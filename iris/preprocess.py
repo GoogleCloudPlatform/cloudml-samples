@@ -102,16 +102,13 @@ def preprocess(pipeline):
   # We turn off sharding of these feature files because the dataset very small.
   (train_features | 'SaveTrain'
                   >> io.SaveFeatures(
-                      os.path.join(args.output_dir, 'features_train'),
-                      shard_name_template=''))
+                      os.path.join(args.output_dir, 'features_train')))
   (eval_features | 'SaveEval'
                  >> io.SaveFeatures(
-                     os.path.join(args.output_dir, 'features_eval'),
-                     shard_name_template=''))
+                     os.path.join(args.output_dir, 'features_eval')))
   (predict_features | 'SavePredict'
                     >> io.SaveFeatures(
-                        os.path.join(args.output_dir, 'features_predict'),
-                        shard_name_template=''))
+                        os.path.join(args.output_dir, 'features_predict')))
   # pylint: enable=expression-not-assigned
 
   return metadata, train_features, eval_features, predict_features

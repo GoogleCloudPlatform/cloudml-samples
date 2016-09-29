@@ -124,16 +124,13 @@ def preprocess(pipeline):
   # We turn off sharding of the feature files because the dataset is very small.
   (train_features | 'SaveTrain'
                   >> io.SaveFeatures(
-                      os.path.join(args.output_dir, 'features_train'),
-                      shard_name_template=''))
+                      os.path.join(args.output_dir, 'features_train')))
   (eval_features | 'SaveEval'
                  >> io.SaveFeatures(
-                     os.path.join(args.output_dir, 'features_eval'),
-                     shard_name_template=''))
+                     os.path.join(args.output_dir, 'features_eval')))
   (predict_features | 'SavePredict'
                     >> io.SaveFeatures(
-                        os.path.join(args.output_dir, 'features_predict'),
-                        shard_name_template=''))
+                        os.path.join(args.output_dir, 'features_predict')))
 
   return metadata, train_features, eval_features, predict_features
 
