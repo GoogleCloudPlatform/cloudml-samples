@@ -62,8 +62,11 @@ def local_predict(args):
       else:
         result = session.run(fetches=tensor_names, feed_dict=feed_dict)
         for row in zip(*result):
-          print json.dumps({name: value.tolist()
-                            for name, value in zip(aliases, row)})
+          print json.dumps({
+              name: (value.tolist() if getattr(value, 'tolist', None) else
+                     value)
+              for name, value in zip(aliases, row)
+          })
 
 
 def parse_args():

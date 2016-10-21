@@ -26,8 +26,6 @@ with a single hidden layer.
 import json
 import os
 
-import tensorflow as tf
-
 import google.cloud.ml.features as features
 
 
@@ -47,12 +45,3 @@ class IrisFeatures(object):
       features.numeric('sepal_length'), features.numeric('sepal_width'),
       features.numeric('petal_length'), features.numeric('petal_width')
   ]
-
-
-def create_inputs(metadata, input_data=None):
-  with tf.name_scope('inputs'):
-    if input_data is None:
-      input_data = tf.placeholder(tf.string, name='input', shape=(None,))
-    parsed = features.FeatureMetadata.parse_features(metadata, input_data)
-    return (input_data, parsed['measurements'], tf.squeeze(parsed['species']),
-            tf.identity(parsed['key']))
