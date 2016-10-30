@@ -416,7 +416,7 @@ def run(model, argv):
   # Print the job data as provided by the service.
   logging.info('Original job data: %s', env.get('job', {}))
 
-  # First find out if there's a task value on the environmtent variable.
+  # First find out if there's a task value on the environment variable.
   # If there is none or it is empty define a default one.
   task_data = env.get('task', None) or {'type': 'master', 'index': 0}
   task = type('TaskSpec', (object,), task_data)
