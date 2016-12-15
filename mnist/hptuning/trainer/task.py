@@ -19,6 +19,7 @@ implements create_model() function. The function creates class implementing
 problem specific implementations of build_train_graph(), build_eval_graph(),
 build_prediction_graph() and format_metric_values().
 """
+
 import argparse
 import json
 import logging
@@ -36,26 +37,27 @@ from tensorflow.python.lib.io import file_io
 class Evaluator(object):
   """Loads variables from latest checkpoint and performs model evaluation."""
 
-  def __init__(self, args, model):
+  def __init__(self, args, model, data_paths, dataset='eval'):
     self.num_eval_batches = args.eval_set_size // args.batch_size
     self.batch_of_examples = []
     self.checkpoint_path = train_dir(args.output_path)
-    self.output_path = os.path.join(args.output_path, 'eval')
-    self.eval_data_paths = args.eval_data_paths
+    self.output_path = os.path.join(args.output_path, dataset)
+    self.eval_data_paths = data_paths
     self.batch_size = args.batch_size
     self.stream = args.streaming_eval
     self.model = model
 
   def evaluate(self, num_eval_batches=None):
     """Run one round of evaluation, return loss and accuracy."""
+
     num_eval_batches = num_eval_batches or self.num_eval_batches
     with tf.Graph().as_default() as graph:
       self.tensors = self.model.build_eval_graph(self.eval_data_paths,
                                                  self.batch_size)
-      self.summary = tf.merge_all_summaries()
+      self.summary = tf.summary.merge_all()
       self.saver = tf.train.Saver()
 
-    self.summary_writer = tf.train.SummaryWriter(self.output_path)
+    self.summary_writer = tf.summary.FileWriter(self.output_path)
     self.sv = tf.train.Supervisor(
         graph=graph,
         logdir=self.output_path,
@@ -79,9 +81,8 @@ class Evaluator(object):
             self.batch_of_examples.append(session.run(self.tensors.examples))
 
         for i in range(num_eval_batches):
-          session.run(self.tensors.metric_updates, {
-              self.tensors.examples: self.batch_of_examples[i]
-          })
+          session.run(self.tensors.metric_updates,
+                      {self.tensors.examples: self.batch_of_examples[i]})
 
       metric_values = session.run(self.tensors.metric_values)
       global_step = tf.train.global_step(session, self.tensors.global_step)
@@ -109,7 +110,7 @@ class Evaluator(object):
         master='', start_standard_services=False) as session:
       self.sv.saver.restore(session, last_checkpoint)
 
-      with open(os.path.join(self.output_path, 'predcitions.csv'), 'wb') as f:
+      with open(os.path.join(self.output_path, 'predictions.csv'), 'wb') as f:
         to_run = [self.tensors.keys] + self.tensors.predictions
         self.sv.start_queue_runners(session)
         last_log_progress = 0
@@ -136,12 +137,17 @@ class Trainer(object):
     self.model = model
     self.cluster = cluster
     self.task = task
-    self.evaluator = Evaluator(self.args, self.model)
+    self.evaluator = Evaluator(self.args, self.model, self.args.eval_data_paths,
+                               'eval_set')
+    self.train_evaluator = Evaluator(self.args, self.model,
+                                     self.args.train_data_paths, 'train_set')
     self.min_train_eval_rate = args.min_train_eval_rate
 
   def run_training(self):
     """Runs a Master."""
     ensure_output_path(self.args.output_path)
+    self.train_path = train_dir(self.args.output_path)
+    self.model_path = model_dir(self.args.output_path)
     self.is_master = self.task.type != 'worker'
     log_interval = self.args.log_interval_secs
     self.eval_interval = self.args.eval_interval_secs
@@ -160,8 +166,9 @@ class Trainer(object):
       # and the parameter servers, i.e., there is no need to directly
       # communicate with the other workers; attempting to do so can result
       # in reliability problems.
-      device_filters = ['/job:ps', '/job:%s/task:%d' % (self.task.type,
-                                                        self.task.index)]
+      device_filters = [
+          '/job:ps', '/job:%s/task:%d' % (self.task.type, self.task.index)
+      ]
       config = tf.ConfigProto(device_filters=device_filters)
     else:
       target = ''
@@ -175,19 +182,19 @@ class Trainer(object):
                                                     self.args.batch_size)
 
         # Add the variable initializer Op.
-        init_op = tf.initialize_all_variables()
+        init_op = tf.global_variables_initializer()
 
         # Create a saver for writing training checkpoints.
         self.saver = tf.train.Saver()
 
         # Build the summary operation based on the TF collection of Summaries.
-        self.summary_op = tf.merge_all_summaries()
+        self.summary_op = tf.summary.merge_all()
 
     # Create a "supervisor", which oversees the training process.
     self.sv = tf.train.Supervisor(
         graph,
         is_chief=self.is_master,
-        logdir=train_dir(self.args.output_path),
+        logdir=self.train_path,
         init_op=init_op,
         saver=self.saver,
         # Write summary_ops by hand.
@@ -198,8 +205,7 @@ class Trainer(object):
         save_model_secs=0)
 
     should_retry = True
-    to_run = [self.tensors.global_step, self.tensors.train
-             ] + self.tensors.metric_updates
+    to_run = [self.tensors.global_step, self.tensors.train]
 
     while should_retry:
       try:
@@ -228,8 +234,6 @@ class Trainer(object):
 
               if should_log:
                 self.log(session)
-                if self.is_master:
-                  self.save_summaries(session)
 
               if should_eval:
                 self.eval(session)
@@ -238,23 +242,12 @@ class Trainer(object):
               should_retry = True
 
           if self.is_master:
-            # Write the final summaries.
-            self.save_summaries(session)
-
             # Take the final checkpoint and compute the final accuracy.
-            self.sv.saver.save(
-                session,
-                self.sv.save_path,
-                global_step=self.tensors.global_step,
-                write_meta_graph=False)
+            self.eval(session)
 
             # Export the model for inference.
-            self.export_model(session)
-
-            # Log the number of steps performed and the final metrics.
-            logging.info(
-                'Final metrics after %d steps, %s', self.global_step,
-                self.model.format_metric_values(self.evaluator.evaluate()))
+            self.model.export(
+                tf.train.latest_checkpoint(self.train_path), self.model_path)
 
       except tf.errors.AbortedError:
         should_retry = True
@@ -264,11 +257,9 @@ class Trainer(object):
 
   def log(self, session):
     """Logs training progress."""
-    logging.info('Train [%s/%d], step %d: %s (%.3f sec) %.1f '
+    logging.info('Train [%s/%d], step %d (%.3f sec) %.1f '
                  'global steps/s, %.1f local steps/s', self.task.type,
                  self.task.index, self.global_step,
-                 self.model.format_metric_values(
-                     session.run(self.tensors.metric_values)),
                  (self.now - self.start_time),
                  (self.global_step - self.last_global_step) /
                  (self.now - self.last_global_time),
@@ -283,8 +274,11 @@ class Trainer(object):
     """Runs evaluation loop."""
     eval_start = time.time()
     self.saver.save(session, self.sv.save_path, self.tensors.global_step)
-    logging.info('Eval, step %d: %s', self.global_step,
-                 self.model.format_metric_values(self.evaluator.evaluate()))
+    logging.info(
+        'Eval, step %d:\n- on train set %s\n-- on eval set %s',
+        self.global_step,
+        self.model.format_metric_values(self.train_evaluator.evaluate()),
+        self.model.format_metric_values(self.evaluator.evaluate()))
     now = time.time()
 
     # Make sure eval doesn't consume too much of total time.
@@ -299,19 +293,9 @@ class Trainer(object):
     self.last_log = now
 
   def save_summaries(self, session):
-    self.sv.summary_computed(session, session.run(self.summary_op),
-                             self.global_step)
+    self.sv.summary_computed(session,
+                             session.run(self.summary_op), self.global_step)
     self.sv.summary_writer.flush()
-
-  def export_model(self, session):
-    output_dir = model_dir(self.args.output_path)
-    with tf.Graph().as_default():
-      # Build and save prediction meta graph and trained variable values.
-      self.model.build_prediction_graph(output_dir)
-      tf.train.Saver().export_meta_graph(filename=os.path.join(output_dir,
-                                                               'export.meta'))
-      self.saver.save(
-          session, os.path.join(output_dir, 'export'), write_meta_graph=False)
 
 
 def main(_):
@@ -363,9 +347,9 @@ def run(model, argv):
       'training summaries.')
   parser.add_argument(
       '--write_predictions',
-      type=int,
-      default=0,
-      help='If set to non-zero model is restored from latest checkpoint '
+      action='store_true',
+      default=False,
+      help='If set, model is restored from latest checkpoint '
       'and predictions are written to a csv file and no training is performed.')
   parser.add_argument(
       '--min_train_eval_rate',
@@ -377,24 +361,24 @@ def run(model, argv):
       'is increased.')
   parser.add_argument(
       '--write_to_tmp',
-      type=int,
-      default=1,
-      help='If set to non-zero all checkpoints and summaries are written to '
+      action='store_true',
+      default=False,
+      help='If set, all checkpoints and summaries are written to '
       'local filesystem (/tmp/) and copied to gcs once training is done. '
       'This can speed up training but if training job fails all the summaries '
       'and checkpoints are lost.')
   parser.add_argument(
       '--copy_train_data_to_tmp',
-      type=int,
-      default=1,
-      help='If set to non-zero training data is copied to local filesystem '
+      action='store_true',
+      default=False,
+      help='If set, training data is copied to local filesystem '
       '(/tmp/). This can speed up training but requires extra space on the '
       'local filesystem.')
   parser.add_argument(
       '--copy_eval_data_to_tmp',
-      type=int,
-      default=0,
-      help='If set to non-zero evaluation data is copied to local filesystem '
+      action='store_true',
+      default=False,
+      help='If set, evaluation data is copied to local filesystem '
       '(/tmp/). This can speed up training but requires extra space on the '
       'local filesystem.')
   parser.add_argument(
@@ -443,8 +427,9 @@ def run(model, argv):
     dispatch(args, model, cluster, task)
 
   if output_path and (not cluster or not task or task.type == 'master'):
-    subprocess.check_call(['gsutil', '-m', '-q', 'cp', '-r',
-                           args.output_path + '/*', output_path])
+    subprocess.check_call([
+        'gsutil', '-m', '-q', 'cp', '-r', args.output_path + '/*', output_path
+    ])
     shutil.rmtree(args.output_path, ignore_errors=True)
 
 

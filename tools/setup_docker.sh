@@ -20,9 +20,6 @@
 # Quit early if any command fails.
 set -ex
 
-# Pillow requires libjpeg.
-apt-get -y install libjpeg-dev
-
 # Install the Cloud ML SDK.
 pip install --upgrade --force-reinstall \
   https://storage.googleapis.com/cloud-ml/sdk/cloudml.latest.tar.gz

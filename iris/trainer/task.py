@@ -11,7 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Example implementation of code to run on the Cloud ML service.
+"""Example Iris implementation to train on CloudML.
+
+This sample reads the pre-processed data and its metadata features as generated
+by the CloudML SDK and exports a model that can be used for serving.
 """
 
 from __future__ import absolute_import
@@ -22,7 +25,6 @@ import argparse
 import json
 import os
 import sys
-import tempfile
 
 from . import util
 import tensorflow as tf
@@ -33,85 +35,96 @@ from tensorflow.contrib import metrics as metrics_lib
 from tensorflow.contrib.learn.python.learn import learn_runner
 from tensorflow.contrib.session_bundle import manifest_pb2
 
-NUM_CLASSES = 3
-
-DIMENSION = 4
-
-# This determines a single column that is used to obtain features
-# after parsing TF.EXamples,
-FEATURES_KEY = 'measurements'
-
-# The following keys determine columns from the parsed Examples to be included
-# in the output.
-TARGET_KEY = 'species'
-
-VOCAB_KEY = 'vocab'
-
-# This is used to map to unparsed tf.Examples so we can output them.
-EXAMPLES_KEY = 'examples'
-
 UNKNOWN_LABEL = 'UNKNOWN'
 
-SCORES_COLUMN = 'score'
-KEY_COLUMN = 'key'
-TARGET_COLUMN = 'target'
-LABEL_COLUMN = 'label'
+# Constants for the feature columns as present on the metadata.
+KEY_FEATURE_COLUMN = 'key'
+TARGET_FEATURE_COLUMN = 'species'
+REAL_VALUED_FEATURE_COLUMNS = 'measurements'
 
-METADATA_HEAD_KEY = 'columns'
+# Constant to map the tf.Examples input placeholder.
+EXAMPLES_PLACEHOLDER_KEY = 'examples'
 
-OUTPUTS_KEY = 'outputs'
+# Constants for the output columns for prediction.
+SCORES_OUTPUT_COLUMN = 'score'
+KEY_OUTPUT_COLUMN = 'key'
+LABEL_OUTPUT_COLUMN = 'label'
+
+# Constants for the exported input and output collections.
 INPUTS_KEY = 'inputs'
+OUTPUTS_KEY = 'outputs'
 
 
-def prediction_input_fn(metadata):
-  """Input function used by the experiment."""
+def get_placeholder_input_fn(metadata):
+  """Wrap the get input features function to provide the metadata."""
 
-  def input_fn():
-    # Generate placeholders for the examples.
+  def get_input_features():
+    """Read the input features from the given placeholder."""
     examples = tf.placeholder(
         dtype=tf.string,
         shape=(None,),
         name='input_example')
-    parsed = ml.features.FeatureMetadata.parse_features(metadata, examples)
-    parsed[EXAMPLES_KEY] = examples
-    # Target is not applicable here, so None is returned.
-    return parsed, None
+    features = ml.features.FeatureMetadata.parse_features(metadata, examples,
+                                                          keep_target=False)
+    features[EXAMPLES_PLACEHOLDER_KEY] = examples
+    # The target feature column is not used for prediction so return None.
+    return features, None
 
-  return input_fn
+  # Return a function to input the feaures into the model from a placeholder.
+  return get_input_features
 
 
-def file_input_fn(metadata, data_paths, batch_size, shuffle):
-  def input_fn():
+def get_reader_input_fn(metadata, data_paths, batch_size, shuffle):
+  """Wrap the get input features function to provide the runtime arguments."""
+
+  def get_input_features():
+    """Read the input features from the given data paths."""
     _, examples = util.read_examples(data_paths, batch_size, shuffle)
-    parsed = ml.features.FeatureMetadata.parse_features(metadata, examples)
-    target = parsed.pop(TARGET_KEY)
-    return parsed, target
+    features = ml.features.FeatureMetadata.parse_features(metadata, examples,
+                                                          keep_target=True)
+    # Retrieve the target feature column.
+    target = features.pop(TARGET_FEATURE_COLUMN)
+    return features, target
 
-  return input_fn
+  # Return a function to input the feaures into the model from a data path.
+  return get_input_features
 
 
-def get_signature_fn(metadata_path):
+def get_vocabulary(metadata_path):
+  """Returns the Iris species vocabulary in the order of its numeric index.
 
-  def _build_signature(examples, features, predictions):
-    """Create a generic signature function with input and output signatures."""
-    iris_labels = VocabGetter(metadata_path).get_vocab().keys()
+  Args:
+    metadata_path: path to metadata file.
+
+  Returns:
+    List of species names as strings.
+  """
+  metadata = ml.features.FeatureMetadata.get_metadata(metadata_path)
+  vocab = metadata.columns[TARGET_FEATURE_COLUMN]['vocab']
+
+  return [class_name for (class_name, class_index)
+          in sorted(vocab.iteritems(),
+                    key=lambda (class_name, class_index): class_index)]
+
+
+def get_export_signature_fn(metadata_path):
+  """Wrap the get export signature function to provide the metadata path."""
+
+  def get_export_signature(examples, features, predictions):
+    """Create an export signature with named input and output signatures."""
+    iris_labels = get_vocabulary(metadata_path)
     prediction = tf.argmax(predictions, 1)
-    labels = tf.contrib.lookup.index_to_string(prediction,
-                                               mapping=iris_labels,
-                                               default_value=UNKNOWN_LABEL)
+    labels = tf.contrib.lookup.index_to_string(
+        prediction, mapping=iris_labels, default_value=UNKNOWN_LABEL)
 
-    target = tf.contrib.lookup.index_to_string(tf.squeeze(features[TARGET_KEY]),
-                                               mapping=iris_labels,
-                                               default_value=UNKNOWN_LABEL)
-    outputs = {SCORES_COLUMN: predictions.name,
-               KEY_COLUMN: tf.squeeze(features[KEY_COLUMN]).name,
-               TARGET_COLUMN: target.name,
-               LABEL_COLUMN: labels.name}
+    outputs = {SCORES_OUTPUT_COLUMN: predictions.name,
+               KEY_OUTPUT_COLUMN: tf.squeeze(features[KEY_FEATURE_COLUMN]).name,
+               LABEL_OUTPUT_COLUMN: labels.name}
 
-    inputs = {EXAMPLES_KEY: examples.name}
+    inputs = {EXAMPLES_PLACEHOLDER_KEY: examples.name}
 
-    tf.add_to_collection(OUTPUTS_KEY, json.dumps(outputs))
     tf.add_to_collection(INPUTS_KEY, json.dumps(inputs))
+    tf.add_to_collection(OUTPUTS_KEY, json.dumps(outputs))
 
     input_signature = manifest_pb2.Signature()
     output_signature = manifest_pb2.Signature()
@@ -125,93 +138,77 @@ def get_signature_fn(metadata_path):
     # Return None for default classification signature.
     return None, {INPUTS_KEY: input_signature,
                   OUTPUTS_KEY: output_signature}
-  return _build_signature
+
+  # Return a function to create an export signature.
+  return get_export_signature
 
 
-def make_experiment_fn(train_data_paths, eval_data_paths, metadata_path,
-                       max_steps, layer1_size, layer2_size, learning_rate,
-                       epsilon, batch_size, eval_batch_size):
+def get_experiment_fn(args):
+  """Wrap the get experiment function to provide the runtime arguments."""
 
-  def experiment_fn(output_dir):
-    """Experiment function used by learn_runner to run training/eval/etc.
-
-    Args:
-      output_dir: String path of directory to use for outputs (model
-        checkpoints, summaries, etc).
-
-    Returns:
-      tf.learn `Experiment`.
-    """
-    config = tf.contrib.learn.RunConfig()
+  def get_experiment(output_dir):
+    """Create a tf.contrib.learn.Experiment to be used by learn_runner."""
     # Write checkpoints more often for more granular evals, since the toy data
     # set is so small and simple. Most normal use cases should not set this and
     # just use the default (600).
-    config.save_checkpoints_secs = 60
+    config = tf.contrib.learn.RunConfig(save_checkpoints_secs=60)
 
     # Load the metadata.
     metadata = ml.features.FeatureMetadata.get_metadata(
-        metadata_path)
+        args.metadata_path)
 
-    # Specify that all features have real-valued data
+    # Specify the real valued feature colums that contain the measurements.
     feature_columns = [tf.contrib.layers.real_valued_column(
-        FEATURES_KEY, dimension=DIMENSION)]
+        metadata.features[REAL_VALUED_FEATURE_COLUMNS]['name'],
+        dimension=metadata.features[REAL_VALUED_FEATURE_COLUMNS]['size'])]
 
     train_dir = os.path.join(output_dir, 'train')
     classifier = tf.contrib.learn.DNNClassifier(
         feature_columns=feature_columns,
-        hidden_units=[layer1_size, layer2_size],
-        n_classes=NUM_CLASSES,
+        hidden_units=[args.layer1_size, args.layer2_size],
+        n_classes=metadata.stats['labels'],
         config=config,
         model_dir=train_dir,
         optimizer=tf.train.AdamOptimizer(
-            learning_rate, epsilon=epsilon))
+            args.learning_rate, epsilon=args.epsilon))
 
-    # In order to export the final model to a predetermined location on GCS,
-    # we use a Monitor, specifically ExportLastModelMonitor.
-    final_model_dir = os.path.join(output_dir, 'model')
+    input_placeholder_for_prediction = get_placeholder_input_fn(
+        metadata)
 
-    # GCS lacks atomic directory renaming. Instead, we export models to
-    # a temporary location on local disk and then copy that model out
-    # to GCS.
-    export_dir = tempfile.mkdtemp()
+    # Export the last model to a predetermined location on GCS.
+    export_monitor = util.ExportLastModelMonitor(
+        output_dir=output_dir,
+        final_model_location='model',  # Relative to the output_dir.
+        additional_assets=[args.metadata_path],
+        input_fn=input_placeholder_for_prediction,
+        input_feature_key=EXAMPLES_PLACEHOLDER_KEY,
+        signature_fn=get_export_signature_fn(args.metadata_path))
 
-    train_monitors = [
-        util.ExportLastModelMonitor(
-            export_dir=export_dir,
-            dest=final_model_dir,
-            additional_assets=[metadata_path],
-            input_fn=prediction_input_fn(metadata),
-            input_feature_key=EXAMPLES_KEY,
-            signature_fn=get_signature_fn(metadata_path))
-    ]
+    input_reader_for_train = get_reader_input_fn(
+        metadata, args.train_data_paths, args.batch_size, shuffle=True)
+    input_reader_for_eval = get_reader_input_fn(
+        metadata, args.eval_data_paths, args.eval_batch_size, shuffle=False)
 
-    train_input_fn = file_input_fn(
-        metadata,
-        train_data_paths,
-        batch_size,
-        shuffle=True)
-
-    eval_input_fn = file_input_fn(
-        metadata,
-        eval_data_paths,
-        eval_batch_size,
-        shuffle=False)
     streaming_accuracy = metrics_lib.streaming_accuracy
     return tf.contrib.learn.Experiment(
         estimator=classifier,
-        train_input_fn=train_input_fn,
-        eval_input_fn=eval_input_fn,
-        train_steps=max_steps,
-        train_monitors=train_monitors,
-        min_eval_frequency=1000,
+        train_input_fn=input_reader_for_train,
+        eval_input_fn=input_reader_for_eval,
+        train_steps=args.max_steps,
+        train_monitors=[export_monitor],
+        min_eval_frequency=args.min_eval_frequency,
         eval_metrics={
             ('accuracy', 'classes'): streaming_accuracy,
+            # Export the accuracy as a metric for hyperparameter tuning.
             ('training/hptuning/metric', 'classes'): streaming_accuracy
         })
-  return experiment_fn
+
+  # Return a function to create an Experiment.
+  return get_experiment
 
 
 def parse_arguments(argv):
+  """Parse the command line arguments."""
   parser = argparse.ArgumentParser()
   parser.add_argument('--train_data_paths', type=str, action='append')
   parser.add_argument('--eval_data_paths', type=str, action='append')
@@ -224,25 +221,12 @@ def parse_arguments(argv):
   parser.add_argument('--epsilon', type=float, default=0.0005)
   parser.add_argument('--batch_size', type=int, default=30)
   parser.add_argument('--eval_batch_size', type=int, default=30)
+  parser.add_argument('--min_eval_frequency', type=int, default=1000)
   return parser.parse_args(args=argv[1:])
 
 
-class VocabGetter(object):
-
-  def __init__(self, metadata_path):
-    self.metadata_path = metadata_path
-    self.vocab_dic = {}
-
-  def get_vocab(self):
-    # Returns a dictionary of Iris labels to arbitrary integer identifiers.
-    if not self.vocab_dic:
-      yaml_data = ml.features.FeatureMetadata.load_from(self.metadata_path)
-      self.vocab_dic = yaml_data[METADATA_HEAD_KEY][TARGET_KEY][VOCAB_KEY]
-    return self.vocab_dic
-
-
 def main(argv=None):
-  """Runs a Tensorflow model on the Iris dataset."""
+  """Run a Tensorflow model on the Iris dataset."""
   args = parse_arguments(sys.argv if argv is None else argv)
 
   env = json.loads(os.environ.get('TF_CONFIG', '{}'))
@@ -257,17 +241,7 @@ def main(argv=None):
     output_dir = args.output_path
 
   learn_runner.run(
-      experiment_fn=make_experiment_fn(
-          train_data_paths=args.train_data_paths,
-          eval_data_paths=args.eval_data_paths,
-          metadata_path=args.metadata_path,
-          max_steps=args.max_steps,
-          layer1_size=args.layer1_size,
-          layer2_size=args.layer2_size,
-          learning_rate=args.learning_rate,
-          epsilon=args.epsilon,
-          batch_size=args.batch_size,
-          eval_batch_size=args.eval_batch_size),
+      experiment_fn=get_experiment_fn(args),
       output_dir=output_dir)
 
 

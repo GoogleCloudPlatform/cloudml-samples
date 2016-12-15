@@ -18,7 +18,7 @@ This file is generic and can be reused by other models without modification.
 """
 
 import multiprocessing
-import subprocess
+import os
 
 import tensorflow as tf
 from tensorflow.python.lib.io import file_io
@@ -28,24 +28,48 @@ METADATA_FILE = 'metadata.yaml'
 
 
 def _copy_all(src_files, dest_dir):
-  subprocess.check_call(['gsutil', '-q', '-m', 'cp'] + src_files + [dest_dir])
+  # file_io.copy does not copy files into folders directly.
+  for src_file in src_files:
+    file_name = os.path.basename(src_file)
+    new_file_location = os.path.join(dest_dir, file_name)
+    file_io.copy(src_file, new_file_location)
 
 
 def _recursive_copy(src_dir, dest_dir):
-  subprocess.check_call(['gsutil', '-q', '-m', 'rsync', src_dir, dest_dir])
+  """Copy the contents of src_dir into the folder dest_dir.
+
+  When called, dest_dir should exist.
+  """
+  for dir_name, sub_dirs, leaf_files in file_io.walk(src_dir):
+    # copy all the files over
+    for leaf_file in leaf_files:
+      leaf_file_path = os.path.join(dir_name, leaf_file)
+      _copy_all([leaf_file_path], dest_dir)
+
+    # Now make all the folders.
+    for sub_dir in sub_dirs:
+      file_io.create_dir(os.path.join(dest_dir, sub_dir))
 
 
 class ExportLastModelMonitor(tf.contrib.learn.monitors.ExportMonitor):
+  """Export the last model to its final location on GCS.
+
+  The tf.learn ExportMonitor exports the models to a location based on the last
+  n steps move the exported model to a fixed location.
+  """
 
   def __init__(self,
-               export_dir,
-               dest,
+               output_dir,
+               final_model_location,
                additional_assets=None,
                input_fn=None,
                input_feature_key=None,
                exports_to_keep=5,
                signature_fn=None,
                default_batch_size=None):
+    # Export the model to a temporary location then upload to its final
+    # GCS destination.
+    export_dir = os.path.join(output_dir, 'intermediate_models')
     super(ExportLastModelMonitor, self).__init__(
         every_n_steps=0,
         export_dir=export_dir,
@@ -54,23 +78,20 @@ class ExportLastModelMonitor(tf.contrib.learn.monitors.ExportMonitor):
         exports_to_keep=exports_to_keep,
         signature_fn=signature_fn,
         default_batch_size=default_batch_size)
-    self._dest = dest
+    self._final_model_location = os.path.join(output_dir, final_model_location)
     self._additional_assets = additional_assets or []
-
-  def every_n_step_end(self, step, outputs):
-    # We only care about the last export.
-    pass
 
   def end(self, session=None):
     super(ExportLastModelMonitor, self).end(session)
-
-    file_io.recursive_create_dir(self._dest)
-    _recursive_copy(self.last_export_dir, self._dest)
+    # Recursively copy the last location export dir from the exporter into the
+    # main export location.
+    file_io.recursive_create_dir(self._final_model_location)
+    _recursive_copy(self.last_export_dir, self._final_model_location)
 
     if self._additional_assets:
       # TODO(rhaertel): use the actual assets directory. For now, metadata.yaml
       # must be a sibling of the export.meta file.
-      assets_dir = self._dest
+      assets_dir = self._final_model_location
       file_io.create_dir(assets_dir)
       _copy_all(self._additional_assets, assets_dir)
 
@@ -123,8 +144,3 @@ def read_examples(input_files, batch_size, shuffle, num_epochs=None):
         enqueue_many=True,
         num_threads=thread_count)
 
-
-def override_if_not_in_args(flag, argument, args):
-  """Checks if flags is in args, and if not it adds the flag to args."""
-  if flag not in args:
-    args.extend([flag, argument])

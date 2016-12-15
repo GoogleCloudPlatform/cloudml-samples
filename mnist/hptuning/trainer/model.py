@@ -22,6 +22,7 @@ build_eval_graph(), build_prediction_graph() and format_metric_values().
 import argparse
 import json
 import logging
+import os
 
 import tensorflow as tf
 from tensorflow.contrib import layers
@@ -100,9 +101,6 @@ class Model(object):
     # Add to the Graph the Ops for loss calculation.
     loss_value = loss(logits, parsed['labels'])
 
-    # Add to the Graph the Ops for accuracy calculation.
-    accuracy_value = evaluation(logits, parsed['labels'])
-
     # Add to the Graph the Ops that calculate and apply gradients.
     if is_training:
       tensors.train, tensors.global_step = training(loss_value,
@@ -110,18 +108,24 @@ class Model(object):
     else:
       tensors.global_step = tf.Variable(0, name='global_step', trainable=False)
 
-    # Add streaming means.
-    loss_op, loss_update = metric_ops.streaming_mean(loss_value)
-    accuracy_op, accuracy_update = metric_ops.streaming_mean(accuracy_value)
-
-    tf.scalar_summary('accuracy', accuracy_op)
-    tf.scalar_summary('loss', loss_op)
+    # Add means across all batches.
+    loss_updates, loss_op = util.loss(loss_value)
+    accuracy_updates, accuracy_op = util.accuracy(logits, parsed['labels'])
 
     # HYPERPARAMETER TUNING: Write the objective value.
     if not is_training:
-      tf.scalar_summary('training/hptuning/metric', accuracy_op)
+      # TODO(b/33420312): remove the if once 0.12 is fully rolled out to prod.
+      if tf.__version__ < '0.12':
+        tf.scalar_summary('accuracy', accuracy_op)
+        tf.scalar_summary('loss', loss_op)
+        tf.scalar_summary('training/hptuning/metric', accuracy_op)
+      else:
+        tf.contrib.deprecated.scalar_summary('accuracy', accuracy_op)
+        tf.contrib.deprecated.scalar_summary('loss', loss_op)
+        tf.contrib.deprecated.scalar_summary('training/hptuning/metric',
+                                             accuracy_op)
 
-    tensors.metric_updates = [loss_update, accuracy_update]
+    tensors.metric_updates = loss_updates + accuracy_updates
     tensors.metric_values = [loss_op, accuracy_op]
     return tensors
 
@@ -131,9 +135,29 @@ class Model(object):
   def build_eval_graph(self, data_paths, batch_size):
     return self.build_graph(data_paths, batch_size, is_training=False)
 
-  def build_prediction_graph(self, export_dir):
+  def export(self, last_checkpoint, output_dir):
+    """Builds a prediction graph and xports the model.
+
+    Args:
+      last_checkpoint: The latest checkpoint from training.
+      output_dir: Path to the folder to be used to output the model.
+    """
+    logging.info('Exporting prediction graph to %s', output_dir)
+    with tf.Session(graph=tf.Graph()) as sess:
+      # Build and save prediction meta graph and trained variable values.
+      self.build_prediction_graph()
+      init_op = tf.initialize_all_variables()
+      sess.run(init_op)
+      trained_saver = tf.train.Saver()
+      trained_saver.restore(sess, last_checkpoint)
+      saver = tf.train.Saver()
+      saver.export_meta_graph(
+          filename=os.path.join(output_dir, 'export.meta'))
+      saver.save(
+          sess, os.path.join(output_dir, 'export'), write_meta_graph=False)
+
+  def build_prediction_graph(self):
     """Builds prediction graph and registers appropriate endpoints."""
-    logging.info('Exporting prediction graph to %s', export_dir)
     examples = tf.placeholder(tf.string, shape=(None,))
     features = {
         'image': tf.FixedLenFeature(
@@ -197,7 +221,7 @@ def inference(images, hidden1_units, hidden2_units):
   """
   hidden1 = layers.fully_connected(images, hidden1_units)
   hidden2 = layers.fully_connected(hidden1, hidden2_units)
-  return layers.fully_connected(hidden2, NUM_CLASSES)
+  return layers.fully_connected(hidden2, NUM_CLASSES, activation_fn=None)
 
 
 def loss(logits, labels):
@@ -236,22 +260,3 @@ def training(loss_op, learning_rate):
   # (and also increment the global step counter) as a single training step.
   train_op = optimizer.minimize(loss_op, global_step=global_step)
   return train_op, global_step
-
-
-def evaluation(logits, labels):
-  """Evaluate the quality of the logits at predicting the label.
-
-  Args:
-    logits: Logits tensor, float - [batch_size, NUM_CLASSES].
-    labels: Labels tensor, int32 - [batch_size], with values in the
-      range [0, NUM_CLASSES).
-  Returns:
-    A scalar float tensor with the ratio of examples (out of batch_size)
-    that were predicted correctly.
-  """
-  # For a classifier model, we can use the in_top_k Op.
-  # It returns a bool tensor with shape [batch_size] that is true for
-  # the examples where the label is in the top k (here k=1)
-  # of all logits for that example.
-  correct = tf.nn.in_top_k(logits, labels, 1)
-  return tf.reduce_mean(tf.cast(correct, tf.float32))

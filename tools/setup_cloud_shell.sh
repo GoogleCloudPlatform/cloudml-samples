@@ -26,7 +26,7 @@ pip install --user --upgrade numpy pandas scikit-learn pyyaml
 pip install --user --upgrade scipy
 # Install TensorFlow.
 pip install --user --upgrade \
-  https://storage.googleapis.com/tensorflow/linux/cpu/debian/jessie/tensorflow-0.11.0rc0-cp27-none-linux_x86_64.whl
+  https://storage.googleapis.com/tensorflow/linux/cpu/debian/jessie/tensorflow-0.11.0-cp27-none-linux_x86_64.whl
 # Install the Cloud ML SDK.
 pip install --user --upgrade \
   https://storage.googleapis.com/cloud-ml/sdk/cloudml.latest.tar.gz

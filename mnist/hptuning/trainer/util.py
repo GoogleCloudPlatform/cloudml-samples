@@ -76,3 +76,27 @@ def override_if_not_in_args(flag, argument, args):
   """Checks if flags is in args, and if not it adds the flag to args."""
   if flag not in args:
     args.extend([flag, argument])
+
+
+def loss(loss_value):
+  """Calculates aggregated mean loss."""
+  total_loss = tf.Variable(0.0, False)
+  loss_count = tf.Variable(0, False)
+  total_loss_update = tf.assign_add(total_loss, loss_value)
+  loss_count_update = tf.assign_add(loss_count, 1)
+  loss_op = total_loss / tf.cast(loss_count, tf.float32)
+  return [total_loss_update, loss_count_update], loss_op
+
+
+def accuracy(logits, labels):
+  """Calculates aggregated accuracy."""
+  is_correct = tf.nn.in_top_k(logits, labels, 1)
+  correct = tf.reduce_sum(tf.cast(is_correct, tf.int32))
+  incorrect = tf.reduce_sum(tf.cast(tf.logical_not(is_correct), tf.int32))
+  correct_count = tf.Variable(0, False)
+  incorrect_count = tf.Variable(0, False)
+  correct_count_update = tf.assign_add(correct_count, correct)
+  incorrect_count_update = tf.assign_add(incorrect_count, incorrect)
+  accuracy_op = tf.cast(correct_count, tf.float32) / tf.cast(
+      correct_count + incorrect_count, tf.float32)
+  return [correct_count_update, incorrect_count_update], accuracy_op

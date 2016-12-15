@@ -98,6 +98,8 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir):
   evaluate = pipeline | beam.Read('ReadEvalData', eval_data_source)
   predict = pipeline | beam.Read('ReadPredictData', predict_data_source)
 
+  # TODO(b/32726166) Update input_format and format_metadata to read from these
+  # values directly from the coder.
   (metadata, train_features, eval_features, predict_features) = (
       (train, evaluate, predict)
       | 'Preprocess'
@@ -136,7 +138,6 @@ def main(argv=None):
                            args.trainer_uri])
     options = {
         'staging_location': os.path.join(args.output_dir, 'tmp', 'staging'),
-        'temp_location': os.path.join(args.output_dir, 'tmp'),
         'job_name': ('cloud-ml-sample-iris-preprocess' + '-'
                      + datetime.datetime.now().strftime('%Y%m%d%H%M%S')),
         'project': args.project_id,

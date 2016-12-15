@@ -25,6 +25,8 @@ import apache_beam as beam
 import trainer.model as iris
 import trainer.task as task
 
+import tensorflow as tf
+
 import google.cloud.ml as ml
 import google.cloud.ml.io as io
 
@@ -140,6 +142,8 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir):
       | 'ReadPredictData'
       >> beam.io.textio.ReadFromText(predict_data, coder=coder_without_target))
 
+  # TODO(b/32726166) Update input_format and format_metadata to read from these
+  # values directly from the coder.
   (metadata, train_features, eval_features, predict_features) = (
       (train, evaluate, predict)
       | 'Preprocess' >> ml.Preprocess(
@@ -223,17 +227,17 @@ def evaluate(pipeline, output_dir, trained_model=None, eval_features=None):
 
   # Run our evaluation data through a Batch Evaluation, then pull out just
   # the expected and predicted target values.
-  iris_vocab = task.VocabGetter(os.path.join(output_dir, METADATA_FILE_NAME))
+  vocab_loader = LazyVocabLoader(os.path.join(output_dir, METADATA_FILE_NAME))
 
   evaluations = (eval_features
                  | 'Evaluate' >> ml.Evaluate(trained_model)
                  | beam.Map('CreateEvaluations',
                             make_evaluation_dict,
-                            iris_vocab))
-
-  coder = io.CsvCoder(['key', 'target', 'predicted', 'score', 'target_label',
-                       'predicted_label', 'all_scores'],
-                      ['target', 'predicted', 'score'])
+                            vocab_loader))
+  coder = io.CsvCoder(
+      column_names=['key', 'target', 'predicted', 'score', 'target_label',
+                    'predicted_label', 'all_scores'],
+      numeric_column_names=['target', 'predicted', 'score'])
   (evaluations
    | 'WriteEvaluation'
    >> beam.io.textio.WriteToText(os.path.join(output_dir,
@@ -243,38 +247,87 @@ def evaluate(pipeline, output_dir, trained_model=None, eval_features=None):
   return evaluations
 
 
-def make_evaluation_dict((example, output), iris_vocab):
-  scores = output[task.SCORES_COLUMN]
-  target_label = output[task.TARGET_COLUMN]
-  predicted_label = output[task.LABEL_COLUMN]
-  vocab = iris_vocab.get_vocab()
+class LazyVocabLoader(object):
+  """Lazy load the vocabulary when needed on the worker."""
+
+  def __init__(self, metadata_path):
+    self.metadata_path = metadata_path
+    self.vocab = {}  # dict of strings to numbers
+    self.reverse_vocab = []  # list of strings.
+
+  def get_vocab(self):
+    # Returns a dictionary of Iris labels to consecutive integer identifiers.
+    if not self.vocab:
+      yaml_data = ml.features.FeatureMetadata.get_metadata(self.metadata_path)
+      self.vocab = yaml_data.columns['species']['vocab']
+    return self.vocab
+
+  def get_reverse_vocab(self):
+    # Returns a list of consecutive integer identifiers to Iris labels.
+    if not self.reverse_vocab:
+      vocab = self.get_vocab()
+      self.reverse_vocab = [None] * len(vocab)
+      for species_name, index_number in vocab.iteritems():
+        self.reverse_vocab[index_number] = species_name
+    return self.reverse_vocab
+
+
+def make_evaluation_dict((input_dict, output_dict), vocab_loader):
+  """Make summary dict for evaluation.
+
+  Must contain the schema "target, predicted, score[optional]" for use with
+  ml.AnalyzeModel.
+
+  Args:
+    input_dict: Input to the TF model ({'input_example:0': tf.Example string})
+    output_dict: output of the TF model ({'key': ?, 'score': ?, 'label': ?})
+    vocab_loader: loads the species vocab.
+
+  Returns:
+    A dict suitable for ml.AnalyzeModel that contains other summary data.
+  """
+  vocab = vocab_loader.get_vocab()
+  reverse_vocab = vocab_loader.get_reverse_vocab()
+
+  scores = output_dict[task.SCORES_OUTPUT_COLUMN]
+  predicted_label = output_dict[task.LABEL_OUTPUT_COLUMN]
+
+  ex = tf.train.Example()
+  ex.ParseFromString(input_dict.values()[0])
+  target = ex.features.feature[task.TARGET_FEATURE_COLUMN].int64_list.value[0]
+
   return {
-      'key': output[task.KEY_COLUMN],
-      'target': vocab[target_label],
+      'key': output_dict[task.KEY_OUTPUT_COLUMN],
+      'target': target,
       'predicted': vocab[predicted_label],
       'score': max(scores),
       'all_scores': scores,
-      'target_label': target_label,
+      'target_label': reverse_vocab[target],
       'predicted_label': predicted_label,
   }
 
 
-def deploy_model(pipeline, output_dir, model_name, version_name,
+def deploy_model(pipeline, output_dir, endpoint, model_name, version_name,
                  trained_model=None):
   if not trained_model:
     trained_model = (pipeline
                      | 'LoadModel' >>
                      io.LoadModel(os.path.join(output_dir, 'saved_model')))
 
-  return trained_model | ml.DeployVersion(model_name, version_name)
+  return trained_model | ml.DeployVersion(model_name, version_name, endpoint)
 
 
 def model_analysis(pipeline, output_dir, evaluation_data=None, metadata=None):
   if not metadata:
-    metadata = pipeline | io.LoadMetadata(METADATA_PATH)
+    metadata = (
+        pipeline
+        | 'LoadMetadataForAnalysis'
+        >> io.LoadMetadata(os.path.join(output_dir, METADATA_FILE_NAME)))
   if not evaluation_data:
-    coder = io.CsvCoder(['key', 'target', 'predicted', 'score'],
-                        ['target', 'predicted', 'score'])
+    coder = io.CsvCoder(
+        column_names=['key', 'target', 'predicted', 'score', 'target_label',
+                      'predicted_label', 'all_scores'],
+        numeric_column_names=['target', 'predicted', 'score'])
     evaluation_data = (
         pipeline
         | 'ReadEvaluation'
@@ -302,7 +355,7 @@ def get_pipeline_name(cloud):
   if cloud:
     return 'BlockingDataflowPipelineRunner'
   else:
-    return 'DirectPipelineRunner'
+    return  'DirectPipelineRunner'
 
 def main(argv=None):
   """Run Preprocessing, Training, Eval, and Prediction as a single Dataflow."""
@@ -317,8 +370,6 @@ def main(argv=None):
     options = {
         'staging_location':
             os.path.join(args.output_dir, 'tmp', 'staging'),
-        'temp_location':
-            os.path.join(args.output_dir, 'tmp'),
         'job_name': ('cloud-ml-sample-iris' + '-' +
                      datetime.datetime.now().strftime('%Y%m%d%H%M%S')),
         'project': args.project_id,
@@ -362,7 +413,8 @@ def main(argv=None):
       model_analysis(p, args.output_dir, evaluations, metadata))
 
   if args.cloud:
-    deployed = deploy_model(p, args.output_dir, args.deploy_model_name,
+    deployed = deploy_model(p, args.output_dir, args.endpoint,
+                            args.deploy_model_name,
                             args.deploy_model_version, trained_model)
     # Use our deployed model to run a batch prediction.
     output_uri = os.path.join(args.output_dir, 'batch_prediction_results')
@@ -370,7 +422,8 @@ def main(argv=None):
         [args.predict_data],
         output_uri,
         region='us-central1',
-        data_format='TEXT')
+        data_format='TEXT',
+        cloud_ml_endpoint=args.endpoint)
 
     print 'Deploying %s version: %s' % (args.deploy_model_name,
                                         args.deploy_model_version)
