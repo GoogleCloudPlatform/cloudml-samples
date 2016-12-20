@@ -61,6 +61,7 @@ class ExportLastModelMonitor(tf.contrib.learn.monitors.ExportMonitor):
   def __init__(self,
                output_dir,
                final_model_location,
+               every_n_steps=5000,
                additional_assets=None,
                input_fn=None,
                input_feature_key=None,
@@ -71,7 +72,7 @@ class ExportLastModelMonitor(tf.contrib.learn.monitors.ExportMonitor):
     # GCS destination.
     export_dir = os.path.join(output_dir, 'intermediate_models')
     super(ExportLastModelMonitor, self).__init__(
-        every_n_steps=0,
+        every_n_steps=every_n_steps,
         export_dir=export_dir,
         input_fn=input_fn,
         input_feature_key=input_feature_key,

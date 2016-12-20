@@ -193,7 +193,11 @@ def run_training():
     sess = tf.Session()
 
     # Instantiate a SummaryWriter to output summaries and the Graph.
-    summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
+    # TODO(b/33420312): remove the if once 0.12 is fully rolled out to prod.
+    try:
+      summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
+    except AttributeError:
+      summary_writer = tf.train.SummaryWriter(FLAGS.train_dir, sess.graph)
 
     # And then after everything is built:
 

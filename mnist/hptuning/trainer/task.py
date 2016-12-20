@@ -57,7 +57,11 @@ class Evaluator(object):
       self.summary = tf.summary.merge_all()
       self.saver = tf.train.Saver()
 
-    self.summary_writer = tf.summary.FileWriter(self.output_path)
+    # TODO(b/33420312): remove the if once 0.12 is fully rolled out to prod.
+    try:
+      self.summary_writer = tf.summary.FileWriter(self.output_path)
+    except AttributeError:
+      self.summary_writer = tf.train.SummaryWriter(self.output_path)
     self.sv = tf.train.Supervisor(
         graph=graph,
         logdir=self.output_path,

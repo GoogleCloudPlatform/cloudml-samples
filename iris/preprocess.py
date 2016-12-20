@@ -143,7 +143,6 @@ def main(argv=None):
         'project': args.project_id,
         'extra_packages': [ml.sdk_location, args.trainer_uri],
         'teardown_policy': 'TEARDOWN_ALWAYS',
-        'no_save_main_session': True
     }
     opts = beam.pipeline.PipelineOptions(flags=[], **options)
     p = beam.Pipeline('BlockingDataflowPipelineRunner', options=opts)
