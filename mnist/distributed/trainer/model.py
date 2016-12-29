@@ -26,6 +26,9 @@ import os
 
 import tensorflow as tf
 from tensorflow.contrib import layers
+from tensorflow.contrib.framework.python.ops import variables as contrib_variables
+from tensorflow.contrib.session_bundle import exporter
+
 import util
 from util import override_if_not_in_args
 
@@ -77,6 +80,7 @@ class Model(object):
     self.learning_rate = learning_rate
     self.hidden1 = hidden1
     self.hidden2 = hidden2
+    self.signatures = None
 
   def build_graph(self, data_paths, batch_size, is_training):
     """Builds generic graph for training or eval."""
@@ -137,15 +141,18 @@ class Model(object):
     with tf.Session(graph=tf.Graph()) as sess:
       # Build and save prediction meta graph and trained variable values.
       self.build_prediction_graph()
+      global_step = tf.Variable(0, name='global_step', trainable=False)
       init_op = tf.initialize_all_variables()
       sess.run(init_op)
       trained_saver = tf.train.Saver()
       trained_saver.restore(sess, last_checkpoint)
-      saver = tf.train.Saver()
-      saver.export_meta_graph(
-          filename=os.path.join(output_dir, 'export.meta'))
-      saver.save(
-          sess, os.path.join(output_dir, 'export'), write_meta_graph=False)
+      saver = tf.train.Saver(sharded=True)
+      model_exporter = exporter.Exporter(saver)
+      model_exporter.init(
+          sess.graph.as_graph_def(),
+          named_graph_signatures=self.signatures,
+      )
+      model_exporter.export(output_dir, global_step, sess)
 
   def build_prediction_graph(self):
     """Builds prediction graph and registers appropriate endpoints."""
@@ -183,6 +190,13 @@ class Model(object):
                              'prediction': prediction.name,
                              'scores': softmax.name
                          }))
+
+    self.signatures = {
+        'inputs': exporter.generic_signature({'examples_bytes': examples}),
+        'outputs': exporter.generic_signature({'key': keys,
+                                               'prediction': prediction,
+                                               'scores': softmax}),
+    }
 
   def format_metric_values(self, metric_values):
     """Formats metric values - used for logging purpose."""
