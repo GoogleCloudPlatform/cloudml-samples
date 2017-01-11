@@ -106,10 +106,9 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir):
       >> ml.Preprocess(feature_set, input_format='csv',
                        format_metadata={'headers': feature_set.csv_columns}))
 
-  # Writes metadata.yaml, features_train, features_eval, and features_eval files
   # pylint: disable=expression-not-assigned
-  (metadata | 'SaveMetadata' >> io.SaveMetadata(os.path.join(output_dir,
-                                                             'metadata.yaml')))
+  (metadata | 'SaveMetadata'
+   >> io.SaveMetadata(os.path.join(output_dir, 'metadata.json')))
 
   # We turn off sharding of these feature files because the dataset very small.
   (train_features | 'SaveTrain'
@@ -142,7 +141,6 @@ def main(argv=None):
                      + datetime.datetime.now().strftime('%Y%m%d%H%M%S')),
         'project': args.project_id,
         'extra_packages': [ml.sdk_location, args.trainer_uri],
-        'teardown_policy': 'TEARDOWN_ALWAYS',
     }
     opts = beam.pipeline.PipelineOptions(flags=[], **options)
     p = beam.Pipeline('BlockingDataflowPipelineRunner', options=opts)

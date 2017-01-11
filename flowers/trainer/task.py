@@ -38,7 +38,8 @@ class Evaluator(object):
   """Loads variables from latest checkpoint and performs model evaluation."""
 
   def __init__(self, args, model, data_paths, dataset='eval'):
-    self.num_eval_batches = args.eval_set_size // args.batch_size
+    self.eval_batch_size = args.eval_batch_size
+    self.num_eval_batches = args.eval_set_size // self.eval_batch_size
     self.batch_of_examples = []
     self.checkpoint_path = train_dir(args.output_path)
     self.output_path = os.path.join(args.output_path, dataset)
@@ -53,11 +54,15 @@ class Evaluator(object):
     num_eval_batches = num_eval_batches or self.num_eval_batches
     with tf.Graph().as_default() as graph:
       self.tensors = self.model.build_eval_graph(self.eval_data_paths,
-                                                 self.batch_size)
+                                                 self.eval_batch_size)
       self.summary = tf.summary.merge_all()
       self.saver = tf.train.Saver()
 
-    self.summary_writer = tf.summary.FileWriter(self.output_path)
+    # TODO(b/33420312): remove the if once 0.12 is fully rolled out to prod.
+    try:
+      self.summary_writer = tf.summary.FileWriter(self.output_path)
+    except AttributeError:
+      self.summary_writer = tf.train.SummaryWriter(self.output_path)
     self.sv = tf.train.Supervisor(
         graph=graph,
         logdir=self.output_path,
@@ -334,6 +339,8 @@ def run(model, argv):
   parser.add_argument(
       '--eval_set_size', type=int, help='Number of examples in the eval set.')
   parser.add_argument(
+      '--eval_batch_size', type=int, help='Number of examples per eval batch.')
+  parser.add_argument(
       '--eval_interval_secs',
       type=float,
       default=5,
@@ -400,7 +407,7 @@ def run(model, argv):
   # Print the job data as provided by the service.
   logging.info('Original job data: %s', env.get('job', {}))
 
-  # First find out if there's a task value on the environmtent variable.
+  # First find out if there's a task value on the environment variable.
   # If there is none or it is empty define a default one.
   task_data = env.get('task', None) or {'type': 'master', 'index': 0}
   task = type('TaskSpec', (object,), task_data)
@@ -418,6 +425,11 @@ def run(model, argv):
     args.train_data_paths = copy_data_to_tmp(args.train_data_paths)
   if args.copy_eval_data_to_tmp:
     args.eval_data_paths = copy_data_to_tmp(args.eval_data_paths)
+
+  if not args.eval_batch_size:
+    # If eval_batch_size not set, use min of batch_size and eval_set_size
+    args.eval_batch_size = min(args.batch_size, args.eval_set_size)
+    logging.info("setting eval batch size to %s", args.eval_batch_size)
 
   cluster_data = env.get('cluster', None)
   cluster = tf.train.ClusterSpec(cluster_data) if cluster_data else None

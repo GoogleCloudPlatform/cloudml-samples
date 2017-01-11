@@ -24,7 +24,7 @@ import tensorflow as tf
 from tensorflow.python.lib.io import file_io
 
 FINAL_MODEL_DIR = 'model'
-METADATA_FILE = 'metadata.yaml'
+METADATA_FILE = 'metadata.json'
 
 
 def _copy_all(src_files, dest_dir):
@@ -90,7 +90,7 @@ class ExportLastModelMonitor(tf.contrib.learn.monitors.ExportMonitor):
     _recursive_copy(self.last_export_dir, self._final_model_location)
 
     if self._additional_assets:
-      # TODO(rhaertel): use the actual assets directory. For now, metadata.yaml
+      # TODO(rhaertel): use the actual assets directory. For now, metadata.json
       # must be a sibling of the export.meta file.
       assets_dir = self._final_model_location
       file_io.create_dir(assets_dir)

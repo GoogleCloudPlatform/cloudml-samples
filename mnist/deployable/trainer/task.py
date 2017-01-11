@@ -177,7 +177,7 @@ def run_training():
     eval_correct = mnist.evaluation(logits, labels_placeholder)
 
     # Build the summary operation based on the TF collection of Summaries.
-    # TODO(b/33420312): remove the if once 0.12 is fully rolled out to prod.
+    # Remove this if once Tensorflow 0.12 is standard.
     if tf.__version__ < '0.12':
       summary_op = tf.merge_all_summaries()
     else:

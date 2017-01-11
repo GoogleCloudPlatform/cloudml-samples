@@ -20,7 +20,7 @@
 set -ex
 
 # Install Python development packages.
-pip install --user --upgrade "pillow>=3.4.2" --global-option="build_ext" --global-option="--disable-jpeg"
+pip install --user --upgrade pillow
 pip install --user --upgrade numpy pandas scikit-learn pyyaml
 # Install scipy separately so that pip does not get killed.
 pip install --user --upgrade scipy

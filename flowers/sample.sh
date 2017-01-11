@@ -31,9 +31,12 @@ echo
 echo "Using job id: " $JOB_ID
 set -v -e
 
-# Takes about 15 minutes to preprocess everything.  We serialize the two
-# preprocess.py synchronous calls just for shell scripting ease.  You could use
-# --runner DataflowPipelineRunner to run them asynchronously.
+# Takes about 30 mins to preprocess everything.  We serialize the two
+# preprocess.py synchronous calls just for shell scripting ease; you could use
+# --runner DataflowPipelineRunner to run them asynchronously.  Typically,
+# the total worker time is higher when running on Cloud instead of your local
+# machine due to increased network traffic and the use of more cost efficient
+# CPU's.  Check progress here: https://console.cloud.google.com/dataflow
 python trainer/preprocess.py \
   --input_dict "$DICT_FILE" \
   --input_path "gs://cloud-ml-data/img/flower_photos/eval_set.csv" \
@@ -46,7 +49,8 @@ python trainer/preprocess.py \
   --output_path "${GCS_PATH}/preproc/train" \
   --cloud
 
-# Training on CloudML is quick after preprocessing.
+# Training on CloudML is quick after preprocessing.  If you ran the above
+# commands asynchronously, make sure they have completed before calling this one.
 gcloud beta ml jobs submit training "$JOB_ID" \
   --module-name trainer.task \
   --package-path trainer \
@@ -56,9 +60,6 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --output_path "${GCS_PATH}/training" \
   --eval_data_paths "${GCS_PATH}/preproc/eval*" \
   --train_data_paths "${GCS_PATH}/preproc/train*"
-
-# Submit job is async, but stream-log will show us the logs and quit when done.
-gcloud beta ml jobs stream-logs "$JOB_ID"
 
 # Tell CloudML about a new type of model coming.  Think of a "model" here as
 # a namespace for deployed Tensorflow graphs.

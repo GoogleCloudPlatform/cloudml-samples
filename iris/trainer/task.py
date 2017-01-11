@@ -210,10 +210,12 @@ def get_experiment_fn(args):
 def parse_arguments(argv):
   """Parse the command line arguments."""
   parser = argparse.ArgumentParser()
-  parser.add_argument('--train_data_paths', type=str, action='append')
-  parser.add_argument('--eval_data_paths', type=str, action='append')
-  parser.add_argument('--metadata_path', type=str)
-  parser.add_argument('--output_path', type=str)
+  parser.add_argument(
+      '--train_data_paths', required=True, type=str, action='append')
+  parser.add_argument(
+      '--eval_data_paths', required=True, type=str, action='append')
+  parser.add_argument('--metadata_path', required=True, type=str)
+  parser.add_argument('--output_path', required=True, type=str)
   parser.add_argument('--max_steps', type=int, default=5000)
   parser.add_argument('--layer1_size', type=int, default=20)
   parser.add_argument('--layer2_size', type=int, default=10)

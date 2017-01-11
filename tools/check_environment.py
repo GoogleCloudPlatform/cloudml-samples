@@ -23,7 +23,6 @@ import sys
 
 MIN_CLOUD_ML_SDK_VERSION = '0.1.7a0'
 MIN_CLOUD_SDK_VERSION = '136.0.0'
-MIN_CLOUD_DATAFLOW_VERSION = '0.4.3'
 MIN_TENSORFLOW_VERSION = '0.11.0rc0'
 
 def get_version_from_pip(package_name):
@@ -66,12 +65,6 @@ def check_version_is_supported(name, version, min_version, help=''):
 # Check that TensorFlow is installed.
 import tensorflow as tf
 check_version_is_supported('TensorFlow', tf.__version__, MIN_TENSORFLOW_VERSION)
-
-# Check that the Apache Beam (a.k.a. Cloud Dataflow) SDK is installed.
-import apache_beam
-check_version_is_supported(
-    'Cloud Dataflow', get_version_from_pip('google-cloud-dataflow'),
-    MIN_CLOUD_DATAFLOW_VERSION)
 
 # Check that the Cloud ML SDK is installed.
 import google.cloud.ml

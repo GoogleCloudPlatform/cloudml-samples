@@ -114,7 +114,7 @@ class Model(object):
 
     # HYPERPARAMETER TUNING: Write the objective value.
     if not is_training:
-      # TODO(b/33420312): remove the if once 0.12 is fully rolled out to prod.
+      # Remove this if once Tensorflow 0.12 is standard.
       if tf.__version__ < '0.12':
         tf.scalar_summary('accuracy', accuracy_op)
         tf.scalar_summary('loss', loss_op)

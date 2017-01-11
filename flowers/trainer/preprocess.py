@@ -384,7 +384,7 @@ def default_args(argv):
   parser.add_argument(
       '--staging_location', type=str, help='Path to the staging location.')
   parser.add_argument(
-      '--num_workers', default=10, type=int, help='The number of workers.')
+      '--num_workers', default=20, type=int, help='The number of workers.')
   parser.add_argument('--cloud', default=False, action='store_true')
   parser.add_argument(
       '--runner',
