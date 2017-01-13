@@ -109,12 +109,12 @@ class Model(object):
 
     if not is_training:
       # Remove this if once Tensorflow 0.12 is standard.
-      if tf.__version__ < '0.12':
-        tf.scalar_summary('accuracy', accuracy_op)
-        tf.scalar_summary('loss', loss_op)
-      else:
+      try:
         tf.contrib.deprecated.scalar_summary('accuracy', accuracy_op)
         tf.contrib.deprecated.scalar_summary('loss', loss_op)
+      except AttributeError:
+        tf.scalar_summary('accuracy', accuracy_op)
+        tf.scalar_summary('loss', loss_op)
 
     tensors.metric_updates = loss_updates + accuracy_updates
     tensors.metric_values = [loss_op, accuracy_op]
@@ -137,13 +137,16 @@ class Model(object):
     with tf.Session(graph=tf.Graph()) as sess:
       # Build and save prediction meta graph and trained variable values.
       self.build_prediction_graph()
-      init_op = tf.initialize_all_variables()
+      # Remove this if once Tensorflow 0.12 is standard.
+      try:
+        init_op = tf.global_variables_initializer()
+      except AttributeError:
+        init_op = tf.initialize_all_variables()
       sess.run(init_op)
       trained_saver = tf.train.Saver()
       trained_saver.restore(sess, last_checkpoint)
       saver = tf.train.Saver()
-      saver.export_meta_graph(
-          filename=os.path.join(output_dir, 'export.meta'))
+      saver.export_meta_graph(filename=os.path.join(output_dir, 'export.meta'))
       saver.save(
           sess, os.path.join(output_dir, 'export'), write_meta_graph=False)
 

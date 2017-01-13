@@ -55,10 +55,16 @@ class Evaluator(object):
     with tf.Graph().as_default() as graph:
       self.tensors = self.model.build_eval_graph(self.eval_data_paths,
                                                  self.eval_batch_size)
-      self.summary = tf.summary.merge_all()
+
+      # Remove this if once Tensorflow 0.12 is standard.
+      try:
+        self.summary = tf.contrib.deprecated.merge_all_summaries()
+      except AttributeError:
+        self.summary = tf.merge_all_summaries()
+
       self.saver = tf.train.Saver()
 
-    # TODO(b/33420312): remove the if once 0.12 is fully rolled out to prod.
+    # Remove this if once Tensorflow 0.12 is standard.
     try:
       self.summary_writer = tf.summary.FileWriter(self.output_path)
     except AttributeError:
@@ -187,13 +193,21 @@ class Trainer(object):
                                                     self.args.batch_size)
 
         # Add the variable initializer Op.
-        init_op = tf.global_variables_initializer()
+        # Remove this if once Tensorflow 0.12 is standard.
+        try:
+          init_op = tf.global_variables_initializer()
+        except AttributeError:
+          init_op = tf.initialize_all_variables()
 
         # Create a saver for writing training checkpoints.
         self.saver = tf.train.Saver()
 
         # Build the summary operation based on the TF collection of Summaries.
-        self.summary_op = tf.summary.merge_all()
+        # Remove this if once Tensorflow 0.12 is standard.
+        try:
+          self.summary_op = tf.contrib.deprecated.merge_all_summaries()
+        except AttributeError:
+          self.summary_op = tf.merge_all_summaries()
 
     # Create a "supervisor", which oversees the training process.
     self.sv = tf.train.Supervisor(

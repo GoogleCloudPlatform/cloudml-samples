@@ -148,9 +148,7 @@ def run_training():
     tf.add_to_collection('inputs', json.dumps(inputs))
 
     # Build a Graph that computes predictions from the inference model.
-    logits = mnist.inference(images_placeholder,
-                             FLAGS.hidden1,
-                             FLAGS.hidden2)
+    logits = mnist.inference(images_placeholder, FLAGS.hidden1, FLAGS.hidden2)
 
     # Add to the Graph the Ops for loss calculation.
     loss = mnist.loss(logits, labels_placeholder)
@@ -178,10 +176,10 @@ def run_training():
 
     # Build the summary operation based on the TF collection of Summaries.
     # Remove this if once Tensorflow 0.12 is standard.
-    if tf.__version__ < '0.12':
-      summary_op = tf.merge_all_summaries()
-    else:
+    try:
       summary_op = tf.contrib.deprecated.merge_all_summaries()
+    except AttributeError:
+      summary_op = tf.merge_all_summaries()
 
     # Add the variable initializer Op.
     init = tf.initialize_all_variables()
@@ -193,7 +191,7 @@ def run_training():
     sess = tf.Session()
 
     # Instantiate a SummaryWriter to output summaries and the Graph.
-    # TODO(b/33420312): remove the if once 0.12 is fully rolled out to prod.
+    # Remove this if once Tensorflow 0.12 is standard.
     try:
       summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
     except AttributeError:
@@ -219,8 +217,7 @@ def run_training():
       # inspect the values of your Ops or variables, you may include them
       # in the list passed to sess.run() and the value tensors will be
       # returned in the tuple from the call.
-      _, loss_value = sess.run([train_op, loss],
-                               feed_dict=feed_dict)
+      _, loss_value = sess.run([train_op, loss], feed_dict=feed_dict)
 
       duration = time.time() - start_time
 

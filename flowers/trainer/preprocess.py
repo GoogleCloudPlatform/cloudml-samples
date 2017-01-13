@@ -179,7 +179,14 @@ class EmbeddingsGraph(object):
     # input_jpeg is the tensor that contains raw image bytes.
     # It is used to feed image bytes and obtain embeddings.
     self.input_jpeg, self.embedding = self.build_graph()
-    self.tf_session.run(tf.initialize_all_variables())
+
+    # Remove this if once Tensorflow 0.12 is standard.
+    try:
+      init_op = tf.global_variables_initializer()
+    except AttributeError:
+      init_op = tf.initialize_all_variables()
+
+    self.tf_session.run(init_op)
     self.restore_from_checkpoint(Default.IMAGE_GRAPH_CHECKPOINT_URI)
 
   def build_graph(self):
