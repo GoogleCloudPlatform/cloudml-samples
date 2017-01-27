@@ -45,7 +45,6 @@ MODULE_NAME = 'trainer.task'
 PREDICTION_WAIT_TIME = 30
 
 
-
 def process_args():
   """Define arguments and assign default values to the ones that are not set.
 
@@ -119,6 +118,11 @@ def process_args():
       '--sample_image_uri',
       default=None,
       help=('URI for a single Jpeg image to be used for online prediction.'))
+  parser.add_argument(
+      '--gcs_bucket',
+      default=None,
+      help=('Google Cloud Storage bucket to be used for uploading intermediate '
+            'data')),
   parser.add_argument(
       '--output_dir',
       default=None,
@@ -262,16 +266,14 @@ class FlowersE2E(object):
       eval_file_path: Path to the eval dataset.
     """
 
-    gcs_bucket = ('gs://' +
-                  self.args.output_dir.replace('gs://', '').split('/')[0])
-
     if self.args.cloud:
       job_name = 'flowers_model' + datetime.datetime.now().strftime(
           '_%y%m%d_%H%M%S')
+
       command = [
           'gcloud', 'beta', 'ml', 'jobs', 'submit', 'training', job_name,
           '--module-name', MODULE_NAME,
-          '--staging-bucket', gcs_bucket,
+          '--staging-bucket', self.args.gcs_bucket,
           '--region', 'us-central1',
           '--project', self.args.project_id,
           '--package-path', 'train',
@@ -295,15 +297,18 @@ class FlowersE2E(object):
     create_model_cmd = [
         'gcloud', 'beta', 'ml', 'models', 'create', self.args.deploy_model_name
     ]
+
     print create_model_cmd
     subprocess.check_call(create_model_cmd)
 
     submit = [
-        'gcloud', 'beta', 'ml', 'models', 'versions', 'create',
+        'gcloud', 'beta', 'ml', 'versions', 'create',
         self.args.deploy_model_version,
         '--model', self.args.deploy_model_name,
         '--origin', model_path
     ]
+    if not model_path.startswith('gs://'):
+      submit.extend(['--staging-bucket', self.args.gcs_bucket])
     print submit
     subprocess.check_call(submit)
 
@@ -353,7 +358,7 @@ class FlowersE2E(object):
       output_json: File handle of the output json where request will be written.
     """
     with open(output_json, 'w') as outf:
-      with file_io.FileIO(uri, mode='r') as f:
+      with file_io.FileIO(uri, mode='rb') as f:
         image_bytes = f.read()
         image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
         image = image.resize((299, 299), Image.BILINEAR)

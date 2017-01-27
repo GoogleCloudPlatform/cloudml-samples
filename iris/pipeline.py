@@ -33,7 +33,7 @@ import google.cloud.ml.io as io
 # Model variables
 MODEL_NAME = 'iris'
 TRAINER_NAME = 'trainer-1.0.tar.gz'
-METADATA_FILE_NAME = 'metadata.json'
+METADATA_FILE_NAME = 'metadata.yaml'
 MODULE_NAME = 'trainer.task'
 EXPORT_SUBDIRECTORY = 'model'
 
@@ -153,7 +153,7 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir):
               'headers': feature_set.csv_columns
           }))
 
-  # Writes metadata.json - specified through METADATA_FILENAME- (text file),
+  # Writes metadata.yaml - specified through METADATA_FILENAME- (text file),
   # features_train, features_eval, and features_eval (TFRecord files)
   (metadata | 'SaveMetadata'
    >> io.SaveMetadata(os.path.join(output_dir, METADATA_FILE_NAME)))
@@ -231,9 +231,8 @@ def evaluate(pipeline, output_dir, trained_model=None, eval_features=None):
 
   evaluations = (eval_features
                  | 'Evaluate' >> ml.Evaluate(trained_model)
-                 | beam.Map('CreateEvaluations',
-                            make_evaluation_dict,
-                            vocab_loader))
+                 | 'CreateEvaluations' >> beam.Map(
+                     make_evaluation_dict, vocab_loader))
   coder = io.CsvCoder(
       column_names=['key', 'target', 'predicted', 'score', 'target_label',
                     'predicted_label', 'all_scores'],
@@ -368,8 +367,8 @@ def main(argv=None):
   opts = None
   if args.cloud:
     options = {
-        'staging_location':
-            os.path.join(args.output_dir, 'tmp', 'staging'),
+        'staging_location': os.path.join(args.output_dir, 'tmp', 'staging'),
+        'temp_location': os.path.join(args.output_dir, 'tmp', 'staging'),
         'job_name': ('cloud-ml-sample-iris' + '-' +
                      datetime.datetime.now().strftime('%Y%m%d%H%M%S')),
         'project': args.project_id,

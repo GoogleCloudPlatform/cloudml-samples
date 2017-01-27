@@ -58,7 +58,10 @@ import subprocess
 import sys
 
 import apache_beam as beam
-from apache_beam.utils.options import PipelineOptions
+try:
+  from apache_beam.utils.pipeline_options import PipelineOptions
+except ImportError:
+  from apache_beam.utils.options import PipelineOptions
 from PIL import Image
 import tensorflow as tf
 
@@ -81,7 +84,8 @@ embedding_good = beam.Aggregator('embedding_good')
 embedding_bad = beam.Aggregator('embedding_bad')
 incompatible_image = beam.Aggregator('incompatible_image')
 invalid_uri = beam.Aggregator('invalid_file_name')
-ignored_unlabeled_image = beam.Aggregator('ignored_unlabeled_image')
+unlabeled_image = beam.Aggregator('unlabeled_image')
+unknown_label = beam.Aggregator('unknown_label')
 
 
 class Default(object):
@@ -125,13 +129,19 @@ class ExtractLabelIdsDoFn(beam.DoFn):
       return
 
     # In a real-world system, you may want to provide a default id for labels
-    # that were not in the dictionary.  In this sample, we will throw an error.
+    # that were not in the dictionary.  In this sample, we simply skip it.
     # This code already supports multi-label problems if you want to use it.
-    label_ids = [self.label_to_id_map[label.strip()] for label in row[1:]]
+    label_ids = []
+    for label in row[1:]:
+      try:
+        label_ids.append(self.label_to_id_map[label.strip()])
+      except KeyError:
+        context.aggregate_to(unknown_label)
+
     context.aggregate_to(labels_count, len(label_ids))
 
     if not label_ids:
-      context.aggregate_to(ignored_unlabeled_image, 1)
+      context.aggregate_to(unlabeled_image, 1)
     yield row[0], label_ids
 
 
@@ -146,7 +156,7 @@ class ReadImageAndConvertToJpegDoFn(beam.DoFn):
     uri, label_ids = context.element
 
     try:
-      with file_io.FileIO(uri, mode='r') as f:
+      with file_io.FileIO(uri, mode='rb') as f:
         image_bytes = f.read()
         img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
 
@@ -328,13 +338,13 @@ class TFExampleFromImageDoFn(beam.DoFn):
 
 def configure_pipeline(p, opt):
   """Specify PCollection and transformations in pipeline."""
-  input_source = beam.io.TextFileSource(
+  read_input_source = beam.io.ReadFromText(
       opt.input_path, strip_trailing_newlines=True)
-  label_source = beam.io.TextFileSource(
+  read_label_source = beam.io.ReadFromText(
       opt.input_dict, strip_trailing_newlines=True)
-  labels = (p | 'Read dictionary' >> beam.Read(label_source))
+  labels = (p | 'Read dictionary' >> read_label_source)
   _ = (p
-       | 'Read input' >> beam.Read(input_source)
+       | 'Read input' >> read_input_source
        | 'Parse input' >> beam.Map(lambda line: csv.reader([line]).next())
        | 'Extract label ids' >> beam.ParDo(ExtractLabelIdsDoFn(),
                                            beam.pvalue.AsIter(labels))

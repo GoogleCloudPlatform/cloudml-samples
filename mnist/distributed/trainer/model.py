@@ -234,7 +234,7 @@ def loss(logits, labels):
   """
   labels = tf.to_int64(labels)
   cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
-      logits, labels, name='xentropy')
+      logits=logits, labels=labels, name='xentropy')
   return tf.reduce_mean(cross_entropy, name='xentropy_mean')
 
 

@@ -81,22 +81,22 @@ def parse_arguments(argv):
 def preprocess(pipeline, training_data, eval_data, predict_data, output_dir):
   feature_set = iris.IrisFeatures()
 
-  training_data_source = beam.io.TextFileSource(
+  read_training_data = beam.io.ReadFromText(
       training_data, strip_trailing_newlines=True,
       coder=io.CsvCoder.from_feature_set(feature_set, feature_set.csv_columns))
 
-  eval_data_source = beam.io.TextFileSource(
+  read_eval_data = beam.io.ReadFromText(
       eval_data, strip_trailing_newlines=True,
       coder=io.CsvCoder.from_feature_set(feature_set, feature_set.csv_columns))
 
-  predict_data_source = beam.io.TextFileSource(
+  read_predict_data = beam.io.ReadFromText(
       predict_data, strip_trailing_newlines=True,
       coder=io.CsvCoder.from_feature_set(feature_set, feature_set.csv_columns,
                                          has_target_columns=False))
 
-  train = pipeline | beam.Read('ReadTrainingData', training_data_source)
-  evaluate = pipeline | beam.Read('ReadEvalData', eval_data_source)
-  predict = pipeline | beam.Read('ReadPredictData', predict_data_source)
+  train = pipeline | 'ReadTrainingData' >> read_training_data
+  evaluate = pipeline | 'ReadEvalData' >> read_eval_data
+  predict = pipeline | 'ReadPredictData' >> read_predict_data
 
   # TODO(b/32726166) Update input_format and format_metadata to read from these
   # values directly from the coder.
@@ -108,7 +108,7 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir):
 
   # pylint: disable=expression-not-assigned
   (metadata | 'SaveMetadata'
-   >> io.SaveMetadata(os.path.join(output_dir, 'metadata.json')))
+   >> io.SaveMetadata(os.path.join(output_dir, 'metadata.yaml')))
 
   # We turn off sharding of these feature files because the dataset very small.
   (train_features | 'SaveTrain'
@@ -137,6 +137,7 @@ def main(argv=None):
                            args.trainer_uri])
     options = {
         'staging_location': os.path.join(args.output_dir, 'tmp', 'staging'),
+        'temp_location': os.path.join(args.output_dir, 'tmp', 'staging'),
         'job_name': ('cloud-ml-sample-iris-preprocess' + '-'
                      + datetime.datetime.now().strftime('%Y%m%d%H%M%S')),
         'project': args.project_id,
@@ -154,7 +155,12 @@ def main(argv=None):
       predict_data=args.predict_data,
       output_dir=args.output_dir)
 
-  p.run()
+  result = p.run()
+  # TODO(yxshi): Remove after the 0.4.5 release of python dataflow sdk
+  try:
+    result.wait_until_finish()
+  except AttributeError:
+    pass
 
 
 if __name__ == '__main__':
