@@ -47,7 +47,7 @@ def local_predict(input_data, model_dir):
   output_alias_map = json.loads(session.graph.get_collection('outputs')[0])
   aliases, tensor_names = zip(*output_alias_map.items())
 
-  metadata_path = os.path.join(model_dir, 'metadata.yaml')
+  metadata_path = os.path.join(model_dir, 'metadata.json')
   transformer = features.FeatureProducer(metadata_path)
   for input_file in input_data:
     with open(input_file) as f:

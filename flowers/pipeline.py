@@ -269,14 +269,13 @@ class FlowersE2E(object):
     if self.args.cloud:
       job_name = 'flowers_model' + datetime.datetime.now().strftime(
           '_%y%m%d_%H%M%S')
-
       command = [
           'gcloud', 'beta', 'ml', 'jobs', 'submit', 'training', job_name,
           '--module-name', MODULE_NAME,
           '--staging-bucket', self.args.gcs_bucket,
           '--region', 'us-central1',
           '--project', self.args.project_id,
-          '--package-path', 'train',
+          '--package-path', 'trainer',
           '--',
           '--output_path', self.args.output_dir,
           '--eval_data_paths', eval_file_path,

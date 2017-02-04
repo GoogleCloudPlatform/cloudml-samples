@@ -21,7 +21,7 @@ import re
 import subprocess
 import sys
 
-MIN_CLOUD_ML_SDK_VERSION = '0.1.7a0'
+MIN_CLOUD_ML_SDK_VERSION = '0.1.8a0'
 MIN_CLOUD_SDK_VERSION = '136.0.0'
 MIN_TENSORFLOW_VERSION = '0.11.0rc0'
 

@@ -129,7 +129,7 @@ python -m trainer.task \
           --l2_regularization 60 \
           --train_data_paths $LOCAL_OUTPUT_DIR/features_train* \
           --eval_data_paths $LOCAL_OUTPUT_DIR/features_eval* \
-          --metadata_path $LOCAL_OUTPUT_DIR/metadata.yaml \
+          --metadata_path $LOCAL_OUTPUT_DIR/metadata.json \
           --output_path $TRAINING_OUTPUT_PATH
 ```
 
@@ -143,7 +143,7 @@ python -m trainer.task \
           --batch_size 512 \
           --train_data_paths $LOCAL_OUTPUT_DIR/features_train* \
           --eval_data_paths $LOCAL_OUTPUT_DIR/features_eval* \
-          --metadata_path $LOCAL_OUTPUT_DIR/metadata.yaml \
+          --metadata_path $LOCAL_OUTPUT_DIR/metadata.json \
           --output_path $TRAINING_OUTPUT_PATH
 ```
 
@@ -168,7 +168,7 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --model_type linear \
   --l2_regularization 60 \
   --output_path "${GCS_PATH}/output/${JOB_ID}" \
-  --metadata_path "${GCS_PATH}/preproc/metadata.yaml" \
+  --metadata_path "${GCS_PATH}/preproc/metadata.json" \
   --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
   --train_data_paths "${GCS_PATH}/preproc/features_train*"
 ```
@@ -190,7 +190,7 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --hidden_units 600 600 600 600 \
   --batch_size 512 \
   --output_path "${GCS_PATH}/output/${JOB_ID}" \
-  --metadata_path "${GCS_PATH}/preproc/metadata.yaml" \
+  --metadata_path "${GCS_PATH}/preproc/metadata.json" \
   --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
   --train_data_paths "${GCS_PATH}/preproc/features_train*"
 ```
@@ -214,7 +214,7 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --l2_regularization 500 \
   --eval_steps 1000 \
   --output_path "${GCS_PATH}/output/${JOB_ID}" \
-  --metadata_path "${GCS_PATH}/preproc/metadata.yaml" \
+  --metadata_path "${GCS_PATH}/preproc/metadata.json" \
   --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
   --train_data_paths "${GCS_PATH}/preproc/features_train*"
 ```
@@ -237,7 +237,7 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --batch_size 512 \
   --eval_steps 1000 \
   --output_path "${GCS_PATH}/output/${JOB_ID}" \
-  --metadata_path "${GCS_PATH}/preproc/metadata.yaml" \
+  --metadata_path "${GCS_PATH}/preproc/metadata.json" \
   --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
   --train_data_paths "${GCS_PATH}/preproc/features_train*"
 ```

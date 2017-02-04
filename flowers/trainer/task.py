@@ -483,7 +483,7 @@ def write_predictions(args, model, cluster, task):
     raise ValueError('invalid task_type %s' % (task.type,))
 
   logging.info('Starting to write predictions on %s/%d', task.type, task.index)
-  evaluator = Evaluator(args, model)
+  evaluator = Evaluator(args, model, args.eval_data_paths)
   evaluator.write_predictions()
   logging.info('Done writing predictions on %s/%d', task.type, task.index)
 

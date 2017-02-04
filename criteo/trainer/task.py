@@ -22,7 +22,7 @@ import sys
 from . import util
 
 import tensorflow as tf
-import tensorflow.contrib.learn.python.learn.learn_runner as learn_runner
+from tensorflow.contrib.learn.python.learn import learn_runner
 from tensorflow.contrib.session_bundle import manifest_pb2
 
 import google.cloud.ml as ml

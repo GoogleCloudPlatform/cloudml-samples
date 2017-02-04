@@ -33,7 +33,7 @@ import google.cloud.ml.io as io
 # Model variables
 MODEL_NAME = 'iris'
 TRAINER_NAME = 'trainer-1.0.tar.gz'
-METADATA_FILE_NAME = 'metadata.yaml'
+METADATA_FILE_NAME = 'metadata.json'
 MODULE_NAME = 'trainer.task'
 EXPORT_SUBDIRECTORY = 'model'
 
@@ -153,7 +153,7 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir):
               'headers': feature_set.csv_columns
           }))
 
-  # Writes metadata.yaml - specified through METADATA_FILENAME- (text file),
+  # Writes metadata.json - specified through METADATA_FILENAME- (text file),
   # features_train, features_eval, and features_eval (TFRecord files)
   (metadata | 'SaveMetadata'
    >> io.SaveMetadata(os.path.join(output_dir, METADATA_FILE_NAME)))

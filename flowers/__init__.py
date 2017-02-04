@@ -11,12 +11,4 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import setuptools
-
-NAME = 'trainer'
-VERSION = '1.0'
-
-if __name__ == '__main__':
-  setuptools.setup(name=NAME, version=VERSION, packages=['trainer'],
-                   install_requires=['protobuf'])
+# ==============================================================================

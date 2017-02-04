@@ -108,7 +108,7 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir):
 
   # pylint: disable=expression-not-assigned
   (metadata | 'SaveMetadata'
-   >> io.SaveMetadata(os.path.join(output_dir, 'metadata.yaml')))
+   >> io.SaveMetadata(os.path.join(output_dir, 'metadata.json')))
 
   # We turn off sharding of these feature files because the dataset very small.
   (train_features | 'SaveTrain'

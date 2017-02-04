@@ -87,6 +87,14 @@ invalid_uri = beam.Aggregator('invalid_file_name')
 unlabeled_image = beam.Aggregator('unlabeled_image')
 unknown_label = beam.Aggregator('unknown_label')
 
+def _is_production_tensorflow():
+  """Detect if we are running with tensorflow 1.0 or later.
+
+  Returns:
+    True if we are running tensorflow version 1.0+.
+  """
+  major_version = tf.__version__.split('.')[0]
+  return int(major_version) >= 1
 
 class Default(object):
   """Default values of variables."""
@@ -156,7 +164,8 @@ class ReadImageAndConvertToJpegDoFn(beam.DoFn):
     uri, label_ids = context.element
 
     try:
-      with file_io.FileIO(uri, mode='rb') as f:
+      read_mode = 'rb' if _is_production_tensorflow() else 'r'
+      with file_io.FileIO(uri, mode=read_mode) as f:
         image_bytes = f.read()
         img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
 
@@ -358,9 +367,8 @@ def run(in_args=None):
   """Runs the pre-processing pipeline."""
 
   pipeline_options = PipelineOptions.from_dictionary(vars(in_args))
-  p = beam.Pipeline(options=pipeline_options)
-  configure_pipeline(p, in_args)
-  p.run()
+  with beam.Pipeline(options=pipeline_options) as p:
+    configure_pipeline(p, in_args)
 
 
 def get_cloud_project():
@@ -399,8 +407,6 @@ def default_args(argv):
       default='flowers-' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S'),
       help='A unique job identifier.')
   parser.add_argument(
-      '--staging_location', type=str, help='Path to the staging location.')
-  parser.add_argument(
       '--num_workers', default=20, type=int, help='The number of workers.')
   parser.add_argument('--cloud', default=False, action='store_true')
   parser.add_argument(
@@ -415,10 +421,10 @@ def default_args(argv):
     default_values = {
         'project':
             get_cloud_project(),
-        'staging_location':
-            os.path.join(os.path.dirname(parsed_args.output_path), 'staging'),
+        'temp_location':
+            os.path.join(os.path.dirname(parsed_args.output_path), 'temp'),
         'runner':
-            'BlockingDataflowPipelineRunner',
+            'DataflowRunner',
         'extra_package':
             Default.CML_PACKAGE,
         'save_main_session':

@@ -111,11 +111,11 @@ def preprocess(pipeline, training_data, eval_data, output_dir,
           format_metadata={'headers': csv_columns,
                            'delimiter': '\t'}))
 
-  # Writes metadata.yaml, features_train, features_eval, and features_eval files
+  # Writes metadata.json, features_train, features_eval, and features_eval files
   # pylint: disable=expression-not-assigned
   (metadata
    | 'SaveMetadata'
-   >> io.SaveMetadata(os.path.join(output_dir, 'metadata.yaml')))
+   >> io.SaveMetadata(os.path.join(output_dir, 'metadata.json')))
   (train_features
    | 'WriteTraining'
    >> io.SaveFeatures(os.path.join(output_dir, 'features_train')))
