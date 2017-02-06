@@ -326,7 +326,7 @@ class FlowersE2E(object):
     elapsed_time = 0
     while elapsed_time < self.args.max_deploy_wait_time:
       try:
-        predict(self.args.sample_image_uri)
+        self.predict(self.args.sample_image_uri)
         return
       except Exception as e:
         time.sleep(PREDICTION_WAIT_TIME)
