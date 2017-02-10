@@ -120,8 +120,22 @@ def build_estimator(model_dir, embedding_size=8, hidden_units=None):
       dnn_hidden_units=hidden_units or [100, 70, 50, 25])
 
 
-serving_input_fn = input_fn_utils.build_parsing_serving_input_fn(
-    layers.create_feature_spec_for_parsing(INPUT_COLUMNS)
+def make_features(value):
+  value_column = tf.expand_dims(value, -1)
+
+  columns = tf.decode_csv(value_column, record_defaults=DEFAULTS)
+
+  features = dict(zip(CSV_COLUMNS, columns))
+
+  # remove the fnlwgt key, which is not used
+  features.pop('fnlwgt', None)
+  income_int = tf.to_int32(tf.equal(features.pop(LABEL_COLUMN), ' >50K'))
+
+  return features, income_int
+
+
+serving_input_fn = input_fn_utils.build_default_serving_input_fn(
+    make_features(tf.placeholder(tf.string, [None, 1]))[0] 
 )
 
 
@@ -131,18 +145,6 @@ def generate_input_fn(filename, num_epochs=None, batch_size=40):
         [filename], num_epochs=num_epochs)
     reader = tf.TextLineReader()
     _, value = reader.read_up_to(filename_queue, num_records=batch_size)
-
-    value_column = tf.expand_dims(value, -1)
-
-    columns = tf.decode_csv(value_column, record_defaults=DEFAULTS)
-
-    features = dict(zip(CSV_COLUMNS, columns))
-
-    # remove the fnlwgt key, which is not used
-    features.pop('fnlwgt', None)
-
-    income_int = tf.to_int32(tf.equal(features.pop(LABEL_COLUMN), ' >50K'))
-
-    return features, income_int
+    return make_features(value) 
 
   return _input_fn
