@@ -132,7 +132,7 @@ def create_parser():
       type=int)
   parser.add_argument('--l2_regularization', help='L2 Regularization', type=int)
   parser.add_argument(
-      '--num_epochs', help='Number of epochs', default=7, type=int)
+      '--num_epochs', help='Number of epochs', default=5, type=int)
   parser.add_argument(
       '--ignore_crosses',
       action='store_true',

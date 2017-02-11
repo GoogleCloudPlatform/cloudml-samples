@@ -121,7 +121,8 @@ class Evaluator(object):
         master='', start_standard_services=False) as session:
       self.sv.saver.restore(session, last_checkpoint)
 
-      with open(os.path.join(self.output_path, 'predictions.csv'), 'wb') as f:
+      with file_io.FileIO(os.path.join(self.output_path,
+                                       'predictions.csv'), 'w') as f:
         to_run = [self.tensors.keys] + self.tensors.predictions
         self.sv.start_queue_runners(session)
         last_log_progress = 0
@@ -134,9 +135,9 @@ class Evaluator(object):
           res = session.run(to_run)
           for element in range(len(res[0])):
             f.write('%s' % res[0][element])
-            for i in range(len(self.tensors.predictions)):
+            for prediction in res[1:]:
               f.write(',')
-              f.write(self.model.format_prediction_values(res[i + 1][element]))
+              f.write(str(prediction[element]))
             f.write('\n')
 
 

@@ -5,15 +5,12 @@ the [criteo dataset](https://www.kaggle.com/c/criteo-display-ad-challenge).
 
 ## Prerequisites
 
-*   Make sure you follow the cloud-ml setup
-    [here](https://cloud.google.com/ml/docs/) before trying the
-    sample.
-*   Make sure you setup your environment
-    [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
+*   Make sure you follow the Google Cloud ML setup
+    [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up)
+    before trying the sample. More documentation about Cloud ML is available
+    [here](https://cloud.google.com/ml/docs/).
 *   Make sure you have installed
-    [Tensorflow](https://www.tensorflow.org/versions/r0.10/get_started/os_setup.html).
-*   Make sure you have installed
-    [virtualenv](https://virtualenv.pypa.io/en/stable/installation/).
+    [Tensorflow](https://www.tensorflow.org/get_started/os_setup).
 *   Make sure your Google Cloud project has sufficient quota.
 
 ## Sample Overview
@@ -24,7 +21,7 @@ This sample consists of two parts:
 
 Data pre-processing step involves taking the TSV data as input and converting it
 to
-[TFRecords](https://www.tensorflow.org/versions/r0.10/api_docs/python/python_io.html#tfrecords-format-details)
+[TFRecords](https://www.tensorflow.org/api_docs/python/python_io/data_io__python_functions_)
 format.
 
 ### Model Training
@@ -40,7 +37,7 @@ The criteo dataset is available in two different sizes:
 ### Kaggle Challenge Dataset
 
 Kaggle challenge dataset can be downloaded
-[here](http://labs.criteo.com/downloads/2014-kaggle-display-advertising-challenge-dataset/).
+[here](http://criteolabs.wpengine.com/downloads/2014-kaggle-display-advertising-challenge-dataset/).
 We recommend working with the Kaggle dataset if you are trying this sample for
 the first time. This dataset is about 10 GB and contains around 45 million
 examples.
@@ -147,6 +144,11 @@ python -m trainer.task \
           --output_path $TRAINING_OUTPUT_PATH
 ```
 
+Running time varies depending on your machine. Typically the linear model takes
+at least 2 hours to train, and the deep model more than 8 hours. You can use
+[Tensorboard](https://www.tensorflow.org/how_tos/summaries_and_tensorboard/)
+to follow the job's progress.
+
 ### Cloud Run for the Small Dataset
 
 You can train using either a single worker (config-single.yaml), or using
@@ -166,7 +168,7 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   -- \
   --dataset kaggle \
   --model_type linear \
-  --l2_regularization 60 \
+  --l2_regularization 100 \
   --output_path "${GCS_PATH}/output/${JOB_ID}" \
   --metadata_path "${GCS_PATH}/preproc/metadata.json" \
   --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
@@ -195,6 +197,11 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --train_data_paths "${GCS_PATH}/preproc/features_train*"
 ```
 
+When using the [distributed configuration](config-small.yaml), the linear model
+may take as little as 10 minutes to train, and the deep model should finish
+in around 90 minutes. Again you can point Tensorboard to the output path to
+follow training progress.
+
 ### Cloud Run for the Large Dataset
 
 To train the linear model:
@@ -211,13 +218,16 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   -- \
   --dataset large \
   --model_type linear \
-  --l2_regularization 500 \
+  --l2_regularization 3000 \
   --eval_steps 1000 \
   --output_path "${GCS_PATH}/output/${JOB_ID}" \
   --metadata_path "${GCS_PATH}/preproc/metadata.json" \
   --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
   --train_data_paths "${GCS_PATH}/preproc/features_train*"
 ```
+
+To train the linear model without crosses, add the option `--ignore_crosses`
+and use `--l2_regularization 1000` for best results.
 
 To train the deep model:
 
@@ -235,7 +245,7 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --model_type deep \
   --hidden_units 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 \
   --batch_size 512 \
-  --eval_steps 1000 \
+  --eval_steps 250 \
   --output_path "${GCS_PATH}/output/${JOB_ID}" \
   --metadata_path "${GCS_PATH}/preproc/metadata.json" \
   --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \

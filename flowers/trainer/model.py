@@ -176,8 +176,13 @@ class Model(object):
     image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
     # Then shift images to [-1, 1) for Inception.
-    image = tf.sub(image, 0.5)
-    image = tf.mul(image, 2.0)
+    # Try-except to make the code compatible across sdk versions
+    try:
+      image = tf.subtract(image, 0.5)
+      image = tf.multiply(image, 2.0)
+    except AttributeError:
+      image = tf.sub(image, 0.5)
+      image = tf.mul(image, 2.0)
 
     # Build Inception layers, which expect A tensor of type float from [-1, 1)
     # and shape [batch_size, height, width, channels].
@@ -194,7 +199,7 @@ class Model(object):
     tensors = GraphReferences()
     is_training = graph_mod == GraphMod.TRAIN
     if data_paths:
-      _, tensors.examples = util.read_examples(
+      tensors.keys, tensors.examples = util.read_examples(
           data_paths,
           batch_size,
           shuffle=is_training,
@@ -376,10 +381,6 @@ class Model(object):
       pass
 
     return '%s, %s' % (loss_str, accuracy_str)
-
-  def format_prediction_values(self, prediction):
-    """Formats prediction values - used for writing batch predictions as csv."""
-    return '%.3f' % (prediction[0])
 
 
 def loss(logits, labels):

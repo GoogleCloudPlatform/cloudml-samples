@@ -4,4 +4,4 @@ trainingInput:
   workerType: complex_model_m
   parameterServerType: large_model
   workerCount: 60
-  parameterServerCount: 37
+  parameterServerCount: 29

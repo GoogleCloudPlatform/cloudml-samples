@@ -56,6 +56,10 @@ def parse_arguments(argv):
   parser.add_argument('--predict_data',
                       default='gs://cloud-ml-data/iris/data_predict.csv',
                       help='Data to encode as prediction features.')
+  parser.add_argument('--metadata_file_name',
+                      default='metadata.json',
+                      help='Name for the metadata file, one of metadata.'
+                      '{json|yaml}.')
   parser.add_argument('--output_dir', default=None,
                       help=('Google Cloud Storage or Local directory in which '
                             'to place outputs.'))
@@ -78,7 +82,8 @@ def parse_arguments(argv):
   return args
 
 
-def preprocess(pipeline, training_data, eval_data, predict_data, output_dir):
+def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
+               metadata_file_name):
   feature_set = iris.IrisFeatures()
 
   read_training_data = beam.io.ReadFromText(
@@ -108,7 +113,7 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir):
 
   # pylint: disable=expression-not-assigned
   (metadata | 'SaveMetadata'
-   >> io.SaveMetadata(os.path.join(output_dir, 'metadata.json')))
+   >> io.SaveMetadata(os.path.join(output_dir, metadata_file_name)))
 
   # We turn off sharding of these feature files because the dataset very small.
   (train_features | 'SaveTrain'
@@ -153,7 +158,8 @@ def main(argv=None):
       training_data=args.training_data,
       eval_data=args.eval_data,
       predict_data=args.predict_data,
-      output_dir=args.output_dir)
+      output_dir=args.output_dir,
+      metadata_file_name=args.metadata_file_name)
 
   result = p.run()
   # TODO(yxshi): Remove after the 0.4.5 release of python dataflow sdk

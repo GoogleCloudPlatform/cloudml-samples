@@ -32,12 +32,13 @@ from google.cloud.ml import features
 from google.cloud.ml import session_bundle
 
 
-def local_predict(input_data, model_dir):
+def local_predict(input_data, model_dir, metadata_file_name):
   """Runs prediction locally.
 
   Args:
     input_data: list of input files to run prediction on.
     model_dir: path to Tensorflow model folder.
+    metadata_file_name: one of metadata.{json|yaml}.
   """
 
   session, _ = session_bundle.load_session_bundle_from_path(model_dir)
@@ -47,7 +48,7 @@ def local_predict(input_data, model_dir):
   output_alias_map = json.loads(session.graph.get_collection('outputs')[0])
   aliases, tensor_names = zip(*output_alias_map.items())
 
-  metadata_path = os.path.join(model_dir, 'metadata.json')
+  metadata_path = os.path.join(model_dir, metadata_file_name)
   transformer = features.FeatureProducer(metadata_path)
   for input_file in input_data:
     with open(input_file) as f:
@@ -75,12 +76,15 @@ def parse_args(args):
       nargs='+',
       help=('The input data file. Multiple files can be specified if more than '
             'one file is needed.'))
-
   argparser.add_argument(
       '--model_dir',
       dest='model_dir',
       help=('The path to the model where the tensorflow meta graph '
             'proto and checkpoint files are saved.'))
+  argparser.add_argument(
+      '--metadata_file_name',
+      default='metadata.json',
+      help='Name for the metadata file, one of metadata.{json|yaml}.')
 
   return argparser.parse_args(args)
 

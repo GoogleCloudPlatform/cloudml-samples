@@ -60,6 +60,10 @@ def parse_arguments(argv):
       '--eval_data', required=True,
       help='Data to encode as evaluation features.')
   parser.add_argument(
+      '--metadata_file_name',
+      default='metadata.json',
+      help='Name for the metadata file, one of metadata.{json|yaml}.')
+  parser.add_argument(
       '--output_dir',
       default=None,
       required=True,
@@ -74,7 +78,7 @@ def parse_arguments(argv):
 
 
 def preprocess(pipeline, training_data, eval_data, output_dir,
-               frequency_threshold):
+               frequency_threshold, metadata_file_name):
   """Run pre-processing step as a pipeline.
 
   Args:
@@ -83,6 +87,7 @@ def preprocess(pipeline, training_data, eval_data, output_dir,
     eval_data: file paths to input csv files.
     output_dir: file path to where to write all the output files.
     frequency_threshold: frequency threshold to use for categorical values.
+    metadata_file_name: one of metadata.{json|yaml}.
   """
   feature_set, csv_columns = criteo.criteo_features(
       frequency_threshold=frequency_threshold)
@@ -115,7 +120,7 @@ def preprocess(pipeline, training_data, eval_data, output_dir,
   # pylint: disable=expression-not-assigned
   (metadata
    | 'SaveMetadata'
-   >> io.SaveMetadata(os.path.join(output_dir, 'metadata.json')))
+   >> io.SaveMetadata(os.path.join(output_dir, metadata_file_name)))
   (train_features
    | 'WriteTraining'
    >> io.SaveFeatures(os.path.join(output_dir, 'features_train')))
@@ -141,28 +146,24 @@ def main(argv=None):
             'THROUGHPUT_BASED',
         'worker_machine_type':
             'n1-standard-4',
-        # TODO(andreasst): remove machine_type once CL 142718023 is submitted.
+        # TODO(andreasst): remove machine_type once no longer needed
         'machine_type':
             'n1-standard-4',
     }
     opts = beam.pipeline.PipelineOptions(flags=[], **options)
-    pipeline = beam.Pipeline('BlockingDataflowPipelineRunner', options=opts)
+    pipeline = beam.Pipeline('DataflowRunner', options=opts)
   else:
-    pipeline = beam.Pipeline('DirectPipelineRunner')
+    pipeline = beam.Pipeline('DirectRunner')
 
   preprocess(
       pipeline=pipeline,
       training_data=args.training_data,
       eval_data=args.eval_data,
       output_dir=args.output_dir,
-      frequency_threshold=args.frequency_threshold)
+      frequency_threshold=args.frequency_threshold,
+      metadata_file_name=args.metadata_file_name)
 
-  result = pipeline.run()
-  # TODO(yxshi): Remove after the 0.4.5 release of python dataflow sdk
-  try:
-    result.wait_until_finish()
-  except AttributeError:
-    pass
+  pipeline.run().wait_until_finish()
 
 
 if __name__ == '__main__':
