@@ -48,22 +48,10 @@ def read_input_data(file_name):
   #input_df = input_df.replace([' ?'], [np.nan])
 
   label_df = input_df.pop(LABEL_COL)
-
-  # convert label to 1 if income over 50K else 0
-  #label_df = label_df.apply(lambda x: int(">50K" in x)).astype(int)
-
-  sparse_t = tf.SparseTensor(
-      indices=[[i, 0] for i in range(label_df.size)],
-      values=label_df.astype('category').cat.codes.values,
-      dense_shape=[label_df.size, 1]
-  )
-
-  dense_i_tensor = tf.sparse_to_indicator(sparse_t, 2)
-  dense_i_tensor = tf.cast(dense_i_tensor, tf.int32)
-  return (input_df, dense_i_tensor)
+  return (input_df, label_df)
 
 
-def generate_input(input_df):
+def generate_input(input_df, label_df):
   """Prepare the input columns using SparseTensor."""
   continuous_columns = [
       tf.constant(input_df[col].values) for col in CONTINUOUS_COLS
@@ -77,8 +65,17 @@ def generate_input(input_df):
       for col in CATEGORICAL_COLS
   ]
 
+  sparse_t = tf.SparseTensor(
+      indices=[[i, 0] for i in range(label_df.size)],
+      values=label_df.astype('category').cat.codes.values,
+      dense_shape=[label_df.size, 1]
+  )
+
+  dense_i_tensor = tf.sparse_to_indicator(sparse_t, 2)
+  dense_i_tensor = tf.cast(dense_i_tensor, tf.int32)
+
   return (
-      continuous_columns + categorical_columns
+      continuous_columns + categorical_columns, dense_i_tensor
   )
 
 
@@ -120,11 +117,11 @@ def generate_wide_columns(input_columns):
 
 # input training data with labels
 train_input, train_label = read_input_data('widendeep/adult.data')
-train_in_tensor = generate_input(train_input)
+train_in_tensor, train_label_tensor = generate_input(train_input, train_label)
 
 # input test data with labels
 test_input, test_label = read_input_data('widendeep/adult.test')
-test_in_tensor = generate_input(test_input)
+test_in_tensor, test_label_tensor = generate_input(test_input, test_label)
 
 wide_columns_train = generate_wide_columns(train_in_tensor)
 wide_columns_test = generate_wide_columns(test_in_tensor)
@@ -148,7 +145,7 @@ for step in xrange(STEPS):
   dense_tensor = tf.cast(dense_tensor, tf.int32)
   train_input = sess.run(dense_tensor)
 
-  sess.run(train_step, feed_dict={inputs: train_input, labels: sess.run(train_label)})
+  sess.run(train_step, feed_dict={inputs: train_input, labels: sess.run(train_label_tensor)})
 
   if step % 10 == 0:
     print('Step number {} of {} done'.format(step, STEPS))
@@ -159,4 +156,10 @@ test_input = tf.sparse_to_indicator(wide_columns_test[3], 2)
 test_input = tf.cast(test_input, tf.int32)
 test_input = sess.run(test_input)
 
-print('\nAccuracy {0:.2f}%'.format(100*sess.run(accuracy, feed_dict={inputs: test_input , labels: sess.run(test_label)})))
+print('\nAccuracy {0:.2f}%'.format(
+    100 * sess.run(
+        accuracy,
+        feed_dict={
+            inputs: test_input,
+            labels: sess.run(test_label_tensor)
+        })))
