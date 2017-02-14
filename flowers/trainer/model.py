@@ -77,6 +77,7 @@ class GraphReferences(object):
     self.metric_values = []
     self.keys = None
     self.predictions = []
+    self.input_jpeg = None
 
 
 class Model(object):
@@ -265,7 +266,6 @@ class Model(object):
       tensors.train, tensors.global_step = training(loss_value)
     else:
       tensors.global_step = tf.Variable(0, name='global_step', trainable=False)
-      tensors.uris = uris
 
     # Add means across all batches.
     loss_updates, loss_op = util.loss(loss_value)

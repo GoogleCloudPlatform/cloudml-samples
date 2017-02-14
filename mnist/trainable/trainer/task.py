@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os.path
+import subprocess
 import tempfile
 import time
 
@@ -40,6 +41,14 @@ flags.DEFINE_integer('batch_size', 100, 'Batch size.  '
 flags.DEFINE_string('train_dir', 'data', 'Directory to put the training data.')
 flags.DEFINE_boolean('fake_data', False, 'If true, uses fake data '
                      'for unit testing.')
+flags.DEFINE_string('input_path', None,
+                    'The GCS path to download the train and eval files from. '
+                    'If this is not set, then they will be downloaded from '
+                    'a default HTTP address. This path must contain the files '
+                    'listed in INPUT_FILES')
+
+INPUT_FILES = ['train-images-idx3-ubyte.gz', 'train-labels-idx1-ubyte.gz',
+               't10k-images-idx3-ubyte.gz', 't10k-labels-idx1-ubyte.gz']
 
 
 def placeholder_inputs(batch_size):
@@ -122,8 +131,15 @@ def do_eval(sess,
 def run_training():
   """Train MNIST for a number of steps."""
   # Get the sets of images and labels for training, validation, and
-  # test on MNIST.
-  data_sets = input_data.read_data_sets(tempfile.mkdtemp(), FLAGS.fake_data)
+  # test on MNIST. If input_path is specified, download the data from GCS to
+  # the folder expected by read_data_sets.
+  data_dir = tempfile.mkdtemp()
+  if FLAGS.input_path:
+    files = [os.path.join(FLAGS.input_path, file_name)
+             for file_name in INPUT_FILES]
+    subprocess.check_call(['gsutil', '-m', '-q', 'cp', '-r'] + files +
+                          [data_dir])
+  data_sets = input_data.read_data_sets(data_dir, FLAGS.fake_data)
 
   # Tell TensorFlow that the model will be built into the default Graph.
   with tf.Graph().as_default():

@@ -19,23 +19,20 @@
 # Quit early if any command fails.
 set -ex
 
-# Some pip installed tools are added to ~/.local/bin, which should be
-# added to the PATH.
-if [[ ":${PATH}:" != *":${HOME}/.local/bin:"* ]]; then
-  echo "Updating PATH"
-  PATH=${HOME}/.local/bin:${PATH}
-  echo 'export PATH=${HOME}/.local/bin:${PATH}' >> ~/.bashrc
-fi
-
 # Install Python development packages.
-pip install --user -U pillow
-pip install --user -U numpy pandas scikit-learn pyyaml
+pip install --user --upgrade pillow
+pip install --user --upgrade numpy pandas scikit-learn pyyaml
 # Install scipy separately so that pip does not get killed.
-pip install --user -U scipy
+pip install --user --upgrade scipy
 # Install TensorFlow.
-pip install --user -U --force-reinstall https://storage.googleapis.com/tensorflow/linux/cpu/debian/jessie/tensorflow-0.11.0-cp27-none-linux_x86_64.whl
+pip install --user --upgrade \
+  https://storage.googleapis.com/tensorflow/linux/cpu/debian/jessie/tensorflow-0.11.0-cp27-none-linux_x86_64.whl
 # Install the Cloud ML SDK.
-pip install --user -U --force-reinstall https://storage.googleapis.com/cloud-ml/sdk/cloudml-0.1.9-alpha.tar.gz
+pip install --user --upgrade \
+  https://storage.googleapis.com/cloud-ml/sdk/cloudml.latest.tar.gz
+
+# Add newly-installed tools to the PATH (starting with the next login).
+echo 'export PATH=${HOME}/.local/bin:${PATH}' >> ~/.bashrc
 
 # Download the Cloud ML samples.
 mkdir -p ~/google-cloud-ml

@@ -149,9 +149,9 @@ def main(argv=None):
         'extra_packages': [ml.sdk_location, args.trainer_uri],
     }
     opts = beam.pipeline.PipelineOptions(flags=[], **options)
-    p = beam.Pipeline('BlockingDataflowPipelineRunner', options=opts)
+    p = beam.Pipeline('DataflowRunner', options=opts)
   else:
-    p = beam.Pipeline('DirectPipelineRunner')
+    p = beam.Pipeline('DirectRunner')
 
   preprocess(
       pipeline=p,
