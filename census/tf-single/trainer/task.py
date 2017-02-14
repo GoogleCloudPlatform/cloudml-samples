@@ -14,6 +14,7 @@
 # ==============================================================================
 
 
+import argparse
 import tensorflow as tf
 import numpy as np
 import pandas as pd
@@ -37,8 +38,6 @@ CATEGORICAL_COLS = ('gender', 'race', 'education', 'marital_status',
 CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss', 'hours_per_week')
 
 LABEL_COL = 'income_bracket'
-
-STEPS = 100
 
 def read_input_data(file_name):
   """Read the input data as a pandas DataFrame of features and labels."""
@@ -138,55 +137,60 @@ def sparse_to_dense(sparse_tensor, vocab_size):
   dense_tensor = tf.cast(dense_tensor, tf.int32)
   return dense_tensor
 
-# input training data with labels
-train_input, train_label = read_input_data('widendeep/adult.data')
-train_in_tensor, train_label_tensor = generate_input(train_input, train_label)
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser()
+  parser.add_argument(
+      '--train_data_path', required=True, type=str)
+  parser.add_argument(
+      '--eval_data_path', required=True, type=str)
+  parser.add_argument('--max_steps', type=int, default=300)
+  parse_args = parser.parse_args()
 
-# input test data with labels
-test_input, test_label = read_input_data('widendeep/adult.test')
-test_in_tensor, test_label_tensor = generate_input(test_input, test_label)
+  # input training data with labels
+  train_input, train_label = read_input_data(parse_args.train_data_path)
+  train_in_tensor, train_label_tensor = generate_input(train_input, train_label)
 
-train_tensor = concat_wide_columns(
-    generate_wide_columns(train_in_tensor)
-)
+  # input test data with labels
+  test_input, test_label = read_input_data(parse_args.eval_data_path)
+  test_in_tensor, test_label_tensor = generate_input(test_input, test_label)
 
-test_tensor = concat_wide_columns(
-    generate_wide_columns(test_in_tensor)
-)
-
-sess = tf.Session()
-
-inputs = tf.placeholder(tf.float32, shape=[None, 53])
-labels = tf.placeholder(tf.float32, shape=[None, 2])
-
-nn_model = model.inference(inputs)
-
-init = tf.global_variables_initializer()
-sess.run(init)
-
-cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=nn_model, labels=labels))
-train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
-
-
-for step in xrange(STEPS):
-  sess.run(
-      train_step,
-      feed_dict={
-          inputs: sess.run(train_tensor),
-          labels: sess.run(train_label_tensor)
-      }
+  train_tensor = concat_wide_columns(
+      generate_wide_columns(train_in_tensor)
   )
 
-  if step % 10 == 0:
-    print('Step number {} of {} done'.format(step, STEPS))
+  test_tensor = concat_wide_columns(
+      generate_wide_columns(test_in_tensor)
+  )
 
-correct_prediction = tf.equal(tf.argmax(nn_model, 1), tf.argmax(labels, 1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+  sess = tf.Session()
 
-print('\nAccuracy {0:.2f}%'.format(
-    100 * sess.run(
-        accuracy,
+  inputs = tf.placeholder(tf.float32, shape=[None, 53])
+  labels = tf.placeholder(tf.float32, shape=[None, 2])
+
+  nn_model = model.inference(inputs)
+  init = tf.global_variables_initializer()
+  sess.run(init)
+
+  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=nn_model, labels=labels))
+  train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+
+  for step in xrange(parse_args.max_steps):
+    sess.run(
+        train_step,
         feed_dict={
-            inputs: sess.run(test_tensor),
-            labels: sess.run(test_label_tensor)
-        })))
+            inputs: sess.run(train_tensor),
+            labels: sess.run(train_label_tensor)
+        }
+    )
+    if step % 10 == 0:
+      print('Step number {} of {} done'.format(step, parse_args.max_steps))
+
+  correct_prediction = tf.equal(tf.argmax(nn_model, 1), tf.argmax(labels, 1))
+  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+  print('\nAccuracy {0:.2f}%'.format(
+      100 * sess.run(
+          accuracy,
+          feed_dict={
+              inputs: sess.run(test_tensor),
+              labels: sess.run(test_label_tensor)
+          })))
