@@ -115,6 +115,29 @@ def generate_wide_columns(input_columns):
 
   return wide_columns
 
+
+def concat_wide_columns(wide_columns):
+  """Concat the tensors from wide columns."""
+
+  (edu_occ, age_race_occ, native_country_occ, gender,
+   native_country, education, occupation, workclass,
+   marital_status, relationship, age_bucket) = wide_columns
+
+  dense_tensors = [
+      sparse_to_dense(gender, 2),
+      sparse_to_dense(workclass, 9),
+      sparse_to_dense(native_country, 42)
+  ]
+
+  return tf.concat(dense_tensors, 1)
+
+
+def sparse_to_dense(sparse_tensor, vocab_size):
+  """Convert the sparse to dense tensor."""
+  dense_tensor = tf.sparse_to_indicator(sparse_tensor, vocab_size)
+  dense_tensor = tf.cast(dense_tensor, tf.int32)
+  return dense_tensor
+
 # input training data with labels
 train_input, train_label = read_input_data('widendeep/adult.data')
 train_in_tensor, train_label_tensor = generate_input(train_input, train_label)
@@ -123,13 +146,18 @@ train_in_tensor, train_label_tensor = generate_input(train_input, train_label)
 test_input, test_label = read_input_data('widendeep/adult.test')
 test_in_tensor, test_label_tensor = generate_input(test_input, test_label)
 
-wide_columns_train = generate_wide_columns(train_in_tensor)
-wide_columns_test = generate_wide_columns(test_in_tensor)
+train_tensor = concat_wide_columns(
+    generate_wide_columns(train_in_tensor)
+)
+
+test_tensor = concat_wide_columns(
+    generate_wide_columns(test_in_tensor)
+)
 
 sess = tf.Session()
 
-inputs = tf.placeholder(tf.float32, shape=[None, 2])
-labels = tf.placeholder(tf.int32, shape=[None, 2])
+inputs = tf.placeholder(tf.float32, shape=[None, 53])
+labels = tf.placeholder(tf.float32, shape=[None, 2])
 
 nn_model = model.inference(inputs)
 
@@ -141,25 +169,24 @@ train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
 
 
 for step in xrange(STEPS):
-  dense_tensor = tf.sparse_to_indicator(wide_columns_train[3], 2)
-  dense_tensor = tf.cast(dense_tensor, tf.int32)
-  train_input = sess.run(dense_tensor)
-
-  sess.run(train_step, feed_dict={inputs: train_input, labels: sess.run(train_label_tensor)})
+  sess.run(
+      train_step,
+      feed_dict={
+          inputs: sess.run(train_tensor),
+          labels: sess.run(train_label_tensor)
+      }
+  )
 
   if step % 10 == 0:
     print('Step number {} of {} done'.format(step, STEPS))
 
 correct_prediction = tf.equal(tf.argmax(nn_model, 1), tf.argmax(labels, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-test_input = tf.sparse_to_indicator(wide_columns_test[3], 2)
-test_input = tf.cast(test_input, tf.int32)
-test_input = sess.run(test_input)
 
 print('\nAccuracy {0:.2f}%'.format(
     100 * sess.run(
         accuracy,
         feed_dict={
-            inputs: test_input,
+            inputs: sess.run(test_tensor),
             labels: sess.run(test_label_tensor)
         })))
