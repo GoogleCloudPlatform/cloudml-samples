@@ -137,6 +137,43 @@ def sparse_to_dense(sparse_tensor, vocab_size):
   dense_tensor = tf.cast(dense_tensor, tf.int32)
   return dense_tensor
 
+def read_input_tensor(input_file):
+  inp, label = read_input_data(input_file)
+  in_tensor, label_tensor = generate_input(inp, label)
+  return concat_wide_columns(generate_wide_columns(in_tensor)), label_tensor
+
+def training(session, model, labels, max_steps, inp_tensor, label_tensor):
+  init = tf.global_variables_initializer()
+  session.run(init)
+
+  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=model, labels=labels))
+  train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+
+  for step in xrange(max_steps):
+    session.run(
+        train_step,
+        feed_dict={
+            inputs: session.run(inp_tensor),
+            labels: session.run(label_tensor)
+        }
+    )
+    if step % 10 == 0:
+      print('Step number {} of {} done'.format(step, max_steps))
+
+  return train_step
+
+def evaluation(session, model, labels, inp_tensor, label_tensor):
+  correct_prediction = tf.equal(tf.argmax(model, 1), tf.argmax(labels, 1))
+  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+  print('\nAccuracy {0:.2f}%'.format(
+      100 * session.run(
+          accuracy,
+          feed_dict={
+              inputs: session.run(inp_tensor),
+              labels: session.run(label_tensor)
+          })))
+
+
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument(
@@ -146,51 +183,20 @@ if __name__ == "__main__":
   parser.add_argument('--max_steps', type=int, default=300)
   parse_args = parser.parse_args()
 
-  # input training data with labels
-  train_input, train_label = read_input_data(parse_args.train_data_path)
-  train_in_tensor, train_label_tensor = generate_input(train_input, train_label)
+  train_tensor, train_lab_tensor = read_input_tensor(parse_args.train_data_path)
+  eval_tensor, eval_lab_tensor = read_input_tensor(parse_args.eval_data_path)
 
-  # input test data with labels
-  test_input, test_label = read_input_data(parse_args.eval_data_path)
-  test_in_tensor, test_label_tensor = generate_input(test_input, test_label)
-
-  train_tensor = concat_wide_columns(
-      generate_wide_columns(train_in_tensor)
-  )
-
-  test_tensor = concat_wide_columns(
-      generate_wide_columns(test_in_tensor)
-  )
-
-  sess = tf.Session()
+  session = tf.Session()
 
   inputs = tf.placeholder(tf.float32, shape=[None, 53])
   labels = tf.placeholder(tf.float32, shape=[None, 2])
-
   nn_model = model.inference(inputs)
-  init = tf.global_variables_initializer()
-  sess.run(init)
 
-  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=nn_model, labels=labels))
-  train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+  training(
+      session, nn_model, labels,
+      parse_args.max_steps, train_tensor, train_lab_tensor
+  )
 
-  for step in xrange(parse_args.max_steps):
-    sess.run(
-        train_step,
-        feed_dict={
-            inputs: sess.run(train_tensor),
-            labels: sess.run(train_label_tensor)
-        }
-    )
-    if step % 10 == 0:
-      print('Step number {} of {} done'.format(step, parse_args.max_steps))
-
-  correct_prediction = tf.equal(tf.argmax(nn_model, 1), tf.argmax(labels, 1))
-  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-  print('\nAccuracy {0:.2f}%'.format(
-      100 * sess.run(
-          accuracy,
-          feed_dict={
-              inputs: sess.run(test_tensor),
-              labels: sess.run(test_label_tensor)
-          })))
+  evaluation(
+      session, nn_model, labels, eval_tensor, eval_lab_tensor
+  )
