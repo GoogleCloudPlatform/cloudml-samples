@@ -24,14 +24,6 @@ def init_variable(shape):
   weights = tf.random_normal(shape, stddev=0.1)
   return tf.Variable(weights)
 
-def build_train_graph(input_tensors):
-  return None
-
-
-def build_eval_graph(input_tensors):
-  return None
-
-
 def inference(x, hidden_units=[100,70,50,25], y_units=2):
   """Create a Feed forward network with hidden units ReLU and SoftMax.
 
