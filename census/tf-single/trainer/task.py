@@ -39,9 +39,9 @@ CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss', 'hour
 
 LABEL_COL = 'income_bracket'
 
-def read_input_data(file_name):
+def read_input_data(file_name, skiprows=None):
   """Read the input data as a pandas DataFrame of features and labels."""
-  input_df = pd.read_csv(file_name, names=CSV_COLUMNS)
+  input_df = pd.read_csv(file_name, names=CSV_COLUMNS, skiprows=skiprows)
 
   # replace missing values with np.nan and ignore
   #input_df = input_df.replace([' ?'], [np.nan])
@@ -137,8 +137,9 @@ def sparse_to_dense(sparse_tensor, vocab_size):
   dense_tensor = tf.cast(dense_tensor, tf.int32)
   return dense_tensor
 
-def read_input_tensor(input_file):
-  inp, label = read_input_data(input_file)
+def read_input_tensor(input_file, skiprows=None):
+  print('skip rows ',skiprows)
+  inp, label = read_input_data(input_file, skiprows)
   in_tensor, label_tensor = generate_input(inp, label)
   return concat_wide_columns(generate_wide_columns(in_tensor)), label_tensor
 
@@ -184,7 +185,8 @@ if __name__ == "__main__":
   parse_args = parser.parse_args()
 
   train_tensor, train_lab_tensor = read_input_tensor(parse_args.train_data_path)
-  eval_tensor, eval_lab_tensor = read_input_tensor(parse_args.eval_data_path)
+  eval_tensor, eval_lab_tensor = read_input_tensor(parse_args.eval_data_path,
+                                                   skiprows=[0])
 
   session = tf.Session()
 
