@@ -138,7 +138,6 @@ def sparse_to_dense(sparse_tensor, vocab_size):
   return dense_tensor
 
 def read_input_tensor(input_file, skiprows=None):
-  print('skip rows ',skiprows)
   inp, label = read_input_data(input_file, skiprows)
   in_tensor, label_tensor = generate_input(inp, label)
   return concat_wide_columns(generate_wide_columns(in_tensor)), label_tensor
