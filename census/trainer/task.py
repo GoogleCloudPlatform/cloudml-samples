@@ -25,7 +25,7 @@ def generate_experiment_fn(train_file,
         eval_file, batch_size=eval_batch_size)
     return Experiment(
         model.build_estimator(
-            output_dir,
+            job_dir,
             embedding_size=embedding_size,
             hidden_units=hidden_units
         ),
@@ -105,7 +105,7 @@ if __name__ == '__main__':
       default=[100, 70, 50, 25]
   )
   parser.add_argument(
-      '--output-dir',
+      '--job_dir',
       help='GCS location to write checkpoints and export models',
       required=True
   )
@@ -126,15 +126,15 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
   arguments = args.__dict__
-  output_dir = arguments.pop('output_dir')
+  job_dir = arguments.pop('job_dir')
   # Append trial_id to path if we are doing hptuning
   # This code can be removed if you are not using hyperparameter tuning
-  output_dir = os.path.join(
-      output_dir,
+  job_dir = os.path.join(
+      job_dir,
       json.loads(
           os.environ.get('TF_CONFIG', '{}')
-      ).get('task', {}).get('trail', '')
+      ).get('task', {}).get('trial', '')
   )
 
   # Run the training job
-  learn_runner.run(generate_experiment_fn(**arguments), output_dir)
+  learn_runner.run(generate_experiment_fn(**arguments), job_dir)

@@ -15,9 +15,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.contrib import layers
-from tensorflow.contrib.learn.python.learn.utils import (
-    saved_model_export_utils, input_fn_utils)
-
+from tensorflow.contrib.learn.python.learn.utils import input_fn_utils
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -120,9 +118,31 @@ def build_estimator(model_dir, embedding_size=8, hidden_units=None):
       dnn_hidden_units=hidden_units or [100, 70, 50, 25])
 
 
-serving_input_fn = input_fn_utils.build_parsing_serving_input_fn(
-    layers.create_feature_spec_for_parsing(INPUT_COLUMNS)
-)
+def is_sparse(column):
+  return isinstance(column, layers.feature_column._SparseColumn)
+
+
+def feature_columns_to_placeholders(feature_columns, default_batch_size=None):
+    return {
+        column.name: tf.placeholder(
+            tf.string if is_sparse(column) else tf.float32,
+            [default_batch_size]
+        )
+        for column in feature_columns
+    }
+
+
+def serving_input_fn():
+    feature_placeholders = feature_columns_to_placeholders(INPUT_COLUMNS)
+    features = {
+      key: tf.expand_dims(tensor, -1)
+      for key, tensor in feature_placeholders.items()
+    }
+    return input_fn_utils.InputFnOps(
+      features,
+      None,
+      feature_placeholders
+    )
 
 
 def generate_input_fn(filename, num_epochs=None, batch_size=40):
@@ -131,18 +151,13 @@ def generate_input_fn(filename, num_epochs=None, batch_size=40):
         [filename], num_epochs=num_epochs)
     reader = tf.TextLineReader()
     _, value = reader.read_up_to(filename_queue, num_records=batch_size)
-
     value_column = tf.expand_dims(value, -1)
 
     columns = tf.decode_csv(value_column, record_defaults=DEFAULTS)
-
     features = dict(zip(CSV_COLUMNS, columns))
 
     # remove the fnlwgt key, which is not used
     features.pop('fnlwgt', None)
-
     income_int = tf.to_int32(tf.equal(features.pop(LABEL_COLUMN), ' >50K'))
-
     return features, income_int
-
   return _input_fn
