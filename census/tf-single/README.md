@@ -12,13 +12,16 @@ Dataset](https://www.tensorflow.org/tutorials/wide/#reading_the_census_data) lin
 
 ### Local run
 ```
-python trainer/task.py
-usage: task.py [-h] --train_data_path TRAIN_DATA_PATH --eval_data_path
-               EVAL_DATA_PATH [--max_steps MAX_STEPS]
+python trainer/task.py --train_data_path TRAIN_DATA_PATH
+                       --eval_data_path EVAL_DATA_PATH
+                       [--max_steps MAX_STEPS]
 ```
 
 ### gcloud local run
 ```
-gcloud beta ml local train --package-path=trainer --module-name=trainer.task --
---train_data_path TRAIN_DATA_PATH --eval_data_path EVAL_DATA_PATH --max_steps MAX_STEPS
+gcloud beta ml local train --package-path=trainer
+                           --module-name=trainer.task
+                           -- --train_data_path TRAIN_DATA_PATH
+                           --eval_data_path EVAL_DATA_PATH
+                           [--max_steps MAX_STEPS]
 ```
