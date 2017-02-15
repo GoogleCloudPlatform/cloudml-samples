@@ -126,7 +126,7 @@ def feature_columns_to_placeholders(feature_columns, default_batch_size=None):
     return {
         column.name: tf.placeholder(
             tf.string if is_sparse(column) else tf.float32,
-            [default_batch_size, 1]
+            [default_batch_size]
         )
         for column in feature_columns
     }
@@ -134,8 +134,15 @@ def feature_columns_to_placeholders(feature_columns, default_batch_size=None):
 
 def serving_input_fn():
     feature_placeholders = feature_columns_to_placeholders(INPUT_COLUMNS)
-    print(feature_placeholders)
-    return input_fn_utils.InputFnOps(feature_placeholders, None, feature_placeholders)
+    features = {
+      key: tf.expand_dims(tensor, -1)
+      for key, tensor in feature_placeholders.items()
+    }
+    return input_fn_utils.InputFnOps(
+      features,
+      None,
+      feature_placeholders
+    )
 
 
 def generate_input_fn(filename, num_epochs=None, batch_size=40):
@@ -145,11 +152,10 @@ def generate_input_fn(filename, num_epochs=None, batch_size=40):
     reader = tf.TextLineReader()
     _, value = reader.read_up_to(filename_queue, num_records=batch_size)
     value_column = tf.expand_dims(value, -1)
-  
+
     columns = tf.decode_csv(value_column, record_defaults=DEFAULTS)
-  
     features = dict(zip(CSV_COLUMNS, columns))
-  
+
     # remove the fnlwgt key, which is not used
     features.pop('fnlwgt', None)
     income_int = tf.to_int32(tf.equal(features.pop(LABEL_COLUMN), ' >50K'))
