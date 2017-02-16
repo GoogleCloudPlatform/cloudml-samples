@@ -4,10 +4,10 @@ import os
 
 import model
 
-from tensorflow.contrib.learn import Experiment
 from tensorflow.contrib.learn.python.learn import learn_runner
 from tensorflow.contrib.learn.python.learn.utils import (
     saved_model_export_utils)
+from tensorflow.contrib import metrics, learn
 
 
 def generate_experiment_fn(train_file,
@@ -23,7 +23,7 @@ def generate_experiment_fn(train_file,
         train_file, num_epochs=num_epochs, batch_size=train_batch_size)
     eval_input = model.generate_input_fn(
         eval_file, batch_size=eval_batch_size)
-    return Experiment(
+    return learn.Experiment(
         model.build_estimator(
             job_dir,
             embedding_size=embedding_size,
@@ -31,6 +31,12 @@ def generate_experiment_fn(train_file,
         ),
         train_input_fn=train_input,
         eval_input_fn=eval_input,
+        eval_metrics={
+            'training/hptuning/metric': learn.MetricSpec(
+                metric_fn=metrics.streaming_accuracy,
+                prediction_key='logits'
+            )
+        },
         export_strategies=[saved_model_export_utils.make_export_strategy(
             model.serving_input_fn,
             default_output_alternative_key=None,

@@ -23,7 +23,7 @@ And use the local locations whereever the environment variables above are used.
 
 ### Installing Dependencies
 
-The local training environment for Cloud ML uses your local python installation. So you will need to have Python 2.7 and install TensorFlow following the instructions [here](https://www.tensorflow.org/versions/r1.0/get_started/os_setup). (Note please ensure that you install `tensorflow>=1.0.0-rc2`)
+The local training environment for Cloud ML uses your local python installation. So you will need to have Python 2.7 and install TensorFlow following the instructions [here](https://www.tensorflow.org/get_started/os_setup).
 
 ### Running Training
 
