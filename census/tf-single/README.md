@@ -22,9 +22,11 @@ There are two options for the virtual environments:
 Install the following dependencies:
 
  * If using virtual env:
-   * Create virtual environment `virtualenv env`
-   * Activate env `source env/bin/activate`
- * If using Miniconda see [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up)
+   * Create virtual environment `virtualenv single-tf`
+   * Activate env `source single-tf/bin/activate`
+ * If using Miniconda:
+   * Create conda environment `conda create --name single-tf python=2.7`
+   * Activate env `source activate single-tf`
  * Install [TensorFlow](https://www.tensorflow.org/install/)
  * Install [Pandas](http://pandas.pydata.org/pandas-docs/stable/install.html#installing-from-pypi)
   
