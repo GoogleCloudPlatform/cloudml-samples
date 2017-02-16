@@ -12,12 +12,19 @@ Dataset](https://www.tensorflow.org/tutorials/wide/#reading_the_census_data) lin
  * Evaluation file is `adult.test` 
 
 
+## Virtual environment
+There are two options for the virtual environments:
+ * Install [Virtual](https://virtualenv.pypa.io/en/stable/) env
+ * Install [Miniconda](https://conda.io/miniconda.html)
+
+
 ## Install dependencies
 Install the following dependencies:
 
- * Install [Virtual](https://virtualenv.pypa.io/en/stable/) env
+ * Using virtual env
    * Create virtual environment `virtualenv env`
    * Activate env `source env/bin/activate`
+ * Using Miniconda see [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up) under `local` tab
  * Install [TensorFlow](https://www.tensorflow.org/install/)
  * Install [Pandas](http://pandas.pydata.org/pandas-docs/stable/install.html#installing-from-pypi)
   
