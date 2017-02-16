@@ -21,7 +21,11 @@ import pandas as pd
 from tensorflow.contrib.layers.python.ops import sparse_feature_cross_op
 from tensorflow.contrib.layers.python.ops import bucketization_op
 
+from StringIO import StringIO
+
 import model
+import os
+#from google.cloud import storage
 
 #https://www.tensorflow.org/tutorials/wide_and_deep/
 #https://github.com/tensorflow/tensorflow/blob/master/tensorflow/contrib/layers/python/layers/feature_column.py
@@ -39,9 +43,24 @@ CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss', 'hour
 
 LABEL_COL = 'income_bracket'
 
+
+## TODO: Hacked up the code. Clean it later.
+def read_local_or_gcs(file_name):
+  """Read local or gcs file."""
+  if file_name.startswith('gs://'):
+    os.system('gsutil cp '+file_name+' '+os.path.basename(file_name))
+    return open(os.path.basename(file_name)).read()
+    #client = storage.Client()
+    #bucket = client.get_bucket(file_name.split('/')[2])
+    #blob = bucket.get_blob('/'.join(file_name.split('/')[3:]))
+    #return blob.download_as_string()
+  else:
+    local_file = open(file_name, 'r')
+    return local_file.read()
+
 def read_input_data(file_name, skiprows=None):
   """Read the input data as a pandas DataFrame of features and labels."""
-  input_df = pd.read_csv(file_name, names=CSV_COLUMNS, skiprows=skiprows)
+  input_df = pd.read_csv(StringIO(read_local_or_gcs(file_name)), names=CSV_COLUMNS, skiprows=skiprows)
 
   label_df = input_df.pop(LABEL_COL)
   return (input_df, label_df)
@@ -194,7 +213,7 @@ if __name__ == "__main__":
       help='Evaluation file location')
   parser.add_argument('--max_steps', type=int, default=200,
       help='Maximum number of training steps to perform')
-  parse_args = parser.parse_args()
+  parse_args, unknown = parser.parse_known_args()
 
   train_tensor, train_lab_tensor = read_input_tensor(parse_args.train_data_path)
   eval_tensor, eval_lab_tensor = read_input_tensor(parse_args.eval_data_path,

@@ -36,19 +36,33 @@ python trainer/task.py -h
 
 ### Local run
 ```
-python trainer/task.py --train_data_path TRAIN_DATA_PATH
-                       --eval_data_path EVAL_DATA_PATH
+python trainer/task.py --train_data_path TRAIN_DATA_PATH \
+                       --eval_data_path EVAL_DATA_PATH \
                        [--max_steps MAX_STEPS]
 ```
 
 ### gcloud local run
 ```
-gcloud beta ml local train --package-path=trainer
-                           --module-name=trainer.task
-                           -- --train_data_path TRAIN_DATA_PATH
-                           --eval_data_path EVAL_DATA_PATH
+gcloud beta ml local train --package-path=trainer \
+                           --module-name=trainer.task \
+                           -- \
+                           --train_data_path TRAIN_DATA_PATH \
+                           --eval_data_path EVAL_DATA_PATH \
                            [--max_steps MAX_STEPS]
 ```
 
+### gcloud cloud ml run
+```
+gcloud beta ml jobs submit training $JOB_NAME \
+                                    --job-dir $GCS_LOCATION_OUTPUT \
+                                    --runtime-version 1.0 \
+                                    --module-name trainer.task \
+                                    --package-path trainer/ \
+                                    --region us-central1 \
+                                    -- \
+                                    --train_data_path $TRAIN_GCS_FILE \     
+                                    --eval_data_path $EVAL_GCS_FILE \
+                                    --max_steps 200
+```
 ## Accuracy
-You should see an accuracy of `82.54%` for default number of training steps.
+You should see an accuracy of `82.84%` for default number of training steps.
