@@ -43,3 +43,6 @@ gcloud beta ml local train --package-path=trainer
                            --eval_data_path EVAL_DATA_PATH
                            [--max_steps MAX_STEPS]
 ```
+
+## Accuracy
+You should see an accuracy of `83.25%` for default number of training steps.
