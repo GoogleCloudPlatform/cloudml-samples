@@ -125,7 +125,12 @@ def concat_wide_columns(wide_columns):
   dense_tensors = [
       sparse_to_dense(gender, 2),
       sparse_to_dense(workclass, 9),
-      sparse_to_dense(native_country, 42)
+      sparse_to_dense(native_country, 42),
+      sparse_to_dense(education, 16),
+      sparse_to_dense(occupation, 15),
+      sparse_to_dense(workclass, 9),
+      sparse_to_dense(marital_status, 7),
+      sparse_to_dense(relationship, 6)
   ]
 
   return tf.concat(dense_tensors, 1)
@@ -182,7 +187,7 @@ if __name__ == "__main__":
   parser.add_argument(
       '--eval_data_path', required=True, type=str,
       help='Evaluation file location')
-  parser.add_argument('--max_steps', type=int, default=300,
+  parser.add_argument('--max_steps', type=int, default=200,
       help='Maximum number of training steps to perform')
   parse_args = parser.parse_args()
 
@@ -192,7 +197,7 @@ if __name__ == "__main__":
 
   session = tf.Session()
 
-  inputs = tf.placeholder(tf.float32, shape=[None, 53])
+  inputs = tf.placeholder(tf.float32, shape=[None, 106])
   labels = tf.placeholder(tf.float32, shape=[None, 2])
   nn_model = model.inference(inputs)
 
