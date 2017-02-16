@@ -43,9 +43,6 @@ def read_input_data(file_name, skiprows=None):
   """Read the input data as a pandas DataFrame of features and labels."""
   input_df = pd.read_csv(file_name, names=CSV_COLUMNS, skiprows=skiprows)
 
-  # replace missing values with np.nan and ignore
-  #input_df = input_df.replace([' ?'], [np.nan])
-
   label_df = input_df.pop(LABEL_COL)
   return (input_df, label_df)
 
@@ -78,11 +75,12 @@ def generate_input(input_df, label_df):
   )
 
 
-def sparse_cross(feature_tensors, name='cross'):
+def sparse_cross(feature_tensors, num_buckets, name='cross'):
   """Sparse feature cross of the feature SparseTensors."""
   return sparse_feature_cross_op.sparse_feature_cross(
       feature_tensors,
       hashed_output=True,
+      num_buckets=num_buckets,
       hash_key=tf.contrib.layers.SPARSE_FEATURE_CROSS_DEFAULT_HASH_KEY,
       name=name
   )
@@ -99,9 +97,15 @@ def generate_wide_columns(input_columns):
   age_bucket = bucketization_op.bucketize(age, [18, 25, 30, 35, 40, 45, 50, 55, 60, 65])
 
   wide_columns = [
-      sparse_cross([education, occupation], name='edu_occ'),
-      sparse_cross([age_bucket, race, occupation], name='age_race_occ'),
-      sparse_cross([native_country, occupation], name='native_country_occ'),
+      sparse_cross([education, occupation], 15 * 16, name='edu_occ'),
+      sparse_cross(
+        [age_bucket, race, occupation],
+        10 * 5 * 15,
+        name='age_race_occ'),
+      sparse_cross(
+        [native_country, occupation],
+        42 * 15,
+        name='native_country_occ'),
       gender,
       native_country,
       education,
@@ -123,6 +127,7 @@ def concat_wide_columns(wide_columns):
    marital_status, relationship, age_bucket) = wide_columns
 
   dense_tensors = [
+      sparse_to_dense(edu_occ, 15 * 16),
       sparse_to_dense(gender, 2),
       sparse_to_dense(workclass, 9),
       sparse_to_dense(native_country, 42),
@@ -197,7 +202,7 @@ if __name__ == "__main__":
 
   session = tf.Session()
 
-  inputs = tf.placeholder(tf.float32, shape=[None, 106])
+  inputs = tf.placeholder(tf.float32, shape=[None, 346])
   labels = tf.placeholder(tf.float32, shape=[None, 2])
   nn_model = model.inference(inputs)
 
