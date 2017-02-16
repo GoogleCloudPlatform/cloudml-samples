@@ -6,7 +6,10 @@ the single node TF vanilla version for Census Income Dataset.
 
 ## Download the data
 Follow the [Census Income
-Dataset](https://www.tensorflow.org/tutorials/wide/#reading_the_census_data) link to download the data.
+Dataset](https://www.tensorflow.org/tutorials/wide/#reading_the_census_data) link to download the data. You can also download directly from [here](https://archive.ics.uci.edu/ml/datasets/Census+Income).
+
+ * Training file is `adult.data`
+ * Evaluation file is `adult.test` 
 
 
 ## Install dependencies
