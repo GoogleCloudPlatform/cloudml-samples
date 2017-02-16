@@ -172,6 +172,7 @@ def read_input_tensor(input_file, skiprows=None):
   return concat_wide_columns(generate_wide_columns(in_tensor)), label_tensor
 
 def training(session, model, labels, max_steps, inp_tensor, label_tensor):
+  """Perform the training step on training input tensor."""
   init = tf.global_variables_initializer()
   session.run(init)
 
@@ -192,6 +193,7 @@ def training(session, model, labels, max_steps, inp_tensor, label_tensor):
   return train_step
 
 def evaluation(session, model, labels, inp_tensor, label_tensor):
+  """Perform the evaluation step to calculate accuracy."""
   correct_prediction = tf.equal(tf.argmax(model, 1), tf.argmax(labels, 1))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   print('\nAccuracy {0:.2f}%'.format(
@@ -221,15 +223,20 @@ if __name__ == "__main__":
 
   session = tf.Session()
 
+  # Placeholder for inputs and labels
+  # input shape = [None, 364]
+  # label shape = [None, 2]
   inputs = tf.placeholder(tf.float32, shape=[None, 346])
   labels = tf.placeholder(tf.float32, shape=[None, 2])
   nn_model = model.inference(inputs)
 
+  # Start training
   training(
       session, nn_model, labels,
       parse_args.max_steps, train_tensor, train_lab_tensor
   )
 
+  # Start evaluation
   evaluation(
       session, nn_model, labels, eval_tensor, eval_lab_tensor
   )
