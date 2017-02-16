@@ -44,21 +44,6 @@ You should see very verbose output, ending with a line about saving your model.
 
 To ensure that your model works with Cloud MLs distributed execution environment you can add the `--distributed` flag (before the `--` that seperates user args from CLI args). You will see output from a number of different processes which are communicating through gRPC!
 
-## Local Prediction
-
-If you wish, you may validate that the model will accept the recommended inputs when you deploy it to the prediction service. You can do this with the `gcloud beta ml local predict` tool. First you must install the Cloud ML SDK.
-
-```
-pip install --upgrade --force-reinstall \
-    https://storage.googleapis.com/cloud-ml/sdk/cloudml.latest.tar.gz
-```
-
-Then run:
-
-```
-gcloud beta ml local predict --model-dir=output/export/Servo/<TIMESTAMP>/ --json-instances=test.json
-```
-
 ## Run On The Cloud
 
 NOTE: Cloud ML Training Jobs are regional. If you do not want to use the us-central1 region, you will need to copy the training data to a regional bucket that matches the region you wish to choose.
