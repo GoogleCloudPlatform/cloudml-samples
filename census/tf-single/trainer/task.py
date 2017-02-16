@@ -177,10 +177,13 @@ def evaluation(session, model, labels, inp_tensor, label_tensor):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument(
-      '--train_data_path', required=True, type=str)
+      '--train_data_path', required=True, type=str,
+      help='Training file location')
   parser.add_argument(
-      '--eval_data_path', required=True, type=str)
-  parser.add_argument('--max_steps', type=int, default=300)
+      '--eval_data_path', required=True, type=str,
+      help='Evaluation file location')
+  parser.add_argument('--max_steps', type=int, default=300,
+      help='Maximum number of training steps to perform')
   parse_args = parser.parse_args()
 
   train_tensor, train_lab_tensor = read_input_tensor(parse_args.train_data_path)
