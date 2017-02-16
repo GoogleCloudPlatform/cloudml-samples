@@ -63,7 +63,11 @@ gcloud beta ml local predict --model-dir=output/export/Servo/<TIMESTAMP>/ --json
 
 NOTE: Cloud ML Training Jobs are regional. If you do not want to use the us-central1 region, you will need to copy the training data to a regional bucket that matches the region you wish to choose.
 
-Below we will use `OUTPUT_PATH` to represent the fully qualified GCS location for model checkpoints, summaries, and exports. 
+Below we will use `OUTPUT_PATH` to represent the fully qualified GCS location for model checkpoints, summaries, and exports. So for example:
+
+```
+OUTPUT_PATH=gs://<my-bucket>/path/to/my/models/run3
+```
 
 ### Single Worker
 
@@ -73,7 +77,7 @@ gcloud beta ml jobs submit training census \
     --runtime-version 1.0 \
     --module-name trainer.task \
     --package-path trainer/ \
-    --region us-central1
+    --region us-central1 \
     -- \
     --train-file gs://tf-ml-workshop/widendeep/adult.data \
     --eval-file gs://tf-ml-workshop/widendeep/adult.test \
@@ -96,10 +100,17 @@ Once your training job has finished, you can use the exported model to create a 
 gcloud beta ml models create census --regions us-central1
 ```
 
-Then create a version for that model:
+Then we'll look up the exact path that your exported trained model binaries live in:
 
 ```
-gcloud beta ml versions create v1 --model census --origin $OUTPUT_PATH/export
+gsutil ls -r $OUTPUT_PATH/export
+```
+
+You should see a directory named `$OUTPUT_PATH/export/Servo/<timestamp>`. Copy this directory path (without the `:` at the end) and set the environment variable `MODEL_BINARIES` to it's value. Then run:
+
+
+```
+gcloud beta ml versions create v1 --model census --origin $MODEL_BINARIES
 ```
 
 You can now send prediction requests to the API. To test this out you can use the `gcloud beta ml predict` tool:
