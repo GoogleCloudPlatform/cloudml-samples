@@ -1,4 +1,4 @@
-# Census: Single node TF vanilla sample (WIP but usable)
+# Census: Single node TF vanilla sample
 
 This sample uses the [TensorFlow](https://tensorflow.org) low level APIs and
 [Google Cloud Machine Learning API](https://cloud.google.com/ml) to demonstrate
