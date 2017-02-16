@@ -13,11 +13,8 @@ Dataset](https://www.tensorflow.org/tutorials/wide/#reading_the_census_data) lin
 Install the following dependencies:
 
  * Install [Virtual](https://virtualenv.pypa.io/en/stable/) env
-   * Create virtual environment
-      ```
-      virtualenv env
-      source env/bin/activate
-      ```
+   * Create virtual environment `virtualenv env`
+   * Activate env `source env/bin/activate`
  * Install [TensorFlow](https://www.tensorflow.org/install/)
  * Install [Pandas](http://pandas.pydata.org/pandas-docs/stable/install.html#installing-from-pypi)
   
