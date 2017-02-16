@@ -23,6 +23,10 @@ Install the following dependencies:
   
 
 ## How to run the code
+### Help
+```
+python trainer/task.py -h
+```
 
 ### Local run
 ```
