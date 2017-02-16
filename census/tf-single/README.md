@@ -20,7 +20,8 @@ Install the following dependencies:
    * source env/bin/activate
  * Install [TensorFlow](https://www.tensorflow.org/install/)
  * Install [Pandas](http://pandas.pydata.org/pandas-docs/stable/install.html#installing-from-pypi)
- * 
+  
+
 ## How to run the code
 
 ### Local run
