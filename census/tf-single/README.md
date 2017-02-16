@@ -15,18 +15,15 @@ Dataset](https://www.tensorflow.org/tutorials/wide/#reading_the_census_data) lin
 ## Virtual environment
 There are two options for the virtual environments:
  * Install [Virtual](https://virtualenv.pypa.io/en/stable/) env
+   * Create virtual environment `virtualenv single-tf`
+   * Activate env `source single-tf/bin/activate`
  * Install [Miniconda](https://conda.io/miniconda.html)
+   * Create conda environment `conda create --name single-tf python=2.7`
+   * Activate env `source activate single-tf`
 
 
 ## Install dependencies
 Install the following dependencies:
-
- * If using virtual env:
-   * Create virtual environment `virtualenv single-tf`
-   * Activate env `source single-tf/bin/activate`
- * If using Miniconda:
-   * Create conda environment `conda create --name single-tf python=2.7`
-   * Activate env `source activate single-tf`
  * Install [TensorFlow](https://www.tensorflow.org/install/)
  * Install [Pandas](http://pandas.pydata.org/pandas-docs/stable/install.html#installing-from-pypi)
   
