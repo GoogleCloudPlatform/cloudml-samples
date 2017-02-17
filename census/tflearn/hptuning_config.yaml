@@ -1,8 +1,8 @@
 trainingInput:
     hyperparameters:
         goal: MAXIMIZE
-        maxTrials: 50
-        maxParallelTrials: 3
+        maxTrials: 10
+        maxParallelTrials: 2
         params:
           - parameterName: embedding-size
             type: integer

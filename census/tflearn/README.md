@@ -2,6 +2,11 @@
 
 This sample walks you through training and prediction, including distributed training, and hyperparameter tuning.
 
+All commands below assume you have cloned this repository and changed to the currend directory. It also assumes you have:
+
+1. Installed the the [Google Cloud SDK](https://cloud.google.com/sdk)
+2. (For Cloud Training) [Set up the Google Cloud Machine Learning API](https://cloud.google.com/ml/docs/how-tos/getting-set-up) NOTE: You can safely ignore the "Setting Up Your Environment" section. 
+
 ## Local Training
 
 ### Getting Data
@@ -15,6 +20,7 @@ EVAL_FILE=gs://tf-ml-workshop/widendeep/adult.test
 
 To use locally simply copy them down with gsutil:
 ```
+mkdir data
 gsutil cp gs://tf-ml-workshop/widendeep/* data/
 ```
 
@@ -71,7 +77,7 @@ gcloud beta ml jobs submit training census \
 
 ### Distributed
 
-TF.Learn models require no code changes to be distributed in Cloud ML. Simply add the `--scale-tier STANDARD_1` flag (or any of the other scale tiers above basic). (Again, be sure to add this above the `--` flag).
+TF.Learn models require no code changes to be distributed in Cloud ML. Simply add the `--scale-tier STANDARD_1` flag (or any of the other [scale tiers](https://cloud.google.com/ml/reference/rest/v1beta1/projects.jobs#scaletier) above basic). (Again, be sure to add this above the `--` flag).
 
 ### HyperParameter Tuning
 
@@ -84,7 +90,9 @@ The necessary code changes to enable hyperparameter tuning are minimal, and have
 2. Make sure to use the environment variable `TF_CONFIG['task']['trial']` to scope your model directories so that different replicas do not write and read checkpoints from the same locations.
 
 
-## Create a Prediction Server
+## Run Predictions
+
+### Create A Prediction Service
 
 Once your training job has finished, you can use the exported model to create a prediction server. To do this you first create a model:
 
@@ -102,8 +110,10 @@ You should see a directory named `$OUTPUT_PATH/export/Servo/<timestamp>`. Copy t
 
 
 ```
-gcloud beta ml versions create v1 --model census --origin $MODEL_BINARIES
+gcloud beta ml versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.0
 ```
+
+### Run Online Predictions
 
 You can now send prediction requests to the API. To test this out you can use the `gcloud beta ml predict` tool:
 
@@ -112,3 +122,17 @@ gcloud beta ml predict --model census --version v1 --json-instances test.json
 ```
 
 You should see a response with the predicted labels of the examples!
+
+### Run Batch Prediction
+
+If you have large amounts of data, and no latency requirements on receiving prediction results, you can submit a prediction job to the API. This uses the same format as online prediction, but requires data be stored in Google Cloud Storage
+
+```
+gcloud beta ml jobs submit prediction my_prediction_job \
+    --model census \
+    --version v1 \
+    --data-format TEXT \
+    --region us-central1 \
+    --input-paths gs://cloudml-public/testdata/prediction/census.json \
+    --output-path $OUTPUT_PATH/predictions
+```
