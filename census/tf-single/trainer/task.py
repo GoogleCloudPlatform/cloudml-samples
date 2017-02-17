@@ -44,6 +44,7 @@ CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss', 'hour
 LABEL_COL = 'income_bracket'
 
 
+#TODO: Change the gsutil to use the veneer storage
 def read_local_or_gcs(file_name):
   """Read local or gcs file."""
   if file_name.startswith('gs://'):
@@ -76,17 +77,12 @@ def generate_input(input_df, label_df):
       for col in CATEGORICAL_COLS
   ]
 
-  sparse_t = tf.SparseTensor(
-      indices=[[i, 0] for i in range(label_df.size)],
-      values=label_df.astype('category').cat.codes.values,
-      dense_shape=[label_df.size, 1]
-  )
-
-  dense_i_tensor = tf.sparse_to_indicator(sparse_t, 2)
-  dense_i_tensor = tf.cast(dense_i_tensor, tf.int32)
+  label_tensor = tf.one_hot(
+      label_df.astype('category').cat.codes.values,
+      2, off_value=1, on_value=0)
 
   return (
-      continuous_columns + categorical_columns, dense_i_tensor
+      continuous_columns + categorical_columns, label_tensor
   )
 
 
