@@ -44,7 +44,6 @@ CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss', 'hour
 LABEL_COL = 'income_bracket'
 
 
-## TODO: Hacked up the code. Clean it later.
 def read_local_or_gcs(file_name):
   """Read local or gcs file."""
   if file_name.startswith('gs://'):
@@ -53,6 +52,7 @@ def read_local_or_gcs(file_name):
   else:
     local_file = open(file_name, 'r')
     return local_file.read()
+
 
 def read_input_data(file_name, skiprows=None):
   """Read the input data as a pandas DataFrame of features and labels."""
