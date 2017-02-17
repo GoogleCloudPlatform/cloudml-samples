@@ -50,10 +50,6 @@ def read_local_or_gcs(file_name):
   if file_name.startswith('gs://'):
     os.system('gsutil cp '+file_name+' '+os.path.basename(file_name))
     return open(os.path.basename(file_name)).read()
-    #client = storage.Client()
-    #bucket = client.get_bucket(file_name.split('/')[2])
-    #blob = bucket.get_blob('/'.join(file_name.split('/')[3:]))
-    #return blob.download_as_string()
   else:
     local_file = open(file_name, 'r')
     return local_file.read()
