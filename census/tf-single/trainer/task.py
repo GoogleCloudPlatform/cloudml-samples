@@ -68,10 +68,13 @@ def read_input_data(file_name, skiprows=None):
 
 def generate_input(input_df, label_df):
   """Prepare the input columns using SparseTensor."""
+  
+  # convert the continuous columns into tf.constant tensor
   continuous_columns = [
       tf.constant(input_df[col].values) for col in CONTINUOUS_COLS
   ]
 
+  # convert the categorical columns into sparse tensors
   categorical_columns = [
       tf.SparseTensor(
           indices=[[i, 0] for i in range(input_df[col].size)],
@@ -80,6 +83,7 @@ def generate_input(input_df, label_df):
       for col in CATEGORICAL_COLS
   ]
 
+  # convert the labels into one hot encoding
   label_tensor = tf.one_hot(
       label_df.astype('category').cat.codes.values,
       2, off_value=1, on_value=0)
