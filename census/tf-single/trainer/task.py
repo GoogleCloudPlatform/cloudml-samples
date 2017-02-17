@@ -13,6 +13,10 @@
 # limitations under the License.
 # ==============================================================================
 
+"""This code implements a single node Feed forward neural network using TF
+   low level APIs. It implements a binary classifier for Census Income Dataset.
+"""
+
 
 import argparse
 import tensorflow as tf
@@ -25,9 +29,8 @@ from StringIO import StringIO
 
 import model
 import os
-#from google.cloud import storage
 
-#https://www.tensorflow.org/tutorials/wide_and_deep/
+#See tutorial on wide and deep https://www.tensorflow.org/tutorials/wide_and_deep/
 #https://github.com/tensorflow/tensorflow/blob/master/tensorflow/contrib/layers/python/layers/feature_column.py
 
 # csv columns in the input file
