@@ -172,20 +172,30 @@ def read_input_tensor(input_file, skiprows=None):
 
 def training(session, model, labels, max_steps, inp_tensor, label_tensor):
   """Perform the training step on training input tensor."""
+  
+  global_step = tf.contrib.framework.get_or_create_global_step()
   init = tf.global_variables_initializer()
   session.run(init)
 
-  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=model, labels=labels))
-  train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+  cross_entropy = tf.reduce_mean(
+          tf.nn.softmax_cross_entropy_with_logits(logits=model, labels=labels))
 
-  for step in xrange(max_steps):
+  train_step = tf.train.GradientDescentOptimizer(0.5).minimize(
+          cross_entropy, global_step=global_step)
+
+  step = tf.train.global_step(session, global_step)
+
+  while step < max_steps:
     session.run(
         train_step,
         feed_dict={
             inputs: session.run(inp_tensor),
             labels: session.run(label_tensor)
-        }
+            }
     )
+
+    step = tf.train.global_step(session, global_step)
+    
     if step % 10 == 0:
       print('Step number {} of {} done'.format(step, max_steps))
 
