@@ -24,14 +24,7 @@ def random_normal():
   return tf.random_normal_initializer(mean=0.0, stddev=0.1)
 
 
-def inference(x, distributed, hidden_units=[100,70,50,25], y_units=2):
-  """Return a single or distributed graph."""
-  if distributed:
-    return inference_distributed(x, hidden_units, y_units)
-  else:
-    return inference_single(x, hidden_units, y_units)
-
-def inference_single(x, hidden_units, y_units):
+def inference(x, hidden_units=[100,70,50,25], y_units=2):
   """Create a Feed forward network running on single node
 
   Args:
