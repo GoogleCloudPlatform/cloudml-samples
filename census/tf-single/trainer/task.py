@@ -19,6 +19,7 @@
 
 
 import argparse
+import json
 import tensorflow as tf
 import numpy as np
 import pandas as pd
@@ -68,7 +69,7 @@ def read_input_data(file_name, skiprows=None):
 
 def generate_input(input_df, label_df):
   """Prepare the input columns using SparseTensor."""
-  
+
   # convert the continuous columns into tf.constant tensor
   continuous_columns = [
       tf.constant(input_df[col].values) for col in CONTINUOUS_COLS
@@ -172,7 +173,7 @@ def read_input_tensor(input_file, skiprows=None):
 
 def training(session, model, labels, max_steps, inp_tensor, label_tensor):
   """Perform the training step on training input tensor."""
-  
+
   global_step = tf.contrib.framework.get_or_create_global_step()
   init = tf.global_variables_initializer()
   session.run(init)
@@ -195,11 +196,34 @@ def training(session, model, labels, max_steps, inp_tensor, label_tensor):
     )
 
     step = tf.train.global_step(session, global_step)
-    
+
     if step % 10 == 0:
       print('Step number {} of {} done'.format(step, max_steps))
 
   return train_step
+
+def training_dist():
+  cluster_spec, job_name, task_index = tf_config
+
+  device_fn = tf.train.replica_device_setter(
+      cluster=cluster_spec,
+      worker_device="/job:%s/task:%d" % (job_name, task_index)
+  )
+
+  # Create and start a server
+  server = tf.train.Server(cluster_spec,
+                           job_name=job_name,
+                           task_index=task_index)
+
+  # master is chief
+  is_chief = (job_name == 'master')
+
+  if job_name == 'ps':
+    server.join()
+  elif job_name in ['master', 'worker']:
+    with tf.device(device_fn):
+      None
+
 
 def evaluation(session, model, labels, inp_tensor, label_tensor):
   """Perform the evaluation step to calculate accuracy."""
@@ -212,6 +236,24 @@ def evaluation(session, model, labels, inp_tensor, label_tensor):
               inputs: session.run(inp_tensor),
               labels: session.run(label_tensor)
           })))
+
+
+def parse_tf_config():
+  """Parse TF_CONFIG to cluster_spec, job_name and task_index."""
+
+  tf_config = os.environ.get('TF_CONFIG')
+
+  if tf_config == '':
+    return None
+
+  tf_config_json = json.loads(tf_config)
+
+  cluster = tf_config_json.get('cluster')
+  job_name = tf_config_json.get('task').get('type')
+  task_index = tf_config_json.get('task').get('index')
+
+  cluster_spec = tf.train.ClusterSpec(cluster)
+  return cluster_spec, job_name, task_index
 
 
 if __name__ == "__main__":
@@ -240,7 +282,9 @@ if __name__ == "__main__":
   # label shape = [None, 2]
   inputs = tf.placeholder(tf.float32, shape=[None, 346])
   labels = tf.placeholder(tf.float32, shape=[None, 2])
-  nn_model = model.inference(inputs, parse_args.distributed)
+
+  tf_config = parse_tf_config()
+  nn_model = model.inference(inputs)
 
   # Start training
   training(

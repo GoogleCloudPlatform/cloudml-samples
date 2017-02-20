@@ -79,10 +79,3 @@ def inference(x, hidden_units=[100,70,50,25], y_units=2):
     output_layer = tf.nn.softmax(output_layer)
 
   return output_layer
-
-def to_cluster_spec(tf_config):
-
-def inference_distributed(x, hidden_units, y_units, cluster_spec):
-  server = tf.train.Server(cluster_spec, job_name=name, task_index=index)
-  x = tf.to_float(x)
-  return None
