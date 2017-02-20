@@ -24,8 +24,15 @@ def random_normal():
   return tf.random_normal_initializer(mean=0.0, stddev=0.1)
 
 
-def inference(x, hidden_units=[100,70,50,25], y_units=2):
-  """Create a Feed forward network with hidden units ReLU and SoftMax.
+def inference(x, distributed, hidden_units=[100,70,50,25], y_units=2):
+  """Return a single or distributed graph."""
+  if distributed:
+    return inference_distributed(x, hidden_units, y_units)
+  else:
+    return inference_single(x, hidden_units, y_units)
+
+def inference_single(x, hidden_units, y_units):
+  """Create a Feed forward network running on single node
 
   Args:
     x: Feature placeholder input
@@ -79,3 +86,10 @@ def inference(x, hidden_units=[100,70,50,25], y_units=2):
     output_layer = tf.nn.softmax(output_layer)
 
   return output_layer
+
+def to_cluster_spec(tf_config):
+
+def inference_distributed(x, hidden_units, y_units, cluster_spec):
+  server = tf.train.Server(cluster_spec, job_name=name, task_index=index)
+  x = tf.to_float(x)
+  return None

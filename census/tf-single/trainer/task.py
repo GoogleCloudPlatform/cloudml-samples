@@ -222,6 +222,9 @@ if __name__ == "__main__":
   parser.add_argument(
       '--eval_data_path', required=True, type=str,
       help='Evaluation file location')
+  parser.add_argument(
+      '--distributed', default=False, type=bool,
+      help='Run the code either as single or distributed mode')
   parser.add_argument('--max_steps', type=int, default=200,
       help='Maximum number of training steps to perform')
   parse_args, unknown = parser.parse_known_args()
@@ -237,7 +240,7 @@ if __name__ == "__main__":
   # label shape = [None, 2]
   inputs = tf.placeholder(tf.float32, shape=[None, 346])
   labels = tf.placeholder(tf.float32, shape=[None, 2])
-  nn_model = model.inference(inputs)
+  nn_model = model.inference(inputs, parse_args.distributed)
 
   # Start training
   training(
