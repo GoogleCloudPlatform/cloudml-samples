@@ -13,6 +13,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import multiprocessing
+
 import tensorflow as tf
 from tensorflow.contrib import layers
 from tensorflow.contrib.learn.python.learn.utils import input_fn_utils
@@ -145,19 +147,34 @@ def serving_input_fn():
     )
 
 
-def generate_input_fn(filename, num_epochs=None, batch_size=40):
+def generate_input_fn(filename,
+                      num_epochs=None,
+                      shuffle=True,
+                      skip_header_lines=0,
+                      batch_size=40):
   def _input_fn():
     filename_queue = tf.train.string_input_producer(
         [filename], num_epochs=num_epochs)
-    reader = tf.TextLineReader()
+    reader = tf.TextLineReader(skip_header_lines=skip_header_lines)
     _, value = reader.read_up_to(filename_queue, num_records=batch_size)
     value_column = tf.expand_dims(value, -1)
 
     columns = tf.decode_csv(value_column, record_defaults=DEFAULTS)
     features = dict(zip(CSV_COLUMNS, columns))
-
     # remove the fnlwgt key, which is not used
     features.pop('fnlwgt', None)
+
+    if shuffle:
+      features = tf.train.shuffle_batch(
+          features,
+          batch_size,
+          capacity=batch_size * 10,
+          min_after_dequeue=batch_size*2 + 1,
+          num_threads=multiprocessing.cpu_count(),
+          enqueue_many=True,
+          allow_smaller_final_batch=True
+      )
+
     income_int = tf.to_int32(tf.equal(features.pop(LABEL_COLUMN), ' >50K'))
     return features, income_int
   return _input_fn

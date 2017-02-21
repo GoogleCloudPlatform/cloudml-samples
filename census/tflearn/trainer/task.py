@@ -22,7 +22,11 @@ def generate_experiment_fn(train_file,
     train_input = model.generate_input_fn(
         train_file, num_epochs=num_epochs, batch_size=train_batch_size)
     eval_input = model.generate_input_fn(
-        eval_file, batch_size=eval_batch_size)
+        eval_file,
+        batch_size=eval_batch_size,
+        skip_header_lines=1,
+        shuffle=False
+    )
     return learn.Experiment(
         model.build_estimator(
             job_dir,
