@@ -245,7 +245,7 @@ class FlowersE2E(object):
       options['sdk_location'] = dataflow_sdk_location
 
     pipeline_name = ('BlockingDataflowPipelineRunner' if self.args.cloud else
-                     'DirectPipelineRunner')
+                     'DirectRunner')
 
     opts = beam.pipeline.PipelineOptions(flags=[], **options)
     pipeline = beam.Pipeline(pipeline_name, options=opts)
@@ -256,7 +256,7 @@ class FlowersE2E(object):
     preprocess_lib.configure_pipeline(pipeline, args)
     lock.release()
     # Execute the pipeline.
-    pipeline.run()
+    pipeline.run().wait_until_finish()
 
   def train(self, train_file_path, eval_file_path):
     """Train a model using the eval and train datasets.

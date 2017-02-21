@@ -88,14 +88,6 @@ invalid_uri = Metrics.counter('main', 'invalid_file_name')
 unlabeled_image = Metrics.counter('main', 'unlabeled_image')
 unknown_label = Metrics.counter('main', 'unknown_label')
 
-def _is_production_tensorflow():
-  """Detect if we are running with tensorflow 1.0 or later.
-
-  Returns:
-    True if we are running tensorflow version 1.0+.
-  """
-  major_version = tf.__version__.split('.')[0]
-  return int(major_version) >= 1
 
 class Default(object):
   """Default values of variables."""
@@ -107,7 +99,7 @@ class Default(object):
   IMAGE_GRAPH_CHECKPOINT_URI = (
       'gs://cloud-ml-data/img/flower_photos/inception_v3_2016_08_28.ckpt')
   # The latest CloudML package.
-  CML_PACKAGE = 'gs://cloud-ml/sdk/cloudml.latest.tar.gz'
+  CML_PACKAGE = 'gs://cloud-ml/sdk/cloudml-0.1.9-alpha.tar.gz'
 
 
 class ExtractLabelIdsDoFn(beam.DoFn):
@@ -170,9 +162,16 @@ class ReadImageAndConvertToJpegDoFn(beam.DoFn):
     except AttributeError:
       uri, label_ids = element
 
+    # TF will enable 'rb' in future versions, but until then, 'r' is
+    # required.
+    def _open_file_read_binary(uri):
+      try:
+        return file_io.FileIO(uri, mode='rb')
+      except errors.InvalidArgumentError:
+        return file_io.FileIO(uri, mode='r')
+
     try:
-      read_mode = 'rb' if _is_production_tensorflow() else 'r'
-      with file_io.FileIO(uri, mode=read_mode) as f:
+      with _open_file_read_binary(uri) as f:
         image_bytes = f.read()
         img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
 
@@ -330,6 +329,7 @@ class TFExampleFromImageDoFn(beam.DoFn):
 
     def _float_feature(value):
       return tf.train.Feature(float_list=tf.train.FloatList(value=value))
+
     try:
       element = element.element
     except AttributeError:
@@ -448,7 +448,7 @@ def default_args(argv):
   else:
     # Flags which need to be set for local runs.
     default_values = {
-        'runner': 'DirectPipelineRunner',
+        'runner': 'DirectRunner',
     }
 
   for kk, vv in default_values.iteritems():

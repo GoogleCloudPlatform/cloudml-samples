@@ -352,9 +352,9 @@ def model_analysis(pipeline, output_dir, evaluation_data=None, metadata=None):
 
 def get_pipeline_name(cloud):
   if cloud:
-    return 'BlockingDataflowPipelineRunner'
+    return 'DataflowRunner'
   else:
-    return  'DirectPipelineRunner'
+    return  'DirectRunner'
 
 def main(argv=None):
   """Run Preprocessing, Training, Eval, and Prediction as a single Dataflow."""
@@ -424,7 +424,7 @@ def main(argv=None):
     print 'Deploying %s version: %s' % (args.deploy_model_name,
                                         args.deploy_model_version)
 
-  p.run()
+  p.run().wait_until_finish()
 
   if args.cloud:
     print 'Deployed %s version: %s' % (args.deploy_model_name,

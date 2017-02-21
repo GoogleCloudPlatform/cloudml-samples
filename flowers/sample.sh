@@ -33,7 +33,7 @@ set -v -e
 
 # Takes about 30 mins to preprocess everything.  We serialize the two
 # preprocess.py synchronous calls just for shell scripting ease; you could use
-# --runner DataflowPipelineRunner to run them asynchronously.  Typically,
+# --runner DataflowRunner to run them asynchronously.  Typically,
 # the total worker time is higher when running on Cloud instead of your local
 # machine due to increased network traffic and the use of more cost efficient
 # CPU's.  Check progress here: https://console.cloud.google.com/dataflow

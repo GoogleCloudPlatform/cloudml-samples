@@ -37,7 +37,7 @@ The criteo dataset is available in two different sizes:
 ### Kaggle Challenge Dataset
 
 Kaggle challenge dataset can be downloaded
-[here](http://criteolabs.wpengine.com/downloads/2014-kaggle-display-advertising-challenge-dataset/).
+[here](http://labs.criteo.com/2014/02/kaggle-display-advertising-challenge-dataset/).
 We recommend working with the Kaggle dataset if you are trying this sample for
 the first time. This dataset is about 10 GB and contains around 45 million
 examples.
@@ -61,18 +61,24 @@ the pre-processing step before you proceed to training.
 The pre-processing step can be performed either locally or on cloud depending
 upon the size of input data.
 
-First you need to split the tsv files into training and evaluation sets. Then
-use those paths as the input flags `--training_data` and `--eval_data`
-respectively.
+For the small dataset, we first split the `train.txt` file into training and
+evaluation sets. The large dataset consists of 24 files named `day_0.txt`
+through `day_23.txt`. We use the first 23 files as training data. The last file
+is used for evaluation, and we rename it to `eval_day_23.txt` for easier file
+matching using wildcards.
 
 ### Local Run
 
-Run the code as below:
+We recommend using local preprocessing only for testing on a small subset of the
+data. You can run it as:
 
 ```
-python preprocess.py --training_data $LOCAL_TRAINING_INPUT \
-                     --eval_data $LOCAL_EVAL_INPUT \
-                     --output_dir $LOCAL_OUTPUT_DIR \
+LOCAL_DATA_DIR=[download location]
+head -10000 $LOCAL_DATA_DIR/train.txt > $LOCAL_DATA_DIR/train-10k.txt
+tail -2000 $LOCAL_DATA_DIR/train.txt > $LOCAL_DATA_DIR/eval-2k.txt
+python preprocess.py --training_data $LOCAL_DATA_DIR/train-10k.txt \
+                     --eval_data $LOCAL_DATA_DIR/eval-2k.txt \
+                     --output_dir $LOCAL_DATA_DIR/preproc
 ```
 
 ### Cloud Run
@@ -85,14 +91,18 @@ BUCKET="gs://${PROJECT}-ml"
 
 # Small dataset
 GCS_PATH="${BUCKET}/${USER}/smallclicks"
-python preprocess.py --training_data $GCS_PATH/train.txt \
-                     --eval_data $GCS_PATH/train.txt \
+head -40800000 $LOCAL_DATA_DIR/train.txt > $LOCAL_DATA_DIR/train-40m.txt
+tail -5000000 $LOCAL_DATA_DIR/train.txt > $LOCAL_DATA_DIR/eval-5m.txt
+gsutil -m cp $LOCAL_DATA_DIR/train-40m.txt $LOCAL_DATA_DIR/eval-5m.txt $GCS_PATH
+python preprocess.py --training_data $GCS_PATH/train-40m.txt \
+                     --eval_data $GCS_PATH/eval-5m.txt \
                      --output_dir $GCS_PATH/preproc \
                      --project_id $PROJECT \
                      --cloud
 
 # Large dataset
 GCS_PATH="${BUCKET}/${USER}/largeclicks"
+gsutil mv $GCS_PATH/day_23.txt $GCS_PATH/eval_day_23.txt
 python preprocess.py --training_data $GCS_PATH/day_* \
                      --eval_data $GCS_PATH/eval_day_* \
                      --output_dir $GCS_PATH/preproc \
