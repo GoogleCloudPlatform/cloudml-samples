@@ -13,8 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 
-"""This code implements a single node Feed forward neural network using TF
-   low level APIs. It implements a binary classifier for Census Income Dataset.
+"""This code implements a Feed forward neural network using TF low level APIs.
+   It implements a binary classifier for Census Income Dataset.
 """
 
 
@@ -241,14 +241,6 @@ def training_distributed(session, model, labels, max_steps,
 
   cluster_spec, job_name, task_index = parse_tf_config()
 
-  # /job:localhost/replica:0/task:0/cpu:0
-  device_fn = tf.train.replica_device_setter(
-      cluster=cluster_spec,
-      ps_device="/job:localhost/replica:%d/task:%d/cpu:%d" % (task_index, task_index, task_index),
-      #worker_device="/job:%s/task:%d" % (job_name, task_index)
-      worker_device="/job:localhost/replica:%d/task:%d/cpu:%d" % (task_index, task_index, task_index)
-  )
-
   # Create and start a server
   server = tf.train.Server(cluster_spec,
                            job_name=job_name,
@@ -257,7 +249,7 @@ def training_distributed(session, model, labels, max_steps,
   if job_name == 'ps':
     server.join()
   elif job_name in ['master', 'worker']:
-    with tf.device(device_fn):
+    with tf.device(tf.train.replica_device_setter()):
       global_step = tf.contrib.framework.get_or_create_global_step()
 
       cross_entropy = loss(model, labels)
