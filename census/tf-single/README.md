@@ -1,7 +1,7 @@
 # Census: TensorFlow Vanilla Sample
 
 This sample uses the [TensorFlow](https://tensorflow.org) low level APIs and
-[Google Cloud Machine Learning API](https://cloud.google.com/ml) to demonstrate
+[Google Cloud Machine Learning Engine](https://cloud.google.com/ml) to demonstrate
 the single node and distributed TF vanilla version for Census Income Dataset.
 
 ## Download the data
@@ -26,17 +26,18 @@ There are two options for the virtual environments:
 Install the following dependencies:
  * Install [TensorFlow](https://www.tensorflow.org/install/)
  * Install [Pandas](http://pandas.pydata.org/pandas-docs/stable/install.html#installing-from-pypi)
+ * Install [gcloud](https://cloud.google.com/sdk/gcloud/)
 
 
-# Single Node Version
-Single node version runs TF code on a single instance. You can run the exact
-same code locally and on Cloud ML.
+# Single Node Training
+Single node training runs TensorFlow code on a single instance. You can run the exact
+same code locally and on Cloud ML Engine.
 
 ## How to run the code
 You can run the code either as a stand-alone python program or using `gcloud`.
 See options below:
 
-### Local Run
+### Using local python
 Run the code on your local machine:
 
 ```
@@ -45,7 +46,7 @@ python trainer/task.py --train_data_path $TRAIN_DATA_PATH \
                        [--max_steps $MAX_STEPS]
 ```
 
-### Gcloud Local Run
+### Using gcloud local
 Run the code on your local machine using `gcloud`:
 
 ```
@@ -57,7 +58,7 @@ gcloud beta ml local train --package-path trainer \
                            [--max_steps $MAX_STEPS]
 ```
 
-### Gcloud Cloud ML Engine Run
+### Using gcloud on cloud
 Run the code on Cloud ML Engine using `gcloud`:
 
 ```
@@ -73,17 +74,20 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --max_steps 200
 ```
 ## Accuracy
-You should see an accuracy of `82.84%` for default number of training steps.
+You should see an accuracy of around `82.84%` for default number of training steps.
 
-# Distributed Version
-Distributed version of the code uses Distributed TensorFlow. The main change to
-make the distributed version work is usage of `TF_CONFIG` environment variable.
-The environment variable is generated using `gcloud` and parsed to create a
-`ClusterSpec`.
+# Distributed Node Training
+Distributed node training uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed). 
+The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml/reference/configuration-data-structures#tf_config_environment_variable)
+environment variable. The environment variable is generated using `gcloud` and parsed to create a
+[ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster). See the [ScaleTier](https://cloud.google.com/ml/pricing#ml_training_units_by_scale_tier) for predefined tiers
 
 ## How to run the code
+You can run the code either locally or on cloud using `gcloud`.
 
-### Gcloud Local Run
+### Using gcloud local
+Run the distributed training code locally using `gcloud`.
+
 ```
 gcloud beta ml local train --package-path trainer \
                            --module-name trainer.task \
@@ -98,4 +102,10 @@ gcloud beta ml local train --package-path trainer \
                            --distributed True
 ```
 
-### Gcloud Cloud ML Engine Run
+### Using gcloud on cloud
+Run the distributed training code on cloud using `gcloud`.
+
+```
+gcloud
+```
+
