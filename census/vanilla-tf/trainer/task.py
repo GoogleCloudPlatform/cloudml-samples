@@ -73,15 +73,6 @@ def evaluation_step(model, labels):
 #
 # Read the input and process
 #
-def read_local_or_gcs(file_name):
-  """Read local or gcs file."""
-  if file_name.startswith('gs://'):
-    gcs_file = tf.gfile.GFile(file_name)
-    return gcs_file.read()
-  else:
-    local_file = open(file_name, 'r')
-    return local_file.read()
-
 def get_inputs_and_labels():
   """Placeholder for inputs and labels
      input shape = [None, 364] label shape = [None, 2]."""
@@ -91,7 +82,7 @@ def get_inputs_and_labels():
 
 def read_input_data(file_name, skiprows=None):
   """Read the input data as a pandas DataFrame of features and labels."""
-  input_df = pd.read_csv(StringIO(read_local_or_gcs(file_name)), names=CSV_COLUMNS, skiprows=skiprows)
+  input_df = pd.read_csv(StringIO(tf.gfile.GFile(file_name).read()), names=CSV_COLUMNS, skiprows=skiprows)
 
   label_df = input_df.pop(LABEL_COL)
   return (input_df, label_df)
