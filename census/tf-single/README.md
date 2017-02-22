@@ -108,7 +108,7 @@ Run the distributed training code on cloud using `gcloud`.
 ```
 gcloud beta ml jobs submit training $JOB_NAME \
                                     --job-dir $JOB_DIR \
-                                    --scale-tier STANDARD_1 \
+                                    --scale-tier $SCALE_TIER \
                                     --runtime-version 1.0 \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
