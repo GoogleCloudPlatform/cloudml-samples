@@ -190,7 +190,7 @@ def optimizer(loss, global_step):
   return train_step
 
 
-def training_steps(session, train_step, model, labels, global_step, max_steps,
+def training_steps(session, train_step, eval_step, model, labels, global_step, max_steps,
                    inp, label,
                    eval_inp, eval_label):
   """Run the training steps and calculate accuracy every 10 steps."""
@@ -208,7 +208,7 @@ def training_steps(session, train_step, model, labels, global_step, max_steps,
     step = tf.train.global_step(session, global_step)
 
     if step % 10 == 0:
-      accuracy = 0.0#evaluation(session, model, labels, eval_inp, eval_label)
+      accuracy = evaluation(session, eval_step, eval_inp, eval_label)
       print('Step number {} of {} done, Accuracy {:.2f}%'.format(
           step, max_steps, accuracy))
 
@@ -235,6 +235,13 @@ def training_single(model, labels, max_steps,
 
   return train_step
 
+
+def accuracy_step(model, labels):
+  """Compute the graph for the accuracy step."""
+  correct_prediction = tf.equal(tf.argmax(model, 1), tf.argmax(labels, 1))
+  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+  return accuracy
+
 def training_distributed(model, labels, max_steps,
                          inp_tensor, label_tensor,
                          eval_inp_tensor, eval_label_tensor):
@@ -257,21 +264,20 @@ def training_distributed(model, labels, max_steps,
 
       cross_entropy = loss(model, labels)
       train_step = optimizer(cross_entropy, global_step)
+      accuracy = accuracy_step(model, labels)
 
     init = tf.global_variables_initializer()
 
     with tf.train.MonitoredTrainingSession(master='', is_chief=is_chief) as session:
       session.run(init)
-      training_steps(session, train_step, model, labels, global_step, max_steps,
+      training_steps(session, train_step, accuracy, model, labels, global_step, max_steps,
                      inp_tensor, label_tensor,
                      eval_inp_tensor, eval_label_tensor)
 
 
 
-def evaluation(session, model, labels, inp_tensor, label_tensor):
+def evaluation(session, accuracy, inp_tensor, label_tensor):
   """Perform the evaluation step to calculate accuracy."""
-  correct_prediction = tf.equal(tf.argmax(model, 1), tf.argmax(labels, 1))
-  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   return 100 * session.run(
       accuracy,
       feed_dict={
