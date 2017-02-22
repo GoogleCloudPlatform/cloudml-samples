@@ -1,7 +1,7 @@
 # Census: TensorFlow Vanilla Sample
 
 This sample uses the [TensorFlow](https://tensorflow.org) low level APIs and
-[Google Cloud Machine Learning API](https://cloud.google.com/ml) to demonstrate
+[Google Cloud Machine Learning Engine](https://cloud.google.com/ml) to demonstrate
 the single node and distributed TF vanilla version for Census Income Dataset.
 
 ## Download the data
