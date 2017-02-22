@@ -189,6 +189,12 @@ def optimizer(loss, global_step):
       loss, global_step=global_step)
   return train_step
 
+def evaluation_step(model, labels):
+  """Compute the graph for the accuracy step."""
+  correct_prediction = tf.equal(tf.argmax(model, 1), tf.argmax(labels, 1))
+  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+  return accuracy
+
 
 def training_steps(session, train_step, eval_step, model, labels, global_step, max_steps,
                    inp, label,
@@ -208,7 +214,7 @@ def training_steps(session, train_step, eval_step, model, labels, global_step, m
     step = tf.train.global_step(session, global_step)
 
     if step % 10 == 0:
-      accuracy = evaluation(session, eval_step, eval_inp, eval_label)
+      accuracy = evaluate_accuracy(session, eval_step, eval_inp, eval_label)
       print('Step number {} of {} done, Accuracy {:.2f}%'.format(
           step, max_steps, accuracy))
 
@@ -235,13 +241,6 @@ def training_single(model, labels, max_steps,
 
   return train_step
 
-
-def accuracy_step(model, labels):
-  """Compute the graph for the accuracy step."""
-  correct_prediction = tf.equal(tf.argmax(model, 1), tf.argmax(labels, 1))
-  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-  return accuracy
-
 def training_distributed(model, labels, max_steps,
                          inp_tensor, label_tensor,
                          eval_inp_tensor, eval_label_tensor):
@@ -264,7 +263,7 @@ def training_distributed(model, labels, max_steps,
 
       cross_entropy = loss(model, labels)
       train_step = optimizer(cross_entropy, global_step)
-      accuracy = accuracy_step(model, labels)
+      accuracy = evaluation_step(model, labels)
 
     init = tf.global_variables_initializer()
 
@@ -274,9 +273,7 @@ def training_distributed(model, labels, max_steps,
                      inp_tensor, label_tensor,
                      eval_inp_tensor, eval_label_tensor)
 
-
-
-def evaluation(session, accuracy, inp_tensor, label_tensor):
+def evaluate_accuracy(session, accuracy, inp_tensor, label_tensor):
   """Perform the evaluation step to calculate accuracy."""
   return 100 * session.run(
       accuracy,
