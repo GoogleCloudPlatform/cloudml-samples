@@ -1,8 +1,8 @@
-# Census: Single node TF vanilla sample
+# Census: TensorFlow Vanilla Sample
 
 This sample uses the [TensorFlow](https://tensorflow.org) low level APIs and
 [Google Cloud Machine Learning API](https://cloud.google.com/ml) to demonstrate
-the single node TF vanilla version for Census Income Dataset.
+the single node and distributed TF vanilla version for Census Income Dataset.
 
 ## Download the data
 Follow the [Census Income
@@ -26,8 +26,9 @@ There are two options for the virtual environments:
 Install the following dependencies:
  * Install [TensorFlow](https://www.tensorflow.org/install/)
  * Install [Pandas](http://pandas.pydata.org/pandas-docs/stable/install.html#installing-from-pypi)
-  
 
+
+# Single Node Version
 ## How to run the code
 ### Help
 ```
@@ -60,9 +61,12 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --package-path trainer/ \
                                     --region us-central1 \
                                     -- \
-                                    --train_data_path $TRAIN_GCS_FILE \     
+                                    --train_data_path $TRAIN_GCS_FILE \
                                     --eval_data_path $EVAL_GCS_FILE \
                                     --max_steps 200
 ```
 ## Accuracy
 You should see an accuracy of `82.84%` for default number of training steps.
+
+# Distributed Version
+Distributed version details

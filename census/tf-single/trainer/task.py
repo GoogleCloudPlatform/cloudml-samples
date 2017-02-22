@@ -58,6 +58,12 @@ def read_local_or_gcs(file_name):
     local_file = open(file_name, 'r')
     return local_file.read()
 
+def get_inputs_and_labels():
+  """Placeholder for inputs and labels
+     input shape = [None, 364] label shape = [None, 2]."""
+  inputs = tf.placeholder(tf.float32, shape=[None, 346])
+  labels = tf.placeholder(tf.float32, shape=[None, 2])
+  return (inputs, labels)
 
 def read_input_data(file_name, skiprows=None):
   """Read the input data as a pandas DataFrame of features and labels."""
@@ -167,47 +173,80 @@ def sparse_to_dense(sparse_tensor, vocab_size):
   return dense_tensor
 
 def read_input_tensor(input_file, skiprows=None):
+  """Concatenate the wide columns to produce a single tensor."""
   inp, label = read_input_data(input_file, skiprows)
   in_tensor, label_tensor = generate_input(inp, label)
   return concat_wide_columns(generate_wide_columns(in_tensor)), label_tensor
 
-def training(session, model, labels, max_steps, inp_tensor, label_tensor):
-  """Perform the training step on training input tensor."""
-
-  global_step = tf.contrib.framework.get_or_create_global_step()
-  init = tf.global_variables_initializer()
-  session.run(init)
-
+def loss(model, labels):
+  """Compute cross entropy loss function."""
   cross_entropy = tf.reduce_mean(
-          tf.nn.softmax_cross_entropy_with_logits(logits=model, labels=labels))
+      tf.nn.softmax_cross_entropy_with_logits(logits=model, labels=labels))
+  return cross_entropy
 
+def optimizer(loss, global_step):
+  """Gradient descent optimizer with 0.5 learning rate."""
   train_step = tf.train.GradientDescentOptimizer(0.5).minimize(
-          cross_entropy, global_step=global_step)
+      loss, global_step=global_step)
+  return train_step
 
+
+def training_steps(session, train_step, model, labels, global_step, max_steps,
+                   inp, label,
+                   eval_inp, eval_label):
+  """Run the training steps and calculate accuracy every 10 steps."""
   step = tf.train.global_step(session, global_step)
 
   while step < max_steps:
     session.run(
         train_step,
         feed_dict={
-            inputs: session.run(inp_tensor),
-            labels: session.run(label_tensor)
+            inputs: session.run(inp),
+            labels: session.run(label)
             }
     )
 
     step = tf.train.global_step(session, global_step)
 
     if step % 10 == 0:
-      print('Step number {} of {} done'.format(step, max_steps))
+      accuracy = evaluation(session, model, labels, eval_inp, eval_label)
+      print('Step number {} of {} done, Accuracy {:.2f}%'.format(
+          step, max_steps, accuracy))
 
   return train_step
 
-def training_dist():
-  cluster_spec, job_name, task_index = tf_config
 
+def training_single(session, model, labels, max_steps,
+                    inp_tensor, label_tensor,
+                    eval_inp_tensor, eval_label_tensor):
+  """Perform single node training."""
+
+  global_step = tf.contrib.framework.get_or_create_global_step()
+  init = tf.global_variables_initializer()
+  session.run(init)
+
+  cross_entropy = loss(model, labels)
+  train_step = optimizer(cross_entropy, global_step)
+
+  training_steps(session, train_step, model, labels, global_step, max_steps,
+                 inp_tensor, label_tensor,
+                 eval_inp_tensor, eval_label_tensor)
+
+  return train_step
+
+def training_distributed(session, model, labels, max_steps,
+                         inp_tensor, label_tensor,
+                         eval_inp_tensor, eval_label_tensor):
+  """Perform distributed training."""
+
+  cluster_spec, job_name, task_index = parse_tf_config()
+
+  # /job:localhost/replica:0/task:0/cpu:0
   device_fn = tf.train.replica_device_setter(
       cluster=cluster_spec,
-      worker_device="/job:%s/task:%d" % (job_name, task_index)
+      ps_device="/job:localhost/replica:%d/task:%d/cpu:%d" % (task_index, task_index, task_index),
+      #worker_device="/job:%s/task:%d" % (job_name, task_index)
+      worker_device="/job:localhost/replica:%d/task:%d/cpu:%d" % (task_index, task_index, task_index)
   )
 
   # Create and start a server
@@ -215,27 +254,35 @@ def training_dist():
                            job_name=job_name,
                            task_index=task_index)
 
-  # master is chief
-  is_chief = (job_name == 'master')
-
   if job_name == 'ps':
     server.join()
   elif job_name in ['master', 'worker']:
     with tf.device(device_fn):
-      None
+      global_step = tf.contrib.framework.get_or_create_global_step()
+
+      cross_entropy = loss(model, labels)
+      train_step = optimizer(cross_entropy, global_step)
+
+    init = tf.global_variables_initializer()
+    session.run(init)
+
+    training_steps(session, train_step, model, labels, global_step, max_steps,
+                   inp_tensor, label_tensor,
+                   eval_inp_tensor, eval_label_tensor)
+
 
 
 def evaluation(session, model, labels, inp_tensor, label_tensor):
   """Perform the evaluation step to calculate accuracy."""
   correct_prediction = tf.equal(tf.argmax(model, 1), tf.argmax(labels, 1))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-  print('\nAccuracy {0:.2f}%'.format(
-      100 * session.run(
-          accuracy,
-          feed_dict={
-              inputs: session.run(inp_tensor),
-              labels: session.run(label_tensor)
-          })))
+  return 100 * session.run(
+      accuracy,
+      feed_dict={
+          inputs: session.run(inp_tensor),
+          labels: session.run(label_tensor)
+      }
+  )
 
 
 def parse_tf_config():
@@ -243,7 +290,7 @@ def parse_tf_config():
 
   tf_config = os.environ.get('TF_CONFIG')
 
-  if tf_config == '':
+  if tf_config is None or tf_config == '':
     return None
 
   tf_config_json = json.loads(tf_config)
@@ -252,6 +299,7 @@ def parse_tf_config():
   job_name = tf_config_json.get('task').get('type')
   task_index = tf_config_json.get('task').get('index')
 
+  print('cluster spec {} {} {}'.format(cluster, job_name, task_index))
   cluster_spec = tf.train.ClusterSpec(cluster)
   return cluster_spec, job_name, task_index
 
@@ -277,22 +325,20 @@ if __name__ == "__main__":
 
   session = tf.Session()
 
-  # Placeholder for inputs and labels
-  # input shape = [None, 364]
-  # label shape = [None, 2]
-  inputs = tf.placeholder(tf.float32, shape=[None, 346])
-  labels = tf.placeholder(tf.float32, shape=[None, 2])
-
-  tf_config = parse_tf_config()
+  inputs, labels = get_inputs_and_labels()
   nn_model = model.inference(inputs)
 
-  # Start training
-  training(
-      session, nn_model, labels,
-      parse_args.max_steps, train_tensor, train_lab_tensor
-  )
-
-  # Start evaluation
-  evaluation(
-      session, nn_model, labels, eval_tensor, eval_lab_tensor
-  )
+  # Start single node training
+  if not parse_args.distributed:
+    training_single(
+        session, nn_model, labels,
+        parse_args.max_steps, train_tensor, train_lab_tensor,
+        eval_tensor, eval_lab_tensor
+    )
+  # Start distributed training
+  elif parse_args.distributed:
+    training_distributed(
+        session, nn_model, labels,
+        parse_args.max_steps, train_tensor, train_lab_tensor,
+        eval_tensor, eval_lab_tensor
+    )
