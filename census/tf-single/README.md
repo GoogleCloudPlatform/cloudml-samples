@@ -28,21 +28,21 @@ Install the following dependencies:
  * Install [Pandas](http://pandas.pydata.org/pandas-docs/stable/install.html#installing-from-pypi)
 
 
-# Single Node Version
-## How to run the code
-### Help
+## Single Node Version
+### How to run the code
+#### Help
 ```
 python trainer/task.py -h
 ```
 
-### Local run
+#### Local run
 ```
 python trainer/task.py --train_data_path TRAIN_DATA_PATH \
                        --eval_data_path EVAL_DATA_PATH \
                        [--max_steps MAX_STEPS]
 ```
 
-### gcloud local run
+#### gcloud local run
 ```
 gcloud beta ml local train --package-path=trainer \
                            --module-name=trainer.task \
@@ -52,7 +52,7 @@ gcloud beta ml local train --package-path=trainer \
                            [--max_steps MAX_STEPS]
 ```
 
-### gcloud cloud ml run
+#### gcloud cloud ml run
 ```
 gcloud beta ml jobs submit training $JOB_NAME \
                                     --job-dir $GCS_LOCATION_OUTPUT \
@@ -65,8 +65,8 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --eval_data_path $EVAL_GCS_FILE \
                                     --max_steps 200
 ```
-## Accuracy
+### Accuracy
 You should see an accuracy of `82.84%` for default number of training steps.
 
-# Distributed Version
+## Distributed Version
 Distributed version details
