@@ -37,19 +37,19 @@ python trainer/task.py -h
 
 ### Local run
 ```
-python trainer/task.py --train_data_path TRAIN_DATA_PATH \
-                       --eval_data_path EVAL_DATA_PATH \
-                       [--max_steps MAX_STEPS]
+python trainer/task.py --train_data_path $TRAIN_DATA_PATH \
+                       --eval_data_path $EVAL_DATA_PATH \
+                       [--max_steps $MAX_STEPS]
 ```
 
 ### gcloud local run
 ```
-gcloud beta ml local train --package-path=trainer \
-                           --module-name=trainer.task \
+gcloud beta ml local train --package-path trainer \
+                           --module-name trainer.task \
                            -- \
-                           --train_data_path TRAIN_DATA_PATH \
-                           --eval_data_path EVAL_DATA_PATH \
-                           [--max_steps MAX_STEPS]
+                           --train_data_path $TRAIN_DATA_PATH \
+                           --eval_data_path $EVAL_DATA_PATH \
+                           [--max_steps $MAX_STEPS]
 ```
 
 ### gcloud cloud ml run
@@ -69,4 +69,19 @@ gcloud beta ml jobs submit training $JOB_NAME \
 You should see an accuracy of `82.84%` for default number of training steps.
 
 # Distributed Version
-Distributed version details
+## How to run the code
+
+### gcloud local run
+```
+gcloud beta ml local train --package-path trainer \
+                           --module-name trainer.task \
+                           --parameter-server-count $PS_SERVER_COUNT \
+                           --worker-count $WORKER_COUNT \
+                           --distributed \
+                           -- \
+                           --train_data_path $TRAIN_DATA_PATH \
+                           --eval_data_path $EVAL_DATA_PATH \
+                           --max_steps $MAX_STEPS \
+                           --job_dir $JOB_DIR \
+                           --distributed True
+```
