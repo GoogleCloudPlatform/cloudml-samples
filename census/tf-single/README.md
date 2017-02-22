@@ -29,9 +29,9 @@ Install the following dependencies:
  * Install [gcloud](https://cloud.google.com/sdk/gcloud/)
 
 
-# Single node
-Single node version runs TF code on a single instance. You can run the exact
-same code locally and on Cloud ML.
+# Single Node Training
+Single node training runs TensorFlow code on a single instance. You can run the exact
+same code locally and on Cloud ML Engine.
 
 ## How to run the code
 You can run the code either as a stand-alone python program or using `gcloud`.
@@ -76,11 +76,11 @@ gcloud beta ml jobs submit training $JOB_NAME \
 ## Accuracy
 You should see an accuracy of around `82.84%` for default number of training steps.
 
-# Distributed nodes
-Distributed version of the code uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed). 
+# Distributed Node Training
+Distributed node training uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed). 
 The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml/reference/configuration-data-structures#tf_config_environment_variable)
 environment variable. The environment variable is generated using `gcloud` and parsed to create a
-[ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster).
+[ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster). See the [ScaleTier](https://cloud.google.com/ml/pricing#ml_training_units_by_scale_tier) for predefined tiers. 
 
 ## How to run the code
 
