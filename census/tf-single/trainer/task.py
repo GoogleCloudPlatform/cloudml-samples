@@ -290,7 +290,6 @@ def parse_tf_config():
   job_name = tf_config_json.get('task').get('type')
   task_index = tf_config_json.get('task').get('index')
 
-  print('cluster spec {} {} {}'.format(cluster, job_name, task_index))
   cluster_spec = tf.train.ClusterSpec(cluster)
   return cluster_spec, job_name, task_index
 
