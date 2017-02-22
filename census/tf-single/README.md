@@ -28,7 +28,7 @@ Install the following dependencies:
  * Install [Pandas](http://pandas.pydata.org/pandas-docs/stable/install.html#installing-from-pypi)
 
 
-# Single Node Version
+# Single node
 Single node version runs TF code on a single instance. You can run the exact
 same code locally and on Cloud ML.
 
@@ -36,7 +36,7 @@ same code locally and on Cloud ML.
 You can run the code either as a stand-alone python program or using `gcloud`.
 See options below:
 
-### Local Run
+### Using local python
 Run the code on your local machine:
 
 ```
@@ -45,7 +45,7 @@ python trainer/task.py --train_data_path $TRAIN_DATA_PATH \
                        [--max_steps $MAX_STEPS]
 ```
 
-### Gcloud Local Run
+### Using gcloud local
 Run the code on your local machine using `gcloud`:
 
 ```
@@ -57,7 +57,7 @@ gcloud beta ml local train --package-path trainer \
                            [--max_steps $MAX_STEPS]
 ```
 
-### Gcloud Cloud ML Engine Run
+### Using gcloud on cloud
 Run the code on Cloud ML Engine using `gcloud`:
 
 ```
@@ -75,7 +75,7 @@ gcloud beta ml jobs submit training $JOB_NAME \
 ## Accuracy
 You should see an accuracy of `82.84%` for default number of training steps.
 
-# Distributed Version
+# Distributed nodes
 Distributed version of the code uses Distributed TensorFlow. The main change to
 make the distributed version work is usage of `TF_CONFIG` environment variable.
 The environment variable is generated using `gcloud` and parsed to create a
@@ -83,7 +83,7 @@ The environment variable is generated using `gcloud` and parsed to create a
 
 ## How to run the code
 
-### Gcloud Local Run
+### Using gcloud local
 ```
 gcloud beta ml local train --package-path trainer \
                            --module-name trainer.task \
@@ -98,4 +98,4 @@ gcloud beta ml local train --package-path trainer \
                            --distributed True
 ```
 
-### Gcloud Cloud ML Engine Run
+### Using gcloud on cloud
