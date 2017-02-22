@@ -48,12 +48,11 @@ CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss', 'hour
 LABEL_COL = 'income_bracket'
 
 
-#TODO: Change the gsutil to use the veneer storage
 def read_local_or_gcs(file_name):
   """Read local or gcs file."""
   if file_name.startswith('gs://'):
-    os.system('gsutil cp '+file_name+' '+os.path.basename(file_name))
-    return open(os.path.basename(file_name)).read()
+    gcs_file = tf.gfile.GFile(file_name)
+    return gcs_file.read()
   else:
     local_file = open(file_name, 'r')
     return local_file.read()
