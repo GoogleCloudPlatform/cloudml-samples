@@ -208,20 +208,22 @@ def training_steps(session, train_step, model, labels, global_step, max_steps,
     step = tf.train.global_step(session, global_step)
 
     if step % 10 == 0:
-      accuracy = evaluation(session, model, labels, eval_inp, eval_label)
+      accuracy = 0.0#evaluation(session, model, labels, eval_inp, eval_label)
       print('Step number {} of {} done, Accuracy {:.2f}%'.format(
           step, max_steps, accuracy))
 
   return train_step
 
 
-def training_single(session, model, labels, max_steps,
+def training_single(model, labels, max_steps,
                     inp_tensor, label_tensor,
                     eval_inp_tensor, eval_label_tensor):
   """Perform single node training."""
 
   global_step = tf.contrib.framework.get_or_create_global_step()
   init = tf.global_variables_initializer()
+
+  session = tf.Session()
   session.run(init)
 
   cross_entropy = loss(model, labels)
@@ -233,7 +235,7 @@ def training_single(session, model, labels, max_steps,
 
   return train_step
 
-def training_distributed(session, model, labels, max_steps,
+def training_distributed(model, labels, max_steps,
                          inp_tensor, label_tensor,
                          eval_inp_tensor, eval_label_tensor):
   """Perform distributed training."""
@@ -245,6 +247,8 @@ def training_distributed(session, model, labels, max_steps,
                            job_name=job_name,
                            task_index=task_index)
 
+  is_chief = (job_name == 'master')
+
   if job_name == 'ps':
     server.join()
   elif job_name in ['master', 'worker']:
@@ -255,11 +259,12 @@ def training_distributed(session, model, labels, max_steps,
       train_step = optimizer(cross_entropy, global_step)
 
     init = tf.global_variables_initializer()
-    session.run(init)
 
-    training_steps(session, train_step, model, labels, global_step, max_steps,
-                   inp_tensor, label_tensor,
-                   eval_inp_tensor, eval_label_tensor)
+    with tf.train.MonitoredTrainingSession(master='', is_chief=is_chief) as session:
+      session.run(init)
+      training_steps(session, train_step, model, labels, global_step, max_steps,
+                     inp_tensor, label_tensor,
+                     eval_inp_tensor, eval_label_tensor)
 
 
 
@@ -313,22 +318,20 @@ if __name__ == "__main__":
   eval_tensor, eval_lab_tensor = read_input_tensor(parse_args.eval_data_path,
                                                    skiprows=[0])
 
-  session = tf.Session()
-
   inputs, labels = get_inputs_and_labels()
   nn_model = model.inference(inputs)
 
   # Start single node training
   if not parse_args.distributed:
     training_single(
-        session, nn_model, labels,
+        nn_model, labels,
         parse_args.max_steps, train_tensor, train_lab_tensor,
         eval_tensor, eval_lab_tensor
     )
   # Start distributed training
   elif parse_args.distributed:
     training_distributed(
-        session, nn_model, labels,
+        nn_model, labels,
         parse_args.max_steps, train_tensor, train_lab_tensor,
         eval_tensor, eval_lab_tensor
     )
