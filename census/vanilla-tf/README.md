@@ -3,6 +3,7 @@
 This sample uses the [TensorFlow](https://tensorflow.org) low level APIs and
 [Google Cloud Machine Learning Engine](https://cloud.google.com/ml) to demonstrate
 the single node and distributed TF vanilla version for Census Income Dataset.
+Setup instructions for the [Cloud ML Engine](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
 
 ## Download the data
 Follow the [Census Income
@@ -24,6 +25,7 @@ There are two options for the virtual environments:
 
 ## Install dependencies
 Install the following dependencies:
+ * Install [Cloud SDK](https://cloud.google.com/sdk/)
  * Install [TensorFlow](https://www.tensorflow.org/install/)
  * Install [Pandas](http://pandas.pydata.org/pandas-docs/stable/install.html#installing-from-pypi)
  * Install [gcloud](https://cloud.google.com/sdk/gcloud/)
