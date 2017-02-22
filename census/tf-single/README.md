@@ -106,6 +106,16 @@ gcloud beta ml local train --package-path trainer \
 Run the distributed training code on cloud using `gcloud`.
 
 ```
-gcloud
+gcloud beta ml jobs submit training $JOB_NAME \
+                                    --job-dir $JOB_DIR \
+                                    --scale-tier STANDARD_1 \
+                                    --runtime-version 1.0 \
+                                    --module-name trainer.task \
+                                    --package-path trainer/ \
+                                    --region us-central1 \
+                                    -- \
+                                    --train_data_path $GCS_TRAIN_PATH \
+                                    --eval_data_path $GCS_EVAL_PATH \
+                                    --max_steps $MAX_STEPS \
+                                    --distributed True
 ```
-
