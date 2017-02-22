@@ -74,7 +74,7 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --max_steps 200
 ```
 ## Accuracy
-You should see an accuracy of `82.84%` for default number of training steps.
+You should see an accuracy of around `82.84%` for default number of training steps.
 
 # Distributed nodes
 Distributed version of the code uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed). 
