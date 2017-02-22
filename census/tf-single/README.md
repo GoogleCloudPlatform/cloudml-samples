@@ -79,7 +79,7 @@ You should see an accuracy of `82.84%` for default number of training steps.
 Distributed version of the code uses Distributed TensorFlow. The main change to
 make the distributed version work is usage of `TF_CONFIG` environment variable.
 The environment variable is generated using `gcloud` and parsed to create a
-`ClusterSpec`. 
+`ClusterSpec`.
 
 ## How to run the code
 
@@ -98,4 +98,4 @@ gcloud beta ml local train --package-path trainer \
                            --distributed True
 ```
 
-### gcloud cloud ml run
+### Gcloud Cloud ML Engine Run
