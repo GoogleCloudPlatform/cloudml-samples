@@ -234,8 +234,9 @@ def training_single(model, labels, max_steps,
 
   cross_entropy = loss(model, labels)
   train_step = optimizer(cross_entropy, global_step)
+  accuracy = evaluation_step(model, labels)
 
-  training_steps(session, train_step, model, labels, global_step, max_steps,
+  training_steps(session, train_step, accuracy, model, labels, global_step, max_steps,
                  inp_tensor, label_tensor,
                  eval_inp_tensor, eval_label_tensor)
 
