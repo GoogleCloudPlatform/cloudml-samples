@@ -80,11 +80,14 @@ You should see an accuracy of around `82.84%` for default number of training ste
 Distributed node training uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed). 
 The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml/reference/configuration-data-structures#tf_config_environment_variable)
 environment variable. The environment variable is generated using `gcloud` and parsed to create a
-[ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster). See the [ScaleTier](https://cloud.google.com/ml/pricing#ml_training_units_by_scale_tier) for predefined tiers. 
+[ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster). See the [ScaleTier](https://cloud.google.com/ml/pricing#ml_training_units_by_scale_tier) for predefined tiers
 
 ## How to run the code
+You can run the code either locally or on cloud using `gcloud`.
 
 ### Using gcloud local
+Run the distributed training code locally using `gcloud`.
+
 ```
 gcloud beta ml local train --package-path trainer \
                            --module-name trainer.task \
@@ -100,3 +103,9 @@ gcloud beta ml local train --package-path trainer \
 ```
 
 ### Using gcloud on cloud
+Run the distributed training code on cloud using `gcloud`.
+
+```
+gcloud
+```
+
