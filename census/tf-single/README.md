@@ -77,10 +77,10 @@ gcloud beta ml jobs submit training $JOB_NAME \
 You should see an accuracy of `82.84%` for default number of training steps.
 
 # Distributed nodes
-Distributed version of the code uses Distributed TensorFlow. The main change to
-make the distributed version work is usage of `TF_CONFIG` environment variable.
-The environment variable is generated using `gcloud` and parsed to create a
-`ClusterSpec`.
+Distributed version of the code uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed). 
+The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml/reference/configuration-data-structures#tf_config_environment_variable)
+environment variable. The environment variable is generated using `gcloud` and parsed to create a
+[ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster).
 
 ## How to run the code
 
