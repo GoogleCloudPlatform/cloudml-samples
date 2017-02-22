@@ -48,6 +48,31 @@ CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss', 'hour
 LABEL_COL = 'income_bracket'
 
 
+#
+# Graph creation section
+# The three functions below create everything for the graph.
+#
+def loss(model, labels):
+  """Compute cross entropy loss function."""
+  cross_entropy = tf.reduce_mean(
+      tf.nn.softmax_cross_entropy_with_logits(logits=model, labels=labels))
+  return cross_entropy
+
+def optimizer(loss, global_step):
+  """Gradient descent optimizer with 0.5 learning rate."""
+  train_step = tf.train.GradientDescentOptimizer(0.5).minimize(
+      loss, global_step=global_step)
+  return train_step
+
+def evaluation_step(model, labels):
+  """Compute the graph for the accuracy step."""
+  correct_prediction = tf.equal(tf.argmax(model, 1), tf.argmax(labels, 1))
+  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+  return accuracy
+
+#
+# Read the input and process
+#
 def read_local_or_gcs(file_name):
   """Read local or gcs file."""
   if file_name.startswith('gs://'):
@@ -70,7 +95,6 @@ def read_input_data(file_name, skiprows=None):
 
   label_df = input_df.pop(LABEL_COL)
   return (input_df, label_df)
-
 
 def generate_input(input_df, label_df):
   """Prepare the input columns using SparseTensor."""
@@ -99,6 +123,9 @@ def generate_input(input_df, label_df):
   )
 
 
+#
+# Feature crosses and generation of wide columns
+#
 def sparse_cross(feature_tensors, num_buckets, name='cross'):
   """Sparse feature cross of the feature SparseTensors."""
   return sparse_feature_cross_op.sparse_feature_cross(
@@ -108,7 +135,6 @@ def sparse_cross(feature_tensors, num_buckets, name='cross'):
       hash_key=tf.contrib.layers.SPARSE_FEATURE_CROSS_DEFAULT_HASH_KEY,
       name=name
   )
-
 
 def generate_wide_columns(input_columns):
   """Generate wide columns by adding feature crosses of SparseTensors."""
@@ -141,7 +167,6 @@ def generate_wide_columns(input_columns):
   ]
 
   return wide_columns
-
 
 def concat_wide_columns(wide_columns):
   """Concat the tensors from wide columns."""
@@ -177,25 +202,11 @@ def read_input_tensor(input_file, skiprows=None):
   in_tensor, label_tensor = generate_input(inp, label)
   return concat_wide_columns(generate_wide_columns(in_tensor)), label_tensor
 
-def loss(model, labels):
-  """Compute cross entropy loss function."""
-  cross_entropy = tf.reduce_mean(
-      tf.nn.softmax_cross_entropy_with_logits(logits=model, labels=labels))
-  return cross_entropy
 
-def optimizer(loss, global_step):
-  """Gradient descent optimizer with 0.5 learning rate."""
-  train_step = tf.train.GradientDescentOptimizer(0.5).minimize(
-      loss, global_step=global_step)
-  return train_step
-
-def evaluation_step(model, labels):
-  """Compute the graph for the accuracy step."""
-  correct_prediction = tf.equal(tf.argmax(model, 1), tf.argmax(labels, 1))
-  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-  return accuracy
-
-
+#
+# Function to perform the actual training loop.
+# This function is same for single and distributed.
+#
 def training_steps(session, train_step, eval_step, model, labels, global_step, max_steps,
                    inp, label,
                    eval_inp, eval_label):
@@ -221,6 +232,9 @@ def training_steps(session, train_step, eval_step, model, labels, global_step, m
   return train_step
 
 
+#
+# Single and Distributed training functions.
+#
 def training_single(model, labels, max_steps,
                     inp_tensor, label_tensor,
                     eval_inp_tensor, eval_label_tensor):
@@ -274,6 +288,9 @@ def training_distributed(model, labels, max_steps,
                      inp_tensor, label_tensor,
                      eval_inp_tensor, eval_label_tensor)
 
+#
+# Evaluate the accuracy graph to compute scalar accuracy.
+#
 def evaluate_accuracy(session, accuracy, inp_tensor, label_tensor):
   """Perform the evaluation step to calculate accuracy."""
   return 100 * session.run(

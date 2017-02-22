@@ -36,13 +36,14 @@ def inference(x, hidden_units=[100,70,50,25], y_units=2):
   previous_units = hidden_units[0]
 
   with tf.variable_scope("layer_0") as scope:
+    initializer = random_normal()
     weight = tf.get_variable("weight_0",
                              [x.get_shape()[1], previous_units],
-                             initializer=random_normal())
+                             initializer=initializer)
 
     bias = tf.get_variable("bias_0",
                            [previous_units],
-                           initializer=random_normal())
+                           initializer=initializer)
 
     hidden_layer = tf.add(tf.matmul(x, weight), bias)
     hidden_layer = tf.nn.relu(hidden_layer)
@@ -50,13 +51,14 @@ def inference(x, hidden_units=[100,70,50,25], y_units=2):
   for layer_num, units in enumerate(hidden_units[1:]):
     layer_num+=1
     with tf.variable_scope("layer_{}".format(layer_num)) as scope:
+      initializer = random_normal()
       weight = tf.get_variable("weight_{}".format(layer_num),
                                [previous_units, units],
-                               initializer=random_normal())
+                               initializer=initializer)
 
       bias = tf.get_variable("bias_{}".format(layer_num),
                              [units],
-                             initializer=random_normal())
+                             initializer=initializer)
 
       layer = tf.add(tf.matmul(hidden_layer, weight), bias)
       layer = tf.nn.relu(layer)
@@ -67,13 +69,14 @@ def inference(x, hidden_units=[100,70,50,25], y_units=2):
   layer_num+=1
 
   with tf.variable_scope("layer_{}".format(layer_num)) as scope:
+    initializer = random_normal()
     weight = tf.get_variable("weight_{}".format(layer_num),
                              [previous_units, y_units],
-                             initializer=random_normal())
+                             initializer=initializer)
 
     bias = tf.get_variable("bias_{}".format(layer_num),
                            [y_units],
-                           initializer=random_normal())
+                           initializer=initializer)
 
     output_layer = tf.add(tf.matmul(hidden_layer, weight), bias)
     output_layer = tf.nn.softmax(output_layer)
