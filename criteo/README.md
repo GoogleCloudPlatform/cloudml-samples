@@ -10,7 +10,8 @@ the [criteo dataset](https://www.kaggle.com/c/criteo-display-ad-challenge).
     before trying the sample. More documentation about Cloud ML is available
     [here](https://cloud.google.com/ml/docs/).
 *   Make sure you have installed
-    [Tensorflow](https://www.tensorflow.org/get_started/os_setup).
+    [Tensorflow](https://www.tensorflow.org/install/) if you want to run the
+    sample locally.
 *   Make sure your Google Cloud project has sufficient quota.
 
 ## Sample Overview
@@ -21,7 +22,7 @@ This sample consists of two parts:
 
 Data pre-processing step involves taking the TSV data as input and converting it
 to
-[TFRecords](https://www.tensorflow.org/api_docs/python/python_io/data_io__python_functions_)
+[TFRecords](https://www.tensorflow.org/api_guides/python/python_io)
 format.
 
 ### Model Training
