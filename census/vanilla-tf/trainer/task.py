@@ -75,8 +75,8 @@ def evaluation_step(logits, labels):
 #
 def get_inputs_and_labels():
   """Placeholder for inputs and labels
-     input shape = [None, 364] label shape = [None, 2]."""
-  inputs = tf.placeholder(tf.float32, shape=[None, 346])
+     input shape = [None, 337] label shape = [None, 2]."""
+  inputs = tf.placeholder(tf.float32, shape=[None, 337])
   labels = tf.placeholder(tf.float32, shape=[None, 2])
   return (inputs, labels)
 
@@ -136,48 +136,19 @@ def generate_wide_columns(input_columns):
   age_bucket = bucketization_op.bucketize(age, [18, 25, 30, 35, 40, 45, 50, 55, 60, 65])
 
   wide_columns = [
-      sparse_cross([education, occupation], 15 * 16, name='edu_occ'),
-      sparse_cross(
-        [age_bucket, race, occupation],
-        10 * 5 * 15,
-        name='age_race_occ'),
-      sparse_cross(
-        [native_country, occupation],
-        42 * 15,
-        name='native_country_occ'),
-      gender,
-      native_country,
-      education,
-      occupation,
-      workclass,
-      marital_status,
-      relationship,
-      age_bucket
+      (sparse_cross([education, occupation], 15 * 16, name='edu_occ'), 15 * 16),
+      (gender, 2),
+      (native_country, 42),
+      (education, 16),
+      (occupation, 15),
+      (workclass, 9),
+      (marital_status, 7),
+      (relationship, 6)
   ]
 
-  return wide_columns
-
-def concat_wide_columns(wide_columns):
-  """Concat the tensors from wide columns."""
-
-  (edu_occ, age_race_occ, native_country_occ, gender,
-   native_country, education, occupation, workclass,
-   marital_status, relationship, age_bucket) = wide_columns
-
-  dense_tensors = [
-      sparse_to_dense(edu_occ, 15 * 16),
-      sparse_to_dense(gender, 2),
-      sparse_to_dense(workclass, 9),
-      sparse_to_dense(native_country, 42),
-      sparse_to_dense(education, 16),
-      sparse_to_dense(occupation, 15),
-      sparse_to_dense(workclass, 9),
-      sparse_to_dense(marital_status, 7),
-      sparse_to_dense(relationship, 6)
-  ]
+  dense_tensors = [sparse_to_dense(col[0], col[1]) for col in wide_columns]
 
   return tf.concat(dense_tensors, 1)
-
 
 def sparse_to_dense(sparse_tensor, vocab_size):
   """Convert the sparse to dense tensor."""
@@ -189,7 +160,7 @@ def read_input_tensor(input_file, skiprows=None):
   """Concatenate the wide columns to produce a single tensor."""
   inp, label = read_input_data(input_file, skiprows)
   in_tensor, label_tensor = generate_input(inp, label)
-  return concat_wide_columns(generate_wide_columns(in_tensor)), label_tensor
+  return generate_wide_columns(in_tensor), label_tensor
 
 
 #
