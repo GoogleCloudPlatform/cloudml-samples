@@ -31,6 +31,8 @@ from StringIO import StringIO
 import model
 import os
 
+tf.logging.set_verbosity(tf.logging.INFO)
+
 #See tutorial on wide and deep https://www.tensorflow.org/tutorials/wide_and_deep/
 #https://github.com/tensorflow/tensorflow/blob/master/tensorflow/contrib/layers/python/layers/feature_column.py
 
@@ -167,9 +169,9 @@ def read_input_tensor(input_file, skiprows=None):
 # Function to perform the actual training loop.
 # This function is same for single and distributed.
 #
-def training_steps(session, train_step, eval_step, logits, labels, global_step, max_steps,
-                   inp, label,
-                   eval_inp, eval_label):
+def training_steps(session, train_step, eval_step, logits,
+                   labels, global_step, max_steps, inp, label,
+                   eval_inp, eval_label, job_name='local', job_id=0):
   """Run the training steps and calculate accuracy every 10 steps."""
   step = tf.train.global_step(session, global_step)
 
@@ -186,8 +188,8 @@ def training_steps(session, train_step, eval_step, logits, labels, global_step, 
 
     if step % 10 == 0:
       accuracy = evaluate_accuracy(session, eval_step, eval_inp, eval_label)
-      print('Step number {} of {} done, Accuracy {:.2f}%'.format(
-          step, max_steps, accuracy))
+      print('[{}/{}]: Step number {} of {} done, Accuracy {:.2f}%'.format(
+          job_name, job_id, step, max_steps, accuracy))
 
   return train_step
 
@@ -252,9 +254,10 @@ def training_distributed(logits, labels, job_dir, max_steps,
                                            save_checkpoint_secs=20,
                                            save_summaries_steps=50) as session:
       session.run(init)
-      training_steps(session, train_step, accuracy, logits, labels, global_step, max_steps,
-                     inp_tensor, label_tensor,
-                     eval_inp_tensor, eval_label_tensor)
+      training_steps(session, train_step, accuracy,
+                     logits, labels, global_step, max_steps,
+                     inp_tensor, label_tensor, eval_inp_tensor,
+                     eval_label_tensor, job_name=job_name, job_id=task_index)
 
 #
 # Evaluate the accuracy graph to compute scalar accuracy.
