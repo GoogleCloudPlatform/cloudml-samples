@@ -52,10 +52,10 @@ LABEL_COL = 'income_bracket'
 # Graph creation section
 # The three functions below create everything for the graph.
 #
-def loss(model, labels):
+def loss(logits, labels):
   """Compute cross entropy loss function."""
   cross_entropy = tf.reduce_mean(
-      tf.nn.softmax_cross_entropy_with_logits(logits=model, labels=labels))
+      tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels))
   return cross_entropy
 
 def optimizer(loss, global_step):
@@ -64,9 +64,9 @@ def optimizer(loss, global_step):
       loss, global_step=global_step)
   return train_step
 
-def evaluation_step(model, labels):
+def evaluation_step(logits, labels):
   """Compute the graph for the accuracy step."""
-  correct_prediction = tf.equal(tf.argmax(model, 1), tf.argmax(labels, 1))
+  correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   return accuracy
 
@@ -109,9 +109,7 @@ def generate_input(input_df, label_df):
       label_df.astype('category').cat.codes.values,
       2, off_value=1, on_value=0)
 
-  return (
-      continuous_columns + categorical_columns, label_tensor
-  )
+  return continuous_columns + categorical_columns, label_tensor
 
 
 #
@@ -198,7 +196,7 @@ def read_input_tensor(input_file, skiprows=None):
 # Function to perform the actual training loop.
 # This function is same for single and distributed.
 #
-def training_steps(session, train_step, eval_step, model, labels, global_step, max_steps,
+def training_steps(session, train_step, eval_step, logits, labels, global_step, max_steps,
                    inp, label,
                    eval_inp, eval_label):
   """Run the training steps and calculate accuracy every 10 steps."""
@@ -226,7 +224,7 @@ def training_steps(session, train_step, eval_step, model, labels, global_step, m
 #
 # Single and Distributed training functions.
 #
-def training_single(model, labels, max_steps,
+def training_single(logits, labels, job_dir, max_steps,
                     inp_tensor, label_tensor,
                     eval_inp_tensor, eval_label_tensor):
   """Perform single node training."""
@@ -234,24 +232,28 @@ def training_single(model, labels, max_steps,
   global_step = tf.contrib.framework.get_or_create_global_step()
   init = tf.global_variables_initializer()
 
-  session = tf.Session()
+
+  cross_entropy = loss(logits, labels)
+  train_step = optimizer(cross_entropy, global_step)
+  accuracy = evaluation_step(logits, labels)
+
+  session = tf.train.MonitoredTrainingSession(checkpoint_dir=job_dir,
+                                              save_checkpoint_secs=20,
+                                              save_summaries_steps=50)
   session.run(init)
 
-  cross_entropy = loss(model, labels)
-  train_step = optimizer(cross_entropy, global_step)
-  accuracy = evaluation_step(model, labels)
-
-  training_steps(session, train_step, accuracy, model, labels, global_step, max_steps,
+  training_steps(session, train_step, accuracy, logits, labels, global_step, max_steps,
                  inp_tensor, label_tensor,
                  eval_inp_tensor, eval_label_tensor)
 
   return train_step
 
-def training_distributed(model, labels, max_steps,
+def training_distributed(logits, labels, job_dir, max_steps,
                          inp_tensor, label_tensor,
                          eval_inp_tensor, eval_label_tensor):
   """Perform distributed training."""
 
+  # Parse the TF_CONFIG to create cluster spec and job name
   cluster_spec, job_name, task_index = parse_tf_config()
 
   # Create and start a server
@@ -267,15 +269,19 @@ def training_distributed(model, labels, max_steps,
     with tf.device(tf.train.replica_device_setter()):
       global_step = tf.contrib.framework.get_or_create_global_step()
 
-      cross_entropy = loss(model, labels)
+      cross_entropy = loss(logits, labels)
       train_step = optimizer(cross_entropy, global_step)
-      accuracy = evaluation_step(model, labels)
+      accuracy = evaluation_step(logits, labels)
 
     init = tf.global_variables_initializer()
 
-    with tf.train.MonitoredTrainingSession(master='', is_chief=is_chief) as session:
+    with tf.train.MonitoredTrainingSession(master=server.target,
+                                           is_chief=is_chief,
+                                           checkpoint_dir=job_dir,
+                                           save_checkpoint_secs=20,
+                                           save_summaries_steps=50) as session:
       session.run(init)
-      training_steps(session, train_step, accuracy, model, labels, global_step, max_steps,
+      training_steps(session, train_step, accuracy, logits, labels, global_step, max_steps,
                      inp_tensor, label_tensor,
                      eval_inp_tensor, eval_label_tensor)
 
@@ -320,6 +326,10 @@ if __name__ == "__main__":
       '--eval_data_path', required=True, type=str,
       help='Evaluation file location')
   parser.add_argument(
+      '--job_dir', required=True, type=str,
+      help='Location to write checkpoints and export model'
+  )
+  parser.add_argument(
       '--distributed', default=False, type=bool,
       help='Run the code either as single or distributed mode')
   parser.add_argument('--max_steps', type=int, default=200,
@@ -327,23 +337,25 @@ if __name__ == "__main__":
   parse_args, unknown = parser.parse_known_args()
 
   train_tensor, train_lab_tensor = read_input_tensor(parse_args.train_data_path)
+
+  # Skip first row which has meta information
   eval_tensor, eval_lab_tensor = read_input_tensor(parse_args.eval_data_path,
                                                    skiprows=[0])
 
   inputs, labels = get_inputs_and_labels()
-  nn_model = model.inference(inputs)
+  logits = model.inference(inputs)
 
   # Start single node training
   if not parse_args.distributed:
     training_single(
-        nn_model, labels,
+        logits, labels, parse_args.job_dir,
         parse_args.max_steps, train_tensor, train_lab_tensor,
         eval_tensor, eval_lab_tensor
     )
   # Start distributed training
   elif parse_args.distributed:
     training_distributed(
-        nn_model, labels,
+        logits, labels, parse_args.job_dir,
         parse_args.max_steps, train_tensor, train_lab_tensor,
         eval_tensor, eval_lab_tensor
     )
