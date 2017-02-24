@@ -49,7 +49,8 @@ python trainer/task.py --train_data_path $TRAIN_DATA_PATH \
 ```
 
 ### Using gcloud local
-Run the code on your local machine using `gcloud`:
+Run the code on your local machine using `gcloud`. This allows you to mock
+running it on the cloud:
 
 ```
 gcloud beta ml local train --package-path trainer \
