@@ -25,12 +25,13 @@ CSV_COLUMNS = ['age', 'workclass', 'fnlwgt', 'education', 'education_num',
            'marital_status', 'occupation', 'relationship', 'race', 'gender',
            'capital_gain', 'capital_loss', 'hours_per_week', 'native_country',
            'income_bracket']
-
 LABEL_COLUMN = 'income_bracket'
 
 DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''], [''],
             [0], [0], [0], [''], ['']]
 
+EVAL_HEADER_LINES = 1
+TRAIN_HEADER_LINES = 0
 
 INPUT_COLUMNS = [
     layers.sparse_column_with_keys(
