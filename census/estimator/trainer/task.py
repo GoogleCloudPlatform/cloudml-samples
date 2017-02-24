@@ -16,7 +16,9 @@ def generate_experiment_fn(train_file,
                            train_batch_size=40,
                            eval_batch_size=40,
                            embedding_size=8,
-                           hidden_units=None,
+                           first_layer_size=100,
+                           num_layers=4,
+                           scale_factor=0.7,
                            **experiment_args):
   def _experiment_fn(output_dir):
     train_input = model.generate_input_fn(
@@ -35,7 +37,10 @@ def generate_experiment_fn(train_file,
         model.build_estimator(
             job_dir,
             embedding_size=embedding_size,
-            hidden_units=hidden_units
+            hidden_units=[
+                int(first_layer_size * scale_factor**i)
+                for i in range(num_layers)
+            ]
         ),
         train_input_fn=train_input,
         eval_input_fn=eval_input,
@@ -112,11 +117,22 @@ if __name__ == '__main__':
       type=int
   )
   parser.add_argument(
-      '--hidden-units',
-      help='List of hidden layer sizes to use for DNN feature columns',
-      nargs='+',
-      type=int,
-      default=[100, 70, 50, 25]
+      '--first-layer-size',
+      help='Number of nodes in the first layer of the DNN',
+      default=100,
+      type=int
+  )
+  parser.add_argument(
+      '--num-layers',
+      help='Number of layers in the DNN',
+      default=4,
+      type=int
+  )
+  parser.add_argument(
+      '--scale-factor',
+      help='How quickly should the size of the layers in the DNN decay',
+      default=0.7,
+      type=float
   )
   parser.add_argument(
       '--job_dir',
