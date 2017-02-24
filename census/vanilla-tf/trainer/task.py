@@ -72,8 +72,9 @@ def make_graph(inputs, labels, learning_rate=0.5):
 
 def get_placeholders():
   """Create placeholder for inputs and prediction labels.
-     inputs: 337 dimension feature after applying one-hot and crosses
-     labels: 2 dimension class
+
+  Returns:
+     tuple (tf.placeholder): 337 dimension feature and 2 classes
   """
   inputs = tf.placeholder(tf.float32, shape=[None, 337])
   labels = tf.placeholder(tf.float32, shape=[None, 2])
@@ -96,7 +97,16 @@ def read_input_data(file_name, skiprows=None):
 
 
 def generate_input(input_df, label_df):
-  """Prepare the input columns using SparseTensor."""
+  """Convert the input columns to continuous and sparse tensor and
+     labels to the one hot tensor.
+
+  Args:
+      input_df (DataFrame): Input dataframe
+      label_df (DataFrame): Label dataframe
+
+  Returns:
+      tuple (tensor): Input column tensor and label tensor
+  """
 
   # convert the continuous columns into tf.constant tensor
   continuous_columns = [
