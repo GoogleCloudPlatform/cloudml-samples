@@ -24,7 +24,8 @@ def random_normal():
   """Random normal initializer."""
   return tf.random_normal_initializer(mean=0.0, stddev=0.1)
 
-def create_layer(layer_name, weight_name, bias_name):
+def add_layer(curr_layer, layer_name, weight_name, bias_name, shape, ops):
+  """Create and add a layer in the neural network."""
   with tf.variable_scope(layer_name):
     weight = tf.get_variable(weight_name,
                              shape,
@@ -34,6 +35,8 @@ def create_layer(layer_name, weight_name, bias_name):
                            shape[1],
                            initializer=tf.zeros_initializer(tf.float32))
 
+    return apply(ops, [tf.matmul(curr_layer, weight) + bias])
+
 def inference(input_x, hidden_units=[100,70,50,25], num_classes=2):
   """Create a Feed forward network running on single node
 
@@ -41,10 +44,10 @@ def inference(input_x, hidden_units=[100,70,50,25], num_classes=2):
     input_x (tf.placeholder): Feature placeholder input
     hidden_units (list): Hidden units
     num_classes (int): Number of classes
-  """
-  input_x = tf.to_float(input_x)
-  previous_units = hidden_units[0]
 
+  Returns:
+    Feed forward NN with relu and softmax layer
+  """
   layers_size = [input_x.get_shape()[1]] + hidden_units
   layers_shape = zip(layers_size[0:],layers_size[1:])
 
@@ -52,30 +55,13 @@ def inference(input_x, hidden_units=[100,70,50,25], num_classes=2):
 
   # Creates the relu hidden layers
   for num, shape in enumerate(layers_shape):
-    with tf.variable_scope("hidden_layer_{}".format(num)):
-      weight = tf.get_variable("weight_{}".format(num),
-                               shape,
-                               initializer=random_normal())
+    curr_layer = add_layer(curr_layer, 'relu_{}'.format(num),
+                           'relu_w_{}'.format(num), 'relu_b_{}'.format(num),
+                           shape, tf.nn.relu)
 
-      bias = tf.get_variable("bias_{}".format(num),
-                             shape[1],
-                             initializer=tf.zeros_initializer(tf.float32))
-
-      curr_layer = tf.nn.relu(tf.matmul(curr_layer, weight) + bias)
 
   # Creates the softmax output layer
-  # Shape of the weight matrix
   shape = [hidden_units[-1], num_classes]
-
-  with tf.variable_scope("output_layer"):
-    weight = tf.get_variable("weight_output",
-                             shape,
-                             initializer=random_normal())
-
-    bias = tf.get_variable("bias_output",
-                           shape[1],
-                           initializer=tf.zeros_initializer(tf.float32))
-
-    curr_layer = tf.nn.softmax(tf.matmul(curr_layer, weight) + bias)
-
+  curr_layer = add_layer(curr_layer, 'softmax', 'softmax_w', 'softmax_b',
+                         shape, tf.nn.softmax)
   return curr_layer
