@@ -19,18 +19,18 @@
 
 import tensorflow as tf
 
-def inference(input_x, hidden_units=[100,70,50,25], y_units=2):
+def inference(input_x, hidden_units=[100,70,50,25], num_classes=2):
   """Create a Feed forward network running on single node
 
   Args:
-    input_x: Feature placeholder input
-    hidden_units: Hidden units
-    y_units: Number of classes
+    input_x (tf.placeholder): Feature placeholder input
+    hidden_units (list): Hidden units
+    num_classes (int): Number of classes
   """
   input_x = tf.to_float(input_x)
   previous_units = hidden_units[0]
 
-  layers_size = [input_x.get_shape()[1]] + hidden_units + [y_units]
+  layers_size = [input_x.get_shape()[1]] + hidden_units + [num_classes]
   layers_shape = zip(layers_size[0:],layers_size[1:])
 
   curr_layer = input_x
