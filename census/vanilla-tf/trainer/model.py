@@ -15,9 +15,14 @@
 
 """Implements the vanilla tensorflow model on single node."""
 
-# See https://goo.gl/JZ6hlH for DNN combined
+# See https://goo.gl/JZ6hlH to contrast this with DNN combined
+# which the high level estimator based sample implements.
 
 import tensorflow as tf
+
+def random_normal():
+  """Random normal initializer."""
+  return tf.random_normal_initializer(mean=0.0, stddev=0.1)
 
 def inference(input_x, hidden_units=[100,70,50,25], num_classes=2):
   """Create a Feed forward network running on single node
@@ -37,7 +42,8 @@ def inference(input_x, hidden_units=[100,70,50,25], num_classes=2):
   for num, shape in enumerate(layers_shape):
     with tf.variable_scope("layer_{}".format(num)):
       weight = tf.get_variable("weight_{}".format(num),
-                               shape)
+                               shape,
+                               initializer=random_normal())
       bias = tf.get_variable("bias_{}".format(num),
                              shape[1],
                              initializer=tf.zeros_initializer(tf.float32))

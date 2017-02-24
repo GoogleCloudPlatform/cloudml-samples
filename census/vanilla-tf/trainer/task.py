@@ -15,7 +15,7 @@
 
 """This code implements a Feed forward neural network using TF low level APIs.
    It implements a binary classifier for Census Income Dataset using both single
-   and distributed node cluster. 
+   and distributed node cluster.
 """
 
 
