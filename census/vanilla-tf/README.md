@@ -60,7 +60,7 @@ gcloud beta ml local train --package-path trainer \
                            [--max_steps $MAX_STEPS]
 ```
 
-### Using Google Cloud ML Engine
+### Using Cloud ML Engine
 Run the code on Cloud ML Engine using `gcloud`:
 
 ```
