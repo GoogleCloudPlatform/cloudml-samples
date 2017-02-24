@@ -1,13 +1,11 @@
 import argparse
-import json
-import os
 
 import model
 
+import tensorflow as tf
 from tensorflow.contrib.learn.python.learn import learn_runner
 from tensorflow.contrib.learn.python.learn.utils import (
     saved_model_export_utils)
-from tensorflow.contrib import metrics, learn
 
 
 def generate_experiment_fn(train_file,
@@ -33,7 +31,7 @@ def generate_experiment_fn(train_file,
         skip_header_lines=model.EVAL_HEADER_LINES,
         shuffle=False
     )
-    return learn.Experiment(
+    return tf.contrib.learn.Experiment(
         model.build_estimator(
             job_dir,
             embedding_size=embedding_size,
@@ -44,12 +42,6 @@ def generate_experiment_fn(train_file,
         ),
         train_input_fn=train_input,
         eval_input_fn=eval_input,
-        eval_metrics={
-            'training/hptuning/metric': learn.MetricSpec(
-                metric_fn=metrics.streaming_accuracy,
-                prediction_key='logits'
-            )
-        },
         export_strategies=[saved_model_export_utils.make_export_strategy(
             model.serving_input_fn,
             default_output_alternative_key=None,
@@ -135,7 +127,7 @@ if __name__ == '__main__':
       type=float
   )
   parser.add_argument(
-      '--job_dir',
+      '--job-dir',
       help='GCS location to write checkpoints and export models',
       required=True
   )
@@ -157,14 +149,6 @@ if __name__ == '__main__':
   args = parser.parse_args()
   arguments = args.__dict__
   job_dir = arguments.pop('job_dir')
-  # Append trial_id to path if we are doing hptuning
-  # This code can be removed if you are not using hyperparameter tuning
-  job_dir = os.path.join(
-      job_dir,
-      json.loads(
-          os.environ.get('TF_CONFIG', '{}')
-      ).get('task', {}).get('trial', '')
-  )
 
   # Run the training job
   learn_runner.run(generate_experiment_fn(**arguments), job_dir)

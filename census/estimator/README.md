@@ -81,14 +81,11 @@ TF.Learn models require no code changes to be distributed in Cloud ML. Simply ad
 
 ### HyperParameter Tuning
 
-To use hyperparameter tuning, we must define an hyperparameter tuning config as described [here](https://cloud.google.com/ml/docs/how-tos/using-hyperparameter-tuning) and pass it to `gcloud` using the `--config` flag. An example config that tunes embedding sizes for the deep columns of this model is provided in [hptuning_config.yaml](hptuning_config.yaml).
+To use hyperparameter tuning, we must define an hyperparameter tuning config as described [here](https://cloud.google.com/ml/docs/how-tos/using-hyperparameter-tuning) and pass it to `gcloud` using the `--config` flag. An example config that tunes the hidden layers of the `DNN` is provided in [hptuning_config.yaml](hptuning_config.yaml).
 
-The necessary code changes to enable hyperparameter tuning are minimal, and have already been made. They are:
+To use hyperparameter tuning we need only create a metric using `tf.contrib.learn.MetricSpec` and pass it to `Experiment` to be used in evaluation. Here our `DNNLinearCombinedClassifier` comes with a number of default metrics, we'll use `accuracy`.
 
-1. Create a metric using `tf.contrib.learn.MetricSpec` named `training/hptuning/metric` and pass it to `Experiment` to be used in evaluation. Here we chose `tf.contrib.metrics.streaming_accuracy` as our metric.
-
-2. Make sure to use the environment variable `TF_CONFIG['task']['trial']` to scope your model directories so that different replicas do not write and read checkpoints from the same locations.
-
+Additionally, we must ensure that different runs use different directories for checkpoints summaries and exports. Fortunately this is taken care of by passing `--job-dir` to the gcloud command rather than directly to our code. The service will use this as a base directory in hyperparameter tuning and append trial ids to the path.
 
 ## Run Predictions
 
