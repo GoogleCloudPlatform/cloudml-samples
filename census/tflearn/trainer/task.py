@@ -16,7 +16,6 @@ def generate_experiment_fn(train_file,
                            train_batch_size=40,
                            eval_batch_size=40,
                            embedding_size=8,
-                           serving_input_fn_type='JSON',
                            hidden_units=None,
                            **experiment_args):
   def _experiment_fn(output_dir):
@@ -28,10 +27,6 @@ def generate_experiment_fn(train_file,
         skip_header_lines=1,
         shuffle=False
     )
-    if args.serving_input_fn_type == 'JSON':
-      serving_input_fn = model.json_serving_input_fn
-    else:
-      serving_input_fn = model.tfrecord_serving_input_fn
     return learn.Experiment(
         model.build_estimator(
             job_dir,
@@ -47,7 +42,7 @@ def generate_experiment_fn(train_file,
             )
         },
         export_strategies=[saved_model_export_utils.make_export_strategy(
-
+            model.serving_input_fn,
             default_output_alternative_key=None,
             exports_to_keep=1
         )],
@@ -58,13 +53,6 @@ def generate_experiment_fn(train_file,
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  # Prediction Arguments
-  parser.add_argument(
-      '--serving-input-fn-type',
-      help='What signature to support in the exported model.',
-      choices=['JSON', 'TFRECORDS'],
-      default='JSON'
-  )
   # Input Arguments
   parser.add_argument(
       '--train-file',
@@ -127,7 +115,7 @@ if __name__ == '__main__':
       default=[100, 70, 50, 25]
   )
   parser.add_argument(
-      '--job-dir',
+      '--job_dir',
       help='GCS location to write checkpoints and export models',
       required=True
   )

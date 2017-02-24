@@ -134,7 +134,7 @@ def feature_columns_to_placeholders(feature_columns, default_batch_size=None):
     }
 
 
-def json_serving_input_fn():
+def serving_input_fn():
     feature_placeholders = feature_columns_to_placeholders(INPUT_COLUMNS)
     features = {
       key: tf.expand_dims(tensor, -1)
@@ -145,11 +145,6 @@ def json_serving_input_fn():
       None,
       feature_placeholders
     )
-
-
-tfrecord_serving_input_fn = tf.contrib.learn.build_parsing_serving_input_fn(
-    layers.create_feature_spec_for_parsing(INPUT_COLUMNS)
-)
 
 
 def generate_input_fn(filename,
