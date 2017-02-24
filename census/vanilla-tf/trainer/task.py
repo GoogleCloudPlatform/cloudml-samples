@@ -114,8 +114,7 @@ def generate_input(input_df, label_df):
 
   # convert the labels into one hot encoding
   label_tensor = tf.one_hot(
-      label_df.astype('category').cat.codes.values,
-      2, off_value=1, on_value=0)
+      label_df.astype('category').cat.codes.values, 2)
 
   return continuous_columns + categorical_columns, label_tensor
 
