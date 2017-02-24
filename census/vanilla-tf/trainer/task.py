@@ -247,14 +247,12 @@ def training_distributed(job_dir, max_steps, train_eval_tensor):
       training_steps(session, graph, inputs, labels, max_steps,
                      train_eval_tensor, job_name=job_name, job_id=task_index)
 
-#
-# Evaluate the accuracy graph to compute scalar accuracy.
-#
-def evaluate_accuracy(session, accuracy, inputs, labels,
+
+def evaluate_accuracy(session, eval_step, inputs, labels,
                       eval_input, eval_label):
   """Perform the evaluation step to calculate accuracy."""
   return 100 * session.run(
-      accuracy,
+      eval_step,
       feed_dict={
           inputs: session.run(eval_input),
           labels: session.run(eval_label)
