@@ -80,11 +80,20 @@ def get_placeholders():
   return inputs, labels
 
 def read_input_data(file_name, skiprows=None):
-  """Read the input data as a pandas DataFrame of features and labels."""
+  """Read the input data as a pandas DataFrame of features and labels.
+
+  Args:
+      file_name (string): Name of the file to read data from.
+      skiprows (int/list): Number or list of rows to skip.
+
+  Returns:
+      tuple: Tuple of input and label pandas dataframe.
+  """
   input_df = pd.read_csv(StringIO(tf.gfile.GFile(file_name).read()), names=CSV_COLUMNS, skiprows=skiprows)
 
   label_df = input_df.pop(LABEL_COL)
   return (input_df, label_df)
+
 
 def generate_input(input_df, label_df):
   """Prepare the input columns using SparseTensor."""
