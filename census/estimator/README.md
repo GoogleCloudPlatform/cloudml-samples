@@ -40,10 +40,10 @@ gcloud beta ml local train \
     --module-name trainer.task \
     --package-path trainer/ \
     -- \
-    --train-file $TRAIN_FILE \
-    --eval-file $EVAL_FILE \
+    --train-files $TRAIN_FILE \
+    --eval-files $EVAL_FILE \
     --train-steps 1000 \
-    --job_dir output
+    --job-dir output
 ```
 
 You should see very verbose output, ending with a line about saving your model.
@@ -70,8 +70,8 @@ gcloud beta ml jobs submit training census \
     --package-path trainer/ \
     --region us-central1 \
     -- \
-    --train-file gs://tf-ml-workshop/widendeep/adult.data \
-    --eval-file gs://tf-ml-workshop/widendeep/adult.test \
+    --train-files gs://tf-ml-workshop/widendeep/adult.data \
+    --eval-files gs://tf-ml-workshop/widendeep/adult.test \
     --train-steps 1000
 ```
 

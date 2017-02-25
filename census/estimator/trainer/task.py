@@ -8,8 +8,8 @@ from tensorflow.contrib.learn.python.learn.utils import (
     saved_model_export_utils)
 
 
-def generate_experiment_fn(train_file,
-                           eval_file,
+def generate_experiment_fn(train_files,
+                           eval_files,
                            num_epochs=None,
                            train_batch_size=40,
                            eval_batch_size=40,
@@ -19,14 +19,20 @@ def generate_experiment_fn(train_file,
                            scale_factor=0.7,
                            **experiment_args):
   def _experiment_fn(output_dir):
+    """Create an experiment given hyperparameters and an output dir.
+    Unlisted args are passed through to Experiment
+    """
+    # num_epochs can control duration if train_steps isn't
+    # passed to Experiment
     train_input = model.generate_input_fn(
-        train_file,
+        train_files,
         num_epochs=num_epochs,
         batch_size=train_batch_size,
         skip_header_lines=model.TRAIN_HEADER_LINES
     )
+    # Don't shuffle evaluation data
     eval_input = model.generate_input_fn(
-        eval_file,
+        eval_files,
         batch_size=eval_batch_size,
         skip_header_lines=model.EVAL_HEADER_LINES,
         shuffle=False
@@ -35,13 +41,16 @@ def generate_experiment_fn(train_file,
         model.build_estimator(
             job_dir,
             embedding_size=embedding_size,
+            # Construct layers sizes with exponetial decay
             hidden_units=[
-                int(first_layer_size * scale_factor**i)
+                max(2, int(first_layer_size * scale_factor**i))
                 for i in range(num_layers)
             ]
         ),
         train_input_fn=train_input,
         eval_input_fn=eval_input,
+        # export strategies control the prediction graph structure
+        # of exported binaries.
         export_strategies=[saved_model_export_utils.make_export_strategy(
             model.serving_input_fn,
             default_output_alternative_key=None,
@@ -56,8 +65,9 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   # Input Arguments
   parser.add_argument(
-      '--train-file',
-      help='GCS or local path to training data',
+      '--train-files',
+      help='GCS or local paths to training data',
+      nargs='+',
       required=True
   )
   parser.add_argument(
@@ -97,8 +107,9 @@ if __name__ == '__main__':
       type=int
   )
   parser.add_argument(
-      '--eval-file',
-      help='GCS or local path to evaluation data',
+      '--eval-files',
+      help='GCS or local paths to evaluation data',
+      nargs='+',
       required=True
   )
   # Training arguments
@@ -151,4 +162,7 @@ if __name__ == '__main__':
   job_dir = arguments.pop('job_dir')
 
   # Run the training job
+  # learn_runner pulls configuration information from environment
+  # variables using tf.learn.RunConfig and uses this configuration
+  # to conditionally execute Experiment, or param server code
   learn_runner.run(generate_experiment_fn(**arguments), job_dir)

@@ -34,8 +34,7 @@ EVAL_HEADER_LINES = 1
 TRAIN_HEADER_LINES = 0
 
 INPUT_COLUMNS = [
-    layers.sparse_column_with_keys(
-        column_name='gender', keys=['female', 'male']),
+    layers.sparse_column_with_keys(column_name='gender', keys=['female', 'male']),
 
     layers.sparse_column_with_keys(
         column_name='race',
@@ -148,14 +147,25 @@ def serving_input_fn():
     )
 
 
-def generate_input_fn(filename,
+def generate_input_fn(filenames,
                       num_epochs=None,
                       shuffle=True,
                       skip_header_lines=0,
                       batch_size=40):
+  """Generates an input function for training or evaluation.
+  Args:
+      filenames: [str] list of CSV files to read data from.
+      num_epochs: int how many times through to read the data.
+        If None will loop through data indefinitely
+      shuffle: bool, whether or not to randomize the order of data.
+        Controls randomization of both file order and line order within
+        files.
+      skip_header_lines: int set to non-zero in order to skip header lines
+        in CSV files.
+      batch_size: int First dimension 
   def _input_fn():
     filename_queue = tf.train.string_input_producer(
-        [filename], num_epochs=num_epochs)
+        filenames, num_epochs=num_epochs, shuffle=shuffle)
     reader = tf.TextLineReader(skip_header_lines=skip_header_lines)
     _, value = reader.read_up_to(filename_queue, num_records=batch_size)
     value_column = tf.expand_dims(value, -1)
