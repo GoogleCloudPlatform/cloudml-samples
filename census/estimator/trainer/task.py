@@ -8,6 +8,9 @@ from tensorflow.contrib.learn.python.learn.utils import (
     saved_model_export_utils)
 
 
+tf.logging.set_verbosity(tf.logging.INFO)
+
+
 def generate_experiment_fn(train_files,
                            eval_files,
                            num_epochs=None,
@@ -18,10 +21,21 @@ def generate_experiment_fn(train_files,
                            num_layers=4,
                            scale_factor=0.7,
                            **experiment_args):
+  """Create an experiment function given hyperparameters.
+  
+  See command line help text for description of args.
+  Returns:
+    A function (output_dir) -> Experiment where output_dir is a string
+    representing the location of summaries, checkpoints, and exports.
+    this function is used by learn_runner to create an Experiment which
+    executes model code provided in the form of an Estimator and
+    input functions.
+
+    All listed arguments in the outer function are used to create an
+    Estimator, and input functions (training, evaluation, serving). 
+    Unlisted args are passed through to Experiment.
+  """
   def _experiment_fn(output_dir):
-    """Create an experiment given hyperparameters and an output dir.
-    Unlisted args are passed through to Experiment
-    """
     # num_epochs can control duration if train_steps isn't
     # passed to Experiment
     train_input = model.generate_input_fn(
