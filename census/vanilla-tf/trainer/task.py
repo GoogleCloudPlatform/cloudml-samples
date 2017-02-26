@@ -86,40 +86,11 @@ def get_placeholders():
   labels = tf.placeholder(tf.float32, shape=[None, 2])
   return inputs, labels
 
-
-def generate_input(features, labels, batch_size):
-  """Convert the input columns to continuous and sparse tensor and
-     labels to the one hot tensor.
-
-  Args:
-      input_df (DataFrame): Input dataframe
-      label_df (DataFrame): Label dataframe
-
-  Returns:
-      tuple (tensor): Input column tensor and label tensor
-  """
-
-  # Get the continuous columns
-  continuous_columns = [
-      features.get(col) for col in CONTINUOUS_COLS
-  ]
-
-  # convert the categorical columns into sparse tensors
-  #
-
-  categorical_columns = [
-      tf.SparseTensor(
-          indices=[[i, 0] for i in range(batch_size)],
-          values=string_ops.string_to_hash_bucket_fast(features[col], vocab),
-          dense_shape=[batch_size, 1])
-      for col, vocab in CATEGORICAL_COLS
-  ]
-
-  # convert the labels into one hot encoding
-  label_tensor = tf.one_hot(labels, 2)
-
-  return continuous_columns + categorical_columns, label_tensor
-
+def sparse_to_dense(sparse_tensor, vocab_size):
+  """Convert the sparse to dense tensor."""
+  dense_tensor = tf.sparse_to_indicator(sparse_tensor, vocab_size)
+  dense_tensor = tf.cast(dense_tensor, tf.int32)
+  return dense_tensor
 
 #
 # Feature crosses and generation of wide columns
@@ -133,6 +104,31 @@ def sparse_cross(feature_tensors, num_buckets, name='cross'):
       hash_key=tf.contrib.layers.SPARSE_FEATURE_CROSS_DEFAULT_HASH_KEY,
       name=name
   )
+
+def to_continuous_and_categorical(features, labels, batch_size):
+  """Convert the input columns to continuous and sparse tensor and
+     labels to the one hot tensor.
+  """
+
+  # get the continuous columns
+  continuous_columns = [
+      features.get(col) for col in CONTINUOUS_COLS
+  ]
+
+  # convert the categorical columns into sparse tensors
+  categorical_columns = [
+      tf.SparseTensor(
+          indices=[[i, 0] for i in range(batch_size)],
+          values=string_ops.string_to_hash_bucket_fast(features[col], vocab),
+          dense_shape=[batch_size, 1])
+      for col, vocab in CATEGORICAL_COLS
+  ]
+
+  # convert the labels into one hot encoding
+  label_tensor = tf.one_hot(labels, 2)
+
+  return continuous_columns + categorical_columns, label_tensor
+
 
 def generate_wide_columns(input_columns):
   """Generate wide columns by adding feature crosses of SparseTensors."""
@@ -159,11 +155,6 @@ def generate_wide_columns(input_columns):
 
   return tf.concat(dense_tensors, 1)
 
-def sparse_to_dense(sparse_tensor, vocab_size):
-  """Convert the sparse to dense tensor."""
-  dense_tensor = tf.sparse_to_indicator(sparse_tensor, vocab_size)
-  dense_tensor = tf.cast(dense_tensor, tf.int32)
-  return dense_tensor
 
 #
 # Function to perform the actual training loop.
@@ -318,8 +309,9 @@ def read_input_tensors(file_name,
   income_label = tf.to_int32(tf.equal(tf.string_split(
       features.pop(LABEL_COLUMN), '.').values, ' >50K'))
 
-  x,y = generate_input(features, income_label, batch_size)
-  return generate_wide_columns(x), y
+  features_list, income_class = to_continuous_and_categorical(
+      features, income_label, batch_size)
+  return generate_wide_columns(features_list), income_class
 
 
 if __name__ == "__main__":
