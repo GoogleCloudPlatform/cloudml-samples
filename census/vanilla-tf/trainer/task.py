@@ -333,7 +333,8 @@ if __name__ == "__main__":
       help='Maximum number of training steps to perform')
   parse_args, unknown = parser.parse_known_args()
 
-  train_tensor = read_input_tensors(parse_args.train_data_path)
+  train_tensor = read_input_tensors(parse_args.train_data_path,
+                                    batch_size=300)
 
   # Skip first row which has meta information
   eval_tensor = read_input_tensors(parse_args.eval_data_path,
