@@ -278,7 +278,7 @@ def parse_tf_config():
 
 
 def read_input_tensors(file_name,
-                       batch_size=40,
+                       batch_size=300,
                        skiprows=None):
   """Read the input file as an input queue.
      See https://www.tensorflow.org/programmers_guide/reading_data/
@@ -333,8 +333,7 @@ if __name__ == "__main__":
       help='Maximum number of training steps to perform')
   parse_args, unknown = parser.parse_known_args()
 
-  train_tensor = read_input_tensors(parse_args.train_data_path,
-                                    batch_size=300)
+  train_tensor = read_input_tensors(parse_args.train_data_path)
 
   # Skip first row which has meta information
   eval_tensor = read_input_tensors(parse_args.eval_data_path,
