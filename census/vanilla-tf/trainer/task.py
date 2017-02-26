@@ -22,8 +22,6 @@
 import argparse
 import json
 import tensorflow as tf
-import numpy as np
-import pandas as pd
 from tensorflow.contrib.layers.python.ops import sparse_feature_cross_op
 from tensorflow.contrib.layers.python.ops import bucketization_op
 from tensorflow.python.ops import string_ops
@@ -167,13 +165,6 @@ def sparse_to_dense(sparse_tensor, vocab_size):
   dense_tensor = tf.cast(dense_tensor, tf.int32)
   return dense_tensor
 
-def read_input_tensor(input_file, skiprows=None):
-  """Concatenate the wide columns to produce a single tensor."""
-  features, label = read_input_tensors(input_file, skiprows=skiprows)
-  in_tensor, label_tensor = generate_input(features, label)
-  return generate_wide_columns(in_tensor), label_tensor
-
-
 #
 # Function to perform the actual training loop.
 # This function is same for single and distributed.
@@ -186,11 +177,9 @@ def training_steps(session, graph, inputs, labels,
   train_step, eval_step, global_step = graph
   step = tf.train.global_step(session, global_step)
 
-  train_fn, eval_fn = train_eval_tensor
-  train_inp, train_label = train_fn()
-  eval_inp, eval_label = eval_fn()
+  (train_inp, train_label), (eval_inp, eval_label) = train_eval_tensor
 
-  with session.as_default():
+  with session:
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord, sess=session)
 
@@ -198,12 +187,11 @@ def training_steps(session, graph, inputs, labels,
       session.run(
           train_step,
           feed_dict={
-              inputs: train_inp.eval(),
-              labels: train_label.eval()
+              inputs: session.run(train_inp),
+              labels: session.run(train_label)
           }
       )
       step = tf.train.global_step(session, global_step)
-      print(step)
       if step % 10 == 0:
         accuracy = evaluate_accuracy(session, eval_step, inputs, labels,
                                    eval_inp, eval_label)
@@ -227,10 +215,9 @@ def training_single(job_dir, max_steps, train_eval_tensor):
   graph = make_graph(inputs, labels)
   init = tf.global_variables_initializer()
 
-  #session = tf.train.MonitoredTrainingSession(checkpoint_dir=job_dir,
-  #                                            save_checkpoint_secs=20,
-  #                                            save_summaries_steps=50)
-  session = tf.Session()
+  session = tf.train.MonitoredTrainingSession(checkpoint_dir=job_dir,
+                                              save_checkpoint_secs=20,
+                                              save_summaries_steps=50)
   session.run(init)
 
   training_steps(session, graph, inputs, labels, max_steps, train_eval_tensor)
@@ -306,37 +293,33 @@ def read_input_tensors(file_name,
      See https://www.tensorflow.org/programmers_guide/reading_data/
   """
 
-  def _input_fn():
-    filename_queue = tf.train.string_input_producer([file_name])
+  filename_queue = tf.train.string_input_producer([file_name])
 
-    reader = tf.TextLineReader(skip_header_lines=skiprows)
-    key, value = reader.read(filename_queue)
-    value_columns = tf.expand_dims(value, -1)
+  reader = tf.TextLineReader(skip_header_lines=skiprows)
+  key, value = reader.read(filename_queue)
+  value_columns = tf.expand_dims(value, -1)
 
-    columns = tf.decode_csv(
-        value_columns,record_defaults=DEFAULTS)
+  columns = tf.decode_csv(
+      value_columns,record_defaults=DEFAULTS)
 
-    features = dict(zip(CSV_COLUMNS, columns))
+  features = dict(zip(CSV_COLUMNS, columns))
 
-    features = tf.train.shuffle_batch(
-        features,
-        batch_size,
-        capacity=batch_size * 10,
-        min_after_dequeue=batch_size*2 + 1,
-        num_threads=multiprocessing.cpu_count(),
-        enqueue_many=True,
-        allow_smaller_final_batch=True
-    )
+  features = tf.train.shuffle_batch(
+      features,
+      batch_size,
+      capacity=batch_size * 10,
+      min_after_dequeue=batch_size*2 + 1,
+      num_threads=multiprocessing.cpu_count(),
+      enqueue_many=True,
+      allow_smaller_final_batch=True
+  )
 
-    # Using tf.string_split because eval data has an extra "." in label column
-    income_label = tf.to_int32(tf.equal(tf.string_split(
-        features.pop(LABEL_COLUMN), '.').values, ' >50K'))
+  # Using tf.string_split because eval data has an extra "." in label column
+  income_label = tf.to_int32(tf.equal(tf.string_split(
+      features.pop(LABEL_COLUMN), '.').values, ' >50K'))
 
-    x,y =generate_input(features, income_label, 40)
-    return generate_wide_columns(x), y
-    #return features, income_label
-
-  return _input_fn
+  x,y = generate_input(features, income_label, batch_size)
+  return generate_wide_columns(x), y
 
 
 if __name__ == "__main__":
