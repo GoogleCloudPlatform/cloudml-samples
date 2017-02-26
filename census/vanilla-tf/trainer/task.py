@@ -125,9 +125,9 @@ def to_continuous_and_categorical(features, labels, batch_size):
   ]
 
   # convert the labels into one hot encoding
-  label_tensor = tf.one_hot(labels, 2)
+  one_hot_labels = tf.one_hot(labels, 2)
 
-  return continuous_columns + categorical_columns, label_tensor
+  return continuous_columns + categorical_columns, one_hot_labels
 
 
 def generate_wide_columns(input_columns):
