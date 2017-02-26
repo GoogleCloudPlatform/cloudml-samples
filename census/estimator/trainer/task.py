@@ -42,13 +42,11 @@ def generate_experiment_fn(train_files,
         train_files,
         num_epochs=num_epochs,
         batch_size=train_batch_size,
-        skip_header_lines=model.TRAIN_HEADER_LINES
     )
     # Don't shuffle evaluation data
     eval_input = model.generate_input_fn(
         eval_files,
         batch_size=eval_batch_size,
-        skip_header_lines=model.EVAL_HEADER_LINES,
         shuffle=False
     )
     return tf.contrib.learn.Experiment(

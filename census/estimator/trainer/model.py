@@ -25,17 +25,10 @@ CSV_COLUMNS = ['age', 'workclass', 'fnlwgt', 'education', 'education_num',
            'marital_status', 'occupation', 'relationship', 'race', 'gender',
            'capital_gain', 'capital_loss', 'hours_per_week', 'native_country',
            'income_bracket']
-LABEL_COLUMN = 'income_bracket'
-# Possible values of the label column. The indices of these values will
-# be returned by the prediction service.
-LABELS = [' <=50K.', ' >50K.']
-
 CSV_COLUMN_DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''], [''],
             [0], [0], [0], [''], ['']]
-
-EVAL_HEADER_LINES = 1
-TRAIN_HEADER_LINES = 0
-
+LABEL_COLUMN = 'income_bracket'
+LABELS=[' <=50K', ' >50K']
 
 # Define the initial ingestion of each feature used by your model.
 # Additionally, provide metadata about the feature.
@@ -72,9 +65,6 @@ INPUT_COLUMNS = [
     layers.real_valued_column('capital_loss'),
     layers.real_valued_column('hours_per_week'),
 ]
-
-# Define a handy constant for later
-INPUT_COLUMN_NAMES = [col.name for col in INPUT_COLUMNS]
 
 
 def build_estimator(model_dir, embedding_size=8, hidden_units=None):
@@ -156,6 +146,24 @@ def build_estimator(model_dir, embedding_size=8, hidden_units=None):
       dnn_hidden_units=hidden_units or [100, 70, 50, 25])
 
 
+def parse_label_column(label_string_tensor): 
+  """Parses a string tensor into the label tensor
+  Args:
+    label_string_tensor: Tensor of dtype string. Result of parsing the
+    CSV column specified by LABEL_COLUMN
+  Returns:
+    A Tensor of the same shape as label_string_tensor, should return
+    an int64 Tensor representing the label index for classification tasks, 
+    and a float32 Tensor representing the value for a regression task.
+  """
+  # Build a Hash Table inside the graph
+  table = tf.contrib.lookup.string_to_index_table_from_tensor(
+      tf.constant(LABELS))
+
+  # Use the hash table to convert string labels to ints
+  return table.lookup(label_string_tensor)
+
+
 # ************************************************************************
 # YOU NEED NOT MODIFY ANYTHING BELOW HERE TO ADAPT THIS MODEL TO YOUR DATA
 # ************************************************************************
@@ -233,13 +241,6 @@ def generate_input_fn(filenames,
           enqueue_many=True,
           allow_smaller_final_batch=True
       )
-
-    # Build a Hash Table inside the graph
-    table = tf.contrib.lookup.string_to_index_table_from_tensor(
-        tf.constant(LABELS))
-
-    # Use the hash table to convert string labels to ints
-    indices = table.lookup(features.pop(LABEL_COLUMN))
-
-    return features, indices
+    label_tensor = parse_label_column(features.pop(LABEL_COLUMN))
+    return features, label_tensor
   return _input_fn

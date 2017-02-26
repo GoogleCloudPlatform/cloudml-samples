@@ -14,8 +14,8 @@ All commands below assume you have cloned this repository and changed to the cur
 Throughout we will use a census dataset for training. For local training, you can read them directly from Google Cloud Storage or if you have an unreliable network, can download them to your local file system.
 
 ```
-TRAIN_FILE=gs://tf-ml-workshop/widendeep/adult.data
-EVAL_FILE=gs://tf-ml-workshop/widendeep/adult.test
+TRAIN_FILE=gs://cloudml-public/census/data/adult.data.csv
+EVAL_FILE=gs://cloudml-public/census/data/adult.test.csv
 ```
 
 To use locally simply copy them down with gsutil:
