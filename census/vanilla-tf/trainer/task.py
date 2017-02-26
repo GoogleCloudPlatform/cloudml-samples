@@ -26,11 +26,14 @@ import numpy as np
 import pandas as pd
 from tensorflow.contrib.layers.python.ops import sparse_feature_cross_op
 from tensorflow.contrib.layers.python.ops import bucketization_op
+from tensorflow.python.ops import string_ops
 
 from StringIO import StringIO
 
 import model
 import os
+import multiprocessing
+
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -43,12 +46,16 @@ CSV_COLUMNS = ('age', 'workclass', 'fnlwgt', 'education', 'education_num',
                'capital_gain', 'capital_loss', 'hours_per_week', 'native_country',
                'income_bracket')
 
-CATEGORICAL_COLS = ('gender', 'race', 'education', 'marital_status',
-                    'relationship', 'workclass','occupation', 'native_country')
+DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''], [''],
+                                    [0], [0], [0], [''], ['']]
+
+# Categorical columns with vocab size
+CATEGORICAL_COLS = (('gender', 2), ('race', 5), ('education', 16), ('marital_status', 7),
+                    ('relationship', 6), ('workclass', 9),('occupation', 15), ('native_country', 42))
 
 CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss', 'hours_per_week')
 
-LABEL_COL = 'income_bracket'
+LABEL_COLUMN = 'income_bracket'
 
 
 #
@@ -81,23 +88,8 @@ def get_placeholders():
   labels = tf.placeholder(tf.float32, shape=[None, 2])
   return inputs, labels
 
-def read_input_data(file_name, skiprows=None):
-  """Read the input data as a pandas DataFrame of features and labels.
 
-  Args:
-      file_name (string): Name of the file to read data from.
-      skiprows (int/list): Number or list of rows to skip.
-
-  Returns:
-      tuple: Tuple of input and label pandas dataframe.
-  """
-  input_df = pd.read_csv(StringIO(tf.gfile.GFile(file_name).read()), names=CSV_COLUMNS, skiprows=skiprows)
-
-  label_df = input_df.pop(LABEL_COL)
-  return (input_df, label_df)
-
-
-def generate_input(input_df, label_df):
+def generate_input(features, labels, batch_size):
   """Convert the input columns to continuous and sparse tensor and
      labels to the one hot tensor.
 
@@ -109,23 +101,24 @@ def generate_input(input_df, label_df):
       tuple (tensor): Input column tensor and label tensor
   """
 
-  # convert the continuous columns into tf.constant tensor
+  # Get the continuous columns
   continuous_columns = [
-      tf.constant(input_df[col].values) for col in CONTINUOUS_COLS
+      features.get(col) for col in CONTINUOUS_COLS
   ]
 
   # convert the categorical columns into sparse tensors
+  #
+
   categorical_columns = [
       tf.SparseTensor(
-          indices=[[i, 0] for i in range(input_df[col].size)],
-          values=input_df[col].astype('category').cat.codes.values,
-          dense_shape=[input_df[col].size, 1])
-      for col in CATEGORICAL_COLS
+          indices=[[i, 0] for i in range(batch_size)],
+          values=string_ops.string_to_hash_bucket_fast(features[col], vocab),
+          dense_shape=[batch_size, 1])
+      for col, vocab in CATEGORICAL_COLS
   ]
 
   # convert the labels into one hot encoding
-  label_tensor = tf.one_hot(
-      label_df.astype('category').cat.codes.values, 2)
+  label_tensor = tf.one_hot(labels, 2)
 
   return continuous_columns + categorical_columns, label_tensor
 
@@ -176,8 +169,8 @@ def sparse_to_dense(sparse_tensor, vocab_size):
 
 def read_input_tensor(input_file, skiprows=None):
   """Concatenate the wide columns to produce a single tensor."""
-  inp, label = read_input_data(input_file, skiprows)
-  in_tensor, label_tensor = generate_input(inp, label)
+  features, label = read_input_tensors(input_file, skiprows=skiprows)
+  in_tensor, label_tensor = generate_input(features, label)
   return generate_wide_columns(in_tensor), label_tensor
 
 
@@ -193,24 +186,32 @@ def training_steps(session, graph, inputs, labels,
   train_step, eval_step, global_step = graph
   step = tf.train.global_step(session, global_step)
 
-  (train_inp, train_label), (eval_inp, eval_label) = train_eval_tensor
+  train_fn, eval_fn = train_eval_tensor
+  train_inp, train_label = train_fn()
+  eval_inp, eval_label = eval_fn()
 
-  while step < max_steps:
-    session.run(
-        train_step,
-        feed_dict={
-            inputs: session.run(train_inp),
-            labels: session.run(train_label)
-            }
-    )
+  with session.as_default():
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(coord=coord, sess=session)
 
-    step = tf.train.global_step(session, global_step)
-
-    if step % 10 == 0:
-      accuracy = evaluate_accuracy(session, eval_step, inputs, labels,
+    while step < max_steps:
+      session.run(
+          train_step,
+          feed_dict={
+              inputs: train_inp.eval(),
+              labels: train_label.eval()
+          }
+      )
+      step = tf.train.global_step(session, global_step)
+      print(step)
+      if step % 10 == 0:
+        accuracy = evaluate_accuracy(session, eval_step, inputs, labels,
                                    eval_inp, eval_label)
-      print('[{}/{}]: Step number {} of {} done, Accuracy {:.2f}%'.format(
-          job_name, job_id, step, max_steps, accuracy))
+        print('[{}/{}]: Step number {} of {} done, Accuracy {:.2f}%'.format(
+            job_name, job_id, step, max_steps, accuracy))
+
+    coord.request_stop()
+    coord.join(threads)
 
   return train_step
 
@@ -226,9 +227,10 @@ def training_single(job_dir, max_steps, train_eval_tensor):
   graph = make_graph(inputs, labels)
   init = tf.global_variables_initializer()
 
-  session = tf.train.MonitoredTrainingSession(checkpoint_dir=job_dir,
-                                              save_checkpoint_secs=20,
-                                              save_summaries_steps=50)
+  #session = tf.train.MonitoredTrainingSession(checkpoint_dir=job_dir,
+  #                                            save_checkpoint_secs=20,
+  #                                            save_summaries_steps=50)
+  session = tf.Session()
   session.run(init)
 
   training_steps(session, graph, inputs, labels, max_steps, train_eval_tensor)
@@ -297,6 +299,46 @@ def parse_tf_config():
   return cluster_spec, job_name, task_index
 
 
+def read_input_tensors(file_name,
+                       batch_size=40,
+                       skiprows=None):
+  """Read the input file as an input queue.
+     See https://www.tensorflow.org/programmers_guide/reading_data/
+  """
+
+  def _input_fn():
+    filename_queue = tf.train.string_input_producer([file_name])
+
+    reader = tf.TextLineReader(skip_header_lines=skiprows)
+    key, value = reader.read(filename_queue)
+    value_columns = tf.expand_dims(value, -1)
+
+    columns = tf.decode_csv(
+        value_columns,record_defaults=DEFAULTS)
+
+    features = dict(zip(CSV_COLUMNS, columns))
+
+    features = tf.train.shuffle_batch(
+        features,
+        batch_size,
+        capacity=batch_size * 10,
+        min_after_dequeue=batch_size*2 + 1,
+        num_threads=multiprocessing.cpu_count(),
+        enqueue_many=True,
+        allow_smaller_final_batch=True
+    )
+
+    # Using tf.string_split because eval data has an extra "." in label column
+    income_label = tf.to_int32(tf.equal(tf.string_split(
+        features.pop(LABEL_COLUMN), '.').values, ' >50K'))
+
+    x,y =generate_input(features, income_label, 40)
+    return generate_wide_columns(x), y
+    #return features, income_label
+
+  return _input_fn
+
+
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument(
@@ -316,11 +358,11 @@ if __name__ == "__main__":
       help='Maximum number of training steps to perform')
   parse_args, unknown = parser.parse_known_args()
 
-  train_tensor = read_input_tensor(parse_args.train_data_path)
+  train_tensor = read_input_tensors(parse_args.train_data_path)
 
   # Skip first row which has meta information
-  eval_tensor = read_input_tensor(parse_args.eval_data_path,
-                                  skiprows=[0])
+  eval_tensor = read_input_tensors(parse_args.eval_data_path,
+                                   skiprows=1)
 
   train_eval_tensor = [train_tensor, eval_tensor]
 
