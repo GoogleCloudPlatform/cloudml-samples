@@ -193,6 +193,10 @@ def dispatch(*args, **kwargs):
   job_name = tf_config_json.get('task').get('type')
   task_index = tf_config_json.get('task').get('index')
 
+  # If cluster information is empty run local
+  if job_name is None or task_index is None:
+    return run('', True, *args, **kwargs)
+
   cluster_spec = tf.train.ClusterSpec(cluster)
   server = tf.train.Server(cluster_spec,
                            job_name=job_name,
