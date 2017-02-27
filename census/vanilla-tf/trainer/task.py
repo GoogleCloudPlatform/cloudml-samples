@@ -94,7 +94,6 @@ def run(target,
                 [global_step_tensor, train_op],
                 feed_dict={mode: TRAIN}
             )
-        print("Gets Here")
 
 
 def dispatch(*args, **kwargs):

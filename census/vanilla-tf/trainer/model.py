@@ -128,7 +128,7 @@ def model_fn(features,
   train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(
         cross_entropy, global_step=global_step)
 
-  accuracy_op = tf.reduce_mean(tf.to_int32(tf.equal(predictions, labels)))
+  accuracy_op = tf.reduce_mean(tf.to_float(tf.equal(predictions, labels)))
 
   return train_op, accuracy_op, global_step, predictions
 
