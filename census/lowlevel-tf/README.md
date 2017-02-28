@@ -157,8 +157,8 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --package-path trainer/ \
                                     --region us-central1 \
                                     -- \
-                                    --train_data_path $GCS_TRAIN_PATH \
-                                    --eval_data_path $GCS_EVAL_PATH \
+                                    --train_data_path $TRAIN_GCS_FILE \
+                                    --eval_data_path $EVAL_GCS_FILE \
                                     --max_steps $MAX_STEPS \
                                     --output_dir $GCS_OUTPUT_DIR \
                                     --distributed True
