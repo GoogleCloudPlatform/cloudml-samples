@@ -1,4 +1,4 @@
-# Census: TensorFlow Vanilla Sample
+# Census: TensorFlow Low-Level API Sample
 
 This sample uses the [TensorFlow](https://tensorflow.org) low level APIs and
 [Google Cloud Machine Learning Engine](https://cloud.google.com/ml) to demonstrate
