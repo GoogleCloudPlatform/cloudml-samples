@@ -94,7 +94,7 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --max_steps $MAX_STEPS
 ```
 ## Accuracy and Output
-You should see the output for default number of training steps:
+You should see the output for default number of training steps and approx accuracy close to `80.25%`.
 
 ```
 INFO:tensorflow:global_step/sec: 280.197
