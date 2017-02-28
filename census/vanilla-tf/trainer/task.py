@@ -88,7 +88,7 @@ def run(target,
                     for _ in range(eval_steps)
                 ]
                 accuracy = sum(accuracies) / eval_steps
-                print("Accuracy at step: {} is {}".format(step, accuracy))
+                print("Accuracy at step: {} is {:.2f}%".format(step, 100*accuracy))
 
             step, _ = session.run(
                 [global_step_tensor, train_op],
