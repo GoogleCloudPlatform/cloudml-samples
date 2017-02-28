@@ -6,11 +6,22 @@ the single node and distributed TF vanilla version for Census Income Dataset.
 Setup instructions for the [Cloud ML Engine](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
 
 ## Download the data
-Follow the [Census Income
-Dataset](https://www.tensorflow.org/tutorials/wide/#reading_the_census_data) link to download the data. You can also download directly from [here](https://archive.ics.uci.edu/ml/datasets/Census+Income).
+The [Census Income Data
+Set](https://archive.ics.uci.edu/ml/datasets/Census+Income) that this sample
+uses for training is hosted by the [UC Irvine Machine Learning
+Repository](https://archive.ics.uci.edu/ml/datasets/). We have hosted the data
+on Google Cloud Storage:
 
- * Training file is `adult.data`
- * Evaluation file is `adult.test`
+ * Training file is `adult.data.csv`
+ * Evaluation file is `adult.test.csv`
+
+```
+export CENSUS_DATA=census_data
+export TRAIN_FILE=adult.data.csv
+export EVAL_FILE=adult.test.csv
+mkdir $CENSUS_DATA
+gsutil cp gs://cloudml-public/census/data/adult*.csv $CENSUS_DATA
+```
 
 
 ## Virtual environment
@@ -43,8 +54,10 @@ See options below:
 Run the code on your local machine:
 
 ```
-python trainer/task.py --train_data_path $TRAIN_DATA_PATH \
-                       --eval_data_path $EVAL_DATA_PATH \
+export JOB_DIR=census_job
+python trainer/task.py --train_data_path $CENSUS_DATA/$TRAIN_FILE \
+                       --eval_data_path $CENSUS_DATA/$EVAL_FILE \
+                       --job_dir $JOB_DIR
                        [--max_steps $MAX_STEPS]
 ```
 
@@ -56,9 +69,9 @@ running it on the cloud:
 gcloud beta ml local train --package-path trainer \
                            --module-name trainer.task \
                            -- \
-                           --train_data_path $TRAIN_DATA_PATH \
-                           --eval_data_path $EVAL_DATA_PATH \
-                           [--max_steps $MAX_STEPS]
+                           --train_data_path $CENSUS_DATA/$TRAIN_FILE \
+                           --eval_data_path $CENSUS_DATA/$EVAL_FILE \
+                           --job_dir $JOB_DIR
 ```
 
 ### Using Cloud ML Engine
@@ -66,7 +79,6 @@ Run the code on Cloud ML Engine using `gcloud`:
 
 ```
 gcloud beta ml jobs submit training $JOB_NAME \
-                                    --job-dir $GCS_LOCATION_OUTPUT \
                                     --runtime-version 1.0 \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
@@ -74,13 +86,36 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     -- \
                                     --train_data_path $TRAIN_GCS_FILE \
                                     --eval_data_path $EVAL_GCS_FILE \
-                                    --max_steps 200
+                                    --max_steps $MAX_STEPS \
+                                    --job_dir $GCS_JOB_DIR \
 ```
-## Accuracy
-You should see an accuracy of around `82.84%` for default number of training steps.
+## Accuracy and Output
+You should see the output for default number of training steps:
+
+```
+INFO:tensorflow:global_step/sec: 280.197
+Accuracy at step: 101 is 72.25%
+INFO:tensorflow:global_step/sec: 621.539
+Accuracy at step: 202 is 77.75%
+INFO:tensorflow:global_step/sec: 621.029
+Accuracy at step: 305 is 78.00%
+INFO:tensorflow:global_step/sec: 662.139
+Accuracy at step: 407 is 78.75%
+INFO:tensorflow:global_step/sec: 640.948
+Accuracy at step: 508 is 75.50%
+INFO:tensorflow:global_step/sec: 668.127
+Accuracy at step: 609 is 73.75%
+INFO:tensorflow:global_step/sec: 676.06
+Accuracy at step: 710 is 76.00%
+INFO:tensorflow:global_step/sec: 636.939
+Accuracy at step: 812 is 76.25%
+INFO:tensorflow:global_step/sec: 661.389
+Accuracy at step: 913 is 80.25%
+```
+
 
 # Distributed Node Training
-Distributed node training uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed). 
+Distributed node training uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed).
 The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml/reference/configuration-data-structures#tf_config_environment_variable)
 environment variable. The environment variable is generated using `gcloud` and parsed to create a
 [ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster). See the [ScaleTier](https://cloud.google.com/ml/pricing#ml_training_units_by_scale_tier) for predefined tiers
@@ -110,7 +145,6 @@ Run the distributed training code on cloud using `gcloud`.
 
 ```
 gcloud beta ml jobs submit training $JOB_NAME \
-                                    --job-dir $JOB_DIR \
                                     --scale-tier $SCALE_TIER \
                                     --runtime-version 1.0 \
                                     --module-name trainer.task \
@@ -120,5 +154,6 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --train_data_path $GCS_TRAIN_PATH \
                                     --eval_data_path $GCS_EVAL_PATH \
                                     --max_steps $MAX_STEPS \
+                                    --job_dir $GCS_JOB_DIR
                                     --distributed True
 ```
