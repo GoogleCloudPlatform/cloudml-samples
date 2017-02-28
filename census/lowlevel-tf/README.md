@@ -133,7 +133,6 @@ Run the distributed training code locally using `gcloud`.
 ```
 gcloud beta ml local train --package-path trainer \
                            --module-name trainer.task \
-                           --job_dir $GCS_JOB_DIR \
                            --parameter-server-count $PS_SERVER_COUNT \
                            --worker-count $WORKER_COUNT \
                            --distributed \
@@ -141,6 +140,7 @@ gcloud beta ml local train --package-path trainer \
                            --train_data_path $TRAIN_DATA_PATH \
                            --eval_data_path $EVAL_DATA_PATH \
                            --max_steps $MAX_STEPS \
+                           --job_dir $GCS_JOB_DIR \
                            --distributed True
 ```
 
@@ -159,5 +159,6 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --train_data_path $GCS_TRAIN_PATH \
                                     --eval_data_path $GCS_EVAL_PATH \
                                     --max_steps $MAX_STEPS \
+                                    --job_dir $GCS_JOB_DIR \
                                     --distributed True
 ```
