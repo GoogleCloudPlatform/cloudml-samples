@@ -37,7 +37,7 @@ def run(target,
         max_steps,
         train_data_paths,
         eval_data_paths,
-        job_dir,
+        output_dir,
         train_batch_size,
         eval_batch_size,
         eval_every=100,
@@ -71,7 +71,7 @@ def run(target,
 
     with tf.train.MonitoredTrainingSession(master=target,
                                            is_chief=is_chief,
-                                           checkpoint_dir=job_dir,
+                                           checkpoint_dir=output_dir,
                                            save_checkpoint_secs=20,
                                            save_summaries_steps=50) as session:
       coord = tf.train.Coordinator(clean_stop_exception_types=(
@@ -137,10 +137,10 @@ if __name__ == "__main__":
                       required=True,
                       type=str,
                       help='Evaluation file location', nargs='+')
-  parser.add_argument('--job_dir',
+  parser.add_argument('--output_dir',
                       required=True,
                       type=str,
-                      help='Location to write checkpoints and export model')
+                      help='GCS or local dir to write checkpoints and export model')
   parser.add_argument('--max_steps',
                       type=int,
                       default=1000,

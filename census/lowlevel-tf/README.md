@@ -58,10 +58,10 @@ See options below:
 Run the code on your local machine:
 
 ```
-export JOB_DIR=census_job
+export OUTPUT_DIR=census_job
 python trainer/task.py --train_data_path $CENSUS_DATA/$TRAIN_FILE \
                        --eval_data_path $CENSUS_DATA/$EVAL_FILE \
-                       --job_dir $JOB_DIR
+                       --output_dir $OUTPUT_DIR
                        [--max_steps $MAX_STEPS]
 ```
 
@@ -75,7 +75,7 @@ gcloud beta ml local train --package-path trainer \
                            -- \
                            --train_data_path $CENSUS_DATA/$TRAIN_FILE \
                            --eval_data_path $CENSUS_DATA/$EVAL_FILE \
-                           --job_dir $JOB_DIR
+                           --output_dir $OUTPUT_DIR
 ```
 
 ### Using Cloud ML Engine
@@ -91,6 +91,7 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     -- \
                                     --train_data_path $TRAIN_GCS_FILE \
                                     --eval_data_path $EVAL_GCS_FILE \
+                                    --output_dir $OUTPUT_DIR \
                                     --max_steps $MAX_STEPS
 ```
 ## Accuracy and Output
@@ -140,7 +141,7 @@ gcloud beta ml local train --package-path trainer \
                            --train_data_path $TRAIN_DATA_PATH \
                            --eval_data_path $EVAL_DATA_PATH \
                            --max_steps $MAX_STEPS \
-                           --job_dir $GCS_JOB_DIR \
+                           --output_dir $OUTPUT_DIR \
                            --distributed True
 ```
 
@@ -159,6 +160,6 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --train_data_path $GCS_TRAIN_PATH \
                                     --eval_data_path $GCS_EVAL_PATH \
                                     --max_steps $MAX_STEPS \
-                                    --job_dir $GCS_JOB_DIR \
+                                    --output_dir $GCS_OUTPUT_DIR \
                                     --distributed True
 ```
