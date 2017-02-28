@@ -38,7 +38,6 @@ There are two options for the virtual environments:
 Install the following dependencies:
  * Install [Cloud SDK](https://cloud.google.com/sdk/)
  * Install [TensorFlow](https://www.tensorflow.org/install/)
- * Install [Pandas](http://pandas.pydata.org/pandas-docs/stable/install.html#installing-from-pypi)
  * Install [gcloud](https://cloud.google.com/sdk/gcloud/)
 
 
