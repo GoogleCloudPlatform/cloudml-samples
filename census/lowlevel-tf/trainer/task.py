@@ -35,8 +35,8 @@ TRAIN = 'TRAIN'
 def run(target,
         is_chief,
         max_steps,
-        train_data_paths,
-        eval_data_paths,
+        train_data_path,
+        eval_data_path,
         output_dir,
         train_batch_size,
         eval_batch_size,
@@ -50,9 +50,9 @@ def run(target,
     with tf.device(tf.train.replica_device_setter()):
       mode = tf.placeholder(shape=[], dtype=tf.string)
       eval_features, eval_label = model.input_fn(
-          eval_data_paths, shuffle=False, batch_size=eval_batch_size)
+          eval_data_path, shuffle=False, batch_size=eval_batch_size)
       train_features, train_label = model.input_fn(
-          train_data_paths, num_epochs=num_epochs, batch_size=train_batch_size)
+          train_data_path, num_epochs=num_epochs, batch_size=train_batch_size)
 
       is_train = tf.equal(mode, tf.constant(TRAIN))
       sorted_keys = train_features.keys()
@@ -129,11 +129,11 @@ def dispatch(*args, **kwargs):
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument('--train_data_paths',
+  parser.add_argument('--train_data_path',
                       required=True,
                       type=str,
                       help='Training file location', nargs='+')
-  parser.add_argument('--eval_data_paths',
+  parser.add_argument('--eval_data_path',
                       required=True,
                       type=str,
                       help='Evaluation file location', nargs='+')
