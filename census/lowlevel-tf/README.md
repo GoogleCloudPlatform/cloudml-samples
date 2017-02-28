@@ -73,6 +73,7 @@ Run the code on your local machine using `gcloud`. This allows you to mock
 running it on the cloud:
 
 ```
+rm -rf $OUTPUT_DIR
 export OUTPUT_DIR=census_output
 ```
 
