@@ -86,7 +86,7 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --train_data_path $TRAIN_GCS_FILE \
                                     --eval_data_path $EVAL_GCS_FILE \
                                     --max_steps $MAX_STEPS \
-                                    --job_dir $GCS_JOB_DIR \
+                                    --job_dir $GCS_JOB_DIR
 ```
 ## Accuracy and Output
 You should see the output for default number of training steps:
