@@ -58,7 +58,7 @@ See options below:
 Run the code on your local machine:
 
 ```
-export OUTPUT_DIR=census_job
+export OUTPUT_DIR=census_output
 python trainer/task.py --train_data_path $CENSUS_DATA/$TRAIN_FILE \
                        --eval_data_path $CENSUS_DATA/$EVAL_FILE \
                        --output_dir $OUTPUT_DIR
