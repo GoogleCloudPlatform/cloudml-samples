@@ -20,7 +20,12 @@ export CENSUS_DATA=census_data
 export TRAIN_FILE=adult.data.csv
 export EVAL_FILE=adult.test.csv
 mkdir $CENSUS_DATA
-gsutil cp gs://cloudml-public/census/data/adult*.csv $CENSUS_DATA
+
+export TRAIN_GCS_FILE=gs://cloudml-public/census/data/$TRAIN_FILE
+export EVAL_GCS_FILE=gs://cloudml-public/census/data/$EVAL_FILE
+
+gsutil cp $TRAIN_GCS_FILE $CENSUS_DATA
+gsutil cp $EVAL_GCS_FILE $CENSUS_DATA
 ```
 
 
