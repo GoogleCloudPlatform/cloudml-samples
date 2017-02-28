@@ -22,7 +22,7 @@ def generate_experiment_fn(train_files,
                            scale_factor=0.7,
                            **experiment_args):
   """Create an experiment function given hyperparameters.
-  
+
   See command line help text for description of args.
   Returns:
     A function (output_dir) -> Experiment where output_dir is a string

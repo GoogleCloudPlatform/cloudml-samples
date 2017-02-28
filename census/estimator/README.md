@@ -1,31 +1,30 @@
-# Census: TF.Learn Distributed Training and Prediction
+# Census: Estimator-based Distributed Training and Prediction
 
 This sample walks you through training and prediction, including distributed training, and hyperparameter tuning.
 
-All commands below assume you have cloned this repository and changed to the currend directory. It also assumes you have:
-
-1. Installed the the [Google Cloud SDK](https://cloud.google.com/sdk)
-2. (For Cloud Training) [Set up the Google Cloud Machine Learning API](https://cloud.google.com/ml/docs/how-tos/getting-set-up) NOTE: You can safely ignore the "Setting Up Your Environment" section. 
+All commands below assume you have cloned this repository and changed to the current directory. It also assumes you have set up the Cloud ML Engine as described [here](https://cloud-dot-devsite.googleplex.com/ml/docs/how-tos/getting-set-up).
 
 ## Local Training
 
 ### Getting Data
 
-Throughout we will use a census dataset for training. For local training, you can read them directly from Google Cloud Storage or if you have an unreliable network, can download them to your local file system.
+The [Census Income Data Set](https://archive.ics.uci.edu/ml/datasets/Census+Income) that this sample uses for training is hosted by the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/)
+
+We have done some trivial cleaning and hosted it at the following locations:
 
 ```
 TRAIN_FILE=gs://cloudml-public/census/data/adult.data.csv
 EVAL_FILE=gs://cloudml-public/census/data/adult.test.csv
 ```
 
-To use locally simply copy them down with gsutil:
+For local training, you can read them directly from Google Cloud Storage or if you have an unreliable network, can download them to your local file system.
+
 ```
 mkdir data
 gsutil cp gs://tf-ml-workshop/widendeep/* data/
 ```
 
-And use the local locations whereever the environment variables above are used.
-
+And use the local locations wherever the environment variables above are used.
 
 ### Installing Dependencies
 
@@ -60,20 +59,26 @@ Below we will use `OUTPUT_PATH` to represent the fully qualified GCS location fo
 OUTPUT_PATH=gs://<my-bucket>/path/to/my/models/run3
 ```
 
+Additionally, if you set `TRAIN_FILES` and `EVAL_FILES` to local locations you will need to update them to a GCS location.
+
 ### Single Worker
 
 ```
-gcloud beta ml jobs submit training census \
-    --job-dir $OUTPUT_PATH \
+JOB_NAME=census
+gcloud beta ml jobs submit training $JOB_NAME \
+    --job-dir $OUTPUT_PATH/$JOB_NAME \
     --runtime-version 1.0 \
     --module-name trainer.task \
     --package-path trainer/ \
     --region us-central1 \
     -- \
-    --train-files gs://tf-ml-workshop/widendeep/adult.data \
-    --eval-files gs://tf-ml-workshop/widendeep/adult.test \
+    --train-files $TRAIN_FILES \
+    --eval-files $EVAL_FILES \
     --train-steps 1000
 ```
+
+NOTE: to restart a failed job you may simply use the same `--job-dir` location (and alter `JOB_NAME`), and the parameters will be loaded from the last saved checkpoint.
+
 
 ### Distributed
 
