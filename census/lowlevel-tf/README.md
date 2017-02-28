@@ -91,7 +91,7 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     -- \
                                     --train_data_path $TRAIN_GCS_FILE \
                                     --eval_data_path $EVAL_GCS_FILE \
-                                    --output_dir $OUTPUT_DIR \
+                                    --output_dir $GCS_OUTPUT_DIR \
                                     --max_steps $MAX_STEPS
 ```
 ## Accuracy and Output
@@ -141,8 +141,7 @@ gcloud beta ml local train --package-path trainer \
                            --train_data_path $TRAIN_DATA_PATH \
                            --eval_data_path $EVAL_DATA_PATH \
                            --max_steps $MAX_STEPS \
-                           --output_dir $OUTPUT_DIR \
-                           --distributed True
+                           --output_dir $OUTPUT_DIR
 ```
 
 ### Using Cloud ML Engine
@@ -160,6 +159,5 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --train_data_path $TRAIN_GCS_FILE \
                                     --eval_data_path $EVAL_GCS_FILE \
                                     --max_steps $MAX_STEPS \
-                                    --output_dir $GCS_OUTPUT_DIR \
-                                    --distributed True
+                                    --output_dir $GCS_OUTPUT_DIR
 ```
