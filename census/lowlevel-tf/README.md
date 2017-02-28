@@ -84,14 +84,14 @@ Run the code on Cloud ML Engine using `gcloud`:
 ```
 gcloud beta ml jobs submit training $JOB_NAME \
                                     --runtime-version 1.0 \
+                                    --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
                                     --region us-central1 \
                                     -- \
                                     --train_data_path $TRAIN_GCS_FILE \
                                     --eval_data_path $EVAL_GCS_FILE \
-                                    --max_steps $MAX_STEPS \
-                                    --job_dir $GCS_JOB_DIR
+                                    --max_steps $MAX_STEPS
 ```
 ## Accuracy and Output
 You should see the output for default number of training steps:
