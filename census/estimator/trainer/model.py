@@ -66,7 +66,7 @@ INPUT_COLUMNS = [
     layers.real_valued_column('hours_per_week'),
 ]
 
-UNUSED_COLUMNS = set(CSV_COLUMNS) - set(col.name for col in INPUT_COLUMNS)
+UNUSED_COLUMNS = set(CSV_COLUMNS) - set(col.name for col in INPUT_COLUMNS) - set([LABEL_COLUMN])
 
 
 def build_estimator(model_dir, embedding_size=8, hidden_units=None):
