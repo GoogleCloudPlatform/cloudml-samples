@@ -38,21 +38,21 @@ def run(target,
         train_data_paths,
         eval_data_paths,
         job_dir,
+        train_batch_size,
+        eval_batch_size,
         eval_every=100,
         eval_steps=10,
         learning_rate=0.1,
-        num_epochs=None,
-        batch_size=40):
-  """Run the training steps and calculate accuracy every 10 steps."""
+        num_epochs=None):
 
   training_eval_graph = tf.Graph()
   with training_eval_graph.as_default():
     with tf.device(tf.train.replica_device_setter()):
       mode = tf.placeholder(shape=[], dtype=tf.string)
       eval_features, eval_label = model.input_fn(
-          eval_data_paths, shuffle=False, batch_size=batch_size)
+          eval_data_paths, shuffle=False, batch_size=eval_batch_size)
       train_features, train_label = model.input_fn(
-          train_data_paths, num_epochs=num_epochs, batch_size=batch_size)
+          train_data_paths, num_epochs=num_epochs, batch_size=train_batch_size)
 
       is_train = tf.equal(mode, tf.constant(TRAIN))
       sorted_keys = train_features.keys()
@@ -129,18 +129,30 @@ def dispatch(*args, **kwargs):
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--train_data_paths', required=True, type=str,
-      help='Training file location', nargs='+')
-  parser.add_argument(
-      '--eval_data_paths', required=True, type=str,
-      help='Evaluation file location', nargs='+')
-  parser.add_argument(
-      '--job_dir', required=True, type=str,
-      help='Location to write checkpoints and export model'
-  )
-  parser.add_argument('--max_steps', type=int, default=1000,
-      help='Maximum number of training steps to perform')
+  parser.add_argument('--train_data_paths',
+                      required=True,
+                      type=str,
+                      help='Training file location', nargs='+')
+  parser.add_argument('--eval_data_paths',
+                      required=True,
+                      type=str,
+                      help='Evaluation file location', nargs='+')
+  parser.add_argument('--job_dir',
+                      required=True,
+                      type=str,
+                      help='Location to write checkpoints and export model')
+  parser.add_argument('--max_steps',
+                      type=int,
+                      default=1000,
+                      help='Maximum number of training steps to perform')
+  parser.add_argument('--train_batch_size',
+                      type=int,
+                      default=40,
+                      help='Batch size for training steps')
+  parser.add_argument('--eval_batch_size',
+                      type=int,
+                      default=40,
+                      help='Batch size for evaluation steps')
   parse_args, unknown = parser.parse_known_args()
 
   dispatch(**parse_args.__dict__)
