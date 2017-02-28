@@ -70,7 +70,8 @@ def model_fn(features,
     num_classes (int): Number of classes
 
   Returns:
-
+    Tuple (train_op, accuracy_op, global_step, predictions): Tuple containing
+    training graph, accuracy graph, global step and predictions
   """
   # Convert categorical (string) values to one_hot values
   for col, bucket_size in HASH_BUCKET_COLS:

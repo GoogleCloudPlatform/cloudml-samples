@@ -44,7 +44,22 @@ def run(target,
         eval_steps=10,
         learning_rate=0.1,
         num_epochs=None):
+  """Run the training and evaluation graph.
 
+  Args:
+    target (string): Tensorflow server target
+    is_chief (bool): Boolean flag to specify a chief server
+    max_steps (int): Maximum training steps
+    train_data_path (string): List of CSV files to read train data
+    eval_data_path (string): List of CSV files to read eval data
+    output_dir (string): Output directory for model and checkpoint
+    train_batch_size (int): Batch size for training
+    eval_batch_size (int): Batch size for evaluation
+    eval_every (int): Run evaluation frequency
+    eval_steps (int): Eval steps
+    learning_rate (float): Learning rate for Gradient Descent
+    num_epochs (int): Number of epochs
+  """
   training_eval_graph = tf.Graph()
   with training_eval_graph.as_default():
     with tf.device(tf.train.replica_device_setter()):
@@ -97,7 +112,7 @@ def run(target,
 
 
 def dispatch(*args, **kwargs):
-  """Parse TF_CONFIG to cluster_spec, job_name and task_index."""
+  """Parse TF_CONFIG to cluster_spec and call run()."""
 
   tf_config = os.environ.get('TF_CONFIG')
 
