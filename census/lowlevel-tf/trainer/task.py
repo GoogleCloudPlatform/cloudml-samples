@@ -116,6 +116,7 @@ def dispatch(*args, **kwargs):
 
   tf_config = os.environ.get('TF_CONFIG')
 
+  # If TF_CONFIG not available run local
   if not tf_config:
     return run('', True, *args, **kwargs)
 
