@@ -242,5 +242,6 @@ def input_fn(filenames,
         min_after_dequeue=batch_size*2 + 1,
         num_threads=multiprocessing.cpu_count(),
         enqueue_many=True,
+        allow_smaller_final_batch=True
     )
   return features, features.pop(LABEL_COLUMN)

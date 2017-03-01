@@ -21,6 +21,7 @@
 import argparse
 import json
 import os
+import threading
 
 import tensorflow as tf
 
@@ -58,42 +59,54 @@ class EvalRepeatedlyHook(tf.train.SessionRunHook):
       self._final_ops_dict = value_dict
       self._eval_ops = update_dict.values()
 
+    self._eval_lock = threading.Lock()
     self._file_writer = tf.summary.FileWriter(checkpoint_dir, graph=graph)
 
   def after_run(self, run_context, run_values):
+    if not self._eval_lock.acquire(False):
+      return
+
     latest = tf.train.latest_checkpoint(self._checkpoint_dir)
     if not latest == self._last_checkpoint:
       self._checkpoints_since_eval += 1
 
-    if not self._checkpoints_since_eval > self._eval_every:
-      return
-    else:
+    if self._checkpoints_since_eval > self._eval_every:
       self._checkpoints_since_eval = 0
+      self._run_eval(latest)
 
+    self._eval_lock.release()
+
+  def end(self, session):
+    # Block to ensure we always eval at the end
+    self._eval_lock.acquire()
+    latest = tf.train.latest_checkpoint(self._checkpoint_dir)
+    self._run_eval(latest)
+    self._eval_lock.release()
+
+  def _run_eval(self, latest):
     with self._graph.as_default():
+      gs = tf.contrib.framework.get_or_create_global_step()
+      saver = tf.train.Saver()
+      coord = tf.train.Coordinator(clean_stop_exception_types=(
+          tf.errors.CancelledError, tf.errors.OutOfRangeError))
+
       with tf.Session() as session:
         session.run([tf.local_variables_initializer(), tf.tables_initializer()])
-        saver = tf.train.Saver()
-        saver.restore(session, latest)
-
-
-        coord = tf.train.Coordinator(clean_stop_exception_types=(
-          tf.errors.CancelledError,))
         tf.train.start_queue_runners(coord=coord, sess=session)
+        saver.restore(session, latest)
+        train_step = session.run(gs)
+        tf.logging.info('Starting Evaluation For Step: {}'.format(train_step))
         with coord.stop_on_exception():
-          step = 0
-          while (self._eval_steps is None
-                 or step < self._eval_steps) and not coord.should_stop():
-            session.run(self._eval_ops)
-            step += 1
-            if step % 100 == 0:
-              tf.logging.info("On Evaluation Step: {}".format(step))
+          eval_step = 0
+          while self._eval_steps is None or eval_step < self._eval_steps:
+            summaries, final_values, _ = session.run(
+                [self._summary_op, self._final_ops_dict, self._eval_ops])
+            if eval_step % 100 == 0:
+              tf.logging.info("On Evaluation Step: {}".format(eval_step))
+            eval_step += 1
 
-        gs = session.run(tf.contrib.framework.get_or_create_global_step())
-        summaries = session.run(self._summary_op)
-        self._file_writer.add_summary(summaries, global_step=gs)
-        tf.logging.info(session.run(self._final_ops_dict))
-
+        self._file_writer.add_summary(summaries, global_step=train_step)
+        tf.logging.info(final_values)
 
 def run(target,
         is_chief,
@@ -116,7 +129,7 @@ def run(target,
     with evaluation_graph.as_default():
       features, labels = model.input_fn(
           eval_data_path,
-          num_epochs=None,
+          num_epochs=eval_num_epochs,
           batch_size=eval_batch_size,
           shuffle=False
       )
@@ -158,7 +171,7 @@ def run(target,
                                            is_chief=is_chief,
                                            checkpoint_dir=output_dir,
                                            hooks=hooks,
-                                           save_checkpoint_secs=20,
+                                           save_checkpoint_secs=2,
                                            save_summaries_steps=50) as session:
       coord = tf.train.Coordinator(clean_stop_exception_types=(
           tf.errors.CancelledError,))
