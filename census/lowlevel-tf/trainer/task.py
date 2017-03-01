@@ -28,72 +28,146 @@ import model
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-EVAL = 'EVAL'
-TRAIN = 'TRAIN'
+
+class EvalRepeatedlyHook(tf.train.SessionRunHook):
+
+  def __init__(self,
+               checkpoint_dir,
+               metric_dict,
+               graph,
+               eval_every_n_checkpoints=1,
+               eval_steps=None,
+               **kwargs):
+
+    self._eval_steps = eval_steps
+    self._checkpoint_dir = checkpoint_dir
+    self._kwargs = kwargs
+    self._eval_every = eval_every_n_checkpoints
+    self._last_checkpoint = None
+    self._checkpoints_since_eval = 0
+    self._graph = graph
+    with graph.as_default():
+      value_dict, update_dict = tf.contrib.metrics.aggregate_metric_map(
+          metric_dict)
+
+      self._summary_op = tf.summary.merge([
+          tf.summary.scalar(name, value_op)
+          for name, value_op in value_dict.iteritems()
+      ])
+
+      self._final_ops_dict = value_dict
+      self._eval_ops = update_dict.values()
+
+    self._file_writer = tf.summary.FileWriter(checkpoint_dir, graph=graph)
+
+  def after_run(self, run_context, run_values):
+    latest = tf.train.latest_checkpoint(self._checkpoint_dir)
+    if not latest == self._last_checkpoint:
+      self._checkpoints_since_eval += 1
+
+    if not self._checkpoints_since_eval > self._eval_every:
+      return
+    else:
+      self._checkpoints_since_eval = 0
+
+    with self._graph.as_default():
+      with tf.Session() as session:
+        session.run([tf.local_variables_initializer(), tf.tables_initializer()])
+        saver = tf.train.Saver()
+        saver.restore(session, latest)
+
+
+        coord = tf.train.Coordinator(clean_stop_exception_types=(
+          tf.errors.CancelledError,))
+        tf.train.start_queue_runners(coord=coord, sess=session)
+        with coord.stop_on_exception():
+          step = 0
+          while (self._eval_steps is None
+                 or step < self._eval_steps) and not coord.should_stop():
+            session.run(self._eval_ops)
+            step += 1
+            if step % 100 == 0:
+              tf.logging.info("On Evaluation Step: {}".format(step))
+
+        gs = session.run(tf.contrib.framework.get_or_create_global_step())
+        summaries = session.run(self._summary_op)
+        self._file_writer.add_summary(summaries, global_step=gs)
+        tf.logging.info(session.run(self._final_ops_dict))
 
 
 def run(target,
         is_chief,
         max_steps,
+        output_dir,
         train_data_path,
         eval_data_path,
-        output_dir,
-        train_batch_size,
-        eval_batch_size,
+        train_batch_size=40,
+        eval_batch_size=40,
+        eval_num_epochs=1,
         eval_every=100,
-        eval_steps=10,
+        hidden_units=[100, 70, 50, 20],
+        eval_steps=None,
+        eval_interval_secs=1,
         learning_rate=0.1,
         num_epochs=None):
 
-  training_eval_graph = tf.Graph()
-  with training_eval_graph.as_default():
-    with tf.device(tf.train.replica_device_setter()):
-      mode = tf.placeholder(shape=[], dtype=tf.string)
-      eval_features, eval_label = model.input_fn(
-          eval_data_path, shuffle=False, batch_size=eval_batch_size)
-      train_features, train_label = model.input_fn(
-          train_data_path, num_epochs=num_epochs, batch_size=train_batch_size)
+  if is_chief:
+    evaluation_graph = tf.Graph()
+    with evaluation_graph.as_default():
+      features, labels = model.input_fn(
+          eval_data_path,
+          num_epochs=None,
+          batch_size=eval_batch_size,
+          shuffle=False
+      )
 
-      is_train = tf.equal(mode, tf.constant(TRAIN))
-      sorted_keys = train_features.keys()
-      sorted_keys.sort()
-      inputs = dict(zip(
-          sorted_keys,
-          tf.cond(
-              is_train,
-              lambda: [train_features[k] for k in sorted_keys],
-              lambda: [eval_features[k] for k in sorted_keys]
-          )
-      ))
-      labels = tf.cond(is_train, lambda: train_label, lambda: eval_label)
-      train_op, accuracy_op, global_step_tensor, predictions = model.model_fn(
-          inputs, labels, learning_rate=learning_rate)
+      metric_dict = model.model_fn(
+          model.EVAL,
+          features,
+          labels,
+          hidden_units=hidden_units,
+          learning_rate=learning_rate
+      )
+    hooks = [EvalRepeatedlyHook(
+        output_dir,
+        metric_dict,
+        evaluation_graph,
+        eval_steps=eval_steps,
+    )]
+  else:
+    hooks = []
+
+  with tf.Graph().as_default():
+    with tf.device(tf.train.replica_device_setter()):
+      features, labels = model.input_fn(
+          train_data_path,
+          num_epochs=num_epochs,
+          batch_size=train_batch_size
+      )
+
+      train_op, global_step_tensor = model.model_fn(
+          model.TRAIN,
+          features,
+          labels,
+          hidden_units=hidden_units,
+          learning_rate=learning_rate
+      )
+
 
     with tf.train.MonitoredTrainingSession(master=target,
                                            is_chief=is_chief,
                                            checkpoint_dir=output_dir,
+                                           hooks=hooks,
                                            save_checkpoint_secs=20,
                                            save_summaries_steps=50) as session:
       coord = tf.train.Coordinator(clean_stop_exception_types=(
           tf.errors.CancelledError,))
       tf.train.start_queue_runners(coord=coord, sess=session)
-      step = 0
-      last_eval = 0
+      step = global_step_tensor.eval(session=session)
       with coord.stop_on_exception():
-        while step < max_steps and not coord.should_stop():
-            if is_chief and step - last_eval > eval_every:
-                last_eval = step
-                accuracies = [
-                    session.run(accuracy_op, feed_dict={mode: EVAL})
-                    for _ in range(eval_steps)
-                ]
-                accuracy = sum(accuracies) / eval_steps
-                print("Accuracy at step: {} is {:.2f}%".format(step, 100*accuracy))
+        while (max_steps is None or step < max_steps) and not coord.should_stop():
+          step, _ = session.run([global_step_tensor, train_op])
 
-            step, _ = session.run(
-                [global_step_tensor, train_op],
-                feed_dict={mode: TRAIN}
-            )
 
 
 def dispatch(*args, **kwargs):

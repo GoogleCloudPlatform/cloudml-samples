@@ -55,13 +55,14 @@ LABEL_COLUMN = 'income_bracket'
 UNUSED_COLUMNS = set(CSV_COLUMNS) - set(
     zip(*CATEGORICAL_COLS)[0] + CONTINUOUS_COLS + (LABEL_COLUMN,))
 
+TRAIN, EVAL, PREDICT = 'TRAIN', 'EVAL', 'PREDICT'
 
-# Graph creation section for training and evaluation
-def model_fn(features,
+
+def model_fn(mode,
+             features,
              labels,
              hidden_units=[100, 70, 50, 20],
-             learning_rate=0.5,
-             batch_size=40):
+             learning_rate=0.5):
   """Create a Feed forward network classification network
 
   Args:
@@ -72,6 +73,8 @@ def model_fn(features,
   Returns:
 
   """
+  label_values = tf.constant(LABELS)
+
   # Convert categorical (string) values to one_hot values
   for col, bucket_size in HASH_BUCKET_COLS:
     features[col] = string_ops.string_to_hash_bucket_fast(
@@ -113,43 +116,91 @@ def model_fn(features,
 
   # Make predictions
   logits = curr_layer
-  probabilities = tf.nn.softmax(logits)
-  predictions = tf.argmax(probabilities, 1)
 
-  # Make labels a vector
-  labels = tf.squeeze(labels)
+  if mode in (PREDICT, EVAL):
+    probabilities = tf.nn.softmax(logits)
+    predicted_indices = tf.argmax(probabilities, 1)
 
-  # Build training operation.
-  global_step = tf.contrib.framework.get_or_create_global_step()
-  cross_entropy = tf.reduce_mean(
+
+  if mode in (TRAIN, EVAL):
+    # Conver the string label column to indices
+    # Build a Hash Table inside the graph
+    table = tf.contrib.lookup.string_to_index_table_from_tensor(
+        label_values)
+    # Use the hash table to convert string labels to ints
+    label_indices = table.lookup(labels)
+    # Make labels a vector
+    label_indices_vector = tf.squeeze(label_indices)
+
+  if mode == PREDICT:
+    # Convert predicted_indices back into strings
+    return {
+        'predictions': tf.gather(predicted_indices, label_values),
+        'confidence': tf.gather(predicted_indices, probabilities)
+    }
+
+  if mode == TRAIN:
+    # Build training operation.
+    cross_entropy = tf.reduce_mean(
         tf.nn.sparse_softmax_cross_entropy_with_logits(
-            logits=logits, labels=labels))
-
-  train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(
+            logits=logits, labels=label_indices_vector))
+    global_step = tf.contrib.framework.get_or_create_global_step()
+    train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(
         cross_entropy, global_step=global_step)
+    return train_op, global_step
 
-  accuracy_op = tf.reduce_mean(tf.to_float(tf.equal(predictions, labels)))
+  if mode == EVAL:
+    return {
+        'accuracy': tf.contrib.metrics.streaming_accuracy(
+            predicted_indices, label_indices),
+        'auroc': tf.contrib.metrics.streaming_auc(predicted_indices, label_indices)
+    }
 
-  return train_op, accuracy_op, global_step, predictions
+
+def build_serving_inputs(mode, default_batch_size=None):
+  if mode == 'CSV':
+    placeholders = [tf.placeholder(
+        shape=[default_batch_size],
+        dtype=tf.string,
+        name='csv_rows'
+    )]
+    features = parse_csv(placeholders[0])
+  else:
+    feature_spec = {}
+    for feat in CONTINUOUS_COLS:
+      feature_spec[feat] = tf.train.FixedLenFeature([], tf.int32)
+
+    for feat, _ in CATEGORICAL_COLS:
+      feature_spec[feat] = tf.train.FixedLenFeature([], tf.string)
+
+    tf_record = tf.placeholder(
+        shape=[default_batch_size],
+        dtype=tf.string,
+        name='tf_record'
+    )
+    feature_scalars = tf.parse_example(tf_record, feature_spec)
+    features = {
+        key: tf.expand_dims(tensor, -1)
+        for key, tensor in feature_scalars.iteritems()
+    }
+    if mode == 'TF_RECORD':
+      placeholders = [tf_record]
+    else:
+      placeholders = feature_scalars.values()
+
+  return features, placeholders
 
 
-def parse_label_column(label_string_tensor):
-  """Parses a string tensor into the label tensor
-  Args:
-    label_string_tensor: Tensor of dtype string. Result of parsing the
-    CSV column specified by LABEL_COLUMN
-  Returns:
-    A Tensor of the same shape as label_string_tensor, should return
-    an int64 Tensor representing the label index for classification tasks,
-    and a float32 Tensor representing the value for a regression task.
-  """
-  # Build a Hash Table inside the graph
-  table = tf.contrib.lookup.string_to_index_table_from_tensor(
-      tf.constant(LABELS))
+def parse_csv(rows_string_tensor):
+  # model_fn expects rank 2 tensors.
+  row_columns = tf.expand_dims(rows_string_tensor, -1)
+  columns = tf.decode_csv(row_columns, record_defaults=CSV_COLUMN_DEFAULTS)
+  features = dict(zip(CSV_COLUMNS, columns))
 
-  # Use the hash table to convert string labels to ints
-  return table.lookup(label_string_tensor)
-
+  # Remove unused columns
+  for col in UNUSED_COLUMNS:
+    features.pop(col)
+  return features
 
 def input_fn(filenames,
              num_epochs=None,
@@ -178,17 +229,9 @@ def input_fn(filenames,
 
   _, rows = reader.read_up_to(filename_queue, num_records=batch_size)
 
-  # model_fn expects rank 2 tensors.
-  row_columns = tf.expand_dims(rows, -1)
+  features = parse_csv(rows)
 
   # Parse the CSV File
-  columns = tf.decode_csv(row_columns, record_defaults=CSV_COLUMN_DEFAULTS)
-  features = dict(zip(CSV_COLUMNS, columns))
-
-  # Remove unused columns
-  for col in UNUSED_COLUMNS:
-    features.pop(col)
-
   if shuffle:
     # This operation builds up a buffer of rows so that, even between batches,
     # rows are fed to training in a suitably randomized order.
@@ -200,5 +243,4 @@ def input_fn(filenames,
         num_threads=multiprocessing.cpu_count(),
         enqueue_many=True,
     )
-  label_tensor = parse_label_column(features.pop(LABEL_COLUMN))
-  return features, label_tensor
+  return features, features.pop(LABEL_COLUMN)
