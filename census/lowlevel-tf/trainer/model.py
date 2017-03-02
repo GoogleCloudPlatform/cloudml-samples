@@ -35,21 +35,13 @@ CSV_COLUMN_DEFAULTS = [[0.], [''], [0.], [''], [0.], [''], [''], [''], [''],
                        [''], [0.], [0.], [0.], [''], ['']]
 
 # Categorical columns with vocab size
-HASH_BUCKET_COLS = (('education', 16), ('marital_status', 7),
+CATEGORICAL_COLS = (('education', 16), ('marital_status', 7),
                     ('relationship', 6), ('workclass', 9), ('occupation', 15),
                     ('native_country', 42), ('gender', 2), ('race', 5))
-KEY_COLS = (
-   #  ('gender', ('female', 'male')), ('race', ('Amer-Indian-Eskimo',
-   #                                                    'Asian-Pac-Islander',
-   #                                                    'Black',
-   #                                                    'Other',
-   #                                                    'White'))
-)
 
 CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss',
                    'hours_per_week')
 
-CATEGORICAL_COLS = HASH_BUCKET_COLS + tuple((col, len(keys)) for col, keys in KEY_COLS)
 LABELS = [' <=50K', ' >50K']
 LABEL_COLUMN = 'income_bracket'
 
@@ -78,19 +70,13 @@ def model_fn(mode,
   label_values = tf.constant(LABELS)
 
   # Convert categorical (string) values to one_hot values
-  for col, bucket_size in HASH_BUCKET_COLS:
+  for col, bucket_size in CATEGORICAL_COLS:
     features[col] = string_ops.string_to_hash_bucket_fast(
             features[col], bucket_size)
 
-  for col, keys in KEY_COLS:
-    table = tf.contrib.lookup.string_to_index_table_from_tensor(
-        tf.constant(keys))
-    features[col] = table.lookup(features[col])
-
-  for col, size in CATEGORICAL_COLS:
     features[col] = tf.squeeze(tf.one_hot(
         features[col],
-        size,
+        bucket_size,
         axis=1,
         dtype=tf.float32), axis=[2])
 
