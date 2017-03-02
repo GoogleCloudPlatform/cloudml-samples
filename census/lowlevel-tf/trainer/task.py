@@ -265,7 +265,7 @@ def build_and_run_exports(latest, job_dir, mode, hidden_units, learning_rate):
         signature_def_map={
             tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature_def
         },
-        main_op=tf.tables_initializer()
+#        main_op=tf.tables_initializer()
     )
 
   exporter.save()

@@ -37,13 +37,14 @@ CSV_COLUMN_DEFAULTS = [[0.], [''], [0.], [''], [0.], [''], [''], [''], [''],
 # Categorical columns with vocab size
 HASH_BUCKET_COLS = (('education', 16), ('marital_status', 7),
                     ('relationship', 6), ('workclass', 9), ('occupation', 15),
-                    ('native_country', 42))
-KEY_COLS = (('gender', ('female', 'male')), ('race', ('Amer-Indian-Eskimo',
-                                                      'Asian-Pac-Islander',
-                                                      'Black',
-                                                      'Other',
-                                                      'White')))
-
+                    ('native_country', 42), ('gender', 2), ('race', 5))
+KEY_COLS = (
+   #  ('gender', ('female', 'male')), ('race', ('Amer-Indian-Eskimo',
+   #                                                    'Asian-Pac-Islander',
+   #                                                    'Black',
+   #                                                    'Other',
+   #                                                    'White'))
+)
 
 CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss',
                    'hours_per_week')
