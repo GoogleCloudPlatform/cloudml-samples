@@ -44,7 +44,7 @@ class EvalRepeatedlyHook(tf.train.SessionRunHook):
     self._checkpoint_dir = checkpoint_dir
     self._kwargs = kwargs
     self._eval_every = eval_every_n_checkpoints
-    self._last_checkpoint = None
+    self._latest_checkpoint = None
     self._checkpoints_since_eval = 0
     self._graph = graph
     with graph.as_default():
@@ -55,58 +55,68 @@ class EvalRepeatedlyHook(tf.train.SessionRunHook):
           tf.summary.scalar(name, value_op)
           for name, value_op in value_dict.iteritems()
       ])
-
+      self._gs = tf.contrib.framework.get_or_create_global_step()
       self._final_ops_dict = value_dict
       self._eval_ops = update_dict.values()
 
     self._eval_lock = threading.Lock()
+    self._checkpoint_lock = threading.Lock()
     self._file_writer = tf.summary.FileWriter(checkpoint_dir, graph=graph)
 
   def after_run(self, run_context, run_values):
-    if not self._eval_lock.acquire(False):
-      return
+    # Always check for new checkpoints in case a single evaluation
+    # takes longer than checkpoint frequency and _eval_every is >1
+    self._update_latest_checkpoint()
+    if self._eval_lock.acquire(False):
+      if self._checkpoints_since_eval > self._eval_every:
+        self._checkpoints_since_eval = 0
+        self._run_eval()
 
-    latest = tf.train.latest_checkpoint(self._checkpoint_dir)
-    if not latest == self._last_checkpoint:
-      self._checkpoints_since_eval += 1
+      self._eval_lock.release()
 
-    if self._checkpoints_since_eval > self._eval_every:
-      self._checkpoints_since_eval = 0
-      self._run_eval(latest)
-
-    self._eval_lock.release()
+  def _update_latest_checkpoint(self):
+    if self._checkpoint_lock.acquire(False):
+      latest = tf.train.latest_checkpoint(self._checkpoint_dir)
+      if not latest == self._latest_checkpoint:
+        self._checkpoints_since_eval += 1
+        self._latest_checkpoint = latest
+      self._checkpoint_lock.release()
 
   def end(self, session):
     # Block to ensure we always eval at the end
     self._eval_lock.acquire()
     latest = tf.train.latest_checkpoint(self._checkpoint_dir)
-    self._run_eval(latest)
+    self._run_eval()
     self._eval_lock.release()
 
-  def _run_eval(self, latest):
-    with self._graph.as_default():
-      gs = tf.contrib.framework.get_or_create_global_step()
+  def _run_eval(self):
+    coord = tf.train.Coordinator(clean_stop_exception_types=(
+        tf.errors.CancelledError, tf.errors.OutOfRangeError))
+
+    with tf.Session(graph=self._graph) as session:
       saver = tf.train.Saver()
-      coord = tf.train.Coordinator(clean_stop_exception_types=(
-          tf.errors.CancelledError, tf.errors.OutOfRangeError))
 
-      with tf.Session() as session:
-        session.run([tf.local_variables_initializer(), tf.tables_initializer()])
-        tf.train.start_queue_runners(coord=coord, sess=session)
-        saver.restore(session, latest)
-        train_step = session.run(gs)
-        tf.logging.info('Starting Evaluation For Step: {}'.format(train_step))
-        with coord.stop_on_exception():
-          eval_step = 0
-          while self._eval_steps is None or eval_step < self._eval_steps:
-            summaries, final_values, _ = session.run(
-                [self._summary_op, self._final_ops_dict, self._eval_ops])
-            if eval_step % 100 == 0:
-              tf.logging.info("On Evaluation Step: {}".format(eval_step))
-            eval_step += 1
+      saver.restore(session, self._latest_checkpoint)
 
-        self._file_writer.add_summary(summaries, global_step=train_step)
-        tf.logging.info(final_values)
+      session.run([
+          tf.local_variables_initializer(),
+          tf.tables_initializer()
+      ])
+      train_step = session.run(self._gs)
+
+      tf.train.start_queue_runners(coord=coord, sess=session)
+      tf.logging.info('Starting Evaluation For Step: {}'.format(train_step))
+      with coord.stop_on_exception():
+        eval_step = 0
+        while self._eval_steps is None or eval_step < self._eval_steps:
+          summaries, final_values, _ = session.run(
+              [self._summary_op, self._final_ops_dict, self._eval_ops])
+          if eval_step % 100 == 0:
+            tf.logging.info("On Evaluation Step: {}".format(eval_step))
+          eval_step += 1
+
+      self._file_writer.add_summary(summaries, global_step=train_step)
+      tf.logging.info(final_values)
 
 def run(target,
         is_chief,
