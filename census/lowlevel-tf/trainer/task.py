@@ -229,10 +229,11 @@ def run(target,
 
 
 def dispatch(*args, **kwargs):
-  """Parse TF_CONFIG to cluster_spec, job_name and task_index."""
+  """Parse TF_CONFIG to cluster_spec and call run()."""
 
   tf_config = os.environ.get('TF_CONFIG')
 
+  # If TF_CONFIG not available run local
   if not tf_config:
     return run('', True, None, *args, **kwargs)
 

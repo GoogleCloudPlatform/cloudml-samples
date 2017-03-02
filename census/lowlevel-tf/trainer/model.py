@@ -71,7 +71,8 @@ def model_fn(mode,
     num_classes (int): Number of classes
 
   Returns:
-
+    Tuple (train_op, accuracy_op, global_step, predictions): Tuple containing
+    training graph, accuracy graph, global step and predictions
   """
   label_values = tf.constant(LABELS)
 
