@@ -85,8 +85,8 @@ class EvalRepeatedlyHook(tf.train.SessionRunHook):
 
   def end(self, session):
     # Block to ensure we always eval at the end
+    self._update_latest_checkpoint()
     self._eval_lock.acquire()
-    latest = tf.train.latest_checkpoint(self._checkpoint_dir)
     self._run_eval()
     self._eval_lock.release()
 
@@ -267,7 +267,8 @@ def build_and_run_exports(latest, output_dir, mode, hidden_units, learning_rate)
         tags=[tf.saved_model.tag_constants.SERVING],
         signature_def_map={
             tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature_def
-        }
+        },
+        main_op=tf.tables_initializer()
     )
 
   exporter.save()
