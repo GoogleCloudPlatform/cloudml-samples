@@ -142,10 +142,11 @@ def run(target,
   Args:
     target (string): Tensorflow server target
     is_chief (bool): Boolean flag to specify a chief server
+    trial_id (string): Trial id for hyperparameter tuning
     max_steps (int): Maximum training steps
+    output_dir (string): Output dir for checkpoint and summary
     train_data_path (string): List of CSV files to read train data
     eval_data_path (string): List of CSV files to read eval data
-    output_dir (string): Output directory for model and checkpoint
     train_batch_size (int): Batch size for training
     eval_batch_size (int): Batch size for evaluation
     learning_rate (float): Learning rate for Gradient Descent
