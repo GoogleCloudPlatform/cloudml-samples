@@ -47,6 +47,7 @@ class EvalRepeatedlyHook(tf.train.SessionRunHook):
     self._latest_checkpoint = None
     self._checkpoints_since_eval = 0
     self._graph = graph
+
     with graph.as_default():
       value_dict, update_dict = tf.contrib.metrics.aggregate_metric_map(
           metric_dict)
@@ -62,6 +63,9 @@ class EvalRepeatedlyHook(tf.train.SessionRunHook):
     self._eval_lock = threading.Lock()
     self._checkpoint_lock = threading.Lock()
     self._file_writer = tf.summary.FileWriter(checkpoint_dir, graph=graph)
+
+  #def before_run(self, run_context):
+  #  return tf.train.SessionRunArgs(self._gs)
 
   def after_run(self, run_context, run_values):
     # Always check for new checkpoints in case a single evaluation
@@ -120,11 +124,10 @@ class EvalRepeatedlyHook(tf.train.SessionRunHook):
 
 def run(target,
         is_chief,
-        trial_id,
         max_steps,
-        output_dir,
-        train_data_path,
-        eval_data_path,
+        job_dir,
+        train_data_paths,
+        eval_data_paths,
         train_batch_size,
         eval_batch_size,
         learning_rate,
@@ -142,11 +145,10 @@ def run(target,
   Args:
     target (string): Tensorflow server target
     is_chief (bool): Boolean flag to specify a chief server
-    trial_id (string): Trial id for hyperparameter tuning
     max_steps (int): Maximum training steps
-    output_dir (string): Output dir for checkpoint and summary
-    train_data_path (string): List of CSV files to read train data
-    eval_data_path (string): List of CSV files to read eval data
+    job_dir (string): Output dir for checkpoint and summary
+    train_data_paths (string): List of CSV files to read train data
+    eval_data_paths (string): List of CSV files to read eval data
     train_batch_size (int): Batch size for training
     eval_batch_size (int): Batch size for evaluation
     learning_rate (float): Learning rate for Gradient Descent
@@ -157,11 +159,6 @@ def run(target,
     eval_steps (int): Eval steps
     num_epochs (int): Number of epochs
   """
-
-  # Add trial_id to the output path when doing Hyperparameter tuning
-  # so that output for each run goes in its own trial.
-  if trial_id:
-    output_dir = os.path.join(output_dir, trial_id)
 
   # Calculate the number of hidden units
   hidden_units=[
@@ -174,7 +171,7 @@ def run(target,
     evaluation_graph = tf.Graph()
     with evaluation_graph.as_default():
       features, labels = model.input_fn(
-          eval_data_path,
+          eval_data_paths,
           num_epochs=eval_num_epochs,
           batch_size=eval_batch_size,
           shuffle=False
@@ -188,7 +185,7 @@ def run(target,
           learning_rate=learning_rate
       )
     hooks = [EvalRepeatedlyHook(
-        output_dir,
+        job_dir,
         metric_dict,
         evaluation_graph,
         eval_steps=eval_steps,
@@ -199,7 +196,7 @@ def run(target,
   with tf.Graph().as_default():
     with tf.device(tf.train.replica_device_setter()):
       features, labels = model.input_fn(
-          train_data_path,
+          train_data_paths,
           num_epochs=num_epochs,
           batch_size=train_batch_size
       )
@@ -215,7 +212,7 @@ def run(target,
 
     with tf.train.MonitoredTrainingSession(master=target,
                                            is_chief=is_chief,
-                                           checkpoint_dir=output_dir,
+                                           checkpoint_dir=job_dir,
                                            hooks=hooks,
                                            save_checkpoint_secs=2,
                                            save_summaries_steps=50) as session:
@@ -236,18 +233,17 @@ def dispatch(*args, **kwargs):
 
   # If TF_CONFIG not available run local
   if not tf_config:
-    return run('', True, None, *args, **kwargs)
+    return run('', True, *args, **kwargs)
 
   tf_config_json = json.loads(tf_config)
 
   cluster = tf_config_json.get('cluster')
   job_name = tf_config_json.get('task').get('type')
   task_index = tf_config_json.get('task').get('index')
-  trial_id = tf_config_json.get('task').get('trial')
 
   # If cluster information is empty run local
   if job_name is None or task_index is None:
-    return run('', True, None, *args, **kwargs)
+    return run('', True, *args, **kwargs)
 
   cluster_spec = tf.train.ClusterSpec(cluster)
   server = tf.train.Server(cluster_spec,
@@ -258,49 +254,49 @@ def dispatch(*args, **kwargs):
     server.join()
     return
   elif job_name in ['master', 'worker']:
-    return run(server.target, job_name == 'master', trial_id, *args, **kwargs)
+    return run(server.target, job_name == 'master', *args, **kwargs)
 
 
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument('--train_data_path',
+  parser.add_argument('--train-data-paths',
                       required=True,
                       type=str,
                       help='Training file location', nargs='+')
-  parser.add_argument('--eval_data_path',
+  parser.add_argument('--eval-data-paths',
                       required=True,
                       type=str,
                       help='Evaluation file location', nargs='+')
-  parser.add_argument('--output_dir',
+  parser.add_argument('--job-dir',
                       required=True,
                       type=str,
                       help='GCS or local dir to write checkpoints and export model')
-  parser.add_argument('--max_steps',
+  parser.add_argument('--max-steps',
                       type=int,
                       default=1000,
                       help='Maximum number of training steps to perform')
-  parser.add_argument('--train_batch_size',
+  parser.add_argument('--train-batch-size',
                       type=int,
                       default=40,
                       help='Batch size for training steps')
-  parser.add_argument('--eval_batch_size',
+  parser.add_argument('--eval-batch-size',
                       type=int,
                       default=40,
                       help='Batch size for evaluation steps')
-  parser.add_argument('--learning_rate',
+  parser.add_argument('--learning-rate',
                       type=float,
                       default=0.5,
                       help='Learning rate for SGD')
-  parser.add_argument('--first_layer_size',
+  parser.add_argument('--first-layer-size',
                      type=int,
                      default=100,
                      help='Number of nodes in the first layer of DNN')
-  parser.add_argument('--num_layers',
+  parser.add_argument('--num-layers',
                      type=int,
                      default=4,
                      help='Number of layers in DNN')
-  parser.add_argument('--scale_factor',
+  parser.add_argument('--scale-factor',
                      type=float,
                      default=0.7,
                      help='Rate of decay size of layer for DNN')
