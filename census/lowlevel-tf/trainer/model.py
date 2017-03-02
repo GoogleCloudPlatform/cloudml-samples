@@ -131,6 +131,10 @@ def model_fn(mode,
     label_indices = table.lookup(labels)
     # Make labels a vector
     label_indices_vector = tf.squeeze(label_indices)
+    # global_step is necessary in eval to correctly load the step
+    # of the checkpoint we are evaluating
+    global_step = tf.contrib.framework.get_or_create_global_step()
+    tf.logging.info(global_step.name)
 
   if mode == PREDICT:
     # Convert predicted_indices back into strings
@@ -144,7 +148,6 @@ def model_fn(mode,
     cross_entropy = tf.reduce_mean(
         tf.nn.sparse_softmax_cross_entropy_with_logits(
             logits=logits, labels=label_indices_vector))
-    global_step = tf.contrib.framework.get_or_create_global_step()
     train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(
         cross_entropy, global_step=global_step)
     return train_op, global_step
