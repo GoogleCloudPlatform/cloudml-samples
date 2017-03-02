@@ -253,7 +253,10 @@ def build_and_run_exports(latest, output_dir, mode, hidden_units, learning_rate)
         for name, tensor in prediction_dict.iteritems()
     }
     signature_def = tf.saved_model.signature_def_utils.build_signature_def(
-        inputs=placeholder_info, outputs=output_info)
+        inputs=placeholder_info,
+        outputs=output_info,
+        method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME
+    )
 
 
   with tf.Session(graph=prediction_graph) as session:
