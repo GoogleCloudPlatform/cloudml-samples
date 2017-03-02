@@ -63,6 +63,9 @@ Run the code on your local machine:
 
 ```
 export OUTPUT_DIR=census_output
+```
+
+```
 python trainer/task.py --train_data_path $CENSUS_DATA/$TRAIN_FILE \
                        --eval_data_path $CENSUS_DATA/$EVAL_FILE \
                        --output_dir $OUTPUT_DIR
@@ -72,6 +75,11 @@ python trainer/task.py --train_data_path $CENSUS_DATA/$TRAIN_FILE \
 ### Using gcloud local
 Run the code on your local machine using `gcloud`. This allows you to mock
 running it on the cloud:
+
+```
+rm -rf $OUTPUT_DIR
+export OUTPUT_DIR=census_output
+```
 
 ```
 gcloud beta ml local train --package-path trainer \
@@ -86,6 +94,11 @@ gcloud beta ml local train --package-path trainer \
 Run the code on Cloud ML Engine using `gcloud`:
 
 ```
+export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/jobs/job3
+export GCS_OUTPUT_DIR=gs://<my-bucket>/path/to/my/models/run3
+```
+
+```
 gcloud beta ml jobs submit training $JOB_NAME \
                                     --runtime-version 1.0 \
                                     --job-dir $GCS_JOB_DIR \
@@ -95,8 +108,7 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     -- \
                                     --train_data_path $TRAIN_GCS_FILE \
                                     --eval_data_path $EVAL_GCS_FILE \
-                                    --output_dir $GCS_OUTPUT_DIR \
-                                    --max_steps $MAX_STEPS
+                                    --output_dir $GCS_OUTPUT_DIR
 ```
 ## Accuracy and Output
 You should see the output for default number of training steps and approx accuracy close to `80.25%`.
@@ -136,20 +148,33 @@ You can run the code either locally or on cloud using `gcloud`.
 Run the distributed training code locally using `gcloud`.
 
 ```
+export PS_SERVER_COUNT=2
+export WORKER_COUNT=3
+export MAX_STEPS=1000
+export OUTPUT_DIR=census_output
+```
+
+```
 gcloud beta ml local train --package-path trainer \
                            --module-name trainer.task \
                            --parameter-server-count $PS_SERVER_COUNT \
                            --worker-count $WORKER_COUNT \
                            --distributed \
                            -- \
-                           --train_data_path $TRAIN_DATA_PATH \
-                           --eval_data_path $EVAL_DATA_PATH \
+                           --train_data_path $CENSUS_DATA/$TRAIN_FILE \
+                           --eval_data_path $CENSUS_DATA/$EVAL_FILE \
                            --max_steps $MAX_STEPS \
                            --output_dir $OUTPUT_DIR
 ```
 
 ### Using Cloud ML Engine
 Run the distributed training code on cloud using `gcloud`.
+
+```
+export SCALE_TIER=STANDARD_1
+export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/models/run3
+export GCS_OUTPUT_DIR=gs://<my-bucket>/path/to/my/models/run3
+```
 
 ```
 gcloud beta ml jobs submit training $JOB_NAME \
@@ -162,7 +187,6 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     -- \
                                     --train_data_path $TRAIN_GCS_FILE \
                                     --eval_data_path $EVAL_GCS_FILE \
-                                    --max_steps $MAX_STEPS \
                                     --output_dir $GCS_OUTPUT_DIR
 ```
 
