@@ -15,6 +15,10 @@ on Google Cloud Storage:
  * Training file is `adult.data.csv`
  * Evaluation file is `adult.test.csv`
 
+### Disclaimer
+The source of this dataset is from a third party. Google provides no representation,
+warranty, or other guarantees about the validity or any other aspects of this dataset.
+
 ```
 export CENSUS_DATA=census_data
 export TRAIN_FILE=adult.data.csv
@@ -151,6 +155,36 @@ Run the distributed training code on cloud using `gcloud`.
 gcloud beta ml jobs submit training $JOB_NAME \
                                     --scale-tier $SCALE_TIER \
                                     --runtime-version 1.0 \
+                                    --job-dir $GCS_JOB_DIR \
+                                    --module-name trainer.task \
+                                    --package-path trainer/ \
+                                    --region us-central1 \
+                                    -- \
+                                    --train_data_path $TRAIN_GCS_FILE \
+                                    --eval_data_path $EVAL_GCS_FILE \
+                                    --max_steps $MAX_STEPS \
+                                    --output_dir $GCS_OUTPUT_DIR
+```
+
+# Hyperparameter Tuning
+Cloud ML Engine allows you to perform Hyperparameter tuning to find out the
+most optimal hyperparameters. See [Overview of Hyperparameter Tuning]
+(https://cloud.google.com/ml/docs/concepts/hyperparameter-tuning-overview) for more details.
+
+## Running Hyperparameter Job
+
+Running Hyperparameter job is almost exactly same as Training job except that
+you need to add the `--config` argument.
+
+```
+export HPTUNING_CONFIG=hptuning_config.yaml
+```
+
+```
+gcloud beta ml jobs submit training $JOB_NAME \
+                                    --scale-tier $SCALE_TIER \
+                                    --runtime-version 1.0 \
+                                    --config $HPTUNING_CONFIG
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \

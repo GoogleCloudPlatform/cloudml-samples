@@ -110,21 +110,56 @@ class EvalRepeatedlyHook(tf.train.SessionRunHook):
 
 def run(target,
         is_chief,
+        trial_id,
         max_steps,
         output_dir,
         train_data_path,
         eval_data_path,
-        train_batch_size=40,
-        eval_batch_size=40,
+        train_batch_size,
+        eval_batch_size,
+        learning_rate,
+        first_layer_size,
+        num_layers,
+        scale_factor,
         eval_num_epochs=1,
         eval_every=100,
-        hidden_units=[100, 70, 50, 20],
         eval_steps=None,
         eval_interval_secs=1,
-        learning_rate=0.1,
         num_epochs=None):
 
+  """Run the training and evaluation graph.
+
+  Args:
+    target (string): Tensorflow server target
+    is_chief (bool): Boolean flag to specify a chief server
+    max_steps (int): Maximum training steps
+    train_data_path (string): List of CSV files to read train data
+    eval_data_path (string): List of CSV files to read eval data
+    output_dir (string): Output directory for model and checkpoint
+    train_batch_size (int): Batch size for training
+    eval_batch_size (int): Batch size for evaluation
+    learning_rate (float): Learning rate for Gradient Descent
+    first_layer_size (int): Size of the first DNN layer
+    num_layers (int): Number of hidden layers in the DNN
+    scale_factor (float): Decay rate for the size of hidden layers
+    eval_every (int): Run evaluation frequency
+    eval_steps (int): Eval steps
+    num_epochs (int): Number of epochs
+  """
+
+  # Add trial_id to the output path when doing Hyperparameter tuning
+  # so that output for each run goes in its own trial.
+  if trial_id:
+    output_dir = os.path.join(output_dir, trial_id)
+
+  # Calculate the number of hidden units
+  hidden_units=[
+      max(2, int(first_layer_size * scale_factor**i))
+      for i in range(num_layers)
+  ]
+
   if is_chief:
+    tf.logging.info("Created DNN hidden units {}".format(hidden_units))
     evaluation_graph = tf.Graph()
     with evaluation_graph.as_default():
       features, labels = model.input_fn(
@@ -189,17 +224,18 @@ def dispatch(*args, **kwargs):
   tf_config = os.environ.get('TF_CONFIG')
 
   if not tf_config:
-    return run('', True, *args, **kwargs)
+    return run('', True, None, *args, **kwargs)
 
   tf_config_json = json.loads(tf_config)
 
   cluster = tf_config_json.get('cluster')
   job_name = tf_config_json.get('task').get('type')
   task_index = tf_config_json.get('task').get('index')
+  trial_id = tf_config_json.get('task').get('trial')
 
   # If cluster information is empty run local
   if job_name is None or task_index is None:
-    return run('', True, *args, **kwargs)
+    return run('', True, None, *args, **kwargs)
 
   cluster_spec = tf.train.ClusterSpec(cluster)
   server = tf.train.Server(cluster_spec,
@@ -210,7 +246,7 @@ def dispatch(*args, **kwargs):
     server.join()
     return
   elif job_name in ['master', 'worker']:
-    return run(server.target, job_name == 'master', *args, **kwargs)
+    return run(server.target, job_name == 'master', trial_id, *args, **kwargs)
 
 
 
@@ -240,6 +276,22 @@ if __name__ == "__main__":
                       type=int,
                       default=40,
                       help='Batch size for evaluation steps')
+  parser.add_argument('--learning_rate',
+                      type=float,
+                      default=0.5,
+                      help='Learning rate for SGD')
+  parser.add_argument('--first_layer_size',
+                     type=int,
+                     default=100,
+                     help='Number of nodes in the first layer of DNN')
+  parser.add_argument('--num_layers',
+                     type=int,
+                     default=4,
+                     help='Number of layers in DNN')
+  parser.add_argument('--scale_factor',
+                     type=float,
+                     default=0.7,
+                     help='Rate of decay size of layer for DNN')
   parse_args, unknown = parser.parse_known_args()
 
   dispatch(**parse_args.__dict__)
