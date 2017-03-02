@@ -135,13 +135,12 @@ def model_fn(mode,
     # global_step is necessary in eval to correctly load the step
     # of the checkpoint we are evaluating
     global_step = tf.contrib.framework.get_or_create_global_step()
-    tf.logging.info(global_step.name)
 
   if mode == PREDICT:
     # Convert predicted_indices back into strings
     return {
-        'predictions': tf.gather(predicted_indices, label_values),
-        'confidence': tf.gather(predicted_indices, probabilities)
+        'predictions': tf.gather(label_values, predicted_indices),
+        'confidence': tf.gather(probabilities, predicted_indices)
     }
 
   if mode == TRAIN:
@@ -163,19 +162,19 @@ def model_fn(mode,
 
 def build_serving_inputs(mode, default_batch_size=None):
   if mode == 'CSV':
-    placeholders = [tf.placeholder(
+    placeholders = {'csv_row': tf.placeholder(
         shape=[default_batch_size],
-        dtype=tf.string,
-        name='csv_rows'
-    )]
-    features = parse_csv(placeholders[0])
+        dtype=tf.string
+    )}
+    features = parse_csv(placeholders['csv_row'])
+    features.pop(LABEL_COLUMN)
   else:
     feature_spec = {}
     for feat in CONTINUOUS_COLS:
-      feature_spec[feat] = tf.train.FixedLenFeature([], tf.int32)
+      feature_spec[feat] = tf.FixedLenFeature(shape=[], dtype=tf.float32)
 
     for feat, _ in CATEGORICAL_COLS:
-      feature_spec[feat] = tf.train.FixedLenFeature([], tf.string)
+      feature_spec[feat] = tf.FixedLenFeature(shape=[], dtype=tf.string)
 
     tf_record = tf.placeholder(
         shape=[default_batch_size],
@@ -188,9 +187,9 @@ def build_serving_inputs(mode, default_batch_size=None):
         for key, tensor in feature_scalars.iteritems()
     }
     if mode == 'TF_RECORD':
-      placeholders = [tf_record]
+      placeholders = {'tf_record': tf_record}
     else:
-      placeholders = feature_scalars.values()
+      placeholders = feature_scalars
 
   return features, placeholders
 

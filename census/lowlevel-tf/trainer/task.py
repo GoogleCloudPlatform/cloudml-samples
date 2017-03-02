@@ -56,6 +56,7 @@ class EvalRepeatedlyHook(tf.train.SessionRunHook):
           tf.summary.scalar(name, value_op)
           for name, value_op in value_dict.iteritems()
       ])
+      self._saver = tf.train.Saver()
       self._gs = tf.contrib.framework.get_or_create_global_step()
       self._final_ops_dict = value_dict
       self._eval_ops = update_dict.values()
@@ -95,17 +96,15 @@ class EvalRepeatedlyHook(tf.train.SessionRunHook):
         tf.errors.CancelledError, tf.errors.OutOfRangeError))
 
     with tf.Session(graph=self._graph) as session:
-      saver = tf.train.Saver()
-
-      saver.restore(session, self._latest_checkpoint)
+      self._saver.restore(session, self._latest_checkpoint)
 
       session.run([
           tf.local_variables_initializer(),
           tf.tables_initializer()
       ])
+      tf.train.start_queue_runners(coord=coord, sess=session)
       train_step = session.run(self._gs)
 
-      tf.train.start_queue_runners(coord=coord, sess=session)
       tf.logging.info('Starting Evaluation For Step: {}'.format(train_step))
       with coord.stop_on_exception():
         eval_step = 0
@@ -221,6 +220,52 @@ def run(target,
         while (max_steps is None or step < max_steps) and not coord.should_stop():
           step, _ = session.run([global_step_tensor, train_op])
 
+    latest_checkpoint = tf.train.latest_checkpoint(output_dir)
+    for mode in ['CSV', 'TF_RECORD', 'JSON']:
+      build_and_run_exports(latest_checkpoint, output_dir, mode, hidden_units, learning_rate)
+
+
+def build_and_run_exports(latest, output_dir, mode, hidden_units, learning_rate):
+  prediction_graph = tf.Graph()
+  exporter = tf.saved_model.builder.SavedModelBuilder(os.path.join(output_dir, mode))
+  with prediction_graph.as_default():
+    features, placeholder_dict = model.build_serving_inputs(mode)
+    prediction_dict = model.model_fn(
+        model.PREDICT,
+        features,
+        None,  # labels
+        hidden_units=hidden_units,
+        learning_rate=learning_rate
+    )
+    saver = tf.train.Saver()
+
+    placeholder_info = {
+        name: tf.saved_model.utils.build_tensor_info(tensor)
+        for name, tensor in placeholder_dict.iteritems()
+    }
+    output_info = {
+        name: tf.saved_model.utils.build_tensor_info(tensor)
+        for name, tensor in prediction_dict.iteritems()
+    }
+    signature_def = tf.saved_model.signature_def_utils.build_signature_def(
+        inputs=placeholder_info,
+        outputs=output_info,
+        method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME
+    )
+
+
+  with tf.Session(graph=prediction_graph) as session:
+    session.run([tf.local_variables_initializer(), tf.tables_initializer()])
+    saver.restore(session, latest)
+    exporter.add_meta_graph_and_variables(
+        session,
+        tags=[tf.saved_model.tag_constants.SERVING],
+        signature_def_map={
+            tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature_def
+        }
+    )
+
+  exporter.save()
 
 
 def dispatch(*args, **kwargs):
