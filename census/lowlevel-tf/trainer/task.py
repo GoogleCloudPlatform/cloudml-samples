@@ -63,7 +63,8 @@ class EvalRepeatedlyHook(tf.train.SessionRunHook):
 
     self._eval_lock = threading.Lock()
     self._checkpoint_lock = threading.Lock()
-    self._file_writer = tf.summary.FileWriter(checkpoint_dir, graph=graph)
+    self._file_writer = tf.summary.FileWriter(
+        os.path.join(checkpoint_dir, 'eval'), graph=graph)
 
   def after_run(self, run_context, run_values):
     # Always check for new checkpoints in case a single evaluation
