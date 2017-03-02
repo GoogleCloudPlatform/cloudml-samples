@@ -62,7 +62,7 @@ def model_fn(mode,
              features,
              labels,
              hidden_units=[100, 70, 50, 20],
-             learning_rate=0.5):
+             learning_rate=0.1):
   """Create a Feed forward network classification network
 
   Args:

@@ -66,10 +66,10 @@ export OUTPUT_DIR=census_output
 ```
 
 ```
-python trainer/task.py --train_data_path $CENSUS_DATA/$TRAIN_FILE \
-                       --eval_data_path $CENSUS_DATA/$EVAL_FILE \
-                       --output_dir $OUTPUT_DIR
-                       [--max_steps $MAX_STEPS]
+python trainer/task.py --train-data-path $CENSUS_DATA/$TRAIN_FILE \
+                       --eval-data-path $CENSUS_DATA/$EVAL_FILE \
+                       --output-dir $OUTPUT_DIR
+                       [--max-steps $MAX_STEPS]
 ```
 
 ### Using gcloud local
@@ -85,9 +85,9 @@ export OUTPUT_DIR=census_output
 gcloud beta ml local train --package-path trainer \
                            --module-name trainer.task \
                            -- \
-                           --train_data_path $CENSUS_DATA/$TRAIN_FILE \
-                           --eval_data_path $CENSUS_DATA/$EVAL_FILE \
-                           --output_dir $OUTPUT_DIR
+                           --train-data-path $CENSUS_DATA/$TRAIN_FILE \
+                           --eval-data-path $CENSUS_DATA/$EVAL_FILE \
+                           --output-dir $OUTPUT_DIR
 ```
 
 ### Using Cloud ML Engine
@@ -106,9 +106,9 @@ gcloud beta ml jobs submit training $JOB_NAME \
                                     --package-path trainer/ \
                                     --region us-central1 \
                                     -- \
-                                    --train_data_path $TRAIN_GCS_FILE \
-                                    --eval_data_path $EVAL_GCS_FILE \
-                                    --output_dir $GCS_OUTPUT_DIR
+                                    --train-data-path $TRAIN_GCS_FILE \
+                                    --eval-data-path $EVAL_GCS_FILE \
+                                    --output-dir $GCS_OUTPUT_DIR
 ```
 ## Accuracy and Output
 You should see the output for default number of training steps and approx accuracy close to `80.25%`.
