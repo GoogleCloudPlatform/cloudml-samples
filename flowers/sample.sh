@@ -51,11 +51,12 @@ python trainer/preprocess.py \
 
 # Training on CloudML is quick after preprocessing.  If you ran the above
 # commands asynchronously, make sure they have completed before calling this one.
-gcloud beta ml jobs submit training "$JOB_ID" \
+gcloud ml-engine jobs submit training "$JOB_ID" \
   --module-name trainer.task \
   --package-path trainer \
   --staging-bucket "$BUCKET" \
   --region us-central1 \
+  --runtime_version=1.0 \
   -- \
   --output_path "${GCS_PATH}/training" \
   --eval_data_paths "${GCS_PATH}/preproc/eval*" \

@@ -29,8 +29,10 @@ import json
 import os
 import subprocess
 
+from tensorflow.python.client import session
 from tensorflow.python.lib.io import tf_record
-from google.cloud.ml import session_bundle
+from tensorflow.python.saved_model import loader
+from tensorflow.python.saved_model import tag_constants
 
 
 def _default_project():
@@ -44,11 +46,13 @@ def _default_project():
 def local_predict(args):
   """Runs prediction locally."""
 
-  session, _ = session_bundle.load_session_bundle_from_path(args.model_dir)
+  sess = session.Session()
+  _ = loader.load(sess, [tag_constants.SERVING], args.model_dir)
+
   # get the mappings between aliases and tensor names
   # for both inputs and outputs
-  input_alias_map = json.loads(session.graph.get_collection('inputs')[0])
-  output_alias_map = json.loads(session.graph.get_collection('outputs')[0])
+  input_alias_map = json.loads(sess.graph.get_collection('inputs')[0])
+  output_alias_map = json.loads(sess.graph.get_collection('outputs')[0])
   aliases, tensor_names = zip(*output_alias_map.items())
 
   for input_file in args.input:
@@ -60,7 +64,7 @@ def local_predict(args):
       print 'Feed data dict %s to graph and fetch %s' % (
           feed_dict, tensor_names)
     else:
-      result = session.run(fetches=tensor_names, feed_dict=feed_dict)
+      result = sess.run(fetches=tensor_names, feed_dict=feed_dict)
       for row in zip(*result):
         print json.dumps(
             {name: (value.tolist() if getattr(value, 'tolist', None) else value)

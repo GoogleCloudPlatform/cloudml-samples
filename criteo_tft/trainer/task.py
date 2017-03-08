@@ -13,19 +13,21 @@
 # limitations under the License.
 """Sample for Criteo dataset can be run as a wide or deep model."""
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import argparse
 import json
 import math
 import os
 import sys
 
-from . import util
-
 import tensorflow as tf
-from tensorflow.contrib.learn.python.learn import learn_runner
-from tensorflow.contrib.session_bundle import manifest_pb2
 
-import google.cloud.ml as ml
+from tensorflow_transform.saved import input_fn_maker
+from tensorflow_transform.tf_metadata import metadata_io
+from tensorflow.contrib.learn.python.learn import learn_runner
 
 DATASETS = ['kaggle', 'large']
 KAGGLE, LARGE = DATASETS
@@ -36,10 +38,15 @@ CROSSES = 'crosses'
 NUM_EXAMPLES = 'num_examples'
 L2_REGULARIZATION = 'l2_regularization'
 
-EXAMPLES_PLACEHOLDER_KEY = 'input_feature'
-
 KEY_FEATURE_COLUMN = 'example_id'
 TARGET_FEATURE_COLUMN = 'clicked'
+
+CROSS_HASH_BUCKET_SIZE = int(1e6)
+
+MODEL_DIR = 'model'
+
+FORMAT_CATEGORICAL_FEATURE_ID = 'categorical-feature-{}_id'
+FORMAT_INT_FEATURE = 'int-feature-{}'
 
 #
 # Pipeline config for the two datasets
@@ -101,7 +108,10 @@ def create_parser():
   parser.add_argument(
       '--eval_data_paths', type=str, action='append', required=True)
   parser.add_argument('--output_path', type=str, required=True)
-  parser.add_argument('--metadata_path', type=str, required=True)
+  # The following three parameters are required for tf.Transform.
+  parser.add_argument('--raw_metadata_path', type=str, required=True)
+  parser.add_argument('--transformed_metadata_path', type=str, required=True)
+  parser.add_argument('--transform_savedmodel', type=str, required=True)
   parser.add_argument(
       '--hidden_units',
       nargs='*',
@@ -143,69 +153,51 @@ def create_parser():
 
 def feature_columns(config, model_type, vocab_sizes, use_crosses):
   """Return the feature columns with their names and types."""
-  columns = []
+  result = []
   boundaries = [1.5**j - 0.51 for j in range(40)]
+
+  # TODO(b/35300113): Reduce the range and other duplication between this and
+  # preprocessing.
+
+  # TODO(b/35300113): Can iterate over metadata so that we don't need to
+  # re-define the schema here?
+
   for index in range(1, 14):
     column = tf.contrib.layers.bucketized_column(
         tf.contrib.layers.real_valued_column(
-            'int-feature-{}'.format(index),
-            default_value=-1,
+            FORMAT_INT_FEATURE.format(index),
             dtype=tf.int64),
         boundaries)
-    columns.append(column)
+    result.append(column)
 
   if model_type == LINEAR:
     for index in range(14, 40):
-      column_name = 'categorical-feature-{}'.format(index)
+      column_name = FORMAT_CATEGORICAL_FEATURE_ID.format(index)
       vocab_size = vocab_sizes[column_name]
       column = tf.contrib.layers.sparse_column_with_integerized_feature(
-          column_name, bucket_size=vocab_size, combiner='sum')
-      columns.append(column)
+          column_name, vocab_size, combiner='sum')
+      result.append(column)
     if use_crosses:
       for cross in config[CROSSES]:
         column = tf.contrib.layers.crossed_column(
-            [columns[index - 1] for index in cross],
-            hash_bucket_size=int(1e6),
+            [result[index - 1] for index in cross],
+            hash_bucket_size=CROSS_HASH_BUCKET_SIZE,
             hash_key=tf.contrib.layers.SPARSE_FEATURE_CROSS_DEFAULT_HASH_KEY,
             combiner='sum')
-        columns.append(column)
+        result.append(column)
   elif model_type == DEEP:
     for index in range(14, 40):
-      column_name = 'categorical-feature-{}'.format(index)
+      column_name = FORMAT_CATEGORICAL_FEATURE_ID.format(index)
       vocab_size = vocab_sizes[column_name]
       column = tf.contrib.layers.sparse_column_with_integerized_feature(
-          column_name, bucket_size=vocab_size, combiner='sum')
+          column_name, vocab_size, combiner='sum')
       embedding_size = int(math.floor(6 * vocab_size**0.25))
       embedding = tf.contrib.layers.embedding_column(column,
                                                      embedding_size,
                                                      combiner='mean')
-      columns.append(embedding)
+      result.append(embedding)
 
-  return columns
-
-
-def get_placeholder_input_fn(config, model_type, vocab_sizes, use_crosses):
-  """Wrap the get input features function to provide the metadata."""
-
-  def get_input_features():
-    """Read the input features from the given placeholder."""
-    columns = feature_columns(config, model_type, vocab_sizes, use_crosses)
-    feature_spec = tf.contrib.layers.create_feature_spec_for_parsing(columns)
-
-    # Add a dense feature for the keys, use '' if not on the tf.Example proto.
-    feature_spec[KEY_FEATURE_COLUMN] = tf.FixedLenFeature(
-        [], dtype=tf.string, default_value='')
-
-    # Add a placeholder for the serialized tf.Example proto input.
-    examples = tf.placeholder(tf.string, shape=(None,))
-
-    features = tf.parse_example(examples, feature_spec)
-    # Pass the input tensor so it can be used for export.
-    features[EXAMPLES_PLACEHOLDER_KEY] = examples
-    return features, None
-
-  # Return a function to input the feaures into the model from a placeholder.
-  return get_input_features
+  return result
 
 
 def gzip_reader_fn():
@@ -213,80 +205,41 @@ def gzip_reader_fn():
       compression_type=tf.python_io.TFRecordCompressionType.GZIP))
 
 
-def get_reader_input_fn(data_paths, config, model_type, vocab_sizes, batch_size,
-                        use_crosses, mode):
+def get_transformed_reader_input_fn(transformed_metadata,
+                                    transformed_data_paths,
+                                    batch_size,
+                                    mode):
   """Wrap the get input features function to provide the runtime arguments."""
-
-  def get_input_features():
-    """Read the input features from the given data paths."""
-    columns = feature_columns(config, model_type, vocab_sizes, use_crosses)
-    feature_spec = tf.contrib.layers.create_feature_spec_for_parsing(columns)
-    feature_spec[TARGET_FEATURE_COLUMN] = tf.FixedLenFeature(
-        [1], dtype=tf.int64)
-
-    keys, features = tf.contrib.learn.io.read_keyed_batch_features(
-        data_paths[0] if len(data_paths) == 1 else data_paths,
-        batch_size,
-        feature_spec,
-        reader=gzip_reader_fn,
-        reader_num_threads=4,
-        queue_capacity=batch_size * 2,
-        randomize_input=(mode != tf.contrib.learn.ModeKeys.EVAL),
-        num_epochs=(1 if mode == tf.contrib.learn.ModeKeys.EVAL else None))
-    target = features.pop(TARGET_FEATURE_COLUMN)
-    features[KEY_FEATURE_COLUMN] = keys
-    return features, target
-
-  # Return a function to input the features into the model from a data path.
-  return get_input_features
+  return input_fn_maker.build_training_input_fn(
+      metadata=transformed_metadata,
+      file_pattern=(
+          transformed_data_paths[0] if len(transformed_data_paths) == 1
+          else transformed_data_paths),
+      training_batch_size=batch_size,
+      label_keys=[TARGET_FEATURE_COLUMN],
+      reader=gzip_reader_fn,
+      key_feature_name=KEY_FEATURE_COLUMN,
+      reader_num_threads=4,
+      queue_capacity=batch_size * 2,
+      randomize_input=(mode != tf.contrib.learn.ModeKeys.EVAL),
+      num_epochs=(1 if mode == tf.contrib.learn.ModeKeys.EVAL else None))
 
 
-def get_export_signature(examples, features, predictions):
-  """Create a classification signature function and add output placeholders."""
-  inputs = {'examples': examples.name}
-  tf.add_to_collection('inputs', json.dumps(inputs))
-
-  prediction = tf.argmax(predictions, 1)
-  labels = tf.contrib.lookup.index_to_string(
-      prediction, mapping=['0', '1'], default_value='UNKNOWN_LABEL')
-
-  outputs = {'score': predictions.name,
-             'key': features[KEY_FEATURE_COLUMN].name,
-             'predicted_click_value': labels.name}
-  tf.add_to_collection('outputs', json.dumps(outputs))
-
-  output_signature = manifest_pb2.Signature()
-  input_signature = manifest_pb2.Signature()
-
-  for name, tensor_name in outputs.iteritems():
-    output_signature.generic_signature.map[name].tensor_name = tensor_name
-
-  for name, tensor_name in inputs.iteritems():
-    input_signature.generic_signature.map[name].tensor_name = tensor_name
-
-  # Return None for default classification signature..
-  return None, {'inputs': input_signature, 'outputs': output_signature}
-
-
-def read_metadata_file(metadata_path):
+def get_vocab_sizes():
   """Read vocabulary sizes from the metadata."""
-  return ml.features.FeatureMetadata.load_from(metadata_path)
-
-
-def get_vocab_sizes(metadata_path):
-  """Read vocabulary sizes from the metadata."""
-  metadata = read_metadata_file(metadata_path)
-  sizes = {}
-  for index in range(14, 40):
-    column = 'categorical-feature-{}'.format(index)
-    sizes[column] = metadata['features'][column]['size']
-  return sizes
+  # TODO(b/35300113) This method will change as we move to tf-transform and use
+  # the new schema and statistics protos. For now return a large-ish constant
+  # (exact vocabulary size not needed, since we are doing "mod" in tf.Learn).
+  # Note that the current workaround might come with a quality sacrifice that
+  # should hopefully be lifted soon.
+  return {FORMAT_CATEGORICAL_FEATURE_ID.format(index): int(10*1000)
+          for index in range(14, 40)}
 
 
 def get_experiment_fn(args):
   """Wrap the get experiment function to provide the runtime arguments."""
-
-  vocab_sizes = get_vocab_sizes(args.metadata_path)
+  vocab_sizes = get_vocab_sizes()
+  use_crosses = not args.ignore_crosses
 
   def get_experiment(output_dir):
     """Function that creates an experiment http://goo.gl/HcKHlT.
@@ -298,8 +251,7 @@ def get_experiment_fn(args):
     """
 
     config = PIPELINE_CONFIG.get(args.dataset)
-    columns = feature_columns(config, args.model_type, vocab_sizes,
-                              not args.ignore_crosses)
+    columns = feature_columns(config, args.model_type, vocab_sizes, use_crosses)
 
     runconfig = tf.contrib.learn.RunConfig()
     cluster = runconfig.cluster_spec
@@ -325,33 +277,29 @@ def get_experiment_fn(args):
 
     l2_regularization = args.l2_regularization or config[L2_REGULARIZATION]
 
-    input_placeholder_for_prediction = get_placeholder_input_fn(
-        config, args.model_type, vocab_sizes, not args.ignore_crosses)
+    transformed_metadata = metadata_io.read_metadata(
+        args.transformed_metadata_path)
+    raw_metadata = metadata_io.read_metadata(args.raw_metadata_path)
+    serving_input_fn = (
+        input_fn_maker.build_parsing_transforming_serving_input_fn(
+            raw_metadata,
+            args.transform_savedmodel,
+            raw_label_keys=[TARGET_FEATURE_COLUMN]))
+    export_strategy = (
+        tf.contrib.learn.utils.make_export_strategy(
+            serving_input_fn, exports_to_keep=5,
+            default_output_alternative_key=None))
 
-    # Export the last model to a predetermined location on GCS.
-    export_monitor = util.ExportLastModelMonitor(
-        output_dir=output_dir,
-        final_model_location='model',  # Relative to the output_dir.
-        additional_assets=[args.metadata_path],
-        input_fn=input_placeholder_for_prediction,
-        input_feature_key=EXAMPLES_PLACEHOLDER_KEY,
-        signature_fn=get_export_signature)
+    train_input_fn = get_transformed_reader_input_fn(
+        transformed_metadata, args.train_data_paths, args.batch_size,
+        tf.contrib.learn.ModeKeys.TRAIN)
 
-    train_input_fn = get_reader_input_fn(args.train_data_paths, config,
-                                         args.model_type, vocab_sizes,
-                                         args.batch_size,
-                                         not args.ignore_crosses,
-                                         tf.contrib.learn.ModeKeys.TRAIN)
-
-    eval_input_fn = get_reader_input_fn(args.eval_data_paths, config,
-                                        args.model_type, vocab_sizes,
-                                        args.eval_batch_size,
-                                        not args.ignore_crosses,
-                                        tf.contrib.learn.ModeKeys.EVAL)
+    eval_input_fn = get_transformed_reader_input_fn(
+        transformed_metadata, args.eval_data_paths, args.batch_size,
+        tf.contrib.learn.ModeKeys.EVAL)
 
     train_set_size = args.train_set_size or config[NUM_EXAMPLES]
 
-    # TODO(zoy): Switch to using ExportStrategy when available.
     return tf.contrib.learn.Experiment(
         estimator=estimator,
         train_steps=(args.train_steps or
@@ -359,7 +307,7 @@ def get_experiment_fn(args):
         eval_steps=args.eval_steps,
         train_input_fn=train_input_fn,
         eval_input_fn=eval_input_fn,
-        train_monitors=[export_monitor],
+        export_strategies=export_strategy,
         min_eval_frequency=500)
 
   # Return a function to create an Experiment.

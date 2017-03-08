@@ -6,13 +6,20 @@ the [criteo dataset](https://www.kaggle.com/c/criteo-display-ad-challenge).
 ## Prerequisites
 
 *   Make sure you follow the Google Cloud ML setup
-    [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up)
-    before trying the sample. More documentation about Cloud ML is available
+    [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up) before
+    trying the sample. More documentation about Cloud ML is available
     [here](https://cloud.google.com/ml/docs/).
 *   Make sure you have installed
     [Tensorflow](https://www.tensorflow.org/install/) if you want to run the
     sample locally.
+*   Make sure you have installed
+    [tensorflow-transform](https://github.com/tensorflow/transform).
 *   Make sure your Google Cloud project has sufficient quota.
+*   Tensorflow has a dependency on a particular version of protobuf. Please run
+    the following after installing tensorflow-transform:
+```
+pip install --upgrade protobuf==3.1.0
+```
 
 ## Sample Overview
 
@@ -21,9 +28,7 @@ This sample consists of two parts:
 ### Data Pre-Processing
 
 Data pre-processing step involves taking the TSV data as input and converting it
-to
-[TFRecords](https://www.tensorflow.org/api_guides/python/python_io)
-format.
+to [TFRecords](https://www.tensorflow.org/api_guides/python/python_io) format.
 
 ### Model Training
 
@@ -137,7 +142,9 @@ python -m trainer.task \
           --l2_regularization 60 \
           --train_data_paths $LOCAL_OUTPUT_DIR/features_train* \
           --eval_data_paths $LOCAL_OUTPUT_DIR/features_eval* \
-          --metadata_path $LOCAL_OUTPUT_DIR/metadata.json \
+          --raw_metadata_path $LOCAL_OUTPUT_DIR/raw_metadata \
+          --transformed_metadata_path $LOCAL_OUTPUT_DIR/transformed_metadata \
+          --transform_savedmodel $LOCAL_OUTPUT_DIR/transform_fn \
           --output_path $TRAINING_OUTPUT_PATH
 ```
 
@@ -151,14 +158,16 @@ python -m trainer.task \
           --batch_size 512 \
           --train_data_paths $LOCAL_OUTPUT_DIR/features_train* \
           --eval_data_paths $LOCAL_OUTPUT_DIR/features_eval* \
-          --metadata_path $LOCAL_OUTPUT_DIR/metadata.json \
+          --raw_metadata_path $LOCAL_OUTPUT_DIR/raw_metadata \
+          --transformed_metadata_path $LOCAL_OUTPUT_DIR/transformed_metadata \
+          --transform_savedmodel $LOCAL_OUTPUT_DIR/transform_fn \
           --output_path $TRAINING_OUTPUT_PATH
 ```
 
 Running time varies depending on your machine. Typically the linear model takes
 at least 2 hours to train, and the deep model more than 8 hours. You can use
-[Tensorboard](https://www.tensorflow.org/how_tos/summaries_and_tensorboard/)
-to follow the job's progress.
+[Tensorboard](https://www.tensorflow.org/how_tos/summaries_and_tensorboard/) to
+follow the job's progress.
 
 ### Cloud Run for the Small Dataset
 
@@ -181,7 +190,9 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --model_type linear \
   --l2_regularization 100 \
   --output_path "${GCS_PATH}/output/${JOB_ID}" \
-  --metadata_path "${GCS_PATH}/preproc/metadata.json" \
+  --raw_metadata_path "${GCS_PATH}/preproc/raw_metadata" \
+  --transformed_metadata_path "${GCS_PATH}/preproc/transformed_metadata" \
+  --transform_savedmodel "${GCS_PATH}/preproc/transform_fn" \
   --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
   --train_data_paths "${GCS_PATH}/preproc/features_train*"
 ```
@@ -203,15 +214,17 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --hidden_units 600 600 600 600 \
   --batch_size 512 \
   --output_path "${GCS_PATH}/output/${JOB_ID}" \
-  --metadata_path "${GCS_PATH}/preproc/metadata.json" \
+  --raw_metadata_path "${GCS_PATH}/preproc/raw_metadata" \
+  --transformed_metadata_path "${GCS_PATH}/preproc/transformed_metadata" \
+  --transform_savedmodel "${GCS_PATH}/preproc/transform_fn" \
   --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
   --train_data_paths "${GCS_PATH}/preproc/features_train*"
 ```
 
 When using the [distributed configuration](config-small.yaml), the linear model
-may take as little as 10 minutes to train, and the deep model should finish
-in around 90 minutes. Again you can point Tensorboard to the output path to
-follow training progress.
+may take as little as 10 minutes to train, and the deep model should finish in
+around 90 minutes. Again you can point Tensorboard to the output path to follow
+training progress.
 
 ### Cloud Run for the Large Dataset
 
@@ -232,13 +245,15 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --l2_regularization 3000 \
   --eval_steps 1000 \
   --output_path "${GCS_PATH}/output/${JOB_ID}" \
-  --metadata_path "${GCS_PATH}/preproc/metadata.json" \
+  --raw_metadata_path "${GCS_PATH}/preproc/raw_metadata" \
+  --transformed_metadata_path "${GCS_PATH}/preproc/transformed_metadata" \
+  --transform_savedmodel "${GCS_PATH}/preproc/transform_fn" \
   --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
   --train_data_paths "${GCS_PATH}/preproc/features_train*"
 ```
 
-To train the linear model without crosses, add the option `--ignore_crosses`
-and use `--l2_regularization 1000` for best results.
+To train the linear model without crosses, add the option `--ignore_crosses` and
+use `--l2_regularization 1000` for best results.
 
 To train the deep model:
 
@@ -254,11 +269,13 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   -- \
   --dataset large \
   --model_type deep \
-  --hidden_units 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 \
+  --hidden_units 1024 512 256 \
   --batch_size 512 \
   --eval_steps 250 \
   --output_path "${GCS_PATH}/output/${JOB_ID}" \
-  --metadata_path "${GCS_PATH}/preproc/metadata.json" \
+  --raw_metadata_path "${GCS_PATH}/preproc/raw_metadata" \
+  --transformed_metadata_path "${GCS_PATH}/preproc/transformed_metadata" \
+  --transform_savedmodel "${GCS_PATH}/preproc/transform_fn" \
   --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
   --train_data_paths "${GCS_PATH}/preproc/features_train*"
 ```

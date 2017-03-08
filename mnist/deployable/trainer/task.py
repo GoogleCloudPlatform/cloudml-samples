@@ -36,6 +36,13 @@ import tensorflow as tf
 
 from tensorflow.examples.tutorials.mnist import mnist
 from tensorflow.python.lib.io import file_io
+from tensorflow.python.saved_model import builder
+from tensorflow.python.saved_model import signature_def_utils
+from tensorflow.python.saved_model import signature_constants
+from tensorflow.python.saved_model import tag_constants
+
+
+from tensorflow.core.protobuf import meta_graph_pb2
 # Copy of tensorflow.examples.tutorials.mnist.input_data but includes
 # support for keys.
 from trainer import input_data
@@ -161,6 +168,15 @@ def run_training():
     placeholders = placeholder_inputs()
     keys_placeholder, images_placeholder, labels_placeholder = placeholders
     inputs = {'key': keys_placeholder.name, 'image': images_placeholder.name}
+    input_signatures = {}
+    for key, val in inputs.iteritems():
+      predict_input_tensor = meta_graph_pb2.TensorInfo()
+      predict_input_tensor.name = val
+      for placeholder in placeholders:
+        if placeholder.name == val:
+          predict_input_tensor.dtype = placeholder.dtype.as_datatype_enum
+      input_signatures[key] = predict_input_tensor
+
     tf.add_to_collection('inputs', json.dumps(inputs))
 
     # Build a Graph that computes predictions from the inference model.
@@ -182,6 +198,15 @@ def run_training():
     outputs = {'key': keys.name,
                'prediction': prediction.name,
                'scores': scores.name}
+    output_signatures = {}
+    for key, val in outputs.iteritems():
+      predict_output_tensor = meta_graph_pb2.TensorInfo()
+      predict_output_tensor.name = val
+      for placeholder in [keys, prediction, scores]:
+        if placeholder.name == val:
+          predict_output_tensor.dtype = placeholder.dtype.as_datatype_enum
+      output_signatures[key] = predict_output_tensor
+
     tf.add_to_collection('outputs', json.dumps(outputs))
 
     # Add to the Graph the Ops that calculate and apply gradients.
@@ -200,7 +225,7 @@ def run_training():
     # Add the variable initializer Op.
     init = tf.initialize_all_variables()
 
-    # Create a saver for writing training checkpoints.
+    # Create a saver for writing legacy training checkpoints.
     saver = tf.train.Saver()
 
     # Create a session for running Ops on the Graph.
@@ -272,9 +297,25 @@ def run_training():
                 labels_placeholder,
                 data_sets.test)
 
-    # Export the model so that it can be loaded and used later for predictions.
     file_io.create_dir(FLAGS.model_dir)
-    saver.save(sess, os.path.join(FLAGS.model_dir, 'export'))
+
+    predict_signature_def = signature_def_utils.build_signature_def(
+        input_signatures, output_signatures,
+        signature_constants.PREDICT_METHOD_NAME)
+
+    # Create a saver for writing SavedModel training checkpoints.
+    build = builder.SavedModelBuilder(
+        os.path.join(FLAGS.model_dir, 'saved_model'))
+    logging.debug('Saved model path %s', os.path.join(FLAGS.model_dir,
+                                                      'saved_model'))
+    build.add_meta_graph_and_variables(
+        sess, [tag_constants.SERVING],
+        signature_def_map={
+            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
+                predict_signature_def
+        },
+        assets_collection=tf.get_collection(tf.GraphKeys.ASSET_FILEPATHS))
+    build.save()
 
 
 def main(_):

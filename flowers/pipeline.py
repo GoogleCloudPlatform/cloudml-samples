@@ -270,12 +270,13 @@ class FlowersE2E(object):
       job_name = 'flowers_model' + datetime.datetime.now().strftime(
           '_%y%m%d_%H%M%S')
       command = [
-          'gcloud', 'beta', 'ml', 'jobs', 'submit', 'training', job_name,
+          'gcloud', 'ml-engine', 'jobs', 'submit', 'training', job_name,
           '--module-name', MODULE_NAME,
           '--staging-bucket', self.args.gcs_bucket,
           '--region', 'us-central1',
           '--project', self.args.project_id,
           '--package-path', 'trainer',
+          '--packages', ml.version.installed_sdk_location,
           '--',
           '--output_path', self.args.output_dir,
           '--eval_data_paths', eval_file_path,
@@ -294,14 +295,14 @@ class FlowersE2E(object):
     """
 
     create_model_cmd = [
-        'gcloud', 'beta', 'ml', 'models', 'create', self.args.deploy_model_name
+        'gcloud', 'ml-engine', 'models', 'create', self.args.deploy_model_name
     ]
 
     print create_model_cmd
     subprocess.check_call(create_model_cmd)
 
     submit = [
-        'gcloud', 'beta', 'ml', 'versions', 'create',
+        'gcloud', 'ml-engine', 'versions', 'create',
         self.args.deploy_model_version,
         '--model', self.args.deploy_model_name,
         '--origin', model_path

@@ -15,13 +15,18 @@
 """
 
 import argparse
-import json
 import logging
-import os
 
 import tensorflow as tf
 from tensorflow.contrib import layers
 from tensorflow.contrib.slim.python.slim.nets import inception_v3 as inception
+
+from tensorflow.python.saved_model import builder as saved_model_builder
+from tensorflow.python.saved_model import signature_constants
+from tensorflow.python.saved_model import signature_def_utils
+from tensorflow.python.saved_model import tag_constants
+from tensorflow.python.saved_model import utils as saved_model_utils
+
 import util
 from util import override_if_not_in_args
 
@@ -42,6 +47,30 @@ class GraphMod():
   TRAIN = 1
   EVALUATE = 2
   PREDICT = 3
+
+
+def build_signature(inputs, outputs):
+  """Build the signature.
+
+  Not using predic_signature_def in saved_model because it is replacing the
+  tensor name, b/35900497.
+
+  Args:
+    inputs: a dictionary of tensor name to tensor
+    outputs: a dictionary of tensor name to tensor
+  Returns:
+    The signature, a SignatureDef proto.
+  """
+  signature_inputs = {key: saved_model_utils.build_tensor_info(tensor)
+                      for key, tensor in inputs.items()}
+  signature_outputs = {key: saved_model_utils.build_tensor_info(tensor)
+                       for key, tensor in outputs.items()}
+
+  signature_def = signature_def_utils.build_signature_def(
+      signature_inputs, signature_outputs,
+      signature_constants.PREDICT_METHOD_NAME)
+
+  return signature_def
 
 
 def create_model():
@@ -333,20 +362,19 @@ class Model(object):
 
     keys_placeholder = tf.placeholder(tf.string, shape=[None])
     inputs = {
-        'key': keys_placeholder.name,
-        'image_bytes': tensors.input_jpeg.name
+        'key': keys_placeholder,
+        'image_bytes': tensors.input_jpeg
     }
-
-    tf.add_to_collection('inputs', json.dumps(inputs))
 
     # To extract the id, we need to add the identity function.
     keys = tf.identity(keys_placeholder)
     outputs = {
-        'key': keys.name,
-        'prediction': tensors.predictions[0].name,
-        'scores': tensors.predictions[1].name
+        'key': keys,
+        'prediction': tensors.predictions[0],
+        'scores': tensors.predictions[1]
     }
-    tf.add_to_collection('outputs', json.dumps(outputs))
+
+    return inputs, outputs
 
   def export(self, last_checkpoint, output_dir):
     """Builds a prediction graph and xports the model.
@@ -358,15 +386,21 @@ class Model(object):
     logging.info('Exporting prediction graph to %s', output_dir)
     with tf.Session(graph=tf.Graph()) as sess:
       # Build and save prediction meta graph and trained variable values.
-      self.build_prediction_graph()
+      inputs, outputs = self.build_prediction_graph()
       init_op = tf.global_variables_initializer()
       sess.run(init_op)
       self.restore_from_checkpoint(sess, self.inception_checkpoint_file,
                                    last_checkpoint)
-      saver = tf.train.Saver()
-      saver.export_meta_graph(filename=os.path.join(output_dir, 'export.meta'))
-      saver.save(
-          sess, os.path.join(output_dir, 'export'), write_meta_graph=False)
+      signature_def = build_signature(inputs=inputs, outputs=outputs)
+      signature_def_map = {
+          signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature_def
+      }
+      builder = saved_model_builder.SavedModelBuilder(output_dir)
+      builder.add_meta_graph_and_variables(
+          sess,
+          tags=[tag_constants.SERVING],
+          signature_def_map=signature_def_map)
+      builder.save()
 
   def format_metric_values(self, metric_values):
     """Formats metric values - used for logging purpose."""
