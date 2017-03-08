@@ -52,7 +52,7 @@ def generate_experiment_fn(train_files,
     )
     return tf.contrib.learn.Experiment(
         model.build_estimator(
-            job_dir,
+            output_dir,
             embedding_size=embedding_size,
             # Construct layers sizes with exponetial decay
             hidden_units=[
