@@ -1,6 +1,7 @@
 #install docker
 
 #Run a command line inside of the Google Cloud Datalab Docker container
+docker pull gcr.io/cloud-datalab/datalab:local
 docker run -it -p "127.0.0.1:8080:8080" --entrypoint=/bin/bash gcr.io/cloud-datalab/datalab:local
 
 #Install required tools and dependencies (if already setup, skip this)
@@ -30,7 +31,7 @@ BUCKET_NAME=${PROJECT_ID}-ml
 
 #make a bucket
 gsutil mb -l us-central1 gs://$BUCKET_NAME
-gsutil mb -l us-central1 -p dataflow-sct gs://$BUCKET_NAME
+#####gsutil mb -l us-central1 -p dataflow-sct gs://$BUCKET_NAME
 
 #Run the .sh file. Once you can see for example sample.sh with ls run this: ./sample.sh
 
