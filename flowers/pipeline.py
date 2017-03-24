@@ -271,6 +271,7 @@ class FlowersE2E(object):
           '_%y%m%d_%H%M%S')
       command = [
           'gcloud', 'ml-engine', 'jobs', 'submit', 'training', job_name,
+          '--stream-logs',
           '--module-name', MODULE_NAME,
           '--staging-bucket', self.args.gcs_bucket,
           '--region', 'us-central1',

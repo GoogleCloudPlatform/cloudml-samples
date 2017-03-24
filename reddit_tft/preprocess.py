@@ -17,6 +17,7 @@ import datetime
 import os
 import subprocess
 import sys
+import tempfile
 
 import path_constants
 import reddit
@@ -121,7 +122,6 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
     output_dir: file path to where to write all the output files.
     frequency_threshold: frequency threshold to use for categorical values.
   """
-  work_dir = os.path.join(output_dir, path_constants.TEMP_DIR)
 
   # 1) The schema can be either defined in-memory or read from a configuration
   #    file, in this case we are creating the schema in-memory.
@@ -146,7 +146,7 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
   (train_dataset, train_metadata), transform_fn = (
       (train_data, input_metadata)
       | 'AnalyzeAndTransform' >> tft.AnalyzeAndTransformDataset(
-          preprocessing_fn, work_dir))
+          preprocessing_fn))
 
   # WriteTransformFn writes transform_fn and metadata to fixed subdirectories
   # of output_dir, which are given by path_constants.TRANSFORM_FN_DIR and
@@ -232,9 +232,9 @@ def main(argv=None):
         'project':
             args.project_id,
 
-        # TODO(b/35811047) Remove once 0.1.5 is installed on the containers.
+        # TODO(b/35811047) Remove once 0.1.6 is installed on the containers.
         'extra_packages': [
-            'gs://cloud-ml/sdk/tensorflow_transform-0.1.5-py2-none-any.whl',
+            'gs://cloud-ml/sdk/tensorflow_transform-0.1.6-py2-none-any.whl',
         ],
 
         # TODO(b/35727492) Remove this.
@@ -246,14 +246,16 @@ def main(argv=None):
     pipeline_name = 'DirectRunner'
     pipeline_options = None
 
+  temp_dir = os.path.join(args.output_dir, 'tmp')
   with beam.Pipeline(pipeline_name, options=pipeline_options) as p:
-    preprocess(
-        pipeline=p,
-        training_data=args.training_data,
-        eval_data=args.eval_data,
-        predict_data=args.predict_data,
-        output_dir=args.output_dir,
-        frequency_threshold=args.frequency_threshold)
+    with tft.Context(temp_dir=temp_dir):
+      preprocess(
+          pipeline=p,
+          training_data=args.training_data,
+          eval_data=args.eval_data,
+          predict_data=args.predict_data,
+          output_dir=args.output_dir,
+          frequency_threshold=args.frequency_threshold)
 
 
 if __name__ == '__main__':

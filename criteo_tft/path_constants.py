@@ -19,7 +19,6 @@ from __future__ import division
 from __future__ import print_function
 
 
-TEMP_DIR = 'tmp'
 TRANSFORM_FN_DIR = 'transform_fn'
 RAW_METADATA_DIR = 'raw_metadata'
 TRANSFORMED_METADATA_DIR = 'transformed_metadata'

@@ -35,16 +35,19 @@ warranty, or other guarantees about the validity or any other aspects of this da
 Please run the export and copy statements first:
 
 ```
-export CENSUS_DATA=census_data
-export TRAIN_FILE=adult.data.csv
-export EVAL_FILE=adult.test.csv
-mkdir $CENSUS_DATA
+TRAIN_FILE=gs://cloudml-public/census/data/adult.data.csv
+EVAL_FILE=gs://cloudml-public/census/data/adult.test.csv
+```
 
-export TRAIN_GCS_FILE=gs://cloudml-public/census/data/$TRAIN_FILE
-export EVAL_GCS_FILE=gs://cloudml-public/census/data/$EVAL_FILE
+Since TensorFlow - not the Cloud ML Engine - handles reading from GCS, you can run all commands below using these environment variables. However, if your network is slow or unreliable, you may want to download the files for local training.
 
-gsutil cp $TRAIN_GCS_FILE $CENSUS_DATA
-gsutil cp $EVAL_GCS_FILE $CENSUS_DATA
+```
+mkdir census_data
+gsutil cp $TRAIN_FILE census_data/adult.data.csv
+gsutil cp $EVAL_FILE census_data/adult.test.csv
+
+TRAIN_FILE=census_data/adult.data.csv
+EVAL_FILE=census_data/adult.test.csv
 ```
 
 
@@ -126,6 +129,7 @@ export TRAIN_STEPS=1000
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
+                                    --stream-logs \
                                     --runtime-version 1.0 \
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
@@ -193,6 +197,7 @@ export TRAIN_STEPS=1000
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
+                                    --stream-logs \
                                     --scale-tier $SCALE_TIER \
                                     --runtime-version 1.0 \
                                     --job-dir $GCS_JOB_DIR \
@@ -223,6 +228,7 @@ export TRAIN_STEPS=1000
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
+                                    --stream-logs \
                                     --scale-tier $SCALE_TIER \
                                     --runtime-version 1.0 \
                                     --config $HPTUNING_CONFIG \

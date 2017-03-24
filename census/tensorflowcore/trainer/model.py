@@ -31,8 +31,8 @@ CSV_COLUMNS = ('age', 'workclass', 'fnlwgt', 'education', 'education_num',
                'gender', 'capital_gain', 'capital_loss', 'hours_per_week',
                'native_country', 'income_bracket')
 
-CSV_COLUMN_DEFAULTS = [[0.], [''], [0.], [''], [0.], [''], [''], [''], [''],
-                       [''], [0.], [0.], [0.], [''], ['']]
+CSV_COLUMN_DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''],
+                       [''], [0], [0], [0], [''], ['']]
 
 # Categorical columns with vocab size
 CATEGORICAL_COLS = (('education', 16), ('marital_status', 7),
@@ -91,6 +91,9 @@ def model_fn(mode,
         tf.nn.embedding_lookup(embeddings, indices),
         axis=[1]
       )
+
+  for feature in CONTINUOUS_COLS:
+    features[feature] = tf.to_float(features[feature])
 
   # Concatenate the (now all dense) features.
   # We need to sort the tensors so that they end up in the same order for
@@ -154,7 +157,7 @@ def model_fn(mode,
     # Convert predicted_indices back into strings
     return {
         'predictions': tf.gather(label_values, predicted_indices),
-        'confidence': tf.gather(tf.transpose(probabilities), predicted_indices)
+        'confidence': tf.reduce_max(probabilities, axis=1)
     }
 
   if mode == TRAIN:
@@ -204,7 +207,7 @@ def example_serving_input_fn(default_batch_size=None):
   """
   feature_spec = {}
   for feat in CONTINUOUS_COLS:
-    feature_spec[feat] = tf.FixedLenFeature(shape=[], dtype=tf.float32)
+    feature_spec[feat] = tf.FixedLenFeature(shape=[], dtype=tf.int64)
 
   for feat, _ in CATEGORICAL_COLS:
     feature_spec[feat] = tf.FixedLenFeature(shape=[], dtype=tf.string)
