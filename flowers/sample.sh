@@ -57,7 +57,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --package-path trainer \
   --staging-bucket "$BUCKET" \
   --region us-central1 \
-  --runtime_version=1.0 \
+  --runtime-version=1.0 \
   -- \
   --output_path "${GCS_PATH}/training" \
   --eval_data_paths "${GCS_PATH}/preproc/eval*" \
