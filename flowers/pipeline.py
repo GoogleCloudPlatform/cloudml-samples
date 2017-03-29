@@ -29,8 +29,10 @@ import uuid
 import apache_beam as beam
 from PIL import Image
 from tensorflow.python.lib.io import file_io
+from tensorflow.python.framework import errors
+
 import trainer.preprocess as preprocess_lib
-import google.cloud.ml as ml
+from trainer.util import get_cloud_project
 
 # Model variables
 MODEL_NAME = 'flowers'
@@ -39,11 +41,12 @@ METADATA_FILE_NAME = 'metadata.json'
 EXPORT_SUBDIRECTORY = 'model'
 CONFIG_FILE_NAME = 'config.yaml'
 MODULE_NAME = 'trainer.task'
+SAMPLE_IMAGE = \
+  'gs://cloud-ml-data/img/flower_photos/tulips/4520577328_a94c11e806_n.jpg'
 
 # Number of seconds to wait before sending next online prediction after
 # an online prediction fails due to model deployment not being complete.
 PREDICTION_WAIT_TIME = 30
-
 
 def process_args():
   """Define arguments and assign default values to the ones that are not set.
@@ -55,8 +58,8 @@ def process_args():
   parser = argparse.ArgumentParser(
       description='Runs Flowers Sample E2E pipeline.')
   parser.add_argument(
-      '--project_id',
-      default=get_cloud_project(),
+      '--project',
+      default=None,
       help='The project to which the job will be submitted.')
   parser.add_argument(
       '--cloud', action='store_true',
@@ -116,7 +119,7 @@ def process_args():
             'The pretrained model will be deployed in this case.'))
   parser.add_argument(
       '--sample_image_uri',
-      default=None,
+      default=SAMPLE_IMAGE,
       help=('URI for a single Jpeg image to be used for online prediction.'))
   parser.add_argument(
       '--gcs_bucket',
@@ -131,25 +134,10 @@ def process_args():
 
   args, _ = parser.parse_known_args()
 
-  if args.cloud and not args.project_id:
-    args.project_id = get_cloud_project()
+  if args.cloud and not args.project:
+    args.project = get_cloud_project()
 
   return args
-
-
-def get_cloud_project():
-  cmd = [
-      'gcloud', '-q', 'config', 'list', 'project',
-      '--format=value(core.project)'
-  ]
-  with open(os.devnull, 'w') as dev_null:
-    try:
-      return subprocess.check_output(cmd, stderr=dev_null).strip() or None
-    except OSError as e:
-      if e.errno == errno.ENOENT:
-        return None  # gcloud command not available
-      else:
-        raise
 
 
 class FlowersE2E(object):
@@ -196,11 +184,10 @@ class FlowersE2E(object):
     eval_output_prefix = os.path.join(self.args.output_dir, 'preprocessed',
                                       eval_dataset_name)
 
-    lock = multiprocessing.Lock()
     train_args = (train_dataset_name, self.args.train_input_path,
-                  train_output_prefix, dataflow_sdk, trainer_uri, lock,)
+                  train_output_prefix, dataflow_sdk, trainer_uri)
     eval_args = (eval_dataset_name, self.args.eval_input_path,
-                 eval_output_prefix, dataflow_sdk, trainer_uri, lock,)
+                 eval_output_prefix, dataflow_sdk, trainer_uri)
 
     # make a pool to run two pipelines in parallel.
     pipeline_pool = [thread_pool.apply_async(self.run_pipeline, train_args),
@@ -209,7 +196,7 @@ class FlowersE2E(object):
     return train_output_prefix, eval_output_prefix
 
   def run_pipeline(self, dataset_name, input_csv, output_prefix,
-                   dataflow_sdk_location, trainer_uri, lock):
+                   dataflow_sdk_location, trainer_uri):
     """Runs a Dataflow pipeline to preprocess the given dataset.
 
     Args:
@@ -219,10 +206,7 @@ class FlowersE2E(object):
       output_prefix:  Output prefix to write results to.
       dataflow_sdk_location: path to Dataflow SDK package.
       trainer_uri: Path to the Flower's trainer package.
-      lock: The lock to acquire before setting some args.
     """
-
-    lock.acquire()
     job_name = ('cloud-ml-sample-flowers-' +
                 datetime.datetime.now().strftime('%Y%m%d%H%M%S')  +
                 '-' + dataset_name)
@@ -233,30 +217,25 @@ class FlowersE2E(object):
         'temp_location':
             os.path.join(self.args.output_dir, 'tmp', dataset_name),
         'project':
-            self.args.project_id,
+            self.args.project,
         'job_name': job_name,
-        # Dataflow needs a copy of the version of the cloud ml sdk that
-        # is being used.
-        'extra_packages': [ml.sdk_location, trainer_uri],
+        'extra_packages': [trainer_uri],
         'save_main_session':
             True,
     }
     if dataflow_sdk_location:
       options['sdk_location'] = dataflow_sdk_location
 
-    pipeline_name = ('BlockingDataflowPipelineRunner' if self.args.cloud else
-                     'DirectRunner')
+    pipeline_name = 'DataflowRunner' if self.args.cloud else 'DirectRunner'
 
     opts = beam.pipeline.PipelineOptions(flags=[], **options)
-    pipeline = beam.Pipeline(pipeline_name, options=opts)
-    args = self.args
+    args = argparse.Namespace(**vars(self.args))
     vars(args)['input_path'] = input_csv
     vars(args)['input_dict'] = self.args.input_dict
     vars(args)['output_path'] = output_prefix
-    preprocess_lib.configure_pipeline(pipeline, args)
-    lock.release()
-    # Execute the pipeline.
-    pipeline.run().wait_until_finish()
+    # execute the pipeline
+    with beam.Pipeline(pipeline_name, options=opts) as pipeline:
+      preprocess_lib.configure_pipeline(pipeline, args)
 
   def train(self, train_file_path, eval_file_path):
     """Train a model using the eval and train datasets.
@@ -265,6 +244,12 @@ class FlowersE2E(object):
       train_file_path: Path to the train dataset.
       eval_file_path: Path to the eval dataset.
     """
+    trainer_args = [
+        '--output_path', self.args.output_dir,
+        '--eval_data_paths', eval_file_path,
+        '--eval_set_size', str(self.args.eval_set_size),
+        '--train_data_paths', train_file_path
+    ]
 
     if self.args.cloud:
       job_name = 'flowers_model' + datetime.datetime.now().strftime(
@@ -275,17 +260,17 @@ class FlowersE2E(object):
           '--module-name', MODULE_NAME,
           '--staging-bucket', self.args.gcs_bucket,
           '--region', 'us-central1',
-          '--project', self.args.project_id,
+          '--project', self.args.project,
           '--package-path', 'trainer',
-          '--packages', ml.version.installed_sdk_location,
-          '--',
-          '--output_path', self.args.output_dir,
-          '--eval_data_paths', eval_file_path,
-          '--eval_set_size', str(self.args.eval_set_size),
-          '--train_data_paths', train_file_path
-      ]
+          '--'
+      ] + trainer_args
     else:
-      command = ['python', '-m', 'trainer/task.py']
+      command = [
+          'gcloud', 'ml-engine', 'local', 'train',
+          '--module-name', MODULE_NAME,
+          '--package-path', 'trainer',
+          '--',
+      ] + trainer_args
     subprocess.check_call(command)
 
   def deploy_model(self, model_path):
@@ -296,7 +281,9 @@ class FlowersE2E(object):
     """
 
     create_model_cmd = [
-        'gcloud', 'ml-engine', 'models', 'create', self.args.deploy_model_name
+        'gcloud', 'ml-engine', 'models', 'create', self.args.deploy_model_name,
+        '--regions', 'us-central1',
+        '--project', self.args.project,
     ]
 
     print create_model_cmd
@@ -306,7 +293,8 @@ class FlowersE2E(object):
         'gcloud', 'ml-engine', 'versions', 'create',
         self.args.deploy_model_version,
         '--model', self.args.deploy_model_name,
-        '--origin', model_path
+        '--origin', model_path,
+        '--project', self.args.project,
     ]
     if not model_path.startswith('gs://'):
       submit.extend(['--staging-bucket', self.args.gcs_bucket])
@@ -344,10 +332,11 @@ class FlowersE2E(object):
     output_json = 'request.json'
     self.make_request_json(image_uri, output_json)
     cmd = [
-        'gcloud', 'beta', 'ml', 'predict',
+        'gcloud', 'ml-engine', 'predict',
         '--model', self.args.deploy_model_name,
         '--version', self.args.deploy_model_version,
-        '--json-instances', 'request.json'
+        '--json-instances', 'request.json',
+        '--project', self.args.project
     ]
     subprocess.check_call(cmd)
 
@@ -358,8 +347,14 @@ class FlowersE2E(object):
       uri: The input image URI.
       output_json: File handle of the output json where request will be written.
     """
+    def _open_file_read_binary(uri):
+      try:
+        return file_io.FileIO(uri, mode='rb')
+      except errors.InvalidArgumentError:
+        return file_io.FileIO(uri, mode='r')
+
     with open(output_json, 'w') as outf:
-      with file_io.FileIO(uri, mode='rb') as f:
+      with _open_file_read_binary(uri) as f:
         image_bytes = f.read()
         image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
         image = image.resize((299, 299), Image.BILINEAR)

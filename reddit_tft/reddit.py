@@ -158,15 +158,6 @@ def make_preprocessing_fn(frequency_threshold):
     result['subreddit_id'] = tft.string_to_int(
         inputs['subreddit'], frequency_threshold=frequency_threshold)
 
-    # TODO(b/35318962): Obviate the need for this workaround on Dense features.
-    # FeatureColumns expect shape (batch_size, 1), not just (batch_size)
-    # All features added to results up to this point are dense and require this
-    # workaround. All following features will be sparse.
-    result = {
-        k: tft.map(lambda x: tf.expand_dims(x, -1), v)
-        for k, v in result.items()
-    }
-
     for name in ('author', 'comment_body', 'comment_parent_body'):
       words = tft.map(tf.string_split, inputs[name])
       # TODO(b/33467613) Translate these to bag-of-words style sparse features.

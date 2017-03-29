@@ -57,7 +57,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --package-path trainer \
   --staging-bucket "$BUCKET" \
   --region us-central1 \
-  --runtime_version=1.0 \
+  --runtime-version=1.0 \
   -- \
   --output_path "${GCS_PATH}/training" \
   --eval_data_paths "${GCS_PATH}/preproc/eval*" \
@@ -65,18 +65,20 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
 
 # Tell CloudML about a new type of model coming.  Think of a "model" here as
 # a namespace for deployed Tensorflow graphs.
-gcloud beta ml models create "$MODEL_NAME"
+gcloud ml-engine models create "$MODEL_NAME" \
+  --region us-central1
 
 # Each unique Tensorflow graph--with all the information it needs to execute--
 # corresponds to a "version".  Creating a version actually deploys our
 # Tensorflow graph to a Cloud instance, and gets is ready to serve (predict).
-gcloud beta ml versions create "$VERSION_NAME" \
+gcloud ml-engine versions create "$VERSION_NAME" \
   --model "$MODEL_NAME" \
-  --origin "${GCS_PATH}/training/model"
+  --origin "${GCS_PATH}/training/model" \
+  --runtime-version=1.0
 
 # Models do not need a default version, but its a great way move your production
 # service from one version to another with a single gcloud command.
-gcloud beta ml versions set-default "$VERSION_NAME" --model "$MODEL_NAME"
+gcloud ml-engine versions set-default "$VERSION_NAME" --model "$MODEL_NAME"
 
 # Finally, download a daisy and so we can test online prediction.
 gsutil cp \
@@ -86,10 +88,10 @@ gsutil cp \
 # Since the image is passed via JSON, we have to encode the JPEG string first.
 python -c 'import base64, sys, json; img = base64.b64encode(open(sys.argv[1], "rb").read()); print json.dumps({"key":"0", "image_bytes": {"b64": img}})' daisy.jpg &> request.json
 
-# Here we are showing off CloudML online prediction which is still in alpha.
+# Here we are showing off CloudML online prediction which is still in beta.
 # If the first call returns an error please give it another try; likely the
 # first worker is still spinning up.  After deploying our model we give the
 # service a moment to catch up--only needed when you deploy a new version.
 # We wait for 10 minutes here, but often see the service start up sooner.
 sleep 10m
-gcloud beta ml predict --model ${MODEL_NAME} --json-instances request.json
+gcloud ml-engine predict --model ${MODEL_NAME} --json-instances request.json

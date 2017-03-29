@@ -96,13 +96,6 @@ def make_preprocessing_fn(frequency_threshold):
       result[name + '_id'] = tft.string_to_int(
           inputs[name], frequency_threshold=frequency_threshold)
 
-    # TODO(b/35318962): Obviate the need for this workaround on Dense features.
-    # FeatureColumns expect shape (batch_size, 1), not just (batch_size)
-    result = {
-        k: tft.map(lambda x: tf.expand_dims(x, -1), v)
-        for k, v in result.items()
-    }
-
     return result
 
   return preprocessing_fn

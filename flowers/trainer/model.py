@@ -206,13 +206,8 @@ class Model(object):
     image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
     # Then shift images to [-1, 1) for Inception.
-    # Try-except to make the code compatible across sdk versions
-    try:
-      image = tf.subtract(image, 0.5)
-      image = tf.multiply(image, 2.0)
-    except AttributeError:
-      image = tf.sub(image, 0.5)
-      image = tf.mul(image, 2.0)
+    image = tf.subtract(image, 0.5)
+    image = tf.multiply(image, 2.0)
 
     # Build Inception layers, which expect A tensor of type float from [-1, 1)
     # and shape [batch_size, height, width, channels].

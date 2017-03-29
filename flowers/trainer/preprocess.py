@@ -66,10 +66,11 @@ except ImportError:
 from PIL import Image
 import tensorflow as tf
 
+from util import get_cloud_project
+
 from tensorflow.contrib.slim.python.slim.nets import inception_v3 as inception
 from tensorflow.python.framework import errors
 from tensorflow.python.lib.io import file_io
-from google.cloud.ml.io import SaveFeatures
 
 slim = tf.contrib.slim
 
@@ -98,8 +99,6 @@ class Default(object):
   # https://research.googleblog.com/2016/08/improving-inception-and-image.html
   IMAGE_GRAPH_CHECKPOINT_URI = (
       'gs://cloud-ml-data/img/flower_photos/inception_v3_2016_08_28.ckpt')
-  # The latest CloudML package.
-  CML_PACKAGE = 'gs://cloud-ml/sdk/cloudml-0.1.9-alpha.tar.gz'
 
 
 class ExtractLabelIdsDoFn(beam.DoFn):
@@ -205,12 +204,7 @@ class EmbeddingsGraph(object):
     # It is used to feed image bytes and obtain embeddings.
     self.input_jpeg, self.embedding = self.build_graph()
 
-    # Remove this if once Tensorflow 0.12 is standard.
-    try:
-      init_op = tf.global_variables_initializer()
-    except AttributeError:
-      init_op = tf.initialize_all_variables()
-
+    init_op = tf.global_variables_initializer()
     self.tf_session.run(init_op)
     self.restore_from_checkpoint(Default.IMAGE_GRAPH_CHECKPOINT_URI)
 
@@ -245,13 +239,8 @@ class EmbeddingsGraph(object):
         image, [self.HEIGHT, self.WIDTH], align_corners=False)
 
     # Then rescale range to [-1, 1) for Inception.
-    # Try-except to make the code compatible across sdk versions
-    try:
-      image = tf.subtract(image, 0.5)
-      inception_input = tf.multiply(image, 2.0)
-    except AttributeError:
-      image = tf.sub(image, 0.5)
-      inception_input = tf.mul(image, 2.0)
+    image = tf.subtract(image, 0.5)
+    inception_input = tf.multiply(image, 2.0)
 
     # Build Inception layers, which expect a tensor of type float from [-1, 1)
     # and shape [batch_size, height, width, channels].
@@ -375,7 +364,11 @@ def configure_pipeline(p, opt):
        | 'Read and convert to JPEG'
        >> beam.ParDo(ReadImageAndConvertToJpegDoFn())
        | 'Embed and make TFExample' >> beam.ParDo(TFExampleFromImageDoFn())
-       | 'Save to disk' >> SaveFeatures(opt.output_path))
+       | 'Save to disk'
+       >> beam.io.WriteToTFRecord(opt.output_path,
+                                  file_name_suffix='.tfrecord.gz',
+                                  coder=beam.coders.ProtoCoder(
+                                      tf.train.Example)))
 
 
 def run(in_args=None):
@@ -384,12 +377,6 @@ def run(in_args=None):
   pipeline_options = PipelineOptions.from_dictionary(vars(in_args))
   with beam.Pipeline(options=pipeline_options) as p:
     configure_pipeline(p, in_args)
-
-
-def get_cloud_project():
-  cmd = ['gcloud', 'config', 'list', 'project', '--format=value(core.project)']
-  with open(os.devnull, 'w') as dev_null:
-    return subprocess.check_output(cmd, stderr=dev_null).strip()
 
 
 def default_args(argv):
@@ -440,8 +427,6 @@ def default_args(argv):
             os.path.join(os.path.dirname(parsed_args.output_path), 'temp'),
         'runner':
             'DataflowRunner',
-        'extra_package':
-            Default.CML_PACKAGE,
         'save_main_session':
             True,
     }
