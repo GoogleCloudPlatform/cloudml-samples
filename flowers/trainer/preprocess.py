@@ -66,8 +66,6 @@ except ImportError:
 from PIL import Image
 import tensorflow as tf
 
-from util import get_cloud_project
-
 from tensorflow.contrib.slim.python.slim.nets import inception_v3 as inception
 from tensorflow.python.framework import errors
 from tensorflow.python.lib.io import file_io
@@ -441,6 +439,29 @@ def default_args(argv):
       vars(parsed_args)[kk] = vv
 
   return parsed_args
+
+
+def get_cloud_project():
+  cmd = [
+      'gcloud', '-q', 'config', 'list', 'project',
+      '--format=value(core.project)'
+  ]
+  with open(os.devnull, 'w') as dev_null:
+    try:
+      res = subprocess.check_output(cmd, stderr=dev_null).strip()
+      if not res:
+        raise Exception('--cloud specified but no Google Cloud Platform '
+                        'project found.\n'
+                        'Please specify your project name with the --project '
+                        'flag or set a default project: '
+                        'gcloud config set project YOUR_PROJECT_NAME')
+      return res
+    except OSError as e:
+      if e.errno == errno.ENOENT:
+        raise Exception('gcloud is not installed. The Google Cloud SDK is '
+                        'necessary to communicate with the Cloud ML service. '
+                        'Please install and set up gcloud.')
+      raise
 
 
 def main(argv):

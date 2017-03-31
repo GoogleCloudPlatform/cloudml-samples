@@ -17,35 +17,10 @@
 This file is generic and can be reused by other models without modification.
 """
 
-import errno
 import multiprocessing
-import os
-import subprocess
 
 import tensorflow as tf
 from tensorflow.python.lib.io import file_io
-
-def get_cloud_project():
-  cmd = [
-      'gcloud', '-q', 'config', 'list', 'project',
-      '--format=value(core.project)'
-  ]
-  with open(os.devnull, 'w') as dev_null:
-    try:
-      res = subprocess.check_output(cmd, stderr=dev_null).strip()
-      if not res:
-        raise Exception('--cloud specified but no Google Cloud Platform '
-                        'project found.\n'
-                        'Please specify your project name with the --project '
-                        'flag or set a default project: '
-                        'gcloud config set project YOUR_PROJECT_NAME')
-      return res
-    except OSError as e:
-      if e.errno == errno.ENOENT:
-        raise Exception('gcloud is not installed. The Google Cloud SDK is '
-                        'necessary to communicate with the Cloud ML service. '
-                        'Please install and set up gcloud.')
-      raise
 
 def read_examples(input_files, batch_size, shuffle, num_epochs=None):
   """Creates readers and queues for reading example protos."""
