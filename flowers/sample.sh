@@ -66,7 +66,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
 # Tell CloudML about a new type of model coming.  Think of a "model" here as
 # a namespace for deployed Tensorflow graphs.
 gcloud ml-engine models create "$MODEL_NAME" \
-  --region us-central1
+  --regions us-central1
 
 # Each unique Tensorflow graph--with all the information it needs to execute--
 # corresponds to a "version".  Creating a version actually deploys our

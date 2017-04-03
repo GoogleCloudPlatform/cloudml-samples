@@ -15,6 +15,7 @@
 import argparse
 import datetime
 import os
+import random
 import subprocess
 import sys
 
@@ -110,6 +111,16 @@ class _ReadData(beam.PTransform):
                   beam.io.BigQuerySource(query=query, use_standard_sql=True)))
 
 
+# TODO(b/33688220) should the transform functions take shuffle as an optional
+# argument instead?
+@beam.ptransform_fn
+def _Shuffle(pcoll):  # pylint: disable=invalid-name
+  return (pcoll
+          | 'PairWithRandom' >> beam.Map(lambda x: (random.random(), x))
+          | 'GroupByRandom' >> beam.GroupByKey()
+          | 'DropRandom' >> beam.FlatMap(lambda (k, vs): vs))
+
+
 def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
                frequency_threshold):
   """Run pre-processing step as a pipeline.
@@ -131,10 +142,6 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
   train_data = pipeline | 'ReadTrainingData' >> _ReadData(training_data)
   evaluate_data = pipeline | 'ReadEvalData' >> _ReadData(eval_data)
 
-  # TODO(b/33688220) should the transform functions take shuffle as an optional
-  # argument?
-  # TODO(b/33688275) Should the transform functions have more user friendly
-  # names?
   input_metadata = dataset_metadata.DatasetMetadata(schema=input_schema)
 
   _ = (input_metadata
@@ -165,6 +172,7 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
   train_coder = coders.ExampleProtoCoder(train_metadata.schema)
   (train_dataset
    | 'SerializeTrainExamples' >> beam.Map(train_coder.encode)
+   | 'ShuffleTraining' >> _Shuffle()  # pylint: disable=no-value-for-parameter
    | 'WriteTraining' >> beam.io.WriteToTFRecord(
        os.path.join(output_dir,
                     path_constants.TRANSFORMED_TRAIN_DATA_FILE_PREFIX),
@@ -173,6 +181,7 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
   evaluate_coder = coders.ExampleProtoCoder(evaluate_metadata.schema)
   (evaluate_dataset
    | 'SerializeEvalExamples' >> beam.Map(evaluate_coder.encode)
+   | 'ShuffleEval' >> _Shuffle()  # pylint: disable=no-value-for-parameter
    | 'WriteEval' >> beam.io.WriteToTFRecord(
        os.path.join(output_dir,
                     path_constants.TRANSFORMED_EVAL_DATA_FILE_PREFIX),
@@ -183,24 +192,13 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
     predict_schema = reddit.make_input_schema(mode=predict_mode)
     predict_coder = coders.ExampleProtoCoder(predict_schema)
 
-    # TODO(b/35653662): Simplify once tf.transform 0.1.5 is released.
-    def encode_predict_data(d):
-      try:
-        return predict_coder.encode(d)
-      except Exception:  # pylint: disable=broad-except
-        # Compatibility path for tf.transform < 0.1.5
-        return predict_coder.encode({
-            k: v.encode('utf-8') if isinstance(v, unicode) else v
-            for k, v in d.items()
-        })
-
     serialized_examples = (pipeline
                            | 'ReadPredictData' >> _ReadData(
                                predict_data, mode=predict_mode)
                            # TODO(b/35194257) Obviate the need for this explicit
                            # serialization.
                            | 'EncodePredictData' >> beam.Map(
-                               encode_predict_data))
+                               predict_coder.encode))
     _ = (serialized_examples
          | 'WritePredictDataAsTFRecord' >> beam.io.WriteToTFRecord(
              os.path.join(output_dir,
