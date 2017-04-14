@@ -90,8 +90,8 @@ rm -rf $OUTPUT_DIR
 ```
 
 ```
-python trainer/task.py --train-files $CENSUS_DATA/$TRAIN_FILE \
-                       --eval-files $CENSUS_DATA/$EVAL_FILE \
+python trainer/task.py --train-files $TRAIN_FILE \
+                       --eval-files $EVAL_FILE \
                        --job-dir $OUTPUT_DIR \
                        --train-steps $TRAIN_STEPS
 ```
@@ -110,8 +110,8 @@ rm -rf $OUTPUT_DIR
 gcloud ml-engine local train --package-path trainer \
                            --module-name trainer.task \
                            -- \
-                           --train-files $CENSUS_DATA/$TRAIN_FILE \
-                           --eval-files $CENSUS_DATA/$EVAL_FILE \
+                           --train-files $TRAIN_FILE \
+                           --eval-files $EVAL_FILE \
                            --job-dir $OUTPUT_DIR \
                            --train-steps $TRAIN_STEPS
 ```
@@ -193,7 +193,8 @@ export SCALE_TIER=STANDARD_1
 export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/models/run3
 export JOB_NAME=census
 export TRAIN_STEPS=1000
-```
+export TRAIN_GCS_FILE=gs://cloudml-public/census/data/adult.data.csv
+export EVAL_GCS_FILE=gs://cloudml-public/census/data/adult.test.csv
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
