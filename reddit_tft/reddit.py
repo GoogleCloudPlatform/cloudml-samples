@@ -133,7 +133,7 @@ def make_input_schema(mode=tf.contrib.learn.ModeKeys.TRAIN):
 
 
 def make_preprocessing_fn(frequency_threshold):
-  """Creates a preprocessing function for criteo.
+  """Creates a preprocessing function for reddit.
 
   Args:
     frequency_threshold: The frequency_threshold used when generating
@@ -144,7 +144,7 @@ def make_preprocessing_fn(frequency_threshold):
   """
 
   def preprocessing_fn(inputs):
-    """User defined preprocessing function for criteo columns.
+    """User defined preprocessing function for reddit columns.
 
     Args:
       inputs: dictionary of input `tensorflow_transform.Column`.

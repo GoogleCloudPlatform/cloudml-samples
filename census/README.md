@@ -35,19 +35,19 @@ warranty, or other guarantees about the validity or any other aspects of this da
 Please run the export and copy statements first:
 
 ```
-TRAIN_FILE=gs://cloudml-public/census/data/adult.data.csv
-EVAL_FILE=gs://cloudml-public/census/data/adult.test.csv
+TRAIN_GCS_FILE=gs://cloudml-public/census/data/adult.data.csv
+EVAL_GCS_FILE=gs://cloudml-public/census/data/adult.test.csv
 ```
 
 Since TensorFlow - not the Cloud ML Engine - handles reading from GCS, you can run all commands below using these environment variables. However, if your network is slow or unreliable, you may want to download the files for local training.
 
 ```
 mkdir census_data
-gsutil cp $TRAIN_FILE census_data/adult.data.csv
-gsutil cp $EVAL_FILE census_data/adult.test.csv
-
 TRAIN_FILE=census_data/adult.data.csv
 EVAL_FILE=census_data/adult.test.csv
+
+gsutil cp $TRAIN_GCS_FILE $TRAIN_FILE
+gsutil cp $EVAL_GCS_FILE $EVAL_FILE
 ```
 
 
@@ -90,8 +90,8 @@ rm -rf $OUTPUT_DIR
 ```
 
 ```
-python trainer/task.py --train-files $CENSUS_DATA/$TRAIN_FILE \
-                       --eval-files $CENSUS_DATA/$EVAL_FILE \
+python trainer/task.py --train-files $TRAIN_FILE \
+                       --eval-files $EVAL_FILE \
                        --job-dir $OUTPUT_DIR \
                        --train-steps $TRAIN_STEPS
 ```
@@ -110,8 +110,8 @@ rm -rf $OUTPUT_DIR
 gcloud ml-engine local train --package-path trainer \
                            --module-name trainer.task \
                            -- \
-                           --train-files $CENSUS_DATA/$TRAIN_FILE \
-                           --eval-files $CENSUS_DATA/$EVAL_FILE \
+                           --train-files $TRAIN_FILE \
+                           --eval-files $EVAL_FILE \
                            --job-dir $OUTPUT_DIR \
                            --train-steps $TRAIN_STEPS
 ```
@@ -179,8 +179,8 @@ gcloud ml-engine local train --package-path trainer \
                            --worker-count $WORKER_COUNT \
                            --distributed \
                            -- \
-                           --train-files $CENSUS_DATA/$TRAIN_FILE \
-                           --eval-files $CENSUS_DATA/$EVAL_FILE \
+                           --train-files $TRAIN_FILE \
+                           --eval-files $EVAL_FILE \
                            --train-steps $TRAIN_STEPS \
                            --job-dir $OUTPUT_DIR
 ```

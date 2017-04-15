@@ -48,6 +48,16 @@ To run this pipeline locally run the above command without --cloud.
 
 TODO(b/31434218)
 """
+
+# TODO(mikehcheng): Beam convention for stage names is CapitalCase as opposed to
+# English sentences (eg ReadAndConvertToJpeg as opposed to
+# "Read and convert to JPEG"). Fix all samples that don't conform to the
+# convention.
+
+# TODO(mikehcheng): Standardize the casing of the various counters (metrics)
+# used within this file. So far we have been using underscore_case for metrics.
+
+
 import argparse
 import csv
 import datetime
@@ -60,10 +70,7 @@ import sys
 
 import apache_beam as beam
 from apache_beam.metrics import Metrics
-try:
-  from apache_beam.utils.pipeline_options import PipelineOptions
-except ImportError:
-  from apache_beam.utils.options import PipelineOptions
+from apache_beam.utils.pipeline_options import PipelineOptions
 from PIL import Image
 import tensorflow as tf
 
@@ -175,8 +182,7 @@ class ReadImageAndConvertToJpegDoFn(beam.DoFn):
 
     # A variety of different calling libraries throw different exceptions here.
     # They all correspond to an unreadable file so we treat them equivalently.
-    # pylint: disable broad-except
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
       logging.exception('Error processing image %s: %s', uri, str(e))
       error_count.inc()
       return
@@ -363,11 +369,13 @@ def configure_pipeline(p, opt):
        | 'Read and convert to JPEG'
        >> beam.ParDo(ReadImageAndConvertToJpegDoFn())
        | 'Embed and make TFExample' >> beam.ParDo(TFExampleFromImageDoFn())
+       # TODO(b/35133536): Get rid of this Map and instead use
+       # coder=beam.coders.ProtoCoder(tf.train.Example) in WriteToTFRecord
+       # below.
+       | 'SerializeToString' >> beam.Map(lambda x: x.SerializeToString())
        | 'Save to disk'
        >> beam.io.WriteToTFRecord(opt.output_path,
-                                  file_name_suffix='.tfrecord.gz',
-                                  coder=beam.coders.ProtoCoder(
-                                      tf.train.Example)))
+                                  file_name_suffix='.tfrecord.gz'))
 
 
 def run(in_args=None):

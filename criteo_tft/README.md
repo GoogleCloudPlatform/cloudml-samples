@@ -17,6 +17,7 @@ the [criteo dataset](https://www.kaggle.com/c/criteo-display-ad-challenge).
 *   Make sure your Google Cloud project has sufficient quota.
 *   Tensorflow has a dependency on a particular version of protobuf. Please run
     the following after installing tensorflow-transform:
+
 ```
 pip install --upgrade protobuf==3.1.0
 ```

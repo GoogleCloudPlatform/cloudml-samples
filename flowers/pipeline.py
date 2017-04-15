@@ -130,6 +130,10 @@ def process_args():
       default=None,
       help=('Google Cloud Storage or Local directory in which '
             'to place outputs.'))
+  parser.add_argument(
+      '--runtime_version',
+      default=os.getenv('CLOUDSDK_ML_DEFAULT_RUNTIME_VERSION', '1.0'),
+      help=('Tensorflow version for model training and prediction.'))
 
   args, _ = parser.parse_known_args()
 
@@ -261,6 +265,7 @@ class FlowersE2E(object):
           '--region', 'us-central1',
           '--project', self.args.project,
           '--package-path', 'trainer',
+          '--runtime-version', self.args.runtime_version,
           '--'
       ] + trainer_args
     else:
@@ -294,6 +299,7 @@ class FlowersE2E(object):
         '--model', self.args.deploy_model_name,
         '--origin', model_path,
         '--project', self.args.project,
+        '--runtime-version', self.args.runtime_version,
     ]
     if not model_path.startswith('gs://'):
       submit.extend(['--staging-bucket', self.args.gcs_bucket])
