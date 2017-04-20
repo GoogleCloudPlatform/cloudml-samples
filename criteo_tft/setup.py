@@ -16,8 +16,6 @@ import setuptools
 
 NAME = 'trainer'
 VERSION = '1.0'
-# TODO(b/35619473) Remove when the tft.saved.input_fn_maker functionality is
-# available on tf.learn.
 TENSORFLOW_TRANSFORM = 'tensorflow-transform==0.1.7'
 
 

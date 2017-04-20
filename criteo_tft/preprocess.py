@@ -30,7 +30,6 @@ import apache_beam as beam
 import tensorflow as tf
 
 from tensorflow_transform import coders
-from tensorflow_transform import version as tft_version
 from tensorflow_transform.beam import impl as tft
 from tensorflow_transform.beam import tft_beam_io
 from tensorflow_transform.tf_metadata import dataset_metadata
@@ -218,13 +217,13 @@ def main(argv=None):
             os.path.join(args.output_dir, 'tmp'),
         'project':
             args.project_id,
-        'extra_packages': [
-            tft_version.py2_installer_location,
-        ],
-
         # TODO(b/35727492): Remove this.
         'max_num_workers':
             1000,
+        'setup_file':
+            os.path.abspath(os.path.join(
+                os.path.dirname(__file__),
+                'setup.py')),
     }
     pipeline_options = beam.pipeline.PipelineOptions(flags=[], **options)
   else:
