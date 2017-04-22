@@ -182,7 +182,7 @@ if __name__ == '__main__':
   arguments = args.__dict__
   job_dir = arguments.pop('job_dir')
 
-  print('Starting Census: Please lauch tensorboard to see results: tensorboard --logdir=$MODEL_DIR')
+  print('Starting Census: Please launch tensorboard to see results: tensorboard --logdir=$MODEL_DIR')
 
   # Run the training job
   # learn_runner pulls configuration information from environment
