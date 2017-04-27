@@ -22,7 +22,7 @@ The [Census Income Data
 Set](https://archive.ics.uci.edu/ml/datasets/Census+Income) that this sample
 uses for training is hosted by the [UC Irvine Machine Learning
 Repository](https://archive.ics.uci.edu/ml/datasets/). We have hosted the data
-on Google Cloud Storage:
+on Google Cloud Storage in a slightly cleaned form:
 
  * Training file is `adult.data.csv`
  * Evaluation file is `adult.test.csv`
@@ -31,23 +31,26 @@ on Google Cloud Storage:
 The source of this dataset is from a third party. Google provides no representation,
 warranty, or other guarantees about the validity or any other aspects of this dataset.
 
-### Run Exports
+### Set Environment Variables
 Please run the export and copy statements first:
 
 ```
-TRAIN_GCS_FILE=gs://cloudml-public/census/data/adult.data.csv
-EVAL_GCS_FILE=gs://cloudml-public/census/data/adult.test.csv
+TRAIN_FILE=gs://cloudml-public/census/data/adult.data.csv
+EVAL_FILE=gs://cloudml-public/census/data/adult.test.csv
 ```
+
+### \*Optional\* Use local training files.
 
 Since TensorFlow - not the Cloud ML Engine - handles reading from GCS, you can run all commands below using these environment variables. However, if your network is slow or unreliable, you may want to download the files for local training.
 
 ```
 mkdir census_data
+
+gsutil cp $TRAIN_FILE census_data/adult.data.csv
+gsutil cp $EVAL_FILE census_data/adult.test.csv
+
 TRAIN_FILE=census_data/adult.data.csv
 EVAL_FILE=census_data/adult.test.csv
-
-gsutil cp $TRAIN_GCS_FILE $TRAIN_FILE
-gsutil cp $EVAL_GCS_FILE $EVAL_FILE
 ```
 
 
@@ -117,6 +120,10 @@ gcloud ml-engine local train --package-path trainer \
 ```
 
 ### Using Cloud ML Engine
+*NOTE* If you used downloaded the training files to your local file system, be sure
+to reset the `TRAIN_FILE` and `EVAL_FILE` environment variables to refer to a GCS location.
+Data must be in GCS for cloud-based training.
+
 Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
 before `--` while training on the cloud and this is so that we can have
 different trial runs during Hyperparameter tuning.
@@ -136,8 +143,8 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --package-path trainer/ \
                                     --region us-central1 \
                                     -- \
-                                    --train-files $TRAIN_GCS_FILE \
-                                    --eval-files $EVAL_GCS_FILE \
+                                    --train-files $TRAIN_FILE \
+                                    --eval-files $EVAL_FILE \
                                     --train-steps $TRAIN_STEPS
 ```
 
@@ -205,8 +212,8 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --package-path trainer/ \
                                     --region us-central1 \
                                     -- \
-                                    --train-files $TRAIN_GCS_FILE \
-                                    --eval-files $EVAL_GCS_FILE \
+                                    --train-files $TRAIN_FILE \
+                                    --eval-files $EVAL_FILE \
                                     --train-steps $TRAIN_STEPS
 ```
 
@@ -237,8 +244,8 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --package-path trainer/ \
                                     --region us-central1 \
                                     -- \
-                                    --train-files $TRAIN_GCS_FILE \
-                                    --eval-files $EVAL_GCS_FILE \
+                                    --train-files $TRAIN_FILE \
+                                    --eval-files $EVAL_FILE \
                                     --train-steps $TRAIN_STEPS
 ```
 

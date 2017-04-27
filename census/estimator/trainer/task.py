@@ -32,10 +32,6 @@ def generate_experiment_fn(train_files,
     Estimator, and input functions (training, evaluation, serving).
     Unlisted args are passed through to Experiment.
   """
-  # Check verbose logging flag
-  verbose_logging = experiment_args.pop('verbose_logging')
-  model.set_verbose_logging(verbose_logging)
-
   def _experiment_fn(output_dir):
     # num_epochs can control duration if train_steps isn't
     # passed to Experiment
@@ -158,10 +154,16 @@ if __name__ == '__main__':
 
   # Argument to turn on all logging
   parser.add_argument(
-      '--verbose-logging',
-      default=False,
-      type=bool,
-      help='Switch to turn on or off verbose logging and warnings'
+      '--verbosity',
+      choices=[
+          'DEBUG',
+          'ERROR',
+          'FATAL',
+          'INFO',
+          'WARN'
+      ],
+      default=tf.logging.FATAL,
+      help='Set logging verbosity'
   )
 
   # Experiment arguments
@@ -180,9 +182,12 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
   arguments = args.__dict__
+  tf.logging.set_verbosity(arguments.pop('verbosity'))
+
   job_dir = arguments.pop('job_dir')
 
-  print('Starting Census: Please lauch tensorboard to see results: tensorboard --logdir=$MODEL_DIR')
+  print('Starting Census: Please lauch tensorboard to see results:\n'
+        'tensorboard --logdir=$MODEL_DIR')
 
   # Run the training job
   # learn_runner pulls configuration information from environment

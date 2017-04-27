@@ -21,12 +21,6 @@ import tensorflow as tf
 from tensorflow.contrib import layers
 from tensorflow.contrib.learn.python.learn.utils import input_fn_utils
 
-tf.logging.set_verbosity(tf.logging.ERROR)
-
-def set_verbose_logging(verbose_logging=False):
-  if verbose_logging is True:
-    tf.logging.set_verbosity(tf.logging.INFO)
-
 
 # Define the format of your input data including unused columns
 CSV_COLUMNS = ['age', 'workclass', 'fnlwgt', 'education', 'education_num',
@@ -178,13 +172,6 @@ def parse_label_column(label_string_tensor):
 # ************************************************************************
 
 
-def column_to_dtype(column):
-  if isinstance(column, layers.feature_column._SparseColumn):
-    return tf.string
-  else:
-    return tf.float32
-
-
 def serving_input_fn():
   """Builds the input subgraph for prediction.
 
@@ -200,7 +187,7 @@ def serving_input_fn():
      from the user.
   """
   feature_placeholders = {
-      column.name: tf.placeholder(column_to_dtype(column), [None])
+      column.name: tf.placeholder(column.dtype, [None])
       for column in INPUT_COLUMNS
   }
   # DNNCombinedLinearClassifier expects rank 2 Tensors, but inputs should be
