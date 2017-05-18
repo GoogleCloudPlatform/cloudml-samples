@@ -70,7 +70,15 @@ import sys
 
 import apache_beam as beam
 from apache_beam.metrics import Metrics
-from apache_beam.utils.pipeline_options import PipelineOptions
+# pylint: disable=g-import-not-at-top
+# TODO(yxshi): Remove after Dataflow 0.4.5 SDK is released.
+try:
+  try:
+    from apache_beam.options.pipeline_options import PipelineOptions
+  except ImportError:
+    from apache_beam.utils.pipeline_options import PipelineOptions
+except ImportError:
+  from apache_beam.utils.options import PipelineOptions
 from PIL import Image
 import tensorflow as tf
 

@@ -36,7 +36,6 @@ def make_standard_sql(table_name,
     The standard SQL query to pull the features from the given reddit table.
   """
 
-  # TODO(b/35648623): Simplify the SQL statement by removing the COALESCE parts.
   infer_mode = (mode == tf.contrib.learn.ModeKeys.INFER)
   return """
 SELECT
