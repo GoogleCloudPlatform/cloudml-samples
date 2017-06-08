@@ -200,7 +200,8 @@ export SCALE_TIER=STANDARD_1
 export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/models/run3
 export JOB_NAME=census
 export TRAIN_STEPS=1000
-```
+export TRAIN_GCS_FILE=gs://cloudml-public/census/data/adult.data.csv
+export EVAL_GCS_FILE=gs://cloudml-public/census/data/adult.test.csv
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
