@@ -1,0 +1,40 @@
+#install docker
+
+#Run a command line inside of the Google Cloud Datalab Docker container
+docker pull gcr.io/cloud-datalab/datalab:local
+docker run -it -p "127.0.0.1:8080:8080" --entrypoint=/bin/bash gcr.io/cloud-datalab/datalab:local
+
+#Install required tools and dependencies (if already setup, skip this)
+cd ~
+curl https://raw.githubusercontent.com/GoogleCloudPlatform/cloudml-samples/master/tools/setup_docker.sh | bash
+
+
+#Run the following at a command prompt:
+gcloud init
+
+#Press Y for logging in, you will have to selct paste the authentication link and get back the authentication key and paste it (for the coresponding gmail account selected)
+
+#configure compute engine preferably in the same location as yours (us-central-1 : 11/12)
+
+#Create Application Default Credentials for TensorFlow:
+gcloud beta auth application-default login
+
+#Verifying your environment
+curl https://raw.githubusercontent.com/GoogleCloudPlatform/cloudml-samples/master/tools/check_environment.py | python
+
+#Initializing your Cloud ML project(Allow the Cloud ML service accounts to access resources in your Google Cloud project)
+gcloud beta ml init-project
+
+#project id variable and bucket name
+PROJECT_ID=$(gcloud config list project --format "value(core.project)")
+BUCKET_NAME=${PROJECT_ID}-ml
+
+#make a bucket
+gsutil mb -l us-central1 gs://$BUCKET_NAME
+#####gsutil mb -l us-central1 -p dataflow-sct gs://$BUCKET_NAME
+
+#Run the .sh file. Once you can see for example sample.sh with ls run this: ./sample.sh
+
+
+
+

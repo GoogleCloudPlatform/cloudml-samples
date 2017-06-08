@@ -20,7 +20,7 @@
 # Now that we are set up, we can start processing some flowers images.
 declare -r PROJECT=$(gcloud config list project --format "value(core.project)")
 declare -r JOB_ID="flowers_${USER}_$(date +%Y%m%d_%H%M%S)"
-declare -r BUCKET="gs://${PROJECT}-ml"
+declare -r BUCKET="gs://${PROJECT}-ml//"
 declare -r GCS_PATH="${BUCKET}/${USER}/${JOB_ID}"
 declare -r DICT_FILE=gs://cloud-ml-data/img/flower_photos/dict.txt
 
