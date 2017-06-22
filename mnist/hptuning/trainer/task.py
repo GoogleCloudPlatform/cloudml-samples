@@ -29,7 +29,7 @@ import subprocess
 import time
 import uuid
 
-import model as model_lib
+from . import model as model_lib
 import tensorflow as tf
 from tensorflow.python.lib.io import file_io
 

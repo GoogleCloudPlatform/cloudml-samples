@@ -57,7 +57,7 @@ def parse_arguments(argv):
   parser.add_argument(
       '--frequency_threshold',
       type=int,
-      default=50,
+      default=10,
       help=
       'The frequency threshold below which categorical values are ignored.')
   parser.add_argument(

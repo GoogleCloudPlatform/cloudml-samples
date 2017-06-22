@@ -62,7 +62,7 @@ def parse_arguments(argv):
   parser.add_argument(
       '--frequency_threshold',
       type=int,
-      default=100,
+      default=15,
       help='The frequency threshold below which categorical values are '
       'ignored.')
   parser.add_argument(
@@ -81,6 +81,11 @@ def parse_arguments(argv):
       required=True,
       help=('Google Cloud Storage or Local directory in which '
             'to place outputs.'))
+  parser.add_argument(
+      '--delimiter',
+      default='\t',
+      type=str,
+      help='Delimiter used to parse the input CSV files.')
   args, _ = parser.parse_known_args(args=argv[1:])
 
   if args.cloud and not args.project_id:
@@ -100,7 +105,7 @@ def _Shuffle(pcoll):  # pylint: disable=invalid-name
 
 
 def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
-               frequency_threshold):
+               frequency_threshold, delimiter):
   """Run pre-processing step as a pipeline.
 
   Args:
@@ -118,7 +123,7 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
   # 2) Configure the coder to map the source file column names to a dictionary
   #    of key -> tensor_proto with the appropiate type derived from the
   #    input_schema.
-  coder = criteo.make_tsv_coder(input_schema)
+  coder = criteo.make_csv_coder(input_schema, delimiter)
 
   # 3) Read from text using the coder.
   train_data = (
@@ -178,12 +183,12 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
   if predict_data:
     predict_mode = tf.contrib.learn.ModeKeys.INFER
     predict_schema = criteo.make_input_schema(mode=predict_mode)
-    tsv_coder = criteo.make_tsv_coder(predict_schema, mode=predict_mode)
+    csv_coder = criteo.make_csv_coder(predict_schema, mode=predict_mode)
     predict_coder = coders.ExampleProtoCoder(predict_schema)
     serialized_examples = (
         pipeline
         | 'ReadPredictData' >> beam.io.ReadFromText(predict_data)
-        | 'ParsePredictCsv' >> beam.Map(tsv_coder.decode)
+        | 'ParsePredictCsv' >> beam.Map(csv_coder.decode)
         # TODO(b/35194257) Obviate the need for this explicit serialization.
         | 'EncodePredictData' >> beam.Map(predict_coder.encode))
     _ = (serialized_examples
@@ -239,7 +244,8 @@ def main(argv=None):
           eval_data=args.eval_data,
           predict_data=args.predict_data,
           output_dir=args.output_dir,
-          frequency_threshold=args.frequency_threshold)
+          frequency_threshold=args.frequency_threshold,
+          delimiter=args.delimiter)
 
 
 if __name__ == '__main__':

@@ -27,8 +27,7 @@ import os
 import tensorflow as tf
 from tensorflow.contrib import layers
 from tensorflow.contrib.metrics.python.ops import metric_ops
-import util
-from util import override_if_not_in_args
+from . import util
 
 # The MNIST dataset has 10 classes, representing the digits 0 through 9.
 NUM_CLASSES = 10
@@ -50,14 +49,14 @@ def create_model():
   parser.add_argument('--hidden2', type=int, default=32)
   args, task_args = parser.parse_known_args()
 
-  override_if_not_in_args('--max_steps', '5000', task_args)
-  override_if_not_in_args('--batch_size', '100', task_args)
-  override_if_not_in_args('--eval_set_size', '10000', task_args)
+  util.override_if_not_in_args('--max_steps', '5000', task_args)
+  util.override_if_not_in_args('--batch_size', '100', task_args)
+  util.override_if_not_in_args('--eval_set_size', '10000', task_args)
 
   # HYPERPARAMETER TUNING: Do not write the objective value too frequently.
-  override_if_not_in_args('--eval_interval_secs', '10', task_args)
-  override_if_not_in_args('--log_interval_secs', '10', task_args)
-  override_if_not_in_args('--min_train_eval_rate', '5', task_args)
+  util.override_if_not_in_args('--eval_interval_secs', '10', task_args)
+  util.override_if_not_in_args('--log_interval_secs', '10', task_args)
+  util.override_if_not_in_args('--min_train_eval_rate', '5', task_args)
 
   return Model(args.learning_rate, args.hidden1, args.hidden2), task_args
 

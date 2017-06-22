@@ -22,7 +22,8 @@ import multiprocessing
 import tensorflow as tf
 from tensorflow.python.ops import string_ops
 
-# See tutorial on wide and deep https://www.tensorflow.org/tutorials/wide_and_deep/
+# See tutorial on wide and deep
+# https://www.tensorflow.org/tutorials/wide_and_deep/
 # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/contrib/layers/python/layers/feature_column.py
 
 # csv columns in the input file
@@ -37,7 +38,8 @@ CSV_COLUMN_DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''],
 # Categorical columns with vocab size
 CATEGORICAL_COLS = (('education', 16), ('marital_status', 7),
                     ('relationship', 6), ('workclass', 9), ('occupation', 15),
-                    ('native_country', 42), ('gender', 2), ('race', 5))
+                    ('native_country', 42), ('gender', [' Male', ' Female']),
+                    ('race', 5))
 
 CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss',
                    'hours_per_week')
@@ -51,6 +53,7 @@ UNUSED_COLUMNS = set(CSV_COLUMNS) - set(
 TRAIN, EVAL, PREDICT = 'TRAIN', 'EVAL', 'PREDICT'
 CSV, EXAMPLE, JSON = 'CSV', 'EXAMPLE', 'JSON'
 PREDICTION_MODES = [CSV, EXAMPLE, JSON]
+
 
 def model_fn(mode,
              features,
@@ -73,27 +76,31 @@ def model_fn(mode,
   label_values = tf.constant(LABELS)
 
   # Keep variance constant with changing embedding sizes.
-  with tf.variable_scope('embeddings',
-                         initializer=tf.truncated_normal_initializer(
-                           stddev=(1.0 / tf.sqrt(float(embedding_size)))
-                         )):
-    # Convert categorical (string) values to one_hot values
-    for col, bucket_size in CATEGORICAL_COLS:
+  embed_initializer = tf.truncated_normal_initializer(
+      stddev=(1.0 / tf.sqrt(float(embedding_size))))
+
+  with tf.variable_scope('embeddings', initializer=embed_initializer):
+    # Convert categorical (string) values to embeddings
+    for col, vals in CATEGORICAL_COLS:
+      bucket_size = vals if isinstance(vals, int) else len(vals)
       embeddings = tf.get_variable(
-        col,
-        shape=[bucket_size, embedding_size]
+          col,
+          shape=[bucket_size, embedding_size]
       )
 
-      indices = string_ops.string_to_hash_bucket_fast(
-        features[col], bucket_size)
+      if isinstance(vals, int):
+        indices = string_ops.string_to_hash_bucket_fast(
+          features[col], bucket_size)
+      else:
+        table = tf.contrib.lookup.index_table_from_tensor(vals)
+        indices = table.lookup(features[col])
 
-      features[col] = tf.squeeze(
-        tf.nn.embedding_lookup(embeddings, indices),
-        axis=[1]
-      )
+      features[col] = tf.nn.embedding_lookup(embeddings, indices)
 
-  for feature in CONTINUOUS_COLS:
-    features[feature] = tf.to_float(features[feature])
+  for col in CONTINUOUS_COLS:
+    # Give continuous columns an extra trivial dimension
+    # So they can be concatenated with embedding tensors
+    features[col] = tf.expand_dims(tf.to_float(features[col]), -1)
 
   # Concatenate the (now all dense) features.
   # We need to sort the tensors so that they end up in the same order for
@@ -102,36 +109,26 @@ def model_fn(mode,
   inputs = tf.concat(sorted_feature_tensors, 1)
 
   # Build the DNN
-
-  layers_size = [inputs.get_shape()[1]] + hidden_units
-  layers_shape = zip(layers_size[0:], layers_size[1:] + [len(LABELS)])
-
   curr_layer = inputs
-  # Set default initializer to variance_scaling_initializer
-  # This initializer prevents variance from exploding or vanishing when
-  # compounded through different sized layers.
-  with tf.variable_scope('dnn',
-                         initializer=tf.contrib.layers.variance_scaling_initializer()):
-    # Creates the relu hidden layers
-    for num, shape in enumerate(layers_shape):
-      with tf.variable_scope('relu_{}'.format(num)):
 
-        weights = tf.get_variable('weights', shape)
+  for layer_size in hidden_units:
+    curr_layer = tf.layers.dense(
+        curr_layer,
+        layer_size,
+        activation=tf.nn.relu,
+        # This initializer prevents variance from exploding or vanishing when
+        # compounded through different sized layers.
+        kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+    )
 
-        biases = tf.get_variable(
-            'biases',
-          shape[1],
-          initializer=tf.zeros_initializer(tf.float32)
-        )
-
-      activations = tf.matmul(curr_layer, weights) + biases
-      if num < len(layers_shape) - 1:
-        curr_layer = tf.nn.relu(activations)
-      else:
-        curr_layer = activations
-
-  # Make predictions
-  logits = curr_layer
+  # Add the output layer
+  logits = tf.layers.dense(
+    curr_layer,
+    len(LABELS),
+    # Do not use ReLU on last layer
+    activation=None,
+    kernel_initializer=tf.contrib.layers.variance_scaling_initializer()
+  )
 
   if mode in (PREDICT, EVAL):
     probabilities = tf.nn.softmax(logits)
@@ -140,8 +137,7 @@ def model_fn(mode,
   if mode in (TRAIN, EVAL):
     # Convert the string label column to indices
     # Build a lookup table inside the graph
-    table = tf.contrib.lookup.string_to_index_table_from_tensor(
-        label_values)
+    table = tf.contrib.lookup.index_table_from_tensor(label_values)
 
     # Use the lookup table to convert string labels to ints
     label_indices = table.lookup(labels)
@@ -167,20 +163,26 @@ def model_fn(mode,
             logits=logits, labels=label_indices_vector))
     tf.summary.scalar('loss', cross_entropy)
     train_op = tf.train.FtrlOptimizer(
-          learning_rate=learning_rate,
-          l1_regularization_strength=3.0,
-          l2_regularization_strength=10.0
+        learning_rate=learning_rate,
+        l1_regularization_strength=3.0,
+        l2_regularization_strength=10.0
     ).minimize(cross_entropy, global_step=global_step)
     return train_op, global_step
 
   if mode == EVAL:
     # Return accuracy and area under ROC curve metrics
     # See https://en.wikipedia.org/wiki/Receiver_operating_characteristic
-    # See https://www.kaggle.com/wiki/AreaUnderCurve
+    # See https://www.kaggle.com/wiki/AreaUnderCurve\
+    labels_one_hot = tf.one_hot(
+        label_indices_vector,
+        depth=label_values.shape[0],
+        on_value=True,
+        off_value=False,
+        dtype=tf.bool
+    )
     return {
-        'accuracy': tf.contrib.metrics.streaming_accuracy(
-            predicted_indices, label_indices),
-        'auroc': tf.contrib.metrics.streaming_auc(predicted_indices, label_indices)
+        'accuracy': tf.metrics.accuracy(label_indices, predicted_indices),
+        'auroc': tf.metrics.auc(labels_one_hot, probabilities)
     }
 
 
@@ -216,11 +218,7 @@ def example_serving_input_fn(default_batch_size=None):
       shape=[default_batch_size],
       dtype=tf.string,
   )
-  feature_scalars = tf.parse_example(example_bytestring, feature_spec)
-  features = {
-      key: tf.expand_dims(tensor, -1)
-      for key, tensor in feature_scalars.iteritems()
-  }
+  features = tf.parse_example(example_bytestring, feature_spec)
   return features, {'example': example_bytestring}
 
 
@@ -233,16 +231,19 @@ def json_serving_input_fn(default_batch_size=None):
   inputs = {}
   for feat in CONTINUOUS_COLS:
     inputs[feat] = tf.placeholder(
-      shape=[default_batch_size], dtype=tf.float32)
+        shape=[default_batch_size], dtype=tf.float32)
 
   for feat, _ in CATEGORICAL_COLS:
     inputs[feat] = tf.placeholder(
-      shape=[default_batch_size], dtype=tf.string)
-  features = {
-      key: tf.expand_dims(tensor, -1)
-      for key, tensor in inputs.iteritems()
-  }
-  return features, inputs
+        shape=[default_batch_size], dtype=tf.string)
+  return inputs, inputs
+
+
+SERVING_INPUT_FUNCTIONS = {
+    JSON: json_serving_input_fn,
+    CSV: csv_serving_input_fn,
+    EXAMPLE: example_serving_input_fn
+}
 
 
 def parse_csv(rows_string_tensor):
@@ -252,8 +253,8 @@ def parse_csv(rows_string_tensor):
   # Example if the data is ['csv,line,1', 'csv,line,2', ..] to
   # [['csv,line,1'], ['csv,line,2']] which after parsing will result in a
   # tuple of tensors: [['csv'], ['csv']], [['line'], ['line']], [[1], [2]]
-  row_columns = tf.expand_dims(rows_string_tensor, -1)
-  columns = tf.decode_csv(row_columns, record_defaults=CSV_COLUMN_DEFAULTS)
+  columns = tf.decode_csv(
+      rows_string_tensor, record_defaults=CSV_COLUMN_DEFAULTS)
   features = dict(zip(CSV_COLUMNS, columns))
 
   # Remove unused columns
@@ -295,14 +296,24 @@ def input_fn(filenames,
   # Parse the CSV File
   features = parse_csv(rows)
 
+  # This operation builds up a buffer of parsed tensors, so that parsing
+  # input data doesn't block training
+  # If requested it will also shuffle
   if shuffle:
-    # This operation builds up a buffer of rows so that, even between batches,
-    # rows are fed to training in a suitably randomized order.
     features = tf.train.shuffle_batch(
         features,
         batch_size,
+        min_after_dequeue=2 * batch_size + 1,
         capacity=batch_size * 10,
-        min_after_dequeue=batch_size*2 + 1,
+        num_threads=multiprocessing.cpu_count(),
+        enqueue_many=True,
+        allow_smaller_final_batch=True
+    )
+  else:
+    features = tf.train.batch(
+        features,
+        batch_size,
+        capacity=batch_size * 10,
         num_threads=multiprocessing.cpu_count(),
         enqueue_many=True,
         allow_smaller_final_batch=True

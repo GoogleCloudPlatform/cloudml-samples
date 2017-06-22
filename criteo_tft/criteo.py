@@ -28,13 +28,15 @@ CATEGORICAL_COLUMN_NAMES = [
     'categorical-feature-{}'.format(column_idx) for column_idx in range(14, 40)]
 
 
-def make_tsv_coder(schema, mode=tf.contrib.learn.ModeKeys.TRAIN):
+def make_csv_coder(schema, mode=tf.contrib.learn.ModeKeys.TRAIN,
+                   delimiter='\t'):
   """Produces a CsvCoder (with tab as the delimiter) from a data schema.
 
   Args:
     schema: A tf.Transform `Schema` object.
     mode: tf.contrib.learn.ModeKeys specifying if the source is being used for
       train/eval or prediction.
+    delimiter: The delimiter used to construct the CsvCoder.
 
   Returns:
     A tf.Transform CsvCoder.
@@ -45,7 +47,7 @@ def make_tsv_coder(schema, mode=tf.contrib.learn.ModeKeys.TRAIN):
   for name in CATEGORICAL_COLUMN_NAMES:
     column_names.append(name)
 
-  return coders.CsvCoder(column_names, schema, delimiter='\t')
+  return coders.CsvCoder(column_names, schema, delimiter=delimiter)
 
 
 def make_input_schema(mode=tf.contrib.learn.ModeKeys.TRAIN):
