@@ -115,6 +115,7 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
     predict_data: file paths to input csv files.
     output_dir: file path to where to write all the output files.
     frequency_threshold: frequency threshold to use for categorical values.
+    delimiter: the column delimiter for the CSV format.
   """
   # 1) The schema can be either defined in-memory or read from a configuration
   #    file, in this case we are creating the schema in-memory.
