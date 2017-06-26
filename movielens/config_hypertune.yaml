@@ -1,0 +1,14 @@
+trainingInput:
+  scaleTier: CUSTOM
+  masterType: standard_gpu
+  hyperparameters:
+    goal: MAXIMIZE
+    hyperparameterMetricTag: recall_at_10
+    maxTrials: 10
+    maxParallelTrials: 5
+    params:
+      - parameterName: learning_rate
+        type: DOUBLE
+        minValue: 0.001
+        maxValue: 0.3
+        scaleType: UNIT_LOG_SCALE

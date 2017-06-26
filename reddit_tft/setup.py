@@ -16,7 +16,7 @@ import setuptools
 
 NAME = 'trainer'
 VERSION = '1.0'
-TENSORFLOW_TRANSFORM = 'tensorflow-transform==0.1.9'
+TENSORFLOW_TRANSFORM = 'tensorflow-transform==0.1.10'
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Sample for modeling Movielens dataset with deep model."""
+"""Sample for building recommendation models for Movielens dataset."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -216,7 +216,7 @@ def make_input_fn(mode,
       # to be item ids.
       target = feature_map[CANDIDATE_MOVIE_ID]
     else:
-      # We use rmse/mae for regression eval metrics, which requires the targets
+      # We use RMSE/MAE for regression eval metrics, which require the targets
       # to be the actual rating scores.
       target = feature_map[LABEL_RATING_SCORE]
     return feature_map, target
@@ -262,7 +262,7 @@ def model_builder(hparams):
 
   Args:
     hparams: A named tuple with the following fields correspond to hyparameters.
-      model_type - we support multiple types of models: MATRIX_FACTORIZATION and
+      model_type - we support 2 types of models: MATRIX_FACTORIZATION and
         DNN_SOFTMAX.
       eval_type - REGRESSION or RANKING.
       learning_rate - learning rate for gradient based optimizers.
@@ -427,7 +427,7 @@ def model_builder(hparams):
         name='query_movies_embedding')
 
     genres_embedding_weights = tf.get_variable(
-        'query_genres_embedding_weightss',
+        'query_genres_embedding_weights',
         [GENRE_VOCAB_SIZE, hparams.genre_embedding_dim],
         initializer=embedding_weight_initializer,
         regularizer=tf.contrib.layers.l2_regularizer(hparams.l2_weight_decay))
@@ -595,8 +595,11 @@ def create_evaluation_metrics(eval_type):
               metric_fn=functools.partial(
                   tf.contrib.metrics.streaming_sparse_recall_at_k, k=k)))
     for k in [1, 2, 3, 4, 5, 10, 20]:
-      eval_metrics['mean_average_precision_at_%d' % k] = functools.partial(
-          tf.contrib.metrics.streaming_sparse_average_precision_at_k, k=k)
+      eval_metrics['mean_average_precision_at_%d' % k] = (
+          tf.contrib.learn.MetricSpec(
+              metric_fn=functools.partial(
+                  tf.contrib.metrics.streaming_sparse_average_precision_at_k,
+                  k=k)))
     return eval_metrics
 
 

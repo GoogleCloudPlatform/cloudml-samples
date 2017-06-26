@@ -47,7 +47,7 @@ SELECT
   created_utc,
   COALESCE(subreddit, '') AS subreddit,
   COALESCE(author, '') AS author,
-  COALESCE(REGEXP_REPLACE(body, r'\n+|\x00+', ' '), '') AS comment_body,
+  COALESCE(REGEXP_REPLACE(body, r'\\n+|\\x00+', ' '), '') AS comment_body,
   '' AS comment_parent_body,
   1 AS toplevel
 FROM
@@ -63,8 +63,8 @@ SELECT
   A.created_utc AS created_utc,
   COALESCE(A.subreddit, '') AS subreddit,
   COALESCE(A.author, '') AS author,
-  COALESCE(REGEXP_REPLACE(A.body, r'\n+|\x00+', ' '), '') AS comment_body,
-  COALESCE(REGEXP_REPLACE(B.body, r'\n+|\x00+', ' '), '') AS comment_parent_body,
+  COALESCE(REGEXP_REPLACE(A.body, r'\\n+|\\x00+', ' '), '') AS comment_body,
+  COALESCE(REGEXP_REPLACE(B.body, r'\\n+|\\x00+', ' '), '') AS comment_parent_body,
   0 AS toplevel
 FROM
   (

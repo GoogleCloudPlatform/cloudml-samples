@@ -90,7 +90,7 @@ tmdbId is an identifier for movies used by <https://www.themoviedb.org>.
 
 # Sample Overview
 
-This sample consists of two parts: data pre-processing and model training.
+This sample consists of two parts: data pre-processing and model training steps.
 
 
 ## Pre-Processing Step
@@ -136,13 +136,21 @@ python preprocess.py --input_dir $LOCAL_TRAINING_INPUT_DIR \
 
 ### Cloud Run
 
-We can run the pre-processing code on Cloud as below:
+First set project, bucket, and data path:
+
+```
+PROJECT_ID=$(gcloud config list project --format "value(core.project)")
+BUCKET="gs://${PROJECT_ID}-ml"
+GCS_OUTPUT_DIR=${BUCKET}/${USER}/movielens
+```
+
+We can now run the pre-processing code on cloud as below:
 
 ```
 python preprocess.py --input_dir $GCS_TRAINING_INPUT_DIR \
-                     --output_dir $GCS_DATA_DIR \
+                     --output_dir $GCS_OUTPUT_DIR \
                      --percent_eval 20 \
-                     --project_id $GCP_PROJECT_ID \
+                     --project_id $PROJECT_ID \
                      --negative_sample_ratio 1 \
                      --negative_sample_label 0.0 \
                      --eval_type ranking \
@@ -173,83 +181,74 @@ The deep model uses a neural network to learn low-dimensional representations of
 functions. The output of the last hidden layers is fed into a softmax layer to
  make prediction on the most likely item to recommend. During training, the
 network parameters are learned to minimize a cross entropy loss between the
-predicted class and the heldout class (item).
+predicted class and the heldout class (item ID).
 
 
 ### Local Run
 
 ```
-python trainer/task.py \
---raw_metadata_path /tmp/preproc/raw_metadata \
---transform_savedmodel /tmp/preproc/transform_fn \
---train_data_paths '/tmp/preproc/features_train*' \
---eval_data_paths '/tmp/preproc/features_eval*' \
---output_path /tmp/preproc/model/dnn_softmax \
---train_steps 1000 \
---eval_steps 100 \
---model_type dnn_softmax \
---problem_type ranking \
---l2_weight_decay 0.001 \
---learning_rate 0.01
+python trainer/task.py --raw_metadata_path /tmp/preproc/raw_metadata \
+                       --transform_savedmodel /tmp/preproc/transform_fn \
+                       --train_data_paths '/tmp/preproc/features_train*' \
+                       --eval_data_paths '/tmp/preproc/features_eval*' \
+                       --output_path /tmp/preproc/model/dnn_softmax \
+                       --train_steps 1000 \
+                       --eval_steps 100 \
+                       --model_type dnn_softmax \
+                       --problem_type ranking \
+                       --l2_weight_decay 0.001 \
+                       --learning_rate 0.01
 ```
 
-### Cloud Run.
+### Cloud Run
 
-First set project, bucket, and data path:
-
-```
-PROJECT=$(gcloud config list project --format "value(core.project)")
-BUCKET="gs://${PROJECT}-ml"
-GCS_PATH=${BUCKET}/${USER_ID}/movielens_ranking
-```
-
-Example run for training a deep model:
+Example run to train a DNN softmax model:
 
 ```
 JOB_ID="movielens_deep_${USER}_$(date +%Y%m%d_%H%M%S)"
 gcloud ml-engine jobs submit training "$JOB_ID" \
-  --module-name trainer.task \
-  --package-path trainer \
-  --staging-bucket "$BUCKET" \
-  --region us-central1 \
-  --config config.yaml \
-  -- \
-  --raw_metadata_path "${GCS_PATH}/raw_metadata" \
-  --transform_savedmodel "${GCS_PATH}/transform_fn" \
-  --eval_data_paths "${GCS_PATH}/features_eval*.tfrecord.gz" \
-  --train_data_paths "${GCS_PATH}/features_train*.tfrecord.gz" \
-  --output_path "${GCS_PATH}/model/${JOB_ID}" \
-  --model_type dnn_softmax \
-  --problem_type ranking \
-  --l2_weight_decay 0.01 \
-  --learning_rate 0.05 \
-  --train_steps 1000000 \
-  --eval_steps 500 \
-  --use_ranking_candidate_movie_ids
+                      --module-name trainer.task \
+                      --package-path trainer \
+                      --staging-bucket "$BUCKET" \
+                      --region us-central1 \
+                      --config config.yaml \
+                      -- \
+                      --raw_metadata_path "${GCS_OUTPUT_DIR}/raw_metadata" \
+                      --transform_savedmodel "${GCS_OUTPUT_DIR}/transform_fn" \
+                      --eval_data_paths "${GCS_OUTPUT_DIR}/features_eval*.tfrecord.gz" \
+                      --train_data_paths "${GCS_OUTPUT_DIR}/features_train*.tfrecord.gz" \
+                      --output_path "${GCS_OUTPUT_DIR}/model/${JOB_ID}" \
+                      --model_type dnn_softmax \
+                      --problem_type ranking \
+                      --l2_weight_decay 0.01 \
+                      --learning_rate 0.05 \
+                      --train_steps 1000000 \
+                      --eval_steps 500 \
+                      --use_ranking_candidate_movie_ids
 ```
 
-Example run for training a matrix factorization model, using hyperparameter tuning:
+Example run to train a matrix factorization model, using hyperparameter tuning:
 
 ```
-JOB_ID="movielens_factorization_gpu_${USER}_$(date +%Y%m%d_%H%M%S)"
+JOB_ID="movielens_factorization_${USER}_$(date +%Y%m%d_%H%M%S)"
 gcloud ml-engine jobs submit training "$JOB_ID" \
-  --module-name trainer.task \
-  --package-path trainer \
-  --staging-bucket "$BUCKET" \
-  --region us-central1 \
-  --config config_hypertune.yaml \
-  -- \
-  --raw_metadata_path "${GCS_PATH}/raw_metadata" \
-  --transform_savedmodel "${GCS_PATH}/transform_fn" \
-  --eval_data_paths "${GCS_PATH}/features_eval*.tfrecord.gz" \
-  --train_data_paths "${GCS_PATH}/features_train*.tfrecord.gz" \
-  --output_path "${GCS_PATH}/model/${JOB_ID}" \
-  --model_type factorization \
-  --problem_type ranking \
-  --l2_weight_decay 0.01 \
-  --learning_rate 0.05 \
-  --train_steps 1000000 \
-  --eval_steps 500 \
-  --movie_embedding_dim 64 \
-  --use_ranking_candidate_movie_ids
+                      --module-name trainer.task \
+                      --package-path trainer \
+                      --staging-bucket "$BUCKET" \
+                      --region us-central1 \
+                      --config config_hypertune.yaml \
+                      -- \
+                      --raw_metadata_path "${GCS_OUTPUT_DIR}/raw_metadata" \
+                      --transform_savedmodel "${GCS_OUTPUT_DIR}/transform_fn" \
+                      --eval_data_paths "${GCS_OUTPUT_DIR}/features_eval*.tfrecord.gz" \
+                      --train_data_paths "${GCS_OUTPUT_DIR}/features_train*.tfrecord.gz" \
+                      --output_path "${GCS_OUTPUT_DIR}/model/${JOB_ID}" \
+                      --model_type matrix_factorization \
+                      --problem_type ranking \
+                      --l2_weight_decay 0.01 \
+                      --learning_rate 0.05 \
+                      --train_steps 1000000 \
+                      --eval_steps 500 \
+                      --movie_embedding_dim 64 \
+                      --use_ranking_candidate_movie_ids
 ```

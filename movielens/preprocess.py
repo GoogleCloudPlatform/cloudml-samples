@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Movielens Classification Sample Preprocessing Runner."""
+"""Movielens Sample Preprocessing Runner."""
 import argparse
 import datetime
 import os
@@ -342,8 +342,8 @@ def preprocess(pipeline, args):
   movies_data = (pipeline
                  | 'ReadMoviesData' >> beam.io.ReadFromText(
                      os.path.join(args.input_dir, 'movies.csv'),
-                     # TODO(b/35653662): Obviate the need for setting this.
                      coder=beam.coders.BytesCoder(),
+                     # TODO(b/35653662): Obviate the need for setting this.
                      skip_header_lines=args.skip_header_lines)
                  | 'DecodeMovies' >> beam.Map(movies_coder.decode)
                  | 'KeyByMovie' >> beam.Map(lambda x: (x['movie_id'], x)))
@@ -469,7 +469,6 @@ def main(argv=None):
             os.path.join(args.output_dir, 'tmp'),
         'project':
             args.project_id,
-        # TODO(b/35727492) Remove this.
         'max_num_workers':
             250,
         'setup_file':
