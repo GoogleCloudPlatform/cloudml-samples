@@ -160,13 +160,13 @@ python preprocess.py --input_dir $GCS_TRAINING_INPUT_DIR \
                      --cloud
 ```
 
-## Models
+## Model Training Step
 
 Model training step takes the pre-processed TFRecords and trains recommendation models such as matrix factorization and deep neural network model.
 
 The matrix factorization model associates each user u with a user-factor vector -- p_u -- and each item i with an item-factor vector -- q_i. The goal is to learn p_u and q_i that minimizes reconstruction error (L2 loss) between the true and the predicted ratings (as computed from p_u^T * q_i).
 
-This model can be used in `regression` mode or in `ranking` mode.
+For matrix factorization, `eval_type` can be `regression` or `ranking`.
 
 *  In regression mode, we predict the rating of a target movie. RMSE (root mean
    square error) and MAE (mean absolute error) metrics are used to compare model
@@ -181,21 +181,22 @@ The deep model uses a neural network to learn low-dimensional representations of
 functions. The output of the last hidden layers is fed into a softmax layer to
  make prediction on the most likely item to recommend. During training, the
 network parameters are learned to minimize a cross entropy loss between the
-predicted class and the heldout class (item ID).
+predicted class and the heldout class (item ID). Note that for DNN softmax model,
+`eval_type` must be set to `ranking`.
 
 
 ### Local Run
 
 ```
-python trainer/task.py --raw_metadata_path /tmp/preproc/raw_metadata \
-                       --transform_savedmodel /tmp/preproc/transform_fn \
-                       --train_data_paths '/tmp/preproc/features_train*' \
-                       --eval_data_paths '/tmp/preproc/features_eval*' \
-                       --output_path /tmp/preproc/model/dnn_softmax \
+python trainer/task.py --raw_metadata_path "$LOCAL_OUTPUT_DIR/raw_metadata" \
+                       --transform_savedmodel "$LOCAL_OUTPUT_DIR/transform_fn" \
+                       --train_data_paths "$LOCAL_OUTPUT_DIR/features_train*" \
+                       --eval_data_paths "$LOCAL_OUTPUT_DIR/features_eval*" \
+                       --output_path "$LOCAL_OUTPUT_DIR/model/dnn_softmax" \
                        --train_steps 1000 \
                        --eval_steps 100 \
                        --model_type dnn_softmax \
-                       --problem_type ranking \
+                       --eval_type ranking \
                        --l2_weight_decay 0.001 \
                        --learning_rate 0.01
 ```
@@ -219,7 +220,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
                       --train_data_paths "${GCS_OUTPUT_DIR}/features_train*.tfrecord.gz" \
                       --output_path "${GCS_OUTPUT_DIR}/model/${JOB_ID}" \
                       --model_type dnn_softmax \
-                      --problem_type ranking \
+                      --eval_type ranking \
                       --l2_weight_decay 0.01 \
                       --learning_rate 0.05 \
                       --train_steps 1000000 \
@@ -244,7 +245,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
                       --train_data_paths "${GCS_OUTPUT_DIR}/features_train*.tfrecord.gz" \
                       --output_path "${GCS_OUTPUT_DIR}/model/${JOB_ID}" \
                       --model_type matrix_factorization \
-                      --problem_type ranking \
+                      --eval_type ranking \
                       --l2_weight_decay 0.01 \
                       --learning_rate 0.05 \
                       --train_steps 1000000 \

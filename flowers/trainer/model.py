@@ -120,7 +120,6 @@ class Model(object):
   def add_final_training_ops(self,
                              embeddings,
                              all_labels_count,
-                             bottleneck_tensor_size,
                              hidden_layer_size=BOTTLENECK_TENSOR_SIZE / 4,
                              dropout_keep_prob=None):
     """Adds a new softmax and fully-connected layer for training.
@@ -133,7 +132,6 @@ class Model(object):
     Args:
       embeddings: The embedding (bottleneck) tensor.
       all_labels_count: The number of all labels including the default label.
-      bottleneck_tensor_size: The number of embeddings.
       hidden_layer_size: The size of the hidden_layer. Roughtly, 1/4 of the
                          bottleneck tensor size.
       dropout_keep_prob: the percentage of activation values that are retained.
@@ -142,15 +140,8 @@ class Model(object):
       logits: The logits tensor.
     """
     with tf.name_scope('input'):
-      bottleneck_input = tf.placeholder_with_default(
-          embeddings,
-          shape=[None, bottleneck_tensor_size],
-          name='ReshapeSqueezed')
-      bottleneck_with_no_gradient = tf.stop_gradient(bottleneck_input)
-
       with tf.name_scope('Wx_plus_b'):
-        hidden = layers.fully_connected(bottleneck_with_no_gradient,
-                                        hidden_layer_size)
+        hidden = layers.fully_connected(embeddings, hidden_layer_size)
         # We need a dropout when the size of the dataset is rather small.
         if dropout_keep_prob:
           hidden = tf.nn.dropout(hidden, dropout_keep_prob)
@@ -271,7 +262,6 @@ class Model(object):
       softmax, logits = self.add_final_training_ops(
           embeddings,
           all_labels_count,
-          BOTTLENECK_TENSOR_SIZE,
           dropout_keep_prob=self.dropout if is_training else None)
 
     # Prediction is the index of the label with the highest score. We are
