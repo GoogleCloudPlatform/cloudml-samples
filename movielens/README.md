@@ -14,6 +14,7 @@ models to recommend movies to users based on movie ratings data from [movielens 
     sample locally.
 *   Make sure you install
     [tensorflow-transform](https://github.com/tensorflow/transform).
+*   Make sure your Google Cloud project has sufficient quota.
 
 # Movielens Dataset
 
@@ -139,18 +140,21 @@ python preprocess.py --input_dir $LOCAL_TRAINING_INPUT_DIR \
 First set project, bucket, and data path:
 
 ```
-PROJECT_ID=$(gcloud config list project --format "value(core.project)")
-BUCKET="gs://${PROJECT_ID}-ml"
-GCS_OUTPUT_DIR=${BUCKET}/${USER}/movielens
+PROJECT=$(gcloud config list project --format "value(core.project)")
+BUCKET="gs://${PROJECT}-ml"
+
+GCS_PATH=${BUCKET}/${USER}/movielens
+GCS_TRAINING_INPUT_DIR=gs://path/to/my/input...
 ```
 
 We can now run the pre-processing code on cloud as below:
 
 ```
-python preprocess.py --input_dir $GCS_TRAINING_INPUT_DIR \
-                     --output_dir $GCS_OUTPUT_DIR \
+PREPROCESS_OUTPUT="${GCS_PATH}/movielens_$(date +%Y%m%d_%H%M%S)"
+python preprocess.py --input_dir "${GCS_TRAINING_INPUT_DIR}" \
+                     --output_dir "${PREPROCESS_OUTPUT}" \
                      --percent_eval 20 \
-                     --project_id $PROJECT_ID \
+                     --project_id ${PROJECT} \
                      --negative_sample_ratio 1 \
                      --negative_sample_label 0.0 \
                      --eval_type ranking \
@@ -206,7 +210,7 @@ python trainer/task.py --raw_metadata_path "$LOCAL_OUTPUT_DIR/raw_metadata" \
 Example run to train a DNN softmax model:
 
 ```
-JOB_ID="movielens_deep_${USER}_$(date +%Y%m%d_%H%M%S)"
+JOB_ID="movielens_deep_$(date +%Y%m%d_%H%M%S)"
 gcloud ml-engine jobs submit training "$JOB_ID" \
                       --module-name trainer.task \
                       --package-path trainer \
@@ -214,11 +218,11 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
                       --region us-central1 \
                       --config config.yaml \
                       -- \
-                      --raw_metadata_path "${GCS_OUTPUT_DIR}/raw_metadata" \
-                      --transform_savedmodel "${GCS_OUTPUT_DIR}/transform_fn" \
-                      --eval_data_paths "${GCS_OUTPUT_DIR}/features_eval*.tfrecord.gz" \
-                      --train_data_paths "${GCS_OUTPUT_DIR}/features_train*.tfrecord.gz" \
-                      --output_path "${GCS_OUTPUT_DIR}/model/${JOB_ID}" \
+                      --raw_metadata_path "${PREPROCESS_OUTPUT}/raw_metadata" \
+                      --transform_savedmodel "${PREPROCESS_OUTPUT}/transform_fn" \
+                      --eval_data_paths "${PREPROCESS_OUTPUT}/features_eval*.tfrecord.gz" \
+                      --train_data_paths "${PREPROCESS_OUTPUT}/features_train*.tfrecord.gz" \
+                      --output_path "${PREPROCESS_OUTPUT}/model/${JOB_ID}" \
                       --model_type dnn_softmax \
                       --eval_type ranking \
                       --l2_weight_decay 0.01 \
@@ -231,7 +235,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
 Example run to train a matrix factorization model, using hyperparameter tuning:
 
 ```
-JOB_ID="movielens_factorization_${USER}_$(date +%Y%m%d_%H%M%S)"
+JOB_ID="movielens_factorization_$(date +%Y%m%d_%H%M%S)"
 gcloud ml-engine jobs submit training "$JOB_ID" \
                       --module-name trainer.task \
                       --package-path trainer \
@@ -239,11 +243,11 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
                       --region us-central1 \
                       --config config_hypertune.yaml \
                       -- \
-                      --raw_metadata_path "${GCS_OUTPUT_DIR}/raw_metadata" \
-                      --transform_savedmodel "${GCS_OUTPUT_DIR}/transform_fn" \
-                      --eval_data_paths "${GCS_OUTPUT_DIR}/features_eval*.tfrecord.gz" \
-                      --train_data_paths "${GCS_OUTPUT_DIR}/features_train*.tfrecord.gz" \
-                      --output_path "${GCS_OUTPUT_DIR}/model/${JOB_ID}" \
+                      --raw_metadata_path "${PREPROCESS_OUTPUT}/raw_metadata" \
+                      --transform_savedmodel "${PREPROCESS_OUTPUT}/transform_fn" \
+                      --eval_data_paths "${PREPROCESS_OUTPUT}/features_eval*.tfrecord.gz" \
+                      --train_data_paths "${PREPROCESS_OUTPUT}/features_train*.tfrecord.gz" \
+                      --output_path "${GCS_PATH}/model/${JOB_ID}" \
                       --model_type matrix_factorization \
                       --eval_type ranking \
                       --l2_weight_decay 0.01 \

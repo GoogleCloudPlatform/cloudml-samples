@@ -15,11 +15,6 @@ a [Reddit Dataset](https://www.reddit.com/r/bigquery/wiki/datasets).
 *   Make sure you have installed
     [tensorflow-transform](https://github.com/tensorflow/transform).
 *   Make sure your Google Cloud project has sufficient quota.
-*   Tensorflow has a dependency on a particular version of protobuf. Please run
-    the following after installing tensorflow-transform:
-```
-pip install --upgrade protobuf==3.1.0
-```
 
 ## Sample Overview
 
@@ -77,11 +72,15 @@ PROJECT=$(gcloud config list project --format "value(core.project)")
 BUCKET="gs://${PROJECT}-ml"
 
 GCS_PATH="${BUCKET}/${USER}/reddit_comments"
+```
+
+```
+PREPROCESS_OUTPUT="${GCS_PATH}/reddit_$(date +%Y%m%d_%H%M%S)"
 python preprocess.py --training_data fh-bigquery.reddit_comments.2015_12 \
                      --eval_data fh-bigquery.reddit_comments.2016_01 \
                      --predict_data fh-bigquery.reddit_comments.2016_02 \
-                     --output_dir $GCS_PATH/preproc \
-                     --project_id $PROJECT \
+                     --output_dir "${PREPROCESS_OUTPUT}" \
+                     --project_id "${PROJECT}" \
                      --cloud
 ```
 
@@ -103,7 +102,7 @@ network model. The code can be run either locally or on cloud.
 To train the linear model (with crosses):
 
 ```
-JOB_ID="reddit_comments_linear_${USER}_$(date +%Y%m%d_%H%M%S)"
+JOB_ID="reddit_comments_linear_$(date +%Y%m%d_%H%M%S)"
 gcloud beta ml jobs submit training "$JOB_ID" \
   --module-name trainer.task \
   --package-path trainer \
@@ -115,18 +114,18 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --model_type linear \
   --l2_regularization 3000 \
   --eval_steps 1000 \
-  --output_path "${GCS_PATH}/output/${JOB_ID}" \
-  --raw_metadata_path "${GCS_PATH}/preproc/raw_metadata" \
-  --transformed_metadata_path "${GCS_PATH}/preproc/transformed_metadata" \
-  --transform_savedmodel "${GCS_PATH}/preproc/transform_fn" \
-  --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
-  --train_data_paths "${GCS_PATH}/preproc/features_train*"
+  --output_path "${GCS_PATH}/model/${JOB_ID}" \
+  --raw_metadata_path "${PREPROCESS_OUTPUT}/raw_metadata" \
+  --transformed_metadata_path "${PREPROCESS_OUTPUT}/transformed_metadata" \
+  --transform_savedmodel "${PREPROCESS_OUTPUT}/transform_fn" \
+  --eval_data_paths "${PREPROCESS_OUTPUT}/features_eval*" \
+  --train_data_paths "${PREPROCESS_OUTPUT}/features_train*"
 ```
 
 To train the deep model:
 
 ```
-JOB_ID="reddit_comments_deep_${USER}_$(date +%Y%m%d_%H%M%S)"
+JOB_ID="reddit_comments_deep_$(date +%Y%m%d_%H%M%S)"
 gcloud beta ml jobs submit training "$JOB_ID" \
   --module-name trainer.task \
   --package-path trainer \
@@ -139,10 +138,10 @@ gcloud beta ml jobs submit training "$JOB_ID" \
   --hidden_units 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 \
   --batch_size 512 \
   --eval_steps 250 \
-  --output_path "${GCS_PATH}/output/${JOB_ID}" \
-  --raw_metadata_path "${GCS_PATH}/preproc/raw_metadata" \
-  --transformed_metadata_path "${GCS_PATH}/preproc/transformed_metadata" \
-  --transform_savedmodel "${GCS_PATH}/preproc/transform_fn" \
-  --eval_data_paths "${GCS_PATH}/preproc/features_eval*" \
-  --train_data_paths "${GCS_PATH}/preproc/features_train*"
+  --output_path "${GCS_PATH}/model/${JOB_ID}" \
+  --raw_metadata_path "${PREPROCESS_OUTPUT}/raw_metadata" \
+  --transformed_metadata_path "${PREPROCESS_OUTPUT}/transformed_metadata" \
+  --transform_savedmodel "${PREPROCESS_OUTPUT}/transform_fn" \
+  --eval_data_paths "${PREPROCESS_OUTPUT}/features_eval*" \
+  --train_data_paths "${PREPROCESS_OUTPUT}/features_train*"
 ```
