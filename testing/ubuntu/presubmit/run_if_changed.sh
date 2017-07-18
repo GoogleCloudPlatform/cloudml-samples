@@ -2,9 +2,9 @@
 set -e
 
 ### Ignore this test if there are no relevant changes
-cd $CMLE_TEST_BASE_DIR
+cd ${CMLE_REPO_DIR}/${CMLE_TEST_BASE_DIR}
 
-if [[-z `git diff $KOKORO_GITHUB_PULL_REQUEST_COMMIT ${KOKORO_GITHUB_PULL_REQUEST_COMMIT}~1 $CMLE_TEST_BASE_DIR`]]
+if [[-z `git diff $KOKORO_GITHUB_PULL_REQUEST_COMMIT ${KOKORO_GITHUB_PULL_REQUEST_COMMIT}~1 $PWD`]]
 then
     echo "TEST IGNORED; directory not modified in pull request $KOKORO_GITHUB_PULL_REQUEST_NUMBER"
     exit 0
