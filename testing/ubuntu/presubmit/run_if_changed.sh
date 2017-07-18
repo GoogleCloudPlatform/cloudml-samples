@@ -3,7 +3,7 @@ set -e
 
 ### Ignore this test if there are no relevant changes
 
-if [-z `git diff $KOKORO_GITHUB_PULL_REQUEST_COMMIT $KOKORO_GITHUB_COMMIT "$(dirname "$PWD")"`];
+if [[-z `git diff $KOKORO_GITHUB_PULL_REQUEST_COMMIT ${KOKORO_GITHUB_PULL_REQUEST_COMMIT}~1 $CMLE_TEST_BASE_DIR`]]
 then
     echo "TEST IGNORED; directory not modified in pull request $KOKORO_GITHUB_PULL_REQUEST_NUMBER"
     exit 0
