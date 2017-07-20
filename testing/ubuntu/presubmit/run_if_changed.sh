@@ -34,4 +34,4 @@ gcloud config set project $CMLE_PROJECT_ID
 gcloud config set compute/region $CMLE_REGION
 
 
-$CMLE_TEST_SCRIPT
+./$CMLE_TEST_SCRIPT
