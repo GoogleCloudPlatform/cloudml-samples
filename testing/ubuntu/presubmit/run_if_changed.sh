@@ -4,15 +4,17 @@ set -e
 ### Ignore this test if there are no relevant changes
 cd ${CMLE_REPO_DIR}/${CMLE_TEST_BASE_DIR}
 
-if [ -z `git diff $KOKORO_GITHUB_PULL_REQUEST_COMMIT master $PWD` ]
+DIFF=`git diff master $KOKORO_GITHUB_PULL_REQUEST_COMMIT $PWD`
+
+echo "DIFF:\n $DIFF"
+
+if [ -z  $DIFF ]
 then
     echo "TEST IGNORED; directory not modified in pull request $KOKORO_GITHUB_PULL_REQUEST_NUMBER"
     exit 0
 fi
 
 ### Common setup
-
-
 sudo apt-get install python-dev python-pip
 
 curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
