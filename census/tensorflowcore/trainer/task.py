@@ -154,6 +154,7 @@ class EvaluationRunHook(tf.train.SessionRunHook):
 
 
 def run(target,
+        cluster_spec,
         is_chief,
         train_steps,
         eval_steps,
@@ -249,7 +250,7 @@ def run(target,
     #
     # See:
     # https://www.tensorflow.org/api_docs/python/tf/train/replica_device_setter
-    with tf.device(tf.train.replica_device_setter()):
+    with tf.device(tf.train.replica_device_setter(cluster=cluster_spec)):
 
       # Features and label tensors as read using filename queue
       features, labels = model.input_fn(
@@ -365,7 +366,7 @@ def dispatch(*args, **kwargs):
 
   # If TF_CONFIG is not available run local
   if not tf_config:
-    return run('', True, *args, **kwargs)
+    return run(target='', cluster_spec=None, is_chief=True, *args, **kwargs)
 
   tf_config_json = json.loads(tf_config)
 
@@ -375,7 +376,7 @@ def dispatch(*args, **kwargs):
 
   # If cluster information is empty run local
   if job_name is None or task_index is None:
-    return run('', True, *args, **kwargs)
+    return run(target='', cluster_spec=None, is_chief=True, *args, **kwargs)
 
   cluster_spec = tf.train.ClusterSpec(cluster)
   server = tf.train.Server(cluster_spec,
@@ -392,7 +393,8 @@ def dispatch(*args, **kwargs):
     server.join()
     return
   elif job_name in ['master', 'worker']:
-    return run(server.target, job_name == 'master', *args, **kwargs)
+    return run(server.target, cluster_spec, is_chief=(job_name == 'master'),
+               *args, **kwargs)
 
 
 if __name__ == "__main__":

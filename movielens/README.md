@@ -222,14 +222,14 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
                       --transform_savedmodel "${PREPROCESS_OUTPUT}/transform_fn" \
                       --eval_data_paths "${PREPROCESS_OUTPUT}/features_eval*.tfrecord.gz" \
                       --train_data_paths "${PREPROCESS_OUTPUT}/features_train*.tfrecord.gz" \
-                      --output_path "${PREPROCESS_OUTPUT}/model/${JOB_ID}" \
+                      --output_path "${GCS_PATH}/model/${JOB_ID}" \
                       --model_type dnn_softmax \
                       --eval_type ranking \
                       --l2_weight_decay 0.01 \
                       --learning_rate 0.05 \
-                      --train_steps 1000000 \
+                      --train_steps 500000 \
                       --eval_steps 500 \
-                      --use_ranking_candidate_movie_ids
+                      --top_k_infer 100
 ```
 
 Example run to train a matrix factorization model, using hyperparameter tuning:
@@ -252,8 +252,75 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
                       --eval_type ranking \
                       --l2_weight_decay 0.01 \
                       --learning_rate 0.05 \
-                      --train_steps 1000000 \
+                      --train_steps 500000 \
                       --eval_steps 500 \
                       --movie_embedding_dim 64 \
-                      --use_ranking_candidate_movie_ids
+                      --top_k_infer 100
 ```
+
+## Prediction step
+
+Once the model finishes training we can deploy it into CloudML Engine for prediction.
+
+First select a model from the export directory.
+
+```
+gsutil ls -l "${GCS_PATH}/model/${JOB_ID}/export/Servo/"
+
+# Set the model source from the output above up to the timestamp, for example
+# MODEL_SOURCE=gs://my-bucket/someuser/movielens/model/movielens_deep_20170704_134621/export/Servo/1499209413002
+MODEL_SOURCE=gs://path/to/my/model...
+```
+
+```
+# Deploy a model to CloudML Engine.
+gcloud ml-engine models create "movielens" --regions us-central1
+gcloud ml-engine versions create "v1" --model "movielens" --origin "${MODEL_SOURCE}"
+```
+
+Now we are ready to issue online prediction requests. Each instance in
+input file results in top_k_infer related movie ids along with their ranking
+scores (by default top_k_infer=100).
+
+Select a small JSON text file from the preprocessed data. Each of the
+entries on the file is a b64 encoded tf.Example record suitable for
+online prediction.
+
+```
+gsutil ls -lh "${PREPROCESS_OUTPUT}/features_predict-*txt"
+# Copy the file locally with the following command
+# gsutil cp ${PREPROCESS_OUTPUT}/features_predict-00476-of-00560.txt .
+gsutil cp gs://path/to/my/file... .
+```
+
+Run online prediction.
+
+```
+LOCAL_PREDICTION_FILE=path/to/local/file
+gcloud ml-engine predict --model "movielens" --version "v1" --json-instances "${LOCAL_PREDICTION_FILE}"
+```
+
+
+For batch prediction requests, we take the following steps.
+
+
+```
+# Select a small file gzipped TF Record file from the preprocessed data.
+gsutil ls -lh "${PREPROCESS_OUTPUT}/features_predict-*tfrecord.gz"
+
+# For example
+# GCS_PREDICTION_FILE=${PREPROCESS_OUTPUT}/features_predict-00543-of-00560.tfrecord.gz
+GCS_PREDICTION_FILE=gs://path/to/my/file...
+JOB_ID="movielens_batch_prediction_$(date +%Y%m%d_%H%M%S)"
+gcloud ml-engine jobs submit prediction "${JOB_ID}" \
+    --model "movielens" \
+    --input-paths "${GCS_PREDICTION_FILE}" \
+    --output-path "${GCS_PATH}/prediction/${JOB_ID}"\
+    --region us-central1 \
+    --data-format TF_RECORD_GZIP
+```
+
+Once the job is successfully submitted, you should be able to find it on the ML
+Engine section of the Google Cloud Platform [console](https://pantheon.corp.google.com/mlengine/jobs). Check the job status there.
+Eventually the resultant file(s) should be on the GCS location in the specified
+output path.

@@ -101,11 +101,13 @@ def parse_arguments(argv):
       help=('When computing ranking based metrics (precision@K, recall@K), only'
             'evaluate on examples where ratings are higher than'
             'eval_score_threshold.'))
+  # Only use this parameter when comparing across datasets.
   parser.add_argument(
       '--num_ranking_candidate_movie_ids',
       type=int,
       default=0,
-      help='Number of unrated movies to rank against the target movie.')
+      help=('(Advanced) Number of unrated movies to rank against the target '
+            'movie.'))
   parser.add_argument(
       '--skip_header_lines',
       type=int,
@@ -419,22 +421,28 @@ def preprocess(pipeline, args):
 
   eval_dataset_transformed, eval_metadata = eval_features_transformed
   eval_coder = tft_coders.ExampleProtoCoder(eval_metadata.schema)
-
-  prediction_schema = movielens.make_prediction_schema()
-  prediction_coder = tft_coders.ExampleProtoCoder(prediction_schema)
-
   _ = (eval_dataset_transformed
        | 'EncodeEval' >> beam.Map(eval_coder.encode)
        | 'ShuffleEval' >> _Shuffle()  # pylint: disable=no-value-for-parameter
        | 'WriteEval' >> beam.io.WriteToTFRecord(
            os.path.join(args.output_dir, 'features_eval'),
            file_name_suffix='.tfrecord.gz'))
-  _ = (eval_data
-       | 'EncodePrediction' >> beam.Map(prediction_coder.encode)
+
+  # Save files for online and batch prediction.
+  prediction_schema = movielens.make_prediction_schema()
+  prediction_coder = tft_coders.ExampleProtoCoder(prediction_schema)
+  prediction_data = (
+      eval_data
+      | 'EncodePrediction' >> beam.Map(prediction_coder.encode))
+  _ = (prediction_data
        | 'EncodeEvalAsB64Json' >> beam.Map(_encode_as_b64_json)
        | 'WritePredictDataAsText' >> beam.io.WriteToText(
-           os.path.join(args.output_dir, 'features_eval'),
+           os.path.join(args.output_dir, 'features_predict'),
            file_name_suffix='.txt'))
+  _ = (prediction_data
+       | 'WritePredictDataAsTfRecord' >> beam.io.WriteToTFRecord(
+           os.path.join(args.output_dir, 'features_predict'),
+           file_name_suffix='.tfrecord.gz'))
 
   _ = (transform_fn
        | 'WriteTransformFn' >> tft_beam_io.WriteTransformFn(args.output_dir))
