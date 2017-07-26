@@ -1,7 +1,7 @@
 Flowers: Image-based transfer learning on Cloud ML
 --------------------------------------------------
 
-[![Build Status](https://storage.googleapis.com/cloudml-samples-test-public/badges/flowers.png)]
+![Build Status](https://storage.googleapis.com/cloudml-samples-test-public/badges/flowers.png)
 
 To run this example, first follow instructions for [setting up your environment](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
 
