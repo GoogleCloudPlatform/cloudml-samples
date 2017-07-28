@@ -318,6 +318,7 @@ class BuildExampleFn(beam.DoFn):
       yield feature
 
 
+# TODO: Perhaps use Reshuffle (https://issues.apache.org/jira/browse/BEAM-1872)?
 @beam.ptransform_fn
 def _Shuffle(pcoll):  # pylint: disable=invalid-name
   """Shuffles a PCollection."""
@@ -397,36 +398,31 @@ def preprocess(pipeline, args):
            os.path.join(args.output_dir, 'raw_metadata'), pipeline))
 
   preprocessing_fn = movielens.make_preprocessing_fn()
-  train_features_transformed, transform_fn = (
-      (train_data, raw_metadata)
-      | 'AnalyzeAndTransform' >> tft.AnalyzeAndTransformDataset(
-          preprocessing_fn))
+  transform_fn = ((train_data, raw_metadata)
+                  | 'Analyze' >> tft.AnalyzeDataset(preprocessing_fn))
 
-  eval_features_transformed = (
-      ((eval_data, raw_metadata), transform_fn)
-      | 'TransformEval' >> tft.TransformDataset())
+  _ = (transform_fn
+       | 'WriteTransformFn' >> tft_beam_io.WriteTransformFn(args.output_dir))
 
-  train_dataset_transformed, train_metadata = train_features_transformed
-  training_coder = tft_coders.ExampleProtoCoder(train_metadata.schema)
-  _ = (train_dataset_transformed
-       | 'EncodeTraining' >> beam.Map(training_coder.encode)
-       | 'ShuffleTraining' >> (
-           _Shuffle())  # pylint: disable=no-value-for-parameter
-       | 'WriteTraining' >> beam.io.WriteToTFRecord(
-           os.path.join(args.output_dir, 'features_train'),
-           file_name_suffix='.tfrecord.gz'))
-  _ = (train_metadata
-       | 'WriteTransformedMetadata' >> tft_beam_io.WriteMetadata(
-           os.path.join(args.output_dir, 'transformed_metadata'), pipeline))
+  @beam.ptransform_fn
+  def TransformAndWrite(pcoll, path):  # pylint: disable=invalid-name
+    pcoll |= 'Shuffle' >> _Shuffle()  # pylint: disable=no-value-for-parameter
+    (dataset, metadata) = (((pcoll, raw_metadata), transform_fn)
+                           | 'Transform' >> tft.TransformDataset())
+    coder = tft_coders.ExampleProtoCoder(metadata.schema)
+    _ = (dataset
+         | 'SerializeExamples' >> beam.Map(coder.encode)
+         | 'WriteExamples' >> beam.io.WriteToTFRecord(
+             os.path.join(args.output_dir, path),
+             file_name_suffix='.tfrecord.gz'))
 
-  eval_dataset_transformed, eval_metadata = eval_features_transformed
-  eval_coder = tft_coders.ExampleProtoCoder(eval_metadata.schema)
-  _ = (eval_dataset_transformed
-       | 'EncodeEval' >> beam.Map(eval_coder.encode)
-       | 'ShuffleEval' >> _Shuffle()  # pylint: disable=no-value-for-parameter
-       | 'WriteEval' >> beam.io.WriteToTFRecord(
-           os.path.join(args.output_dir, 'features_eval'),
-           file_name_suffix='.tfrecord.gz'))
+  _ = train_data | 'TransformAndWriteTraining' >> TransformAndWrite(  # pylint: disable=no-value-for-parameter
+      'features_train')
+
+  _ = eval_data | 'TransformAndWriteEval' >> TransformAndWrite(  # pylint: disable=no-value-for-parameter
+      'features_eval')
+
+  # TODO(b/35300113) Remember to eventually also save the statistics.
 
   # Save files for online and batch prediction.
   prediction_schema = movielens.make_prediction_schema()
@@ -435,7 +431,7 @@ def preprocess(pipeline, args):
       eval_data
       | 'EncodePrediction' >> beam.Map(prediction_coder.encode))
   _ = (prediction_data
-       | 'EncodeEvalAsB64Json' >> beam.Map(_encode_as_b64_json)
+       | 'EncodePredictionAsB64Json' >> beam.Map(_encode_as_b64_json)
        | 'WritePredictDataAsText' >> beam.io.WriteToText(
            os.path.join(args.output_dir, 'features_predict'),
            file_name_suffix='.txt'))
@@ -443,9 +439,6 @@ def preprocess(pipeline, args):
        | 'WritePredictDataAsTfRecord' >> beam.io.WriteToTFRecord(
            os.path.join(args.output_dir, 'features_predict'),
            file_name_suffix='.tfrecord.gz'))
-
-  _ = (transform_fn
-       | 'WriteTransformFn' >> tft_beam_io.WriteTransformFn(args.output_dir))
 
 
 def _encode_as_b64_json(serialized_example):

@@ -226,7 +226,7 @@ def run(target,
       # model.model_fn returns the dict when EVAL mode
       metric_dict = model.model_fn(
           model.EVAL,
-          features,
+          features.copy(),
           labels,
           hidden_units=hidden_units,
           learning_rate=learning_rate
@@ -262,7 +262,7 @@ def run(target,
       # Returns the training graph and global step tensor
       train_op, global_step_tensor = model.model_fn(
           model.TRAIN,
-          features,
+          features.copy(),
           labels,
           hidden_units=hidden_units,
           learning_rate=learning_rate
@@ -319,7 +319,7 @@ def build_and_run_exports(latest, job_dir, serving_input_fn, hidden_units):
     features, inputs_dict = serving_input_fn()
     prediction_dict = model.model_fn(
         model.PREDICT,
-        features,
+        features.copy(),
         None,  # labels
         hidden_units=hidden_units,
         learning_rate=None  # learning_rate unused in prediction mode

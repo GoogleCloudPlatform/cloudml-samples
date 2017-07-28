@@ -107,6 +107,12 @@ def create_parser():
       '--train_data_paths', type=str, action='append', required=True)
   parser.add_argument(
       '--eval_data_paths', type=str, action='append', required=True)
+  parser.add_argument(
+      '--eval_only_summary_filename', type=str,
+      help=('If given, model will not be trained but only evaluated using '
+            'the data given in --eval_data_paths, the summary will be '
+            'written as json to the given filename. Parameters for models etc. '
+            'should be the same as those for training.'))
   parser.add_argument('--output_path', type=str, required=True)
   # The following three parameters are required for tf.Transform.
   parser.add_argument('--raw_metadata_path', type=str, required=True)
@@ -329,8 +335,19 @@ def main(argv=None):
   else:
     output_dir = args.output_path
 
-  learn_runner.run(experiment_fn=get_experiment_fn(args),
-                   output_dir=output_dir)
+  # Do only evaluation if instructed so, or call Experiment's run.
+  if args.eval_only_summary_filename:
+    experiment = get_experiment_fn(args)(output_dir)
+    # Note that evaluation here will appear as 'one_pass' in tensorboard.
+    results = experiment.evaluate(delay_secs=0)
+    # Converts numpy types to native types for json dumps.
+    json_out = json.dumps(
+        {key: value.tolist() for key, value in results.iteritems()})
+    with tf.Session():
+      tf.write_file(args.eval_only_summary_filename, json_out).run()
+  else:
+    learn_runner.run(experiment_fn=get_experiment_fn(args),
+                     output_dir=output_dir)
 
 
 if __name__ == '__main__':

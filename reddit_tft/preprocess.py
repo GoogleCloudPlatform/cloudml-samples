@@ -109,8 +109,7 @@ class _ReadData(beam.PTransform):
                   beam.io.BigQuerySource(query=query, use_standard_sql=True)))
 
 
-# TODO(b/33688220) should the transform functions take shuffle as an optional
-# argument instead?
+# TODO: Perhaps use Reshuffle (https://issues.apache.org/jira/browse/BEAM-1872)?
 @beam.ptransform_fn
 def _Shuffle(pcoll):  # pylint: disable=invalid-name
   return (pcoll
@@ -148,10 +147,8 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
            pipeline=pipeline))
 
   preprocessing_fn = reddit.make_preprocessing_fn(frequency_threshold)
-  (train_dataset, train_metadata), transform_fn = (
-      (train_data, input_metadata)
-      | 'AnalyzeAndTransform' >> tft.AnalyzeAndTransformDataset(
-          preprocessing_fn))
+  transform_fn = ((train_data, input_metadata)
+                  | 'Analyze' >> tft.AnalyzeDataset(preprocessing_fn))
 
   # WriteTransformFn writes transform_fn and metadata to fixed subdirectories
   # of output_dir, which are given by path_constants.TRANSFORM_FN_DIR and
@@ -159,31 +156,24 @@ def preprocess(pipeline, training_data, eval_data, predict_data, output_dir,
   _ = (transform_fn
        | 'WriteTransformFn' >> tft_beam_io.WriteTransformFn(output_dir))
 
-  (evaluate_dataset, evaluate_metadata) = (
-      ((evaluate_data, input_metadata), transform_fn)
-      | 'TransformEval' >> tft.TransformDataset())
+  @beam.ptransform_fn
+  def TransformAndWrite(pcoll, path):  # pylint: disable=invalid-name
+    pcoll |= 'Shuffle' >> _Shuffle()  # pylint: disable=no-value-for-parameter
+    (dataset, metadata) = (((pcoll, input_metadata), transform_fn)
+                           | 'Transform' >> tft.TransformDataset())
+    coder = coders.ExampleProtoCoder(metadata.schema)
+    _ = (dataset
+         | 'SerializeExamples' >> beam.Map(coder.encode)
+         | 'WriteExamples' >> beam.io.WriteToTFRecord(
+             os.path.join(output_dir, path), file_name_suffix='.tfrecord.gz'))
 
-  # pylint: disable=expression-not-assigned
-  # TODO(b/34231369) Remember to eventually also save the statistics and the
-  # metadata.
+  _ = train_data | 'TransformAndWriteTraining' >> TransformAndWrite(  # pylint: disable=no-value-for-parameter
+      path_constants.TRANSFORMED_TRAIN_DATA_FILE_PREFIX)
 
-  train_coder = coders.ExampleProtoCoder(train_metadata.schema)
-  (train_dataset
-   | 'SerializeTrainExamples' >> beam.Map(train_coder.encode)
-   | 'ShuffleTraining' >> _Shuffle()  # pylint: disable=no-value-for-parameter
-   | 'WriteTraining' >> beam.io.WriteToTFRecord(
-       os.path.join(output_dir,
-                    path_constants.TRANSFORMED_TRAIN_DATA_FILE_PREFIX),
-       file_name_suffix='.tfrecord.gz'))
+  _ = evaluate_data | 'TransformAndWriteEval' >> TransformAndWrite(  # pylint: disable=no-value-for-parameter
+      path_constants.TRANSFORMED_EVAL_DATA_FILE_PREFIX)
 
-  evaluate_coder = coders.ExampleProtoCoder(evaluate_metadata.schema)
-  (evaluate_dataset
-   | 'SerializeEvalExamples' >> beam.Map(evaluate_coder.encode)
-   | 'ShuffleEval' >> _Shuffle()  # pylint: disable=no-value-for-parameter
-   | 'WriteEval' >> beam.io.WriteToTFRecord(
-       os.path.join(output_dir,
-                    path_constants.TRANSFORMED_EVAL_DATA_FILE_PREFIX),
-       file_name_suffix='.tfrecord.gz'))
+  # TODO(b/35300113) Remember to eventually also save the statistics.
 
   if predict_data:
     predict_mode = tf.contrib.learn.ModeKeys.INFER

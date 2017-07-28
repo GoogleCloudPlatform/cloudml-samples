@@ -26,10 +26,6 @@ def make_standard_sql(table_name,
   This query takes ~60s, processing 13.3GB for reddit_comments.2015_12 table,
   and takes ~140s, processing 148GB for reddit_comments.2015_* table.
 
-  Note: The query strips out NULL bytes from the input stream. This is
-  because CsvCoder uses python 2.7's csv modules which have known issues when
-  handling NULL bytes in the file.
-
   Args:
     table_name: the table name to pull the data from.
       multiple tables can be chosen using *, like:
@@ -47,7 +43,7 @@ SELECT
   created_utc,
   COALESCE(subreddit, '') AS subreddit,
   COALESCE(author, '') AS author,
-  COALESCE(REGEXP_REPLACE(body, r'\\n+|\\x00+', ' '), '') AS comment_body,
+  COALESCE(REGEXP_REPLACE(body, r'\\n+', ' '), '') AS comment_body,
   '' AS comment_parent_body,
   1 AS toplevel
 FROM
@@ -63,8 +59,8 @@ SELECT
   A.created_utc AS created_utc,
   COALESCE(A.subreddit, '') AS subreddit,
   COALESCE(A.author, '') AS author,
-  COALESCE(REGEXP_REPLACE(A.body, r'\\n+|\\x00+', ' '), '') AS comment_body,
-  COALESCE(REGEXP_REPLACE(B.body, r'\\n+|\\x00+', ' '), '') AS comment_parent_body,
+  COALESCE(REGEXP_REPLACE(A.body, r'\\n+', ' '), '') AS comment_body,
+  COALESCE(REGEXP_REPLACE(B.body, r'\\n+', ' '), '') AS comment_parent_body,
   0 AS toplevel
 FROM
   (
