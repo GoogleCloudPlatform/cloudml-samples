@@ -26,6 +26,10 @@ import threading
 import model
 
 import tensorflow as tf
+
+from tensorflow.python.ops import variables
+from tensorflow.python.ops import lookup_ops
+from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.saved_model import signature_constants as sig_constants
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -300,6 +304,12 @@ def run(target,
                             hidden_units)
 
 
+def main_op():
+  init_local = variables.local_variables_initializer()
+  init_tables = lookup_ops.tables_initializer()
+  return control_flow_ops.group(init_local, init_tables)
+
+
 def build_and_run_exports(latest, job_dir, serving_input_fn, hidden_units):
   """Given the latest checkpoint file export the saved model.
 
@@ -349,7 +359,7 @@ def build_and_run_exports(latest, job_dir, serving_input_fn, hidden_units):
         signature_def_map={
             sig_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature_def
         },
-        legacy_init_op=tf.saved_model.main_op.main_op()
+        legacy_init_op=main_op()
     )
 
   exporter.save()
