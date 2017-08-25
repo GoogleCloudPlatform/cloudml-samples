@@ -16,7 +16,6 @@ the [criteo dataset](https://www.kaggle.com/c/criteo-display-ad-challenge).
     [tensorflow-transform](https://github.com/tensorflow/transform).
 *   Make sure your Google Cloud project has sufficient quota.
 
-
 ## Sample Overview
 
 This sample consists of two parts:

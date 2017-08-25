@@ -15,7 +15,7 @@
 
 """Implements the Keras Sequential model."""
 
-import multiprocessing
+import itertools
 
 import keras
 import pandas as pd
@@ -145,4 +145,5 @@ def generator_input(input_file, chunk_size):
     label = pd.get_dummies(input_data.pop(LABEL_COLUMN))
 
     input_data = to_numeric_features(input_data)
-    return ( (input_data.iloc[[index]], label.iloc[[index]]) for index in xrange(input_data.size) )
+    n_rows = input_data.shape[0]
+    return ( (input_data.iloc[[index % n_rows]], label.iloc[[index % n_rows]]) for index in itertools.count() )

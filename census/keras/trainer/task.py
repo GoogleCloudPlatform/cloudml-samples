@@ -21,7 +21,6 @@ import json
 import os
 
 import keras
-from keras import callbacks
 from keras.models import load_model
 import model
 
@@ -87,7 +86,7 @@ def dispatch(train_files,
     pass
 
   # Model checkpoint callback
-  checkpoint = callbacks.ModelCheckpoint(
+  checkpoint = keras.callbacks.ModelCheckpoint(
       os.path.join(job_dir, FILE_PATH),
       monitor='val_loss',
       verbose=1,
@@ -101,7 +100,7 @@ def dispatch(train_files,
                               job_dir)
 
   # Tensorboard logs callback
-  tblog = callbacks.TensorBoard(
+  tblog = keras.callbacks.TensorBoard(
       log_dir=os.path.join(job_dir, 'logs'),
       histogram_freq=0,
       write_graph=True,
