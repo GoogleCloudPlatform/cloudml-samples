@@ -3,6 +3,8 @@
 ### Common setup
 sudo apt-get install python-dev python-pip
 
+echo Y | gcloud components update --version 167.0.0
+
 curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
 
 sudo pip install virtualenv
