@@ -16,6 +16,10 @@ models to recommend movies to users based on movie ratings data from [movielens 
     [tensorflow-transform](https://github.com/tensorflow/transform).
 *   Make sure your Google Cloud project has sufficient quota.
 
+## Install Dependencies
+
+Install dependencies by running `pip install -r requirements.txt`
+
 # Movielens Dataset
 
 The movielens dataset is available in many different sizes but here we focus on
@@ -212,6 +216,7 @@ Example run to train a DNN softmax model:
 ```
 JOB_ID="movielens_deep_$(date +%Y%m%d_%H%M%S)"
 gcloud ml-engine jobs submit training "$JOB_ID" \
+                      --stream-logs \
                       --module-name trainer.task \
                       --package-path trainer \
                       --staging-bucket "$BUCKET" \
@@ -237,6 +242,7 @@ Example run to train a matrix factorization model, using hyperparameter tuning:
 ```
 JOB_ID="movielens_factorization_$(date +%Y%m%d_%H%M%S)"
 gcloud ml-engine jobs submit training "$JOB_ID" \
+                      --stream-logs \
                       --module-name trainer.task \
                       --package-path trainer \
                       --staging-bucket "$BUCKET" \

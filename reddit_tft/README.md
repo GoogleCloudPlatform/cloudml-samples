@@ -16,6 +16,10 @@ a [Reddit Dataset](https://www.reddit.com/r/bigquery/wiki/datasets).
     [tensorflow-transform](https://github.com/tensorflow/transform).
 *   Make sure your Google Cloud project has sufficient quota.
 
+## Install Dependencies
+
+Install dependencies by running `pip install -r requirements.txt`
+
 ## Sample Overview
 
 This sample consists of two parts:
@@ -103,13 +107,13 @@ To train the linear model (with crosses):
 
 ```
 JOB_ID="reddit_comments_linear_$(date +%Y%m%d_%H%M%S)"
-gcloud beta ml jobs submit training "$JOB_ID" \
+gcloud ml-engine jobs submit training "$JOB_ID" \
+  --stream-logs \
   --module-name trainer.task \
   --package-path trainer \
   --staging-bucket "$BUCKET" \
   --region us-central1 \
   --config config-small.yaml \
-  --async \
   -- \
   --model_type linear \
   --l2_regularization 3000 \
@@ -126,13 +130,13 @@ To train the deep model:
 
 ```
 JOB_ID="reddit_comments_deep_$(date +%Y%m%d_%H%M%S)"
-gcloud beta ml jobs submit training "$JOB_ID" \
+gcloud ml-engine jobs submit training "$JOB_ID" \
+  --stream-logs \
   --module-name trainer.task \
   --package-path trainer \
   --staging-bucket "$BUCKET" \
   --region us-central1 \
   --config config-small.yaml \
-  --async \
   -- \
   --model_type deep \
   --hidden_units 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 \
