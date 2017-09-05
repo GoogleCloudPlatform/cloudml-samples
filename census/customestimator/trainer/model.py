@@ -186,7 +186,7 @@ def generate_model_fn(embedding_size=8,
       # Use the lookup table to convert string labels to ints
       label_indices = table.lookup(labels)
       # Make labels a vector
-      label_indices_vector = tf.squeeze(label_indices)
+      label_indices_vector = tf.squeeze(label_indices, axis=[1])
 
       # global_step is necessary in eval to correctly load the step
       # of the checkpoint we are evaluating
