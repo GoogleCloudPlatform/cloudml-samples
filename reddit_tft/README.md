@@ -57,7 +57,7 @@ upon the size of input data.
 
 First you need to separate your input into training and evaluation sets. We can
 use one month's worth of data
-([December 2015](https://bigquery.cloud.google.com/table/fh-bigquery:reddit_comments.2015_01))
+([December 2015](https://bigquery.cloud.google.com/table/fh-bigquery:reddit_comments.2015_12))
 which amounts to approximately 20GB for training and we can then evaluate
 ourselves on a month's worth of "future" data
 ([January 2016](https://bigquery.cloud.google.com/table/fh-bigquery:reddit_comments.2016_01)).
