@@ -16,6 +16,10 @@ the [criteo dataset](https://www.kaggle.com/c/criteo-display-ad-challenge).
     [tensorflow-transform](https://github.com/tensorflow/transform).
 *   Make sure your Google Cloud project has sufficient quota.
 
+## Install Dependencies
+
+Install dependencies by running `pip install -r requirements.txt`
+
 ## Sample Overview
 
 This sample consists of two parts:
