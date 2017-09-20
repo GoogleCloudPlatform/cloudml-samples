@@ -85,7 +85,7 @@ auth_token = subprocess.check_output(
 models = subprocess.check_output([
     'curl', '-s', '-S', '-X', 'GET', '-H', 'Content-Type: application/json',
     '-H', 'Authorization: Bearer %s' % auth_token,
-    'https://ml.googleapis.com/v1beta1/projects/%s/models' % project_id])
+    'https://ml.googleapis.com/v1/projects/%s/models' % project_id])
 if '"error"' in models:
   print('ERROR: Unable to list Cloud ML models: %s' % models, file=sys.stderr)
   exit(1)
