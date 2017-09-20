@@ -1,0 +1,3 @@
+six==1.10.0
+tensorflow==1.3.0
+tensorflow-transform==0.1.10
