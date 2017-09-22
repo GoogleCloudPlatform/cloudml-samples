@@ -126,14 +126,13 @@ if __name__ == '__main__':
       required=True
   )
   parser.add_argument(
-      'reuse-job-dir',
+      '--reuse-job-dir',
+      action='store_true',
       default=False,
-      type=bool,
       help="""\
           Flag to decide if the model checkpoint should
           be re-used from the job-dir. If False then the
-          job-dir will be deleted
-          """
+          job-dir will be deleted"""
   )
 
   # Argument to turn on all logging
@@ -184,6 +183,12 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
+  # Set python level verbosity
+  tf.logging.set_verbosity(args.verbosity)
+  # Set C++ Graph Execution level verbosity
+  os.environ['TF_CPP_MIN_LOG_LEVEL'] = str(
+      tf.logging.__dict__[args.verbosity] / 10)
+
   # If job_dir_reuse is False then remove the job_dir if it exists
   if not args.reuse_job_dir:
     if tf.gfile.Exists(args.job_dir):
@@ -193,12 +198,6 @@ if __name__ == '__main__':
       tf.logging.info("No job_dir available to delete")
   else:
     tf.logging.info("Reusing job_dir {} if it exists".format(args.job_dir))
-
-  # Set python level verbosity
-  tf.logging.set_verbosity(args.verbosity)
-  # Set C++ Graph Execution level verbosity
-  os.environ['TF_CPP_MIN_LOG_LEVEL'] = str(
-      tf.logging.__dict__[args.verbosity] / 10)
 
   # Run the training job
   # learn_runner pulls configuration information from environment

@@ -90,6 +90,12 @@ export OUTPUT_DIR=census_output
 rm -rf $OUTPUT_DIR
 ```
 
+### Model reuse
+Its worth calling out that we have a `--reuse-job-dir` flag which is set to
+false by default. If you want to reuse the model checkpoint in the job_dir then
+simply add the flag `--reuse-job-dir` to enable reuse. Otherwise the code will
+remove the job_dir, if it exists, everytime you run the code in default setting.
+
 ```
 python trainer/task.py --train-files $TRAIN_FILE \
                        --eval-files $EVAL_FILE \

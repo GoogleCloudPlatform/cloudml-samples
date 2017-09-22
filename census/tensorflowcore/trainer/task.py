@@ -436,8 +436,8 @@ if __name__ == "__main__":
                       summaries. Use an existing directory to load a
                       trained model, or a new directory to retrain""")
   parser.add_argument('--reuse-job-dir',
+                      action='store_true',
                       default=False,
-                      type=bool,
                       help="""\
                       Flag to decide if the model checkpoint should
                       be re-used from the job-dir. If False then the
