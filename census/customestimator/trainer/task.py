@@ -134,6 +134,16 @@ if __name__ == '__main__':
       required=True
   )
   parser.add_argument(
+      'reuse-job-dir',
+      default=False,
+      type=bool,
+      help="""\
+          Flag to decide if the model checkpoint should
+          be re-used from the job-dir. If False then the
+          job-dir will be deleted
+          """
+  )
+  parser.add_argument(
       '--verbosity',
       choices=[
           'DEBUG',
@@ -183,6 +193,17 @@ if __name__ == '__main__':
   )
 
   args = parser.parse_args()
+
+  # If job_dir_reuse is False then remove the job_dir if it exists
+  if not args.reuse_job_dir:
+    if tf.gfile.Exists(args.job_dir):
+      tf.gfile.DeleteRecursively(args.job_dir)
+      tf.logging.info("Deleted job_dir {} to avoid re-use".format(args.job_dir))
+    else:
+      tf.logging.info("No job_dir available to delete")
+  else:
+    tf.logging.info("Reusing job_dir {} if it exists".format(args.job_dir))
+
 
   # Set python level verbosity
   tf.logging.set_verbosity(args.verbosity)
