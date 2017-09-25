@@ -163,6 +163,7 @@ def run(target,
         train_steps,
         eval_steps,
         job_dir,
+        reuse_job_dir,
         train_files,
         eval_files,
         train_batch_size,
@@ -200,6 +201,16 @@ def run(target,
     export_format (str): One of 'JSON', 'CSV' or 'EXAMPLE'. The input format
       for the outputed saved_model binary.
   """
+
+  # If job_dir_reuse is False then remove the job_dir if it exists
+  if not reuse_job_dir:
+    if tf.gfile.Exists(job_dir):
+      tf.gfile.DeleteRecursively(job_dir)
+      tf.logging.info("Deleted job_dir {} to avoid re-use".format(job_dir))
+    else:
+      tf.logging.info("No job_dir available to delete")
+  else:
+    tf.logging.info("Reusing job_dir {} if it exists".format(job_dir))
 
   # Calculate the number of hidden units
   hidden_units = [
@@ -424,6 +435,14 @@ if __name__ == "__main__":
                       GCS or local dir for checkpoints, exports, and
                       summaries. Use an existing directory to load a
                       trained model, or a new directory to retrain""")
+  parser.add_argument('--reuse-job-dir',
+                      action='store_true',
+                      default=False,
+                      help="""\
+                      Flag to decide if the model checkpoint should
+                      be re-used from the job-dir. If False then the
+                      job-dir will be deleted
+                      """)
   parser.add_argument('--train-steps',
                       type=int,
                       help='Maximum number of training steps to perform.')
