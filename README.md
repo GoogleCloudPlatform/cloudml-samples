@@ -6,9 +6,6 @@ This repository contains samples for usage of the Google Cloud Machine Learning 
 
 ## Cloud ML Engine
 
-### TPU (Contrib)
-* [Resnet TPU](tpu)
-
 ### CPU and GPU
 
 * [Keras Census](census/keras) - Keras single node model
@@ -19,6 +16,9 @@ This repository contains samples for usage of the Google Cloud Machine Learning 
 * [Flowers](flowers) - Image transfer learning using flowers dataset
 * [Movielens](movielens) - Personalized recommendation using movielens dataset
 * [Reddit](reddit_tft) - Wide and Deep model using reddit dataset
+
+### TPU (Contrib)
+* [Resnet TPU](tpu)
 
 - - -
 
