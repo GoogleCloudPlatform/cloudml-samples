@@ -6,6 +6,11 @@ This repository contains samples for usage of the Google Cloud Machine Learning 
 
 ## Cloud ML Engine
 
+### TPU (Contrib)
+* [Resnet TPU](tpu)
+
+### CPU and GPU
+
 * [Keras Census](census/keras) - Keras single node model
 * [Canned Estimator Census](census/estimator) - TensorFlow canned estimator model
 * [Custom Estimator Census](census/customestimator) - TensorFlow custom estimator model
