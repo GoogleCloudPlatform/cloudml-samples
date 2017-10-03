@@ -51,7 +51,8 @@ class ContinuousEval(keras.callbacks.Callback):
     self.steps = steps
 
   def on_epoch_begin(self, epoch, logs={}):
-    if epoch > 0 and epoch % self.eval_frequency == 0:
+    checkpoints = glob.glob(os.path.join(self.job_dir, 'checkpoint.*'))
+    if epoch > 0 and epoch % self.eval_frequency == 0 and len(checkpoints) > 1:
       checkpoints = glob.glob(os.path.join(self.job_dir, 'checkpoint.*'))
       checkpoints.sort()
       census_model = load_model(checkpoints[-1])
