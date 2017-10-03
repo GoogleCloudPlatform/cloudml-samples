@@ -92,7 +92,7 @@ gcloud ml-engine local predict --model-dir=$JOB_DIR/export \
 You can train the model on Cloud ML Engine
 
 ```
-gcloud ml-engine jobs submit training $JOB_NAME
+gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
                                     --runtime-version 1.2 \
                                     --job-dir $JOB_DIR \
