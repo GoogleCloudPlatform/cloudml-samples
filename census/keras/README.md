@@ -100,8 +100,8 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --module-name trainer.task \
                                     --region us-central1 \
                                     -- \
-                                    --train-files $TRAIN_FILE \
-                                    --eval-files $EVAL_FILE \
+                                    --train-files $GCS_TRAIN_FILE \
+                                    --eval-files $GCS_EVAL_FILE \
                                     --train-steps $TRAIN_STEPS
 ```
 
