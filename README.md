@@ -25,6 +25,4 @@ This repository contains samples for usage of the Google Cloud Machine Learning 
 
 ## Contrib
 
-Place to host samples which depend on the TensorFlow contrib API. 
-
-
+We welcome external sample contributions and TensorFlow contrib API samples to contrib. 
