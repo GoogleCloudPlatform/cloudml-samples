@@ -51,7 +51,7 @@ You can run the Keras code locally
 
 ```
 JOB_DIR=census_keras
-TRAIN_STEPS=200
+TRAIN_STEPS=2000
 python trainer/task.py --train-files $TRAIN_FILE \
                        --eval-files $EVAL_FILE \
                        --job-dir $JOB_DIR \

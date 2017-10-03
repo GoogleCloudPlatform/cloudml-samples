@@ -95,8 +95,7 @@ def to_savedmodel(model, export_path):
         sess=sess,
         tags=[tag_constants.SERVING],
         signature_def_map={
-            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature},
-        legacy_init_op=tf.saved_model.main_op.main_op()
+            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature}
     )
     builder.save()
 
