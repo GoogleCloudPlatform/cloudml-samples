@@ -12,7 +12,7 @@ This repository contains samples for usage of the Google Cloud Machine Learning 
 * [Low Level TF Census](census/tensorflowcore) - TensorFlow low level API model
 * [Criteo](criteo_tft) - Advertisement CTR prediction on Criteo dataset
 * [Flowers](flowers) - Image transfer learning using flowers dataset
-* [Movielens](movielens) - Persnalized recommendation using movielens dataset
+* [Movielens](movielens) - Personalized recommendation using movielens dataset
 * [Reddit](reddit_tft) - Wide and Deep model using reddit dataset
 
 - - -
