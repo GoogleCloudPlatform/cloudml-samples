@@ -23,6 +23,7 @@ import os
 import keras
 from keras.models import load_model
 import model
+from tensorflow.python.lib.io import file_io
 
 INPUT_SIZE = 55
 CLASS_SIZE = 2
@@ -52,16 +53,26 @@ class ContinuousEval(keras.callbacks.Callback):
 
   def on_epoch_begin(self, epoch, logs={}):
     if epoch > 0 and epoch % self.eval_frequency == 0:
-      checkpoints = glob.glob(os.path.join(self.job_dir, 'checkpoint.*'))
-      checkpoints.sort()
-      census_model = load_model(checkpoints[-1])
-      census_model = model.compile_model(census_model, self.learning_rate)
-      loss, acc = census_model.evaluate_generator(
-          model.generator_input(self.eval_files, chunk_size=CHUNK_SIZE),
-          steps=self.steps)
-      print '\nEvaluation epoch[{}] metrics[{:.2f}, {:.2f}] {}'.format(
-          epoch, loss, acc, census_model.metrics_names)
 
+      # Unhappy hack to work around h5py not being able to write to GCS.
+      # Force snapshots and saves to local filesystem, then copy them over to GCS.
+      model_path_glob = 'checkpoint.*'
+      if not self.job_dir.startswith("gs://"):
+        model_path_glob = os.path.join(self.job_dir, model_path_glob)
+      checkpoints = glob.glob(model_path_glob)
+      if len(checkpoints) > 0:
+        checkpoints.sort()
+        census_model = load_model(checkpoints[-1])
+        census_model = model.compile_model(census_model, self.learning_rate)
+        loss, acc = census_model.evaluate_generator(
+            model.generator_input(self.eval_files, chunk_size=CHUNK_SIZE),
+            steps=self.steps)
+        print '\nEvaluation epoch[{}] metrics[{:.2f}, {:.2f}] {}'.format(
+            epoch, loss, acc, census_model.metrics_names)
+        if self.job_dir.startswith("gs://"):
+          copy_file_to_gcs(self.job_dir, checkpoints[-1])
+      else:
+        print '\nEvaluation epoch[{}] (no checkpoints found)'.format(epoch)
 
 def dispatch(train_files,
              eval_files,
@@ -85,9 +96,15 @@ def dispatch(train_files,
   except:
     pass
 
+  # Unhappy hack to work around h5py not being able to write to GCS.
+  # Force snapshots and saves to local filesystem, then copy them over to GCS.
+  checkpoint_path = FILE_PATH
+  if not job_dir.startswith("gs://"):
+    checkpoint_path = os.path.join(job_dir, checkpoint_path)
+
   # Model checkpoint callback
   checkpoint = keras.callbacks.ModelCheckpoint(
-      os.path.join(job_dir, FILE_PATH),
+      checkpoint_path,
       monitor='val_loss',
       verbose=1,
       period=checkpoint_epochs,
@@ -106,13 +123,7 @@ def dispatch(train_files,
       write_graph=True,
       embeddings_freq=0)
 
-  #TODO: This needs to be fixed in h5py so that writes to GCS are possible
-  # Don't attempt to create checkpoints on Cloud ML Engine for now because
-  # h5py doesn't come with native GCS write capability
-  if job_dir.startswith('gs://'):
-    callbacks=[evaluation, tblog]
-  else:
-    callbacks=[checkpoint, evaluation, tblog]
+  callbacks=[checkpoint, evaluation, tblog]
 
   census_model.fit_generator(
       model.generator_input(train_files, chunk_size=CHUNK_SIZE),
@@ -120,10 +131,22 @@ def dispatch(train_files,
       epochs=num_epochs,
       callbacks=callbacks)
 
-  census_model.save(os.path.join(job_dir, CENSUS_MODEL))
+  # Unhappy hack to work around h5py not being able to write to GCS.
+  # Force snapshots and saves to local filesystem, then copy them over to GCS.
+  if job_dir.startswith("gs://"):
+    census_model.save(CENSUS_MODEL)
+    copy_file_to_gcs(job_dir, CENSUS_MODEL)
+  else:
+    census_model.save(os.path.join(job_dir, CENSUS_MODEL))
 
   # Convert the Keras model to TensorFlow SavedModel
   model.to_savedmodel(census_model, os.path.join(job_dir, 'export'))
+
+# h5py workaround: copy local models over to GCS if the job_dir is GCS.
+def copy_file_to_gcs(job_dir, file_path):
+  with file_io.FileIO(file_path, mode='r') as input_f:
+    with file_io.FileIO(os.path.join(job_dir, file_path), mode='w+') as output_f:
+        output_f.write(input_f.read())
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
