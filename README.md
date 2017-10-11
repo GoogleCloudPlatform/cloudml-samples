@@ -22,7 +22,7 @@ This repository contains samples for usage of the Google Cloud Machine Learning 
 
 - - -
 
-## External Samples
+## Other Google Samples
 
 * [Genomics Ancestry Inference](https://github.com/googlegenomics/cloudml-examples) - Genomics ancestry inference using 1000 Genomes dataset
 
