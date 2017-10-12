@@ -1,7 +1,0 @@
-# TODO(wenzhel): update to use scale tier 'BASIC_TPU' once it's available in
-# public API.
-trainingInput:
-  scaleTier: CUSTOM
-  masterType: standard
-  workerType: standard_tpu
-  workerCount: 1
