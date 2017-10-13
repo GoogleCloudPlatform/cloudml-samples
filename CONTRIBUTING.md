@@ -8,11 +8,11 @@ We are happy to see your enthusiasm. This table lists the criteria and how impor
 
 <br/>
 
-| Criteria        | Core         | Contrib  |
+| Criteria        | Core Samples        | Contrib Samples |
 | ------------- |:-------------:| -----:|
-| Include requirements.txt for dependencies     | Hard | Hard |
-| Include unit tests     | Hard | Soft |
-| Include integration tests     | Hard | Soft|
-| Include core TF API aka no contrib   | Hard | Soft |
-| Include README     | Hard | Soft |
-| Maintain version dependency updates     | Hard | Soft |
+| Include requirements.txt for dependencies     | Yes | Yes |
+| Include unit tests     | Yes | Optional |
+| Include integration tests     | Yes | Optional |
+| Include core TF API aka no contrib   | Yes | Optional |
+| Include README     | Yes | Optional |
+| Maintain version dependency updates     | Yes | Optional |
