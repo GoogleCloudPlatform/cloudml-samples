@@ -9,11 +9,6 @@ models to recommend movies to users based on movie ratings data from [movielens 
     [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up)
     before trying the sample. More documentation about Cloud ML is available
     [here](https://cloud.google.com/ml/docs/).
-*   Make sure you install
-    [Tensorflow](https://www.tensorflow.org/install/) if you want to run the
-    sample locally.
-*   Make sure you install
-    [tensorflow-transform](https://github.com/tensorflow/transform).
 *   Make sure your Google Cloud project has sufficient quota.
 
 ## Install Dependencies
