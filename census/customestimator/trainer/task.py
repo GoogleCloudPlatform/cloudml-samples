@@ -134,16 +134,6 @@ if __name__ == '__main__':
       required=True
   )
   parser.add_argument(
-      '--reuse-job-dir',
-      action='store_true',
-      default=False,
-      help="""\
-          Flag to decide if the model checkpoint should
-          be re-used from the job-dir. If False then the
-          job-dir will be deleted
-          """
-  )
-  parser.add_argument(
       '--verbosity',
       choices=[
           'DEBUG',
