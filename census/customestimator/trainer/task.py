@@ -205,6 +205,6 @@ if __name__ == '__main__':
               exports_to_keep=1
           )]
       ),
-      run_config=tf.contrib.learn.RunConfig(model_dir=job_dir),
+      run_config=tf.contrib.learn.RunConfig(model_dir=args.job_dir),
       hparams=hparam.HParams(**args.__dict__)
   )

@@ -196,6 +196,6 @@ if __name__ == '__main__':
               default_output_alternative_key=None,
           )]
       ),
-      run_config=run_config.RunConfig(model_dir=job_dir),
+      run_config=run_config.RunConfig(model_dir=args.job_dir),
       hparams=hparam.HParams(**args.__dict__)
   )
