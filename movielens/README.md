@@ -1,7 +1,7 @@
-# Movielens Sample
+# MovieLens Sample
 
-The Movielens sample demonstrates how to build personalized recommendation
-models to recommend movies to users based on movie ratings data from [movielens 20M dataset](https://grouplens.org/datasets/movielens/20m/).
+The MovieLens sample demonstrates how to build personalized recommendation
+models to recommend movies to users based on movie ratings data from [MovieLens 20M dataset](https://grouplens.org/datasets/movielens/20m/).
 
 # Prerequisites
 
@@ -15,11 +15,15 @@ models to recommend movies to users based on movie ratings data from [movielens 
 
 Install dependencies by running `pip install -r requirements.txt`
 
-# Movielens Dataset
+# MovieLens Dataset
 
-The movielens dataset is available in many different sizes but here we focus on
+The MovieLens dataset is available in many different sizes but here we focus on
 20M dataset which can be downloaded
 [here](https://grouplens.org/datasets/movielens/20m/).
+
+When running locally please use the 
+[MovieLens small](http://files.grouplens.org/datasets/movielens/ml-latest-small.zip) 
+dataset.
 
 ## Data Format
 
@@ -74,6 +78,7 @@ Genres are a pipe-separated list, and are selected from the following:
 * (no genres listed)
 
 ### Links
+
 Identifiers that can be used to link to other sources of movie data are
 contained in the file `links.csv`. Each line of this file after the header row
 represents one movie, and has the following format:
@@ -95,8 +100,9 @@ This sample consists of two parts: data pre-processing and model training steps.
 
 ## Pre-Processing Step
 
-The pre-processing step can be performed either locally or on cloud. We will read
-the above files and convert them into [TFRecords](https://www.tensorflow.org/api_guides/python/python_io)
+The pre-processing step can be performed either locally or on cloud _depending on the size of the input_.
+
+We will read the above files and convert them into [TFRecords](https://www.tensorflow.org/api_guides/python/python_io)
 format for training.
 
 *   Ratings are split into training and evaluation sets based on user_id. The
@@ -123,8 +129,10 @@ format for training.
 Run the code as below:
 
 ```
-python preprocess.py --input_dir $LOCAL_TRAINING_INPUT_DIR \
-                     --output_dir $LOCAL_OUTPUT_DIR \
+LOCAL_TRAINING_INPUT_DIR=/path/to/ml-latest-small/input...
+LOCAL_OUTPUT_DIR=/path/to/output
+python preprocess.py --input_dir "$LOCAL_TRAINING_INPUT_DIR" \
+                     --output_dir "$LOCAL_OUTPUT_DIR" \
                      --percent_eval 20 \
                      --negative_sample_ratio 1 \
                      --negative_sample_label 0.0 \
@@ -143,7 +151,7 @@ PROJECT=$(gcloud config list project --format "value(core.project)")
 BUCKET="gs://${PROJECT}-ml"
 
 GCS_PATH=${BUCKET}/${USER}/movielens
-GCS_TRAINING_INPUT_DIR=gs://path/to/my/input...
+GCS_TRAINING_INPUT_DIR=gs://path/to/ml-20m/input...
 ```
 
 We can now run the pre-processing code on cloud as below:
