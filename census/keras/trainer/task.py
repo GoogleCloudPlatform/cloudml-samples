@@ -20,7 +20,8 @@ import glob
 import json
 import os
 
-import keras
+import trainer.model as model
+
 from keras.models import load_model
 import model
 from tensorflow.python.lib.io import file_io

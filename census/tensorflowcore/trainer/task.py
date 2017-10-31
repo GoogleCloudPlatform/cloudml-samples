@@ -23,7 +23,7 @@ import json
 import os
 import threading
 
-import model
+import trainer.model as model
 
 import tensorflow as tf
 
