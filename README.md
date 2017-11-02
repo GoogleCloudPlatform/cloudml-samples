@@ -20,6 +20,9 @@ This repository contains samples for usage of the Google Cloud Machine Learning 
 ### TPU (Contrib)
 * [Resnet TPU](tpu)
 
+### TensorFlow on Cloud ML Engine
+* [Multi-GPU Cifar10](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10_estimator)
+
 - - -
 
 ## Google Samples
