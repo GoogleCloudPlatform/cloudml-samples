@@ -16,11 +16,10 @@ This repository contains samples for usage of the Google Cloud Machine Learning 
 * [Flowers](flowers) - Image transfer learning using flowers dataset
 * [Movielens](movielens) - Personalized recommendation using movielens dataset
 * [Reddit](reddit_tft) - Wide and Deep model using reddit dataset
+* [Cifar10](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10_estimator) - Multi-GPU Cifar10
 
 ### TPU (Contrib)
 * [Resnet TPU](tpu)
-
-### [Multi-GPU](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10_estimator) - Multi-GPU Cifar10
 
 - - -
 
