@@ -10,9 +10,9 @@ This repository contains samples for usage of the Google Cloud Machine Learning 
 
 * [Keras Census](census/keras) - Keras single node model
 * [Census](census) - TensorFlow census models
-  * [Canned Estimator Census](census/estimator) - TensorFlow canned estimator model
-  * [Custom Estimator Census](census/customestimator) - TensorFlow custom estimator model
-  * [Low Level TF Census](census/tensorflowcore) - TensorFlow low level API model
+  * [Canned Estimator](census/estimator) - TensorFlow canned estimator model
+  * [Custom Estimator](census/customestimator) - TensorFlow custom estimator model
+  * [Low Level TF](census/tensorflowcore) - TensorFlow low level API model
 * [Criteo](criteo_tft) - Advertisement CTR prediction on Criteo dataset
 * [Flowers](flowers) - Image transfer learning using flowers dataset
 * [Movielens](movielens) - Personalized recommendation using movielens dataset
