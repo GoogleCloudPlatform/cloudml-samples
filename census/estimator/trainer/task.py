@@ -203,18 +203,43 @@ if __name__ == '__main__':
   # learn_runner pulls configuration information from environment
   # variables using tf.learn.RunConfig and uses this configuration
   # to conditionally execute Experiment, or param server code
-  learn_runner.run(
-      generate_experiment_fn(
-          min_eval_frequency=args.min_eval_frequency,
-          eval_delay_secs=args.eval_delay_secs,
-          train_steps=args.train_steps,
-          eval_steps=args.eval_steps,
-          export_strategies=[saved_model_export_utils.make_export_strategy(
-              model.SERVING_FUNCTIONS[args.export_format],
-              exports_to_keep=1,
-              default_output_alternative_key=None,
-          )]
-      ),
-      run_config=run_config.RunConfig(model_dir=args.job_dir),
-      hparams=hparam.HParams(**args.__dict__)
+
+  hparams=hparam.HParams(**args.__dict__)
+  train_input = lambda: model.generate_input_fn(
+      hparams.train_files,
+      num_epochs=hparams.num_epochs,
+      batch_size=hparams.train_batch_size
   )
+
+    # Don't shuffle evaluation data
+  eval_input = lambda: model.generate_input_fn(
+      hparams.eval_files,
+      batch_size=hparams.eval_batch_size,
+      shuffle=False
+  )
+
+  train_spec = tf.estimator.TrainSpec(train_input,
+                                      max_steps=args.train_steps
+                                      )
+
+  eval_spec = tf.estimator.EvalSpec(eval_input,
+                                    steps=args.eval_steps,
+                                    name='census-eval'
+                                    )
+
+  run_config = tf.estimator.RunConfig()
+  run_config.replace(model_dir=args.job_dir)
+  estimator = model.build_estimator(
+      embedding_size=hparams.embedding_size,
+      # Construct layers sizes with exponetial decay
+      hidden_units=[
+          max(2, int(hparams.first_layer_size *
+                     hparams.scale_factor**i))
+          for i in range(hparams.num_layers)
+      ],
+      config=run_config
+  )
+
+  tf.estimator.train_and_evaluate(estimator,
+                                  train_spec,
+                                  eval_spec)
