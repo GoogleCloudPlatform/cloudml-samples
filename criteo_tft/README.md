@@ -174,7 +174,11 @@ follow the job's progress.
 
 #### How to run Tensorboard
 
-You can run Tensorboard by running the command ```tensorboard --logdir=$TRAINING_OUTPUT_PATH```
+You can run Tensorboard using the command
+
+```
+tensorboard --logdir=$TRAINING_OUTPUT_PATH
+```
 
 ### Cloud Run for the Small Dataset
 
