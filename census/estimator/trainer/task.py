@@ -29,13 +29,17 @@ def run_experiment(hparams):
                                       max_steps=hparams.train_steps
                                       )
 
+  exporter = tf.estimator.FinalExporter('census',
+          model.SERVING_FUNCTIONS[hparams.export_format])
   eval_spec = tf.estimator.EvalSpec(eval_input,
                                     steps=hparams.eval_steps,
+                                    exporters=[exporter],
                                     name='census-eval'
                                     )
 
   run_config = tf.estimator.RunConfig()
-  run_config.replace(model_dir=hparams.job_dir)
+  run_config = run_config.replace(model_dir=hparams.job_dir)
+  print('model dir {}'.format(run_config.model_dir))
   estimator = model.build_estimator(
       embedding_size=hparams.embedding_size,
       # Construct layers sizes with exponetial decay
