@@ -214,10 +214,6 @@ def example_serving_input_fn():
       example_bytestring,
       tf.feature_column.make_parse_example_spec(INPUT_COLUMNS)
   )
-  features = {
-      key: tf.expand_dims(tensor, -1)
-      for key, tensor in feature_scalars.iteritems()
-  }
   return tf.estimator.export.ServingInputReceiver(
       features,
       {'example_proto': example_bytestring}
@@ -230,11 +226,8 @@ def json_serving_input_fn():
   for feat in INPUT_COLUMNS:
     inputs[feat.name] = tf.placeholder(shape=[None], dtype=feat.dtype)
 
-  features = {
-      key: tf.expand_dims(tensor, -1)
-      for key, tensor in inputs.iteritems()
-  }
-  return tf.estimator.export.ServingInputReceiver(features, inputs)
+  receiver_tensor_alternatives = {'serving_default': }
+  return tf.estimator.export.ServingInputReceiver(inputs, inputs, receiver_tensor_alternatives)
 
 
 SERVING_FUNCTIONS = {
