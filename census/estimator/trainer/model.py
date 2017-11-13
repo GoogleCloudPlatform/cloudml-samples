@@ -204,7 +204,7 @@ def csv_serving_input_fn():
   features.pop(LABEL_COLUMN)
   return tf.contrib.learn.InputFnOps(features, None, {'csv_row': csv_row})
 
-# [START serving-function]
+
 def example_serving_input_fn():
   """Build the serving inputs."""
   example_bytestring = tf.placeholder(
@@ -224,8 +224,8 @@ def example_serving_input_fn():
       None,  # labels
       {'example_proto': example_bytestring}
   )
-# [END serving-function]
 
+# [START serving-function]
 def json_serving_input_fn():
   """Build the serving inputs."""
   inputs = {}
@@ -237,7 +237,7 @@ def json_serving_input_fn():
       for key, tensor in inputs.iteritems()
   }
   return tf.contrib.learn.InputFnOps(features, None, inputs)
-
+# [END serving-function]
 
 SERVING_FUNCTIONS = {
     'JSON': json_serving_input_fn,
