@@ -180,6 +180,7 @@ if __name__ == '__main__':
   os.environ['TF_CPP_MIN_LOG_LEVEL'] = str(
       tf.logging.__dict__[args.verbosity] / 10)
 
+  # [START learn-runner]
   # Run the training job
   # learn_runner pulls configuration information from environment
   # variables using tf.learn.RunConfig and uses this configuration
@@ -199,3 +200,4 @@ if __name__ == '__main__':
       run_config=run_config.RunConfig(model_dir=args.job_dir),
       hparams=hparam.HParams(**args.__dict__)
   )
+  # [END learn-runner]
