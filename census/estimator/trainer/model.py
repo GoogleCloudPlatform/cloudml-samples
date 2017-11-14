@@ -226,8 +226,7 @@ def json_serving_input_fn():
   for feat in INPUT_COLUMNS:
     inputs[feat.name] = tf.placeholder(shape=[None], dtype=feat.dtype)
 
-  receiver_tensor_alternatives = {'serving_default': }
-  return tf.estimator.export.ServingInputReceiver(inputs, inputs, receiver_tensor_alternatives)
+  return tf.estimator.export.ServingInputReceiver(inputs, inputs)
 
 
 SERVING_FUNCTIONS = {
