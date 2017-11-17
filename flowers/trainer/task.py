@@ -300,7 +300,7 @@ class Trainer(object):
     self.sv.summary_writer.flush()
 
 
-def dispatch():
+def run_main():
   model, argv = model_lib.create_model()
   run(model, argv)
 
@@ -539,4 +539,4 @@ def model_dir(output_path):
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO)
-  dispatch()
+  run_main()
