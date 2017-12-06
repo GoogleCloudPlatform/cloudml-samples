@@ -135,7 +135,7 @@ before `--` while training on the cloud and this is so that we can have
 different trial runs during Hyperparameter tuning.
 
 ```
-export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/jobs/job3
+export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/jobs
 export JOB_NAME=census
 export TRAIN_STEPS=1000
 ```
