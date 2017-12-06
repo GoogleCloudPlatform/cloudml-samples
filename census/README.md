@@ -143,7 +143,7 @@ export TRAIN_STEPS=1000
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
-                                    --runtime-version 1.2 \
+                                    --runtime-version 1.4 \
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
@@ -211,7 +211,7 @@ export TRAIN_STEPS=1000
 gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
                                     --scale-tier $SCALE_TIER \
-                                    --runtime-version 1.0 \
+                                    --runtime-version 1.4 \
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
@@ -243,7 +243,7 @@ export TRAIN_STEPS=1000
 gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
                                     --scale-tier $SCALE_TIER \
-                                    --runtime-version 1.2 \
+                                    --runtime-version 1.4 \
                                     --config $HPTUNING_CONFIG \
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
@@ -293,11 +293,11 @@ gsutil ls -r $GCS_JOB_DIR/export
  ```
 
 ```
-gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.2
+gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.4
 ```
 
 ### (Optional) Inspect the model binaries with the SavedModel CLI
-From version 1.2, TensorFlow ships with a CLI that allows you to inspect the signature of exported binary files. To do this run:
+TensorFlow ships with a CLI that allows you to inspect the signature of exported binary files. To do this run:
 
 ```
 saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def prediction
@@ -327,7 +327,7 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --version v1 \
     --data-format TEXT \
     --region us-central1 \
-    --runtime-version 1.2 \
+    --runtime-version 1.4 \
     --input-paths gs://cloudml-public/testdata/prediction/census.json \
     --output-path $GCS_JOB_DIR/predictions
 ```

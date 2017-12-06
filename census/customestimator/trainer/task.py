@@ -140,18 +140,6 @@ if __name__ == '__main__':
   )
   # Experiment arguments
   parser.add_argument(
-      '--eval-delay-secs',
-      help='How long to wait before running first evaluation',
-      default=10,
-      type=int
-  )
-  parser.add_argument(
-      '--min-eval-frequency',
-      help='Minimum number of training steps between evaluations',
-      default=1,
-      type=int
-  )
-  parser.add_argument(
       '--train-steps',
       help="""\
       Steps to run the training job for. If --num-epochs is not specified,
