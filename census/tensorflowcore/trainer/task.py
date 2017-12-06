@@ -25,6 +25,7 @@ import threading
 
 import trainer.model as model
 
+import six
 import tensorflow as tf
 
 from tensorflow.python.ops import variables
@@ -71,7 +72,7 @@ class EvaluationRunHook(tf.train.SessionRunHook):
       # Op that creates a Summary protocol buffer by merging summaries
       self._summary_op = tf.summary.merge([
           tf.summary.scalar(name, value_op)
-          for name, value_op in value_dict.iteritems()
+          for name, value_op in six.iteritems(value_dict)
       ])
 
       # Saver class add ops to save and restore
@@ -338,11 +339,11 @@ def build_and_run_exports(latest, job_dir, serving_input_fn, hidden_units):
 
     inputs_info = {
         name: tf.saved_model.utils.build_tensor_info(tensor)
-        for name, tensor in inputs_dict.iteritems()
+        for name, tensor in six.iteritems(inputs_dict)
     }
     output_info = {
         name: tf.saved_model.utils.build_tensor_info(tensor)
-        for name, tensor in prediction_dict.iteritems()
+        for name, tensor in six.iteritems(prediction_dict)
     }
     signature_def = tf.saved_model.signature_def_utils.build_signature_def(
         inputs=inputs_info,
