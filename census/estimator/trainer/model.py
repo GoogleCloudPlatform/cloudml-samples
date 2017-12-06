@@ -17,6 +17,7 @@ from __future__ import print_function
 
 import multiprocessing
 
+import six
 import tensorflow as tf
 
 
@@ -217,7 +218,7 @@ def example_serving_input_fn():
   )
   features = {
       key: tf.expand_dims(tensor, -1)
-      for key, tensor in feature_scalars.iteritems()
+      for key, tensor in six.iteritems(feature_scalars)
   }
   return tf.contrib.learn.InputFnOps(
       features,
@@ -234,7 +235,7 @@ def json_serving_input_fn():
 
   features = {
       key: tf.expand_dims(tensor, -1)
-      for key, tensor in inputs.iteritems()
+      for key, tensor in six.iteritems(inputs)
   }
   return tf.contrib.learn.InputFnOps(features, None, inputs)
 
