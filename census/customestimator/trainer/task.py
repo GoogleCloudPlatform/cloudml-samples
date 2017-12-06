@@ -28,13 +28,13 @@ def generate_experiment_fn(**experiment_args):
   def _experiment_fn(run_config, hparams):
     # num_epochs can control duration if train_steps isn't
     # passed to Experiment
-    train_input = lambda: model.generate_input_fn(
+    train_input = lambda: model.input_fn(
         hparams.train_files,
         num_epochs=hparams.num_epochs,
         batch_size=hparams.train_batch_size,
     )
     # Don't shuffle evaluation data
-    eval_input = lambda: model.generate_input_fn(
+    eval_input = lambda: model.input_fn(
         hparams.eval_files,
         batch_size=hparams.eval_batch_size,
         shuffle=False
