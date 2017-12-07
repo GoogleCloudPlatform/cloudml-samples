@@ -213,7 +213,7 @@ export TRAIN_STEPS=1000
 gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
                                     --scale-tier $SCALE_TIER \
-                                    --runtime-version 1.0 \
+                                    --runtime-version 1.2 \
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
