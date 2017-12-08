@@ -27,10 +27,7 @@ import os
 import tensorflow as tf
 from tensorflow.contrib import layers
 from tensorflow.core.protobuf import meta_graph_pb2
-from tensorflow.python.saved_model import builder
-from tensorflow.python.saved_model import signature_constants
-from tensorflow.python.saved_model import signature_def_utils
-from tensorflow.python.saved_model import tag_constants
+from tensorflow.contrib.saved_model.python.saved_model import utils as saved_model_util
 import util
 from util import override_if_not_in_args
 
@@ -142,7 +139,7 @@ class Model(object):
     logging.info('Exporting prediction graph to %s', output_dir)
     with tf.Session(graph=tf.Graph()) as sess:
       # Build and save prediction meta graph and trained variable values.
-      input_signatures, output_signatures = self.build_prediction_graph()
+      inputs, outputs = self.build_prediction_graph()
       # Remove this if once Tensorflow 0.12 is standard.
       try:
         init_op = tf.global_variables_initializer()
@@ -152,10 +149,12 @@ class Model(object):
       trained_saver = tf.train.Saver()
       trained_saver.restore(sess, last_checkpoint)
 
-      predict_signature_def = signature_def_utils.build_signature_def(
-          input_signatures, output_signatures,
-          signature_constants.PREDICT_METHOD_NAME)
       # Create a saver for writing SavedModel training checkpoints.
+      saved_model_util.simple_save(
+          sess,
+          os.path.join(output_dir, 'saved_model'),
+          inputs,
+          outputs)
       build = builder.SavedModelBuilder(
           os.path.join(output_dir, 'saved_model'))
       build.add_meta_graph_and_variables(
@@ -193,34 +192,11 @@ class Model(object):
     # Note that any output tensor marked with an alias with suffix _bytes, shall
     # be base64 encoded in the HTTP response. To get the binary value, it
     # should be base64 decoded.
-    input_signatures = {}
-    predict_input_tensor = meta_graph_pb2.TensorInfo()
-    predict_input_tensor.name = examples.name
-    predict_input_tensor.dtype = examples.dtype.as_datatype_enum
-    input_signatures['example_bytes'] = predict_input_tensor
-
-    tf.add_to_collection('inputs',
-                         json.dumps({
-                             'examples_bytes': examples.name
-                         }))
-    tf.add_to_collection('outputs',
-                         json.dumps({
-                             'key': keys.name,
-                             'prediction': prediction.name,
-                             'scores': softmax.name
-                         }))
-    output_signatures = {}
-    outputs_dict = {'key': keys.name,
-                    'prediction': prediction.name,
-                    'scores': softmax.name}
-    for key, val in outputs_dict.iteritems():
-      predict_output_tensor = meta_graph_pb2.TensorInfo()
-      predict_output_tensor.name = val
-      for placeholder in [keys, prediction, softmax]:
-        if placeholder.name == val:
-          predict_output_tensor.dtype = placeholder.dtype.as_datatype_enum
-      output_signatures[key] = predict_output_tensor
-    return input_signatures, output_signatures
+    inputs = {'example_bytes': examples}
+    outputs = {'key': keys,
+               'prediction': prediction,
+               'scores': softmax}
+    return inputs, outputs
 
   def format_metric_values(self, metric_values):
     """Formats metric values - used for logging purpose."""

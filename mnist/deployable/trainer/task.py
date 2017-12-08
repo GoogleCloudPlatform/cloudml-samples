@@ -36,10 +36,7 @@ import tensorflow as tf
 
 from tensorflow.examples.tutorials.mnist import mnist
 from tensorflow.python.lib.io import file_io
-from tensorflow.python.saved_model import builder
-from tensorflow.python.saved_model import signature_def_utils
-from tensorflow.python.saved_model import signature_constants
-from tensorflow.python.saved_model import tag_constants
+from tensorflow.contrib.saved_model.python.saved_model import utils as saved_model_util
 
 
 from tensorflow.core.protobuf import meta_graph_pb2
@@ -167,17 +164,6 @@ def run_training():
     # Generate placeholders for the images and labels and mark as input.
     placeholders = placeholder_inputs()
     keys_placeholder, images_placeholder, labels_placeholder = placeholders
-    inputs = {'key': keys_placeholder.name, 'image': images_placeholder.name}
-    input_signatures = {}
-    for key, val in inputs.iteritems():
-      predict_input_tensor = meta_graph_pb2.TensorInfo()
-      predict_input_tensor.name = val
-      for placeholder in placeholders:
-        if placeholder.name == val:
-          predict_input_tensor.dtype = placeholder.dtype.as_datatype_enum
-      input_signatures[key] = predict_input_tensor
-
-    tf.add_to_collection('inputs', json.dumps(inputs))
 
     # Build a Graph that computes predictions from the inference model.
     logits = mnist.inference(images_placeholder, FLAGS.hidden1, FLAGS.hidden2)
@@ -193,21 +179,6 @@ def run_training():
     # over all possible digits.
     prediction = tf.argmax(logits, 1)
     scores = tf.nn.softmax(logits)
-
-    # Mark the outputs.
-    outputs = {'key': keys.name,
-               'prediction': prediction.name,
-               'scores': scores.name}
-    output_signatures = {}
-    for key, val in outputs.iteritems():
-      predict_output_tensor = meta_graph_pb2.TensorInfo()
-      predict_output_tensor.name = val
-      for placeholder in [keys, prediction, scores]:
-        if placeholder.name == val:
-          predict_output_tensor.dtype = placeholder.dtype.as_datatype_enum
-      output_signatures[key] = predict_output_tensor
-
-    tf.add_to_collection('outputs', json.dumps(outputs))
 
     # Add to the Graph the Ops that calculate and apply gradients.
     train_op = mnist.training(loss, FLAGS.learning_rate)
@@ -299,23 +270,16 @@ def run_training():
 
     file_io.create_dir(FLAGS.model_dir)
 
-    predict_signature_def = signature_def_utils.build_signature_def(
-        input_signatures, output_signatures,
-        signature_constants.PREDICT_METHOD_NAME)
-
     # Create a saver for writing SavedModel training checkpoints.
-    build = builder.SavedModelBuilder(
-        os.path.join(FLAGS.model_dir, 'saved_model'))
+    saved_model_util.simple_save(
+        sess,
+        os.path.join(FLAGS.model_dir, 'saved_model'),
+        inputs={'key': keys_placeholder, 'image': images_placeholder},
+        outputs={'key': keys,
+                 'prediction': prediction,
+                 'scores': scores})
     logging.debug('Saved model path %s', os.path.join(FLAGS.model_dir,
                                                       'saved_model'))
-    build.add_meta_graph_and_variables(
-        sess, [tag_constants.SERVING],
-        signature_def_map={
-            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
-                predict_signature_def
-        },
-        assets_collection=tf.get_collection(tf.GraphKeys.ASSET_FILEPATHS))
-    build.save()
 
 
 def main(_):

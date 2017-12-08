@@ -1,4 +1,5 @@
 # Copyright 2017 The TensorFlow Authors. All Rights Reserved.
+
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,11 +28,7 @@ from keras.backend import relu, sigmoid
 from urlparse import urlparse
 
 import tensorflow as tf
-from tensorflow.python.saved_model import builder as saved_model_builder
-from tensorflow.python.saved_model import utils
-from tensorflow.python.saved_model import tag_constants, signature_constants
-from tensorflow.python.saved_model.signature_def_utils_impl import build_signature_def, predict_signature_def
-from tensorflow.contrib.session_bundle import exporter
+from tensorflow.contrib.saved_model.python.saved_model import utils as saved_model_util
 
 # csv columns in the input file
 CSV_COLUMNS = ('age', 'workclass', 'fnlwgt', 'education', 'education_num',
@@ -84,20 +81,12 @@ def compile_model(model, learning_rate):
 
 def to_savedmodel(model, export_path):
   """Convert the Keras HDF5 model into TensorFlow SavedModel."""
-
-  builder = saved_model_builder.SavedModelBuilder(export_path)
-
-  signature = predict_signature_def(inputs={'input': model.inputs[0]},
-                                    outputs={'income': model.outputs[0]})
-
   with K.get_session() as sess:
-    builder.add_meta_graph_and_variables(
-        sess=sess,
-        tags=[tag_constants.SERVING],
-        signature_def_map={
-            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature}
-    )
-    builder.save()
+    saved_model_util.simple_save(
+        sess,
+        export_path,
+        inputs={'input': model.inputs[0]},
+        outputs={'income': model.outputs[0]})
 
 
 def to_numeric_features(features):

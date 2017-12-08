@@ -21,11 +21,8 @@ import tensorflow as tf
 from tensorflow.contrib import layers
 from tensorflow.contrib.slim.python.slim.nets import inception_v3 as inception
 
-from tensorflow.python.saved_model import builder as saved_model_builder
-from tensorflow.python.saved_model import signature_constants
-from tensorflow.python.saved_model import signature_def_utils
-from tensorflow.python.saved_model import tag_constants
 from tensorflow.python.saved_model import utils as saved_model_utils
+from tensorflow.contrib.saved_model.python.saved_model import utils as contrib_util
 
 import util
 from util import override_if_not_in_args
@@ -47,30 +44,6 @@ class GraphMod():
   TRAIN = 1
   EVALUATE = 2
   PREDICT = 3
-
-
-def build_signature(inputs, outputs):
-  """Build the signature.
-
-  Not using predic_signature_def in saved_model because it is replacing the
-  tensor name, b/35900497.
-
-  Args:
-    inputs: a dictionary of tensor name to tensor
-    outputs: a dictionary of tensor name to tensor
-  Returns:
-    The signature, a SignatureDef proto.
-  """
-  signature_inputs = {key: saved_model_utils.build_tensor_info(tensor)
-                      for key, tensor in inputs.items()}
-  signature_outputs = {key: saved_model_utils.build_tensor_info(tensor)
-                       for key, tensor in outputs.items()}
-
-  signature_def = signature_def_utils.build_signature_def(
-      signature_inputs, signature_outputs,
-      signature_constants.PREDICT_METHOD_NAME)
-
-  return signature_def
 
 
 def create_model():
@@ -376,16 +349,12 @@ class Model(object):
       sess.run(init_op)
       self.restore_from_checkpoint(sess, self.inception_checkpoint_file,
                                    last_checkpoint)
-      signature_def = build_signature(inputs=inputs, outputs=outputs)
-      signature_def_map = {
-          signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature_def
-      }
       builder = saved_model_builder.SavedModelBuilder(output_dir)
-      builder.add_meta_graph_and_variables(
+      contrib_util.simple_save(
           sess,
-          tags=[tag_constants.SERVING],
-          signature_def_map=signature_def_map)
-      builder.save()
+          output_dir,
+          inputs,
+          outputs)
 
   def format_metric_values(self, metric_values):
     """Formats metric values - used for logging purpose."""
