@@ -23,7 +23,7 @@ import pandas as pd
 from keras import backend as K
 from keras import layers, models
 from keras.utils import np_utils
-from keras.backend import relu, sigmoid
+from keras.backend import relu, softmax
 
 from urlparse import urlparse
 
@@ -69,13 +69,14 @@ def model_fn(input_dim,
     input_dim = units
 
   # Add a dense final layer with sigmoid function
-  model.add(layers.Dense(labels_dim, activation=sigmoid))
+  model.add(layers.Dense(labels_dim, activation=softmax))
   compile_model(model, learning_rate)
   return model
 
 def compile_model(model, learning_rate):
   model.compile(loss='categorical_crossentropy',
                 optimizer=keras.optimizers.SGD(lr=learning_rate),
+		#optimizer='adam',
                 metrics=['accuracy'])
   return model
 
