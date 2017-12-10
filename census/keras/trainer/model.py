@@ -89,7 +89,7 @@ def to_savedmodel(model, export_path):
         outputs={'income': model.outputs[0]})
 
 
-def to_numeric_features(features):
+def to_numeric_features(features,feature_cols=None):
   """Convert the pandas input features to numeric values.
      Args:
         features: Input features in the data
@@ -107,6 +107,11 @@ def to_numeric_features(features):
           capital_loss (continuous)
           hours_per_week (continuous)
           native_country (categorical)
+         
+        feature_cols: Column list of converted features to be returned. 
+            Optional, may be used to ensure schema consistency over multiple executions.
+            
+        
   """
 
   for col in CATEGORICAL_COLS:
@@ -117,21 +122,33 @@ def to_numeric_features(features):
   for col in UNUSED_COLUMNS:
     features.pop(col)
 
+  #Re-index dataframe (in case categories list changed from the previous dataset)
+  if feature_cols is not None:
+      features = features.T.reindex(feature_cols).T.fillna(0)
+
   return features
 
 def generator_input(input_file, chunk_size):
   """Generator function to produce features and labels
      needed by keras fit_generator.
   """
-  input_reader = pd.read_csv(tf.gfile.Open(input_file[0]),
-                           names=CSV_COLUMNS,
-                           chunksize=chunk_size,
-                           na_values=" ?")
 
-  for input_data in input_reader:
-    input_data = input_data.dropna()
-    label = pd.get_dummies(input_data.pop(LABEL_COLUMN))
+  feature_cols=None  
+  while True:
+      input_reader = pd.read_csv(tf.gfile.Open(input_file[0]),
+                               names=CSV_COLUMNS,
+                               chunksize=chunk_size,
+                               na_values=" ?")
+  
+      for input_data in input_reader:
+        input_data = input_data.dropna()
+        label = pd.get_dummies(input_data.pop(LABEL_COLUMN))
+    
+        input_data = to_numeric_features(input_data,feature_cols)
+        
+        #Retains schema for next chunk processing
+        if feature_cols is None:
+            feature_cols=input_data.columns
 
-    input_data = to_numeric_features(input_data)
-    n_rows = input_data.shape[0]
-    return ( (input_data.iloc[[index % n_rows]], label.iloc[[index % n_rows]]) for index in itertools.count() )
+        for index in xrange(input_data.shape[0]):
+            yield (input_data.iloc[[index]], label.iloc[[index]])
