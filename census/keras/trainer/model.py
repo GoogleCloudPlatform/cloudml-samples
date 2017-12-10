@@ -58,7 +58,7 @@ UNUSED_COLUMNS = set(CSV_COLUMNS) - set(
 def model_fn(input_dim,
              labels_dim,
              hidden_units=[100, 70, 50, 20],
-             learning_rate=0.1):
+             learning_rate=0.001):
   """Create a Keras Sequential model with layers."""
   model = models.Sequential()
 
@@ -75,8 +75,7 @@ def model_fn(input_dim,
 
 def compile_model(model, learning_rate):
   model.compile(loss='categorical_crossentropy',
-                optimizer=keras.optimizers.SGD(lr=learning_rate),
-		#optimizer='adam',
+                optimizer=keras.optimizers.RMSprop(lr=learning_rate),
                 metrics=['accuracy'])
   return model
 
