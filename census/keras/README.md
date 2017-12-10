@@ -94,7 +94,7 @@ You can train the model on Cloud ML Engine
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
-                                    --runtime-version 1.2 \
+                                    --runtime-version 1.4 \
                                     --job-dir $JOB_DIR \
                                     --package-path trainer \
                                     --module-name trainer.task \
