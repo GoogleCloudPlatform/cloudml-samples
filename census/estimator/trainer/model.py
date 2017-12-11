@@ -117,7 +117,7 @@ def build_estimator(config, embedding_size=8, hidden_units=None):
   (gender, race, education, marital_status, relationship,
    workclass, occupation, native_country, age,
    education_num, capital_gain, capital_loss, hours_per_week) = INPUT_COLUMNS
-  """Build an estimator."""
+  # Build an estimator.
 
   # Reused Transformations.
   # Continuous columns can be converted to categorical via bucketization
