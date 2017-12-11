@@ -219,7 +219,7 @@ def example_serving_input_fn():
       {'example_proto': example_bytestring}
   )
 
-
+# [START serving-function]
 def json_serving_input_fn():
   """Build the serving inputs."""
   inputs = {}
@@ -227,7 +227,7 @@ def json_serving_input_fn():
     inputs[feat.name] = tf.placeholder(shape=[None], dtype=feat.dtype)
 
   return tf.estimator.export.ServingInputReceiver(inputs, inputs)
-
+# [END serving-function]
 
 SERVING_FUNCTIONS = {
     'JSON': json_serving_input_fn,
