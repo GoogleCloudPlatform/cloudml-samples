@@ -16,8 +16,6 @@
 
 """Implements the Keras Sequential model."""
 
-import itertools
-
 import keras
 import pandas as pd
 from keras import backend as K
@@ -76,7 +74,6 @@ def model_fn(input_dim,
 def compile_model(model, learning_rate):
   model.compile(loss='categorical_crossentropy',
                 optimizer=keras.optimizers.RMSprop(lr=learning_rate),
-                #optimizer='adam',
                 metrics=['accuracy'])
   return model
 
