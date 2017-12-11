@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CODE_DIR=$1
-cd $CODE_DIR
+#[TODO] Hardcoded for now, fix when this works
+cd estimator
 
 GCS_TRAIN_FILE=gs://cloudml-public/census/data/adult.data.csv
 GCS_EVAL_FILE=gs://cloudml-public/census/data/adult.test.csv
