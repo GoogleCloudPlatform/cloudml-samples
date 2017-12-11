@@ -76,6 +76,7 @@ def model_fn(input_dim,
 def compile_model(model, learning_rate):
   model.compile(loss='categorical_crossentropy',
                 optimizer=keras.optimizers.RMSprop(lr=learning_rate),
+                #optimizer='adam',
                 metrics=['accuracy'])
   return model
 
@@ -128,7 +129,7 @@ def to_numeric_features(features,feature_cols=None):
 
   return features
 
-def generator_input(input_file, chunk_size):
+def generator_input(input_file, chunk_size,batch_size=64):
   """Generator function to produce features and labels
      needed by keras fit_generator.
   """
@@ -150,5 +151,6 @@ def generator_input(input_file, chunk_size):
         if feature_cols is None:
             feature_cols=input_data.columns
 
-        for index in xrange(input_data.shape[0]):
-            yield (input_data.iloc[[index]], label.iloc[[index]])
+        idx_len=input_data.shape[0]
+        for index in xrange(0,idx_len,batch_size):
+            yield (input_data.iloc[index:min(idx_len,index+batch_size)], label.iloc[index:min(idx_len,index+batch_size)])
