@@ -30,7 +30,7 @@ import tensorflow as tf
 from tensorflow.python.ops import variables
 from tensorflow.python.ops import lookup_ops
 from tensorflow.python.ops import control_flow_ops
-from tensorflow.contrib.saved_model.python.saved_model import utils as saved_model_util
+from tensorflow.python.saved_model import signature_constants as sig_constants
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -323,6 +323,8 @@ def build_and_run_exports(latest, job_dir, serving_input_fn, hidden_units):
   """
 
   prediction_graph = tf.Graph()
+  exporter = tf.saved_model.builder.SavedModelBuilder(
+      os.path.join(job_dir, 'export'))
   with prediction_graph.as_default():
     features, inputs_dict = serving_input_fn()
     prediction_dict = model.model_fn(
@@ -334,11 +336,33 @@ def build_and_run_exports(latest, job_dir, serving_input_fn, hidden_units):
     )
     saver = tf.train.Saver()
 
+    inputs_info = {
+        name: tf.saved_model.utils.build_tensor_info(tensor)
+        for name, tensor in inputs_dict.iteritems()
+    }
+    output_info = {
+        name: tf.saved_model.utils.build_tensor_info(tensor)
+        for name, tensor in prediction_dict.iteritems()
+    }
+    signature_def = tf.saved_model.signature_def_utils.build_signature_def(
+        inputs=inputs_info,
+        outputs=output_info,
+        method_name=sig_constants.PREDICT_METHOD_NAME
+    )
+
   with tf.Session(graph=prediction_graph) as session:
     session.run([tf.local_variables_initializer(), tf.tables_initializer()])
     saver.restore(session, latest)
-    saved_model_util.simple_save(
-        session, os.path.join(job_dir, 'export'), inputs_dict, prediction_dict)
+    exporter.add_meta_graph_and_variables(
+        session,
+        tags=[tf.saved_model.tag_constants.SERVING],
+        signature_def_map={
+            sig_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature_def
+        },
+        legacy_init_op=main_op()
+    )
+
+  exporter.save()
 
 
 def dispatch(*args, **kwargs):
