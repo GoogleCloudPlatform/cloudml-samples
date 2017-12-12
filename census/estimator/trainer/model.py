@@ -263,12 +263,12 @@ def parse_csv(rows_string_tensor):
   return features
 
 
-def generate_input_fn(filenames,
+def input_fn(filenames,
                       num_epochs=None,
                       shuffle=True,
                       skip_header_lines=0,
                       batch_size=200):
-  """Generates an input function for training or evaluation.
+  """Generates features and labels for training or evaluation.
   This uses the input pipeline based approach using file name queue
   to read data so that entire data is not loaded in memory.
 
@@ -284,7 +284,7 @@ def generate_input_fn(filenames,
       batch_size: int First dimension size of the Tensors returned by
         input_fn
   Returns:
-      A function () -> (features, indices) where features is a dictionary of
+      A (features, indices) tuple where features is a dictionary of
         Tensors, and indices is a single Tensor of label indices.
   """
   filename_queue = tf.train.string_input_producer(
