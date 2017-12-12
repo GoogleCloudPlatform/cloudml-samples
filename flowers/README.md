@@ -3,6 +3,10 @@ Flowers: Image-based transfer learning on Cloud ML
 
 ![Build Status](https://storage.googleapis.com/cloudml-samples-test-public/badges/flowers.png)
 
+Build a model to recognize the type of a flower from its image.
+
+- - -
+
 To run this example, first follow instructions for [setting up your environment](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
 
 Also, we use Apache Beam (running on Cloud Dataflow) and PIL to preprocess the images into embeddings, so make sure to install the required packages:

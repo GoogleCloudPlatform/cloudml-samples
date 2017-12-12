@@ -1,5 +1,12 @@
 ## Reddit Sample
 
+[Multiple years'](https://bigquery.cloud.google.com/dataset/fh-bigquery:reddit_comments)
+worth of Reddit Comments are publicly available in Google Cloud BigQuery. We
+will use a subset of the data and some SQL manipulation to create training data
+for predicting the score of a Reddit thread.
+
+- - -
+
 The Reddit sample demonstrates the capability of both linear and deep models on
 a [Reddit Dataset](https://www.reddit.com/r/bigquery/wiki/datasets).
 
@@ -31,13 +38,6 @@ format.
 Model training step involves taking the pre-processed TFRecords data and
 training a linear classifier using Stochastic Dual Coordinate Ascent (SDCA)
 optimizer, or a deep neural network classifier.
-
-## Reddit Comments Dataset
-
-[Multiple years'](https://bigquery.cloud.google.com/dataset/fh-bigquery:reddit_comments)
-worth of Reddit Comments are publicly available in Google Cloud BigQuery. We
-will use a subset of the data and some SQL manipulation to create training data
-for predicting the score of a Reddit thread.
 
 ## Data Format
 

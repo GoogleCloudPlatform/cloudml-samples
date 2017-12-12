@@ -1,5 +1,9 @@
 # Predicting Income with the Census Income Dataset
 
+Predict whether a given individual earns at least $50,000.
+
+- - -
+
 There are two samples provided in this directory. Both allow you to move from
 single-worker training to distributed training without any code changes, and
 make it easy to export model binaries for prediction, but with the following
