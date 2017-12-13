@@ -1,6 +1,6 @@
 ## Criteo Sample
 
-Predict whether a given individual will click on a given advertisement.
+Predict how likely a person is to click on an advertisement.
 
 - - -
 

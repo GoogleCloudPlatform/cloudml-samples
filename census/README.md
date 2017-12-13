@@ -1,6 +1,6 @@
 # Predicting Income with the Census Income Dataset
 
-Predict whether a given individual earns at least $50,000.
+Predict a person's income level.
 
 - - -
 

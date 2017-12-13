@@ -1,9 +1,10 @@
 ## Reddit Sample
 
 [Multiple years'](https://bigquery.cloud.google.com/dataset/fh-bigquery:reddit_comments)
-worth of Reddit Comments are publicly available in Google Cloud BigQuery. We
-will use a subset of the data and some SQL manipulation to create training data
-for predicting the score of a Reddit thread.
+worth of Reddit Comments are publicly available in Google Cloud
+[BigQuery](https://cloud.google.com/bigquery/). We will use a subset of the data
+and some SQL manipulation to create training data for predicting the score of a
+Reddit thread.
 
 - - -
 

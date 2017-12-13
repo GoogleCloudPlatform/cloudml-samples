@@ -8,12 +8,12 @@ This repository contains samples for usage of the Google Cloud Machine Learning 
 
 ### CPU and GPU
 
-* [Census](census) - Predict whether an individual earns at least $50,000 per year
+* [Census](census) - Predict a person's income level
   * [Keras Census](census/keras) - [Keras](https://keras.io/) single node model
   * [Canned Estimator](census/estimator) - [TensorFlow canned estimator](https://www.tensorflow.org/programmers_guide/estimators#pre-made_estimators) model
   * [Custom Estimator](census/customestimator) - [TensorFlow custom estimator](https://www.tensorflow.org/programmers_guide/estimators#custom_estimators) model
   * [Low Level TF](census/tensorflowcore) - TensorFlow low level API model
-* [Criteo](criteo_tft) - Predict whether an individual will click on an
+* [Criteo](criteo_tft) - Predict how likely a person is to click on an
   advertisement
 * [Flowers](flowers) - Recognize the type of a flower from its image
 * [Movielens](movielens) - Make movie recommendations
