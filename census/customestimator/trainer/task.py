@@ -48,7 +48,7 @@ def run_experiment(hparams):
                 ],
                 learning_rate=hparams.learning_rate)
 
-  estimator = tf.estimator.Estimator(model_fn=model_fn,model_dir=hparams.job_dir)
+  estimator = tf.estimator.Estimator(model_fn=model_fn, model_dir=hparams.job_dir)
   tf.estimator.train_and_evaluate(estimator,
                                   train_spec,
                                   eval_spec)
