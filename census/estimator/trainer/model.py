@@ -163,12 +163,11 @@ def build_estimator(config, embedding_size=8, hidden_units=None):
       hours_per_week,
   ]
 
-  return tf.contrib.learn.DNNLinearCombinedClassifier(
+  return tf.estimator.DNNLinearCombinedClassifier(
       config=config,
       linear_feature_columns=wide_columns,
       dnn_feature_columns=deep_columns,
-      dnn_hidden_units=hidden_units or [100, 70, 50, 25],
-      fix_global_step_increment_bug=True
+      dnn_hidden_units=hidden_units or [100, 70, 50, 25]
   )
 
 
@@ -202,7 +201,7 @@ def csv_serving_input_fn():
   )
   features = parse_csv(csv_row)
   features.pop(LABEL_COLUMN)
-  return tf.contrib.learn.InputFnOps(features, None, {'csv_row': csv_row})
+  return tf.estimator.export.ServingInputReceiver(features, {'csv_row': csv_row})
 
 
 def example_serving_input_fn():
@@ -215,13 +214,8 @@ def example_serving_input_fn():
       example_bytestring,
       tf.feature_column.make_parse_example_spec(INPUT_COLUMNS)
   )
-  features = {
-      key: tf.expand_dims(tensor, -1)
-      for key, tensor in feature_scalars.iteritems()
-  }
-  return tf.contrib.learn.InputFnOps(
+  return tf.estimator.export.ServingInputReceiver(
       features,
-      None,  # labels
       {'example_proto': example_bytestring}
   )
 
@@ -232,11 +226,7 @@ def json_serving_input_fn():
   for feat in INPUT_COLUMNS:
     inputs[feat.name] = tf.placeholder(shape=[None], dtype=feat.dtype)
 
-  features = {
-      key: tf.expand_dims(tensor, -1)
-      for key, tensor in inputs.iteritems()
-  }
-  return tf.contrib.learn.InputFnOps(features, None, inputs)
+  return tf.estimator.export.ServingInputReceiver(inputs, inputs)
 # [END serving-function]
 
 SERVING_FUNCTIONS = {
