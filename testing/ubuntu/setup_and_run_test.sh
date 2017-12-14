@@ -21,4 +21,4 @@ gcloud auth activate-service-account --key-file "${KOKORO_GFILE_DIR}/${CMLE_KEYF
 gcloud config set project $CMLE_PROJECT_ID
 gcloud config set compute/region $CMLE_REGION
 
-./$CMLE_TEST_SCRIPT
+bash $CMLE_TEST_SCRIPT
