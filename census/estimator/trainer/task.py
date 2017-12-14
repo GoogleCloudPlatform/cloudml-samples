@@ -12,14 +12,14 @@ from tensorflow.contrib.training.python.training import hparam
 def run_experiment(hparams):
   """Run the training and evaluate using the high level API"""
 
-  train_input = lambda: model.generate_input_fn(
+  train_input = lambda: model.input_fn(
       hparams.train_files,
       num_epochs=hparams.num_epochs,
       batch_size=hparams.train_batch_size
   )
 
   # Don't shuffle evaluation data
-  eval_input = lambda: model.generate_input_fn(
+  eval_input = lambda: model.input_fn(
       hparams.eval_files,
       batch_size=hparams.eval_batch_size,
       shuffle=False
