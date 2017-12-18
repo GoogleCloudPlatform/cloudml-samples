@@ -206,7 +206,7 @@ Run the distributed training code on cloud using `gcloud`.
 export SCALE_TIER=STANDARD_1
 export JOB_NAME=census
 export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/models/$JOB_NAME
-export TRAIN_STEPS=1000
+export TRAIN_STEPS=5000
 ```
 
 ```
@@ -283,9 +283,9 @@ gsutil ls -r $GCS_JOB_DIR/export
 ```
 
 
- * Estimator Based: You should see a directory named `$GCS_JOB_DIR/export/Servo/<timestamp>`.
+ * Estimator Based: You should see a directory named `$GCS_JOB_DIR/export/census/<timestamp>`.
  ```
- export MODEL_BINARIES=$GCS_JOB_DIR/export/Servo/<timestamp>
+ export MODEL_BINARIES=$GCS_JOB_DIR/export/census/<timestamp>
  ```
 
  * Low Level Based: You should see a directory named `$GCS_JOB_DIR/export/JSON/`
