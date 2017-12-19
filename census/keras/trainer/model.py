@@ -126,7 +126,7 @@ def to_numeric_features(features,feature_cols=None):
 
   return features
 
-def generator_input(input_file, chunk_size,batch_size=64):
+def generator_input(input_file, chunk_size, batch_size=64):
   """Generator function to produce features and labels
      needed by keras fit_generator.
   """
