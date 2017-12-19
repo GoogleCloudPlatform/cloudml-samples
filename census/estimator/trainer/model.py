@@ -282,6 +282,7 @@ def input_fn(filenames,
 
   if shuffle:
     dataset = dataset.shuffle(buffer_size=batch_size * 10)
+  dataset = dataset.repeat(num_epochs)
   dataset = dataset.batch(batch_size)
   iterator = dataset.make_one_shot_iterator()
   features = iterator.get_next()
