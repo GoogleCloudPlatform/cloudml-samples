@@ -136,9 +136,11 @@ before `--` while training on the cloud and this is so that we can have
 different trial runs during Hyperparameter tuning.
 
 ```
-export JOB_NAME=census
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME=census_$DATE
 export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/jobs/$JOB_NAME
-export TRAIN_STEPS=1000
+echo $GCS_JOB_DIR
+export TRAIN_STEPS=5000
 ```
 
 ```
@@ -204,8 +206,10 @@ Run the distributed training code on cloud using `gcloud`.
 
 ```
 export SCALE_TIER=STANDARD_1
-export JOB_NAME=census
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME=census_$DATE
 export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/models/$JOB_NAME
+echo $GCS_JOB_DIR
 export TRAIN_STEPS=5000
 ```
 
