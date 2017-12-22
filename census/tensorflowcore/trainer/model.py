@@ -263,10 +263,10 @@ def parse_csv(rows_string_tensor):
   return features
 
 def input_fn(filenames,
-                      num_epochs=None,
-                      shuffle=True,
-                      skip_header_lines=0,
-                      batch_size=200):
+             num_epochs=None,
+             shuffle=True,
+             skip_header_lines=0,
+             batch_size=200):
   """Generates features and labels for training or evaluation.
   This uses the input pipeline based approach using file name queue
   to read data so that entire data is not loaded in memory.
