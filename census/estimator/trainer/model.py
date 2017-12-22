@@ -277,36 +277,13 @@ def input_fn(filenames,
       A (features, indices) tuple where features is a dictionary of
         Tensors, and indices is a single Tensor of label indices.
   """
-  filename_queue = tf.train.string_input_producer(
-      filenames, num_epochs=num_epochs, shuffle=shuffle)
-  reader = tf.TextLineReader(skip_header_lines=skip_header_lines)
 
-  _, rows = reader.read_up_to(filename_queue, num_records=batch_size)
+  dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(parse_csv)
 
-  # Parse the CSV File
-  features = parse_csv(rows)
-
-  # This operation builds up a buffer of parsed tensors, so that parsing
-  # input data doesn't block training
-  # If requested it will also shuffle
   if shuffle:
-    features = tf.train.shuffle_batch(
-        features,
-        batch_size,
-        min_after_dequeue=2 * batch_size + 1,
-        capacity=batch_size * 10,
-        num_threads=multiprocessing.cpu_count(),
-        enqueue_many=True,
-        allow_smaller_final_batch=True
-    )
-  else:
-    features = tf.train.batch(
-        features,
-        batch_size,
-        capacity=batch_size * 10,
-        num_threads=multiprocessing.cpu_count(),
-        enqueue_many=True,
-        allow_smaller_final_batch=True
-    )
-
+    dataset = dataset.shuffle(buffer_size=batch_size * 10)
+  dataset = dataset.repeat(num_epochs)
+  dataset = dataset.batch(batch_size)
+  iterator = dataset.make_one_shot_iterator()
+  features = iterator.get_next()
   return features, parse_label_column(features.pop(LABEL_COLUMN))
