@@ -14,5 +14,5 @@ We are happy to see your enthusiasm. This table lists the criteria and how impor
 | Include unit tests     | Yes | Optional |
 | Include integration tests     | Yes | Optional |
 | Include core TF API aka no contrib   | Yes | Optional |
-| Include README     | Yes | Optional |
+| Include README     | Yes | Yes |
 | Maintain version dependency updates     | Yes | Optional |

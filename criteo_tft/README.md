@@ -1,5 +1,9 @@
 ## Criteo Sample
 
+Predict how likely a person is to click on an advertisement.
+
+- - -
+
 The Criteo sample demonstrates the capability of both linear and deep models on
 the [criteo dataset](https://www.kaggle.com/c/criteo-display-ad-challenge).
 

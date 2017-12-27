@@ -293,14 +293,12 @@ def parse_csv(rows_string_tensor):
     features[key] = tf.expand_dims(features[key], -1)
   return features
 
-
-def generate_input_fn(filenames,
+def input_fn(filenames,
                       num_epochs=None,
                       shuffle=True,
                       skip_header_lines=0,
                       batch_size=200):
-  """Generates an input function for training or evaluation.
-
+  """Generates features and labels for training or evaluation.
   This uses the input pipeline based approach using file name queue
   to read data so that entire data is not loaded in memory.
 
@@ -316,39 +314,16 @@ def generate_input_fn(filenames,
       batch_size: int First dimension size of the Tensors returned by
         input_fn
   Returns:
-      A function () -> (Mapping[str:Tensor], Tensor) which produces the
-      feature dictionary, and label Tensor.
+      A (features, indices) tuple where features is a dictionary of
+        Tensors, and indices is a single Tensor of label indices.
   """
-  filename_queue = tf.train.string_input_producer(
 
-      filenames, num_epochs=num_epochs, shuffle=shuffle)
-  reader = tf.TextLineReader(skip_header_lines=skip_header_lines)
+  dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(parse_csv)
 
-  _, rows = reader.read_up_to(filename_queue, num_records=batch_size)
-
-  # Parse the CSV File
-  features = parse_csv(rows)
-
-  # This operation builds up a buffer of parsed tensors, so that parsing
-  # input data doesn't block training. If requested it will also shuffle.
   if shuffle:
-    features = tf.train.shuffle_batch(
-        features,
-        batch_size,
-        min_after_dequeue=2 * batch_size + 1,
-        capacity=batch_size * 10,
-        num_threads=multiprocessing.cpu_count(),
-        enqueue_many=True,
-        allow_smaller_final_batch=True
-    )
-  else:
-    features = tf.train.batch(
-        features,
-        batch_size,
-        capacity=batch_size * 10,
-        num_threads=multiprocessing.cpu_count(),
-        enqueue_many=True,
-        allow_smaller_final_batch=True
-    )
-
+    dataset = dataset.shuffle(buffer_size=batch_size * 10)
+  dataset = dataset.repeat(num_epochs)
+  dataset = dataset.batch(batch_size)
+  iterator = dataset.make_one_shot_iterator()
+  features = iterator.get_next()
   return features, features.pop(LABEL_COLUMN)
