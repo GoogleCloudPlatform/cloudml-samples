@@ -1,7 +1,7 @@
 import argparse
 import os
 
-import model
+import trainer.model as model
 
 import tensorflow as tf
 from tensorflow.contrib.learn.python.learn.utils import (

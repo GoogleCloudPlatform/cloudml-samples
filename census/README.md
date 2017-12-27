@@ -101,7 +101,7 @@ model location should be a new location so that old model doesn't conflict with 
 one. 
 
 ```
-python trainer/task.py --train-files $TRAIN_FILE \
+python -m trainer.task --train-files $TRAIN_FILE \
                        --eval-files $EVAL_FILE \
                        --job-dir $OUTPUT_DIR \
                        --train-steps $TRAIN_STEPS \

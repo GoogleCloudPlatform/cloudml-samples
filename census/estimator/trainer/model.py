@@ -17,6 +17,7 @@ from __future__ import print_function
 
 import multiprocessing
 
+import six
 import tensorflow as tf
 
 
@@ -225,7 +226,7 @@ def json_serving_input_fn():
   inputs = {}
   for feat in INPUT_COLUMNS:
     inputs[feat.name] = tf.placeholder(shape=[None], dtype=feat.dtype)
-
+    
   return tf.estimator.export.ServingInputReceiver(inputs, inputs)
 # [END serving-function]
 
