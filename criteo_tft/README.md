@@ -174,7 +174,7 @@ follow the job's progress.
 
 #### How to run Tensorboard
 
-You can run Tensorboard using the command
+Tensorboard comes installed with TensorFlow and can be run using
 
 ```
 tensorboard --logdir=$TRAINING_OUTPUT_PATH
