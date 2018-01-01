@@ -63,6 +63,10 @@ def model_fn(input_dim,
              hidden_units=[100, 70, 50, 20],
              learning_rate=0.1):
   """Create a Keras Sequential model with layers."""
+  # taken from the keras blog, otherwise tensorflow serving raise the following error:
+  # AbortionError(code=StatusCode.INVALID_ARGUMENT during online prediction
+  # all new operations will be in test mode from now on  
+  K.set_learning_phase(False)
   model = models.Sequential()
 
   for units in hidden_units:
