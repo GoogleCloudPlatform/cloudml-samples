@@ -28,17 +28,16 @@ If you are new to TensorFlow, we recommend that you start with [estimator](./est
 
 All the models provided in this directory can be run on the Cloud Machine Learning Engine. To follow along, check out the setup instruction [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
 
-## Download the data
-The [Census Income Data
-Set](https://archive.ics.uci.edu/ml/datasets/Census+Income) that this sample
-uses for training is hosted by the [UC Irvine Machine Learning
-Repository](https://archive.ics.uci.edu/ml/datasets/). We have hosted the data
-on Google Cloud Storage in a slightly cleaned form:
+## Dataset
+We have hosted the Census Income Dataset on Google Cloud Storage in a slightly cleaned form:
 
- * Training file is `adult.data.csv`
- * Evaluation file is `adult.test.csv`
+ * Training file is `gs://cloudml-public/census/data/adult.data.csv`
+ * Evaluation file is `gs://cloudml-public/census/data/adult.test.csv`
 
 ### Disclaimer
+The [Census Income Dataset](https://archive.ics.uci.edu/ml/datasets/Census+Income) that this sample
+uses for training is hosted by the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/).
+
 The source of this dataset is from a third party. Google provides no representation,
 warranty, or other guarantees about the validity or any other aspects of this dataset.
 
