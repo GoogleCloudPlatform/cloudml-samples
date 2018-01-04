@@ -4,20 +4,27 @@ Predict a person's income level.
 
 - - -
 
-There are two samples provided in this directory. Both allow you to move from
-single-worker training to distributed training without any code changes, and
-make it easy to export model binaries for prediction, but with the following
-distiction:
+There are three samples provided in this directory. All of these samples allow
+you to move from single-worker training to distributed training without any
+code changes, and make it easy to export model binaries for prediction, but
+with the following distiction:
 
 
-* The sample provided in [TensorFlow Core](./tensorflowcore) uses the low level
+* The sample provided in the [estimator](./estimator) directory uses a prebuilt model utilizing the high level
+  [`tf.estimator.Estimator`](https://www.tensorflow.org/api_docs/python/tf/estimator/Estimator)
+  API. This API is great for fast iteration, and quickly adapting models to
+  your own datasets without major code overhauls.
+
+* The sample provided in the [estimator](./customestimator) directory uses the high level
+  [`tf.estimator.Estimator`](https://www.tensorflow.org/api_docs/python/tf/estimator/Estimator)
+  API to build a custom model.
+
+* The sample provided in the [tensorflowcore](./tensorflowcore) directory uses the low level
   bindings to build a model. This example is great for understanding the
   underlying workings of TensorFlow, best practices when using the low-level
   APIs.
 
-* The sample provided in [Estimator](./estimator) uses the high level
-  `tf.contrib.learn.Estimator` API. This API is great for fast iteration, and
-  quickly adapting models to your own datasets without major code overhauls.
+If you are new to TensorFlow, we recommend that you start with [estimator](./estimator).
 
 All the models provided in this directory can be run on the Cloud Machine Learning Engine. To follow along, check out the setup instruction [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
 
