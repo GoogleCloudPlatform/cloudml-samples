@@ -149,7 +149,7 @@ different trial runs during Hyperparameter tuning.
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=census_$DATE
-export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/jobs/$JOB_NAME
+export GCS_JOB_DIR=gs://<my-bucket>/$JOB_NAME
 echo $GCS_JOB_DIR
 export TRAIN_STEPS=5000
 ```
@@ -299,7 +299,6 @@ Then we'll look up the exact path that your exported trained model binaries live
 ```
 gsutil ls -r $GCS_JOB_DIR/export
 ```
-
 
 If you used
 
