@@ -83,13 +83,14 @@ There are two options for the virtual environments:
  * Install [gcloud](https://cloud.google.com/sdk/gcloud/)
  * Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
-# Single Node Training
+# How to run the code
+You can run the code either as a stand-alone python program or using `gcloud`.
+
+Before you run any code, you should locally change your working directory to the appropriate subdirectory -- [./estimator](./estimator) for the prebuilt estimator, [./customestimator](./customestimator) for the custom Estimator-based model, or [./tensorflowcore](./tensorflowcore) for the core TensorFlow model.
+
+## Single Node Training
 Single node training runs TensorFlow code on a single instance. You can run the exact
 same code locally and on Cloud ML Engine.
-
-## How to run the code
-You can run the code either as a stand-alone python program or using `gcloud`.
-See options below:
 
 ### Using local python
 Run the code on your local machine:
@@ -101,7 +102,7 @@ export OUTPUT_DIR=census_$DATE
 rm -rf $OUTPUT_DIR
 ```
 
-### Model location reuse
+#### Model location reuse
 Its worth calling out that unless you want to reuse the old model output dir,
 model location should be a new location so that old model doesn't conflict with new
 one. 
@@ -169,24 +170,11 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 
 ```
 
-## Tensorboard
-Run the Tensorboard to inspect the details about the graph.
-
-```
-tensorboard --logdir=$GCS_JOB_DIR
-```
-
-## Accuracy and Output
-You should see the output for default number of training steps and approx accuracy close to `80%`.
-
-# Distributed Node Training
+## Distributed Node Training
 Distributed node training uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed).
 The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml/reference/configuration-data-structures#tf_config_environment_variable)
 environment variable. The environment variable is generated using `gcloud` and parsed to create a
 [ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster). See the [ScaleTier](https://cloud.google.com/ml/pricing#ml_training_units_by_scale_tier) for predefined tiers
-
-## How to run the code
-You can run the code either locally or on cloud using `gcloud`.
 
 ### Using gcloud local
 Run the distributed training code locally using `gcloud`.
@@ -239,6 +227,22 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --eval-steps 100
 ```
 
+## Accuracy and Output
+The output will conclude by reporting the accuracy of the trained model on the evaluation dataset. For the default number of training steps, the accuracy should be close to `80%`.
+
+## Tensorboard
+Run [Tensorboard](https://www.tensorflow.org/get_started/summaries_and_tensorboard) to inspect the details about the graph.
+
+If you saved the model locally at `$OUTPUT_DIR`, run:
+```
+tensorboard --logdir=$OUTPUT_DIR
+```
+
+If you saved the model on Google Cloud Storage at `$GCS_JOB_DIR`, run:
+```
+tensorboard --logdir=$GCS_JOB_DIR
+```
+
 # Hyperparameter Tuning
 Cloud ML Engine allows you to perform Hyperparameter tuning to find out the
 most optimal hyperparameters. See [Overview of Hyperparameter Tuning]
@@ -280,9 +284,9 @@ compare accuracy / auroc numbers:
 tensorboard --logdir=$GCS_JOB_DIR
 ```
 
-## Run Predictions
+# Run Predictions
 
-### Create A Prediction Service
+## Create A Prediction Service
 
 Once your training job has finished, you can use the exported model to create a prediction server. To do this you first create a model:
 
@@ -297,12 +301,14 @@ gsutil ls -r $GCS_JOB_DIR/export
 ```
 
 
- * Estimator Based: You should see a directory named `$GCS_JOB_DIR/export/census/<timestamp>`.
+If you used
+
+ * An Estimator-based model ([estimator](./estimator) or [customestimator](./customestimator)): You should see a directory named `$GCS_JOB_DIR/export/census/<timestamp>`.
  ```
  export MODEL_BINARIES=$GCS_JOB_DIR/export/census/<timestamp>
  ```
 
- * Low Level Based: You should see a directory named `$GCS_JOB_DIR/export/JSON/`
+ * The core TensorFlow model ([tensorflowcore](./tensorflowcore)): You should see a directory named `$GCS_JOB_DIR/export/JSON/`
    for `JSON`. See other formats `CSV` and `TFRECORD`.
  ```
  export MODEL_BINARIES=$GCS_JOB_DIR/export/JSON/
@@ -312,14 +318,14 @@ gsutil ls -r $GCS_JOB_DIR/export
 gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.4
 ```
 
-### (Optional) Inspect the model binaries with the SavedModel CLI
+## (Optional) Inspect the model binaries with the SavedModel CLI
 TensorFlow ships with a CLI that allows you to inspect the signature of exported binary files. To do this run:
 
 ```
 saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def predict
 ```
 
-### Run Online Predictions
+## Run Online Predictions
 
 You can now send prediction requests to the API. To test this out you can use the `gcloud ml-engine predict` tool:
 
@@ -329,7 +335,7 @@ gcloud ml-engine predict --model census --version v1 --json-instances ../test.js
 
 You should see a response with the predicted labels of the examples!
 
-### Run Batch Prediction
+## Run Batch Prediction
 
 If you have large amounts of data, and no latency requirements on receiving prediction results, you can submit a prediction job to the API. This uses the same format as online prediction, but requires data be stored in Google Cloud Storage
 
