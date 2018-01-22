@@ -32,7 +32,7 @@ on Google Cloud Storage in a slightly cleaned form:
  * Evaluation file is `adult.test.csv`
 
 ### Disclaimer
-The source of this dataset is from a third party. Google provides no representation,
+This dataset is provided by a third party. Google provides no representation,
 warranty, or other guarantees about the validity or any other aspects of this dataset.
 
 ### Set Environment Variables
