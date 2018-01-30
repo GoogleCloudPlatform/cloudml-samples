@@ -278,9 +278,17 @@ def input_fn(filenames,
       A (features, indices) tuple where features is a dictionary of
         Tensors, and indices is a single Tensor of label indices.
   """
-
-  dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(parse_csv)
-
+  filename_dataset = tf.data.Dataset.from_tensor_slices(filenames)
+  if shuffle:
+    # Process the files in a random order.
+    filename_dataset = filename_dataset.shuffle(len(filenames))
+    
+  # For each filename, parse it into one element per line, and skip the header
+  # if necessary.
+  dataset = filename_dataset.flat_map(
+      lambda filename: tf.data.TextLineDataset(filename).skip(skip_header_lines))
+  
+  dataset = dataset.map(parse_csv)
   if shuffle:
     dataset = dataset.shuffle(buffer_size=batch_size * 10)
   dataset = dataset.repeat(num_epochs)
