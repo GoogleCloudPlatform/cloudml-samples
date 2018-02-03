@@ -24,10 +24,8 @@ from keras.backend import relu, softmax
 
 #Python2/3 compatibility imports
 #   urlparse renamed urllib.parse
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
+from six.moves.urllib import parse as urlparse
+
 #   range
 from builtins import range
 
