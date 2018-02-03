@@ -3,6 +3,8 @@
 The MovieLens sample demonstrates how to build personalized recommendation
 models to recommend movies to users based on movie ratings data from [MovieLens 20M dataset](https://grouplens.org/datasets/movielens/20m/).
 
+- - -
+
 # Prerequisites
 
 *   Make sure you follow the Google Cloud ML setup

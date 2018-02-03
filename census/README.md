@@ -1,5 +1,9 @@
 # Predicting Income with the Census Income Dataset
 
+Predict a person's income level.
+
+- - -
+
 There are two samples provided in this directory. Both allow you to move from
 single-worker training to distributed training without any code changes, and
 make it easy to export model binaries for prediction, but with the following
@@ -97,7 +101,7 @@ model location should be a new location so that old model doesn't conflict with 
 one. 
 
 ```
-python trainer/task.py --train-files $TRAIN_FILE \
+python -m trainer.task --train-files $TRAIN_FILE \
                        --eval-files $EVAL_FILE \
                        --job-dir $OUTPUT_DIR \
                        --train-steps $TRAIN_STEPS \
@@ -136,15 +140,17 @@ before `--` while training on the cloud and this is so that we can have
 different trial runs during Hyperparameter tuning.
 
 ```
-export JOB_NAME=census
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME=census_$DATE
 export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/jobs/$JOB_NAME
-export TRAIN_STEPS=1000
+echo $GCS_JOB_DIR
+export TRAIN_STEPS=5000
 ```
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
-                                    --runtime-version 1.2 \
+                                    --runtime-version 1.4 \
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
@@ -204,16 +210,18 @@ Run the distributed training code on cloud using `gcloud`.
 
 ```
 export SCALE_TIER=STANDARD_1
-export JOB_NAME=census
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME=census_$DATE
 export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/models/$JOB_NAME
-export TRAIN_STEPS=1000
+echo $GCS_JOB_DIR
+export TRAIN_STEPS=5000
 ```
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
                                     --scale-tier $SCALE_TIER \
-                                    --runtime-version 1.2 \
+                                    --runtime-version 1.4 \
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
@@ -245,7 +253,7 @@ export TRAIN_STEPS=1000
 gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
                                     --scale-tier $SCALE_TIER \
-                                    --runtime-version 1.2 \
+                                    --runtime-version 1.4 \
                                     --config $HPTUNING_CONFIG \
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
@@ -283,9 +291,9 @@ gsutil ls -r $GCS_JOB_DIR/export
 ```
 
 
- * Estimator Based: You should see a directory named `$GCS_JOB_DIR/export/Servo/<timestamp>`.
+ * Estimator Based: You should see a directory named `$GCS_JOB_DIR/export/census/<timestamp>`.
  ```
- export MODEL_BINARIES=$GCS_JOB_DIR/export/Servo/<timestamp>
+ export MODEL_BINARIES=$GCS_JOB_DIR/export/census/<timestamp>
  ```
 
  * Low Level Based: You should see a directory named `$GCS_JOB_DIR/export/JSON/`
@@ -295,14 +303,14 @@ gsutil ls -r $GCS_JOB_DIR/export
  ```
 
 ```
-gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.2
+gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.4
 ```
 
 ### (Optional) Inspect the model binaries with the SavedModel CLI
-From version 1.2, TensorFlow ships with a CLI that allows you to inspect the signature of exported binary files. To do this run:
+TensorFlow ships with a CLI that allows you to inspect the signature of exported binary files. To do this run:
 
 ```
-saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def prediction
+saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def predict
 ```
 
 ### Run Online Predictions
@@ -329,7 +337,7 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --version v1 \
     --data-format TEXT \
     --region us-central1 \
-    --runtime-version 1.2 \
+    --runtime-version 1.4 \
     --input-paths gs://cloudml-public/testdata/prediction/census.json \
     --output-path $GCS_JOB_DIR/predictions
 ```

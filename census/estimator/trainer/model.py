@@ -17,6 +17,7 @@ from __future__ import print_function
 
 import multiprocessing
 
+import six
 import tensorflow as tf
 
 
@@ -116,7 +117,7 @@ def build_estimator(config, embedding_size=8, hidden_units=None):
   (gender, race, education, marital_status, relationship,
    workclass, occupation, native_country, age,
    education_num, capital_gain, capital_loss, hours_per_week) = INPUT_COLUMNS
-  """Build an estimator."""
+  # Build an estimator.
 
   # Reused Transformations.
   # Continuous columns can be converted to categorical via bucketization
@@ -163,12 +164,11 @@ def build_estimator(config, embedding_size=8, hidden_units=None):
       hours_per_week,
   ]
 
-  return tf.contrib.learn.DNNLinearCombinedClassifier(
+  return tf.estimator.DNNLinearCombinedClassifier(
       config=config,
       linear_feature_columns=wide_columns,
       dnn_feature_columns=deep_columns,
-      dnn_hidden_units=hidden_units or [100, 70, 50, 25],
-      fix_global_step_increment_bug=True
+      dnn_hidden_units=hidden_units or [100, 70, 50, 25]
   )
 
 
@@ -202,7 +202,7 @@ def csv_serving_input_fn():
   )
   features = parse_csv(csv_row)
   features.pop(LABEL_COLUMN)
-  return tf.contrib.learn.InputFnOps(features, None, {'csv_row': csv_row})
+  return tf.estimator.export.ServingInputReceiver(features, {'csv_row': csv_row})
 
 
 def example_serving_input_fn():
@@ -215,13 +215,8 @@ def example_serving_input_fn():
       example_bytestring,
       tf.feature_column.make_parse_example_spec(INPUT_COLUMNS)
   )
-  features = {
-      key: tf.expand_dims(tensor, -1)
-      for key, tensor in feature_scalars.iteritems()
-  }
-  return tf.contrib.learn.InputFnOps(
+  return tf.estimator.export.ServingInputReceiver(
       features,
-      None,  # labels
       {'example_proto': example_bytestring}
   )
 
@@ -231,12 +226,8 @@ def json_serving_input_fn():
   inputs = {}
   for feat in INPUT_COLUMNS:
     inputs[feat.name] = tf.placeholder(shape=[None], dtype=feat.dtype)
-
-  features = {
-      key: tf.expand_dims(tensor, -1)
-      for key, tensor in inputs.iteritems()
-  }
-  return tf.contrib.learn.InputFnOps(features, None, inputs)
+    
+  return tf.estimator.export.ServingInputReceiver(inputs, inputs)
 # [END serving-function]
 
 SERVING_FUNCTIONS = {
@@ -263,12 +254,12 @@ def parse_csv(rows_string_tensor):
   return features
 
 
-def generate_input_fn(filenames,
+def input_fn(filenames,
                       num_epochs=None,
                       shuffle=True,
                       skip_header_lines=0,
                       batch_size=200):
-  """Generates an input function for training or evaluation.
+  """Generates features and labels for training or evaluation.
   This uses the input pipeline based approach using file name queue
   to read data so that entire data is not loaded in memory.
 
@@ -284,39 +275,24 @@ def generate_input_fn(filenames,
       batch_size: int First dimension size of the Tensors returned by
         input_fn
   Returns:
-      A function () -> (features, indices) where features is a dictionary of
+      A (features, indices) tuple where features is a dictionary of
         Tensors, and indices is a single Tensor of label indices.
   """
-  filename_queue = tf.train.string_input_producer(
-      filenames, num_epochs=num_epochs, shuffle=shuffle)
-  reader = tf.TextLineReader(skip_header_lines=skip_header_lines)
-
-  _, rows = reader.read_up_to(filename_queue, num_records=batch_size)
-
-  # Parse the CSV File
-  features = parse_csv(rows)
-
-  # This operation builds up a buffer of parsed tensors, so that parsing
-  # input data doesn't block training
-  # If requested it will also shuffle
+  filename_dataset = tf.data.Dataset.from_tensor_slices(filenames)
   if shuffle:
-    features = tf.train.shuffle_batch(
-        features,
-        batch_size,
-        min_after_dequeue=2 * batch_size + 1,
-        capacity=batch_size * 10,
-        num_threads=multiprocessing.cpu_count(),
-        enqueue_many=True,
-        allow_smaller_final_batch=True
-    )
-  else:
-    features = tf.train.batch(
-        features,
-        batch_size,
-        capacity=batch_size * 10,
-        num_threads=multiprocessing.cpu_count(),
-        enqueue_many=True,
-        allow_smaller_final_batch=True
-    )
-
+    # Process the files in a random order.
+    filename_dataset = filename_dataset.shuffle(len(filenames))
+    
+  # For each filename, parse it into one element per line, and skip the header
+  # if necessary.
+  dataset = filename_dataset.flat_map(
+      lambda filename: tf.data.TextLineDataset(filename).skip(skip_header_lines))
+  
+  dataset = dataset.map(parse_csv)
+  if shuffle:
+    dataset = dataset.shuffle(buffer_size=batch_size * 10)
+  dataset = dataset.repeat(num_epochs)
+  dataset = dataset.batch(batch_size)
+  iterator = dataset.make_one_shot_iterator()
+  features = iterator.get_next()
   return features, parse_label_column(features.pop(LABEL_COLUMN))
