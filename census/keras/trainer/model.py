@@ -23,10 +23,19 @@ from keras import layers, models
 from keras.utils import np_utils
 from keras.backend import relu, softmax
 
-from urlparse import urlparse
+#Python2/3 compatibility imports
+#   urlparse renamed urllib.parse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
+#   range
+from builtins import range
 
 import tensorflow as tf
-from tensorflow.contrib.saved_model.python.saved_model import utils as saved_model_util
+from tensorflow.python.saved_model import builder as saved_model_builder
+from tensorflow.python.saved_model import tag_constants, signature_constants
+from tensorflow.python.saved_model.signature_def_utils_impl import predict_signature_def
 
 # csv columns in the input file
 CSV_COLUMNS = ('age', 'workclass', 'fnlwgt', 'education', 'education_num',
@@ -50,7 +59,7 @@ LABELS = [' <=50K', ' >50K']
 LABEL_COLUMN = 'income_bracket'
 
 UNUSED_COLUMNS = set(CSV_COLUMNS) - set(
-    zip(*CATEGORICAL_COLS)[0] + CONTINUOUS_COLS + (LABEL_COLUMN,))
+    list(zip(*CATEGORICAL_COLS))[0] + CONTINUOUS_COLS + (LABEL_COLUMN,))
 
 
 def model_fn(input_dim,
@@ -79,13 +88,20 @@ def compile_model(model, learning_rate):
 
 def to_savedmodel(model, export_path):
   """Convert the Keras HDF5 model into TensorFlow SavedModel."""
-  with K.get_session() as sess:
-    saved_model_util.simple_save(
-        sess,
-        export_path,
-        inputs={'input': model.inputs[0]},
-        outputs={'income': model.outputs[0]})
 
+  builder = saved_model_builder.SavedModelBuilder(export_path)
+
+  signature = predict_signature_def(inputs={'input': model.inputs[0]},
+                                    outputs={'income': model.outputs[0]})
+
+  with K.get_session() as sess:
+    builder.add_meta_graph_and_variables(
+        sess=sess,
+        tags=[tag_constants.SERVING],
+        signature_def_map={
+            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature}
+    )
+    builder.save()
 
 def to_numeric_features(features,feature_cols=None):
   """Convert the pandas input features to numeric values.
@@ -105,11 +121,11 @@ def to_numeric_features(features,feature_cols=None):
           capital_loss (continuous)
           hours_per_week (continuous)
           native_country (categorical)
-         
-        feature_cols: Column list of converted features to be returned. 
+
+        feature_cols: Column list of converted features to be returned.
             Optional, may be used to ensure schema consistency over multiple executions.
-            
-        
+
+
   """
 
   for col in CATEGORICAL_COLS:
@@ -131,23 +147,23 @@ def generator_input(input_file, chunk_size, batch_size=64):
      needed by keras fit_generator.
   """
 
-  feature_cols=None  
+  feature_cols=None
   while True:
       input_reader = pd.read_csv(tf.gfile.Open(input_file[0]),
                                names=CSV_COLUMNS,
                                chunksize=chunk_size,
                                na_values=" ?")
-  
+
       for input_data in input_reader:
         input_data = input_data.dropna()
         label = pd.get_dummies(input_data.pop(LABEL_COLUMN))
-    
+
         input_data = to_numeric_features(input_data,feature_cols)
-        
+
         #Retains schema for next chunk processing
         if feature_cols is None:
             feature_cols=input_data.columns
 
         idx_len=input_data.shape[0]
-        for index in xrange(0,idx_len,batch_size):
+        for index in range(0,idx_len,batch_size):
             yield (input_data.iloc[index:min(idx_len,index+batch_size)], label.iloc[index:min(idx_len,index+batch_size)])
