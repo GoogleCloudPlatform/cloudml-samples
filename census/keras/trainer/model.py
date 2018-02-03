@@ -23,10 +23,7 @@ from keras.utils import np_utils
 from keras.backend import relu, softmax
 
 #Python2/3 compatibility imports
-#   urlparse renamed urllib.parse
 from six.moves.urllib import parse as urlparse
-
-#   range
 from builtins import range
 
 import tensorflow as tf
