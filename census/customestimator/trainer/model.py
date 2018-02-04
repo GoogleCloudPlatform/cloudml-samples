@@ -26,14 +26,19 @@ from tensorflow.python.estimator.model_fn import ModeKeys as Modes
 # https://www.tensorflow.org/tutorials/wide_and_deep/
 
 # Define the format of your input data including unused columns
+LABEL_COLUMN = 'income_bracket'
+LABELS = [' <=50K', ' >50K']
+KEY = 'key'
+
 CSV_COLUMNS = ['age', 'workclass', 'fnlwgt', 'education', 'education_num',
                'marital_status', 'occupation', 'relationship', 'race', 'gender',
                'capital_gain', 'capital_loss', 'hours_per_week',
                'native_country', 'income_bracket']
 CSV_COLUMN_DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''], [''],
-                       [0], [0], [0], [''], ['']]
-LABEL_COLUMN = 'income_bracket'
-LABELS = [' <=50K', ' >50K']
+                       [0], [0], [0], [''], [' >50k']]
+
+CSV_COLUMN_DEFAULTS_SERVING = [[0]] + CSV_COLUMN_DEFAULTS[0:-1]
+CSV_COLUMNS_SERVING = [KEY] + CSV_COLUMNS[0:-1]
 
 # Define the initial ingestion of each feature used by your model.
 # Additionally, provide metadata about the feature.
@@ -88,6 +93,8 @@ INPUT_COLUMNS = [
 
 UNUSED_COLUMNS = set(CSV_COLUMNS) - {col.name for col in INPUT_COLUMNS} - \
     {LABEL_COLUMN}
+
+INPUT_COLUMNS_SERVING = [tf.feature_column.numeric_column(KEY)] + INPUT_COLUMNS
 
 
 def generate_model_fn(embedding_size=8,
@@ -149,6 +156,10 @@ def generate_model_fn(embedding_size=8,
         hours_per_week,
     ]
 
+    if mode == Modes.PREDICT:
+      # Convert predicted_indices back into strings
+      key_tensor = features.pop(KEY)
+
     inputs = tf.feature_column.input_layer(features, transformed_columns)
     label_values = tf.constant(LABELS)
 
@@ -200,7 +211,8 @@ def generate_model_fn(embedding_size=8,
       # Convert predicted_indices back into strings
       predictions = {
           'classes': tf.gather(label_values, predicted_indices),
-          'scores': tf.reduce_max(probabilities, axis=1)
+          'scores': tf.reduce_max(probabilities, axis=1),
+          'key': tf.identity(key_tensor)
       }
       export_outputs = {
           'prediction': tf.estimator.export.PredictOutput(predictions)
@@ -243,9 +255,7 @@ def csv_serving_input_fn():
       shape=[None],
       dtype=tf.string
   )
-  features = parse_csv(csv_row)
-  # Ignore label column
-  features.pop(LABEL_COLUMN)
+  features = parse_csv(csv_row, include_label=False)
   return tf.estimator.export.ServingInputReceiver(
       features, {'csv_row': csv_row})
 
@@ -258,7 +268,7 @@ def example_serving_input_fn():
   )
   features = tf.parse_example(
       example_bytestring,
-      tf.feature_column.make_parse_example_spec(INPUT_COLUMNS)
+      tf.feature_column.make_parse_example_spec(INPUT_COLUMNS_SERVING)
   )
   return tf.estimator.export.ServingInputReceiver(
       features, {'example_proto': example_bytestring})
@@ -266,10 +276,15 @@ def example_serving_input_fn():
 
 def json_serving_input_fn():
   """Build the serving inputs."""
+  features = {}
   inputs = {}
-  for feat in INPUT_COLUMNS:
-    inputs[feat.name] = tf.placeholder(shape=[None], dtype=feat.dtype)
-  return tf.estimator.export.ServingInputReceiver(inputs, inputs)
+  for feat in INPUT_COLUMNS_SERVING:
+    features[feat.name] = tf.placeholder(shape=[None], dtype=feat.dtype)
+    inputs[feat.name] = features[feat.name]
+
+  # features cannot be reused in the receiver tensor as it is modified in the 
+  # inference greaph.
+  return tf.estimator.export.ServingInputReceiver(features, inputs)
 
 
 SERVING_FUNCTIONS = {
@@ -279,11 +294,16 @@ SERVING_FUNCTIONS = {
 }
 
 
-def parse_csv(rows_string_tensor):
+def parse_csv(rows_string_tensor, include_label=True):
   """Takes the string input tensor and returns a dict of rank-2 tensors."""
+  record_defaults = CSV_COLUMN_DEFAULTS if include_label else CSV_COLUMN_DEFAULTS_SERVING
+  csv_columns = CSV_COLUMNS if include_label else CSV_COLUMNS_SERVING
+
   columns = tf.decode_csv(
-      rows_string_tensor, record_defaults=CSV_COLUMN_DEFAULTS)
-  features = dict(zip(CSV_COLUMNS, columns))
+      rows_string_tensor,
+      record_defaults=record_defaults)
+
+  features = dict(zip(csv_columns, columns))
 
   # Remove unused columns
   for col in UNUSED_COLUMNS:
@@ -294,10 +314,10 @@ def parse_csv(rows_string_tensor):
   return features
 
 def input_fn(filenames,
-                      num_epochs=None,
-                      shuffle=True,
-                      skip_header_lines=0,
-                      batch_size=200):
+             num_epochs=None,
+             shuffle=True,
+             skip_header_lines=0,
+             batch_size=200):
   """Generates features and labels for training or evaluation.
   This uses the input pipeline based approach using file name queue
   to read data so that entire data is not loaded in memory.
