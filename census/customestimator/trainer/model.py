@@ -157,7 +157,6 @@ def generate_model_fn(embedding_size=8,
     ]
 
     if mode == Modes.PREDICT:
-      # Convert predicted_indices back into strings
       key_tensor = features.pop(KEY)
 
     inputs = tf.feature_column.input_layer(features, transformed_columns)
