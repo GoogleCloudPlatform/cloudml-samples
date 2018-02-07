@@ -3,6 +3,8 @@
 This repository contains samples for usage of the Google Cloud Machine Learning Engine (Cloud ML Engine). For installation instructions and overview, please see [the documentation](https://cloud.google.com/ml-engine/docs/). Please refer to **README.md** in each sample directory for more specific instructions. 
 
 - - - 
+## ML on GCP guides
+Please checkout [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp) guides on how to bring your code from various ML frameworks to [Google Cloud Platform](https://cloud.google.com/).
 
 ## Cloud ML Engine
 
