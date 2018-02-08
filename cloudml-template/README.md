@@ -1,4 +1,4 @@
-# TensorFlow Trainer Package Template (Tensorflow v1.4)
+# TensorFlow Trainer Package Template 
 
 The purpose of this repository is to provide a template of how you can package a TensorFlow training model to submit it to Cloud ML Engine. The template makes it easier to organise your code, and to adapt it to your dataset. In more details, the template covers the following functionality:
 * Metadata to define your dataset, along with the problem type (classification vs regression).
@@ -20,3 +20,5 @@ Although the template provides standard implementation to different functionalit
 |[featurizer.py](https://github.com/ksalama/cloudml-samples/blob/master/cloudml-template/template/featurizer.py)| Creates: 1) tensorflow feature_column(s) based on the dataset metadata (and other extended feature columns, e.g. bucketisation, crossing, embedding, etc.), and 2) deep and wide feature column lists. | **Maybe**, if you want to your feature_column(s) and/or change how deep and wide columns are defined (see next section). 
 |[model.py](https://github.com/ksalama/cloudml-samples/blob/master/cloudml-template/template/model.py)|Includes: 1) function to create DNNLinearCombinedRegressor, 2) DNNLinearCombinedClassifier, and 2) function to implement for a custom estimator model_fn.|**No, unless** you want to change something in the estimator, e.g., activation functions, optimizers, etc., or to implement a custom estimator. 
 |[task.py](https://github.com/ksalama/cloudml-samples/blob/master/cloudml-template/template/task.py) |Includes: 1 experiment function that executes the model training and evaluation, 2) initialise and parse task arguments (hyper parameters), and 3) Entry point to the trainer. | **No, unless** you want to add/remove parameters, or change parameter default values.
+
+### Suitable for TensorFlow v1.4+
