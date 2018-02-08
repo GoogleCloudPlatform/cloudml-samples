@@ -1,34 +1,17 @@
-# Cloud ML Engine - TF Trainer Package Template
+# TensorFlow Trainer Package Template (Tensorflow v1.4)
 
-The purpose of this repository is to provide a template of how you can package a TensorFlow training model to submit it to Cloud ML Engine. 
-The template makes it easier to organise your code, and to adapt it to your dataset. In more details, the template covers the following functionality:
-* Metadata to define your dataset, along with the problem type (classification vs regression)
-* Standard implementation of input, parsing, and serving functions
-* Feature columns creation based on the metadata (and normalisation stats)
-* Wide and Deep model creation using canned estimators
-* Create custom estimator using standardised model_fn
-* Train, evaluate, and export the model
-* Parameterisation of the experiment
+The purpose of this repository is to provide a template of how you can package a TensorFlow training model to submit it to Cloud ML Engine. The template makes it easier to organise your code, and to adapt it to your dataset. In more details, the template covers the following functionality:
+* Metadata to define your dataset, along with the problem type (classification vs regression).
+* Standard implementation of input, parsing, and serving functions.
+* Automatic feature columns creation based on the metadata (and normalisation stats).
+* Wide & Deep model construction using canned estimators.
+* Create custom estimator using standardised model_fn.
+* Train, evaluate, and export the model.
+* Parameterisation of the experiment.
 
 Although the template provides standard implementation to different functionality, you can customise these parts with your own implementation.
 
-## Latest TF Version: Tensorflow v1.4
-
-### Repository Structure
-1. **template**: includes all the python module files to adapt to your data to build the ML trainer.
-
-2. **examples**: currently 3 examples are included, 1) classification, using the [Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) dataset, 2) regression, using the [House Pricing](https://www.kaggle.com/apratim87/housingdata/data) dataset,
-and 3) regression, with a custom estimator, using [Natality Baby Weight](https://catalog.data.gov/dataset?tags=birth-weight) dataset.
-The examples show how the template is adapted given a dataset. The datasets are found in the examples' folders.
-
-
-3. **scripts**: includes scripts to 1) train the model locally, 2) train the model on Cloud ML Engine, 
-and 3) deploy the model on GCP as well as to make prediction (inference) using the deployed model.
-
-4. **mle_inference.py**: a python code to perform prediction (inference ) via calling  the deployed model API
-
 ### Trainer Template Modules
-
 
 |File Name| Purpose| Do You Need to Change?
 |:---|:---|:---
