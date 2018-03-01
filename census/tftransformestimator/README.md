@@ -67,15 +67,15 @@ There are two options for the virtual environments:
 Run the code on your local machine:
 
 ```
-export TFT_OUTPUT_DIR_LOCAL=census_data
+export TFT_OUTPUT_DIR_LOCAL=census_data_tft
 rm -rf $TFT_OUTPUT_DIR_LOCAL
 
 python preprocess.py --train-data-file $TRAIN_FILE_LOCAL \
                      --test-data-file $EVAL_FILE_LOCAL \
                      --root-train-data-out train \
-                     --root-test-data-out test
+                     --root-test-data-out test \
                      --working-dir $TFT_OUTPUT_DIR_LOCAL \
-                     --temp-location ${TFT_OUTPUT_DIR_LOCAL}\tmp
+                     --temp-location ${TFT_OUTPUT_DIR_LOCAL}/tmp
 
 ```
 
@@ -84,20 +84,21 @@ python preprocess.py --train-data-file $TRAIN_FILE_LOCAL \
 ```
 gcloud auth application-default login
 
-export TFT_OUTPUT_DIR=gs://<my-bucket>/path/to/my/jobs/$JOB_NAME
+export TFT_OUTPUT_DIR=gs://<my-bucket>/path/to/my/jobs/
 export REGION=<your-gcp-region>
 export PROJECT=<your-gcp-project>
+export JOB_NAME=census-tft
 
 python preprocess.py --train-data-file $TRAIN_FILE \
                      --test-data-file $EVAL_FILE \
                      --root-train-data-out train \
-                     --root-test-data-out test
+                     --root-test-data-out test \
                      --working-dir $TFT_OUTPUT_DIR \
                      --runner DataflowRunner \
-                     --requirements_file requirements.txt \
+                     --requirements-file requirements_dataflow.txt \
                      --region $REGION \
-                     --project $PROJECT
-
+                     --project $PROJECT \
+                     --job-name $JOB_NAME
 ```
 
 
@@ -148,7 +149,7 @@ rm -rf $OUTPUT_DIR
 gcloud ml-engine local train --module-name trainer.task \
                              --package-path trainer \
                              -- \
-                             --tft-working-dir $TFT_OUTPUT_DIR_LOCAL
+                             --tft-working-dir $TFT_OUTPUT_DIR_LOCAL \
                              --train-filebase train \
                              --eval-filebase test \
                              --train-steps $TRAIN_STEPS \
@@ -175,13 +176,13 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --runtime-version 1.4 \
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
-                                    --package-path trainer/ \
+                                    --package-path trainer \
                                     --region $REGION \
                                     --project $PROJECT \
                                     -- \
                                     --tft-working-dir $TFT_OUTPUT_DIR \
                                     --train-filebase train \
-                                    --eval-filebase test
+                                    --eval-filebase test \
                                     --train-steps $TRAIN_STEPS \
                                     --job-dir $GCS_JOB_DIR
 
@@ -212,7 +213,7 @@ Run the distributed training code locally using `gcloud`.
 ```
 export TRAIN_STEPS=1000
 DATE=`date '+%Y%m%d_%H%M%S'`
-export OUTPUT_DIR=census_$DATE
+export OUTPUT_DIR=census_distributed_$DATE
 rm -rf $OUTPUT_DIR
 ```
 
@@ -221,7 +222,7 @@ gcloud ml-engine local train --module-name trainer.task \
                              --package-path trainer \
                              --distributed \
                              -- \
-                             --tft-working-dir $TFT_OUTPUT_DIR_LOCAL
+                             --tft-working-dir $TFT_OUTPUT_DIR_LOCAL \
                              --train-filebase train \
                              --eval-filebase test \
                              --train-steps $TRAIN_STEPS \
@@ -235,7 +236,7 @@ Run the distributed training code on cloud using `gcloud`.
 ```
 export SCALE_TIER=STANDARD_1
 DATE=`date '+%Y%m%d_%H%M%S'`
-export JOB_NAME=census_$DATE
+export JOB_NAME=census_${SCALE_TIER}_$DATE
 export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/models/$JOB_NAME
 echo $GCS_JOB_DIR
 export TRAIN_STEPS=5000
@@ -248,13 +249,13 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --scale-tier $SCALE_TIER \
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
-                                    --package-path trainer/ \
+                                    --package-path trainer \
                                     --region $REGION \
                                     --project $PROJECT \
                                     -- \
                                     --tft-working-dir $TFT_OUTPUT_DIR \
                                     --train-filebase train \
-                                    --eval-filebase test
+                                    --eval-filebase test \
                                     --train-steps $TRAIN_STEPS \
                                     --job-dir $GCS_JOB_DIR
 
@@ -271,9 +272,13 @@ Running Hyperparameter job is almost exactly same as Training job except that
 you need to add the `--config` argument.
 
 ```
-export HPTUNING_CONFIG=hptuning_config.yaml
-export JOB_NAME=census
-export TRAIN_STEPS=1000
+export HPTUNING_CONFIG=../hptuning_config.yaml
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME=census_hptuning_$DATE
+export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/models/$JOB_NAME
+echo $GCS_JOB_DIR
+export TRAIN_STEPS=5000
+
 ```
 
 ```
@@ -284,13 +289,13 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --scale-tier $SCALE_TIER \
                                     --job-dir $GCS_JOB_DIR \
                                     --module-name trainer.task \
-                                    --package-path trainer/ \
+                                    --package-path trainer \
                                     --region $REGION \
                                     --project $PROJECT \
                                     -- \
                                     --tft-working-dir $TFT_OUTPUT_DIR \
                                     --train-filebase train \
-                                    --eval-filebase test
+                                    --eval-filebase test \
                                     --train-steps $TRAIN_STEPS \
                                     --job-dir $GCS_JOB_DIR
 
