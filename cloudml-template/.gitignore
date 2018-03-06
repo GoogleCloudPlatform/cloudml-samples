@@ -1,0 +1,15 @@
+.idea/
+mle-tf1.4-env
+.idea
+examples/census-classification/trained_models
+mle_inference_test.py
+examples/housing-regression/trained_models
+template/__pycache__
+examples/babyweight-custom/trained_models
+examples/babyweight-custom/trainer/__pycache__/
+examples/census-classification/trainer/__pycache__/
+examples/housing-regression/trainer/__pycache__/
+.DS_Store
+examples/.DS_Store
+examples/babyweight-custom/.DS_Store
+examples/census-classification/trainer/trained_modeds/

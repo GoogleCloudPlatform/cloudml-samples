@@ -1,0 +1,30 @@
+trainingInput:
+  scaleTier: BASIC # BASIC | BASIC_GPU | STANDARD_1 | PREMIUM_1
+######### example of custom scale tier config ##############
+#  scaleTier: CUSTOM
+#  masterType: complex_model_m
+#  workerType: complex_model_m
+#  parameterServerType: large_model
+#  workerCount: 9
+#  parameterServerCount: 3
+######### example of hyper-parameter tuning config ##############
+#  hyperparameters:
+#    goal: MINIMIZE #MINIMIZE -> loss | MAXIMIZE -> accuracy
+#    maxTrials: 10
+#    maxParallelTrials: 1
+#    params:
+#    - parameterName: num-layers
+#      type: INTEGER
+#      minValue: 2
+#      maxValue: 6
+#      scaleType: UNIT_LINEAR_SCALE
+#    - parameterName: layer-sizes-scale-factor
+#      type: DOUBLE
+#      minValue: 0.2
+#      maxValue: 0.8
+#      scaleType: UNIT_LINEAR_SCALE
+#    - parameterName: learning-rate
+#      type: DOUBLE
+#      minValue: 0.0001
+#      maxValue: 0.01
+#      scaleType: UNIT_LOG_SCALE
