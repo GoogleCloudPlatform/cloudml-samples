@@ -74,10 +74,10 @@ def parse_tf_example(example_proto, is_serving=False):
 
     feature_spec = {}
 
-    for feature_name in metadata.NUMERIC_FEATURE_NAMES:
+    for feature_name in metadata.INPUT_FEATURE_NAMES:
         feature_spec[feature_name] = tf.FixedLenFeature(shape=1, dtype=tf.float32)
 
-    for feature_name in metadata.CATEGORICAL_FEATURE_NAMES:
+    for feature_name in metadata.INPUT_CATEGORICAL_FEATURE_NAMES:
         feature_spec[feature_name] = tf.FixedLenFeature(shape=1, dtype=tf.string)
 
     if not is_serving:
@@ -239,7 +239,7 @@ def generate_input_fn(file_names_pattern,
 
         return features, target
 
-    return _input_fn()
+    return _input_fn
 
 
 # **************************************************************************

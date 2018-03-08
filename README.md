@@ -1,8 +1,8 @@
 # Cloud Machine Learning Engine
 
-This repository contains samples for usage of the Google Cloud Machine Learning Engine (Cloud ML Engine). For installation instructions and overview, please see [the documentation](https://cloud.google.com/ml-engine/docs/). Please refer to **README.md** in each sample directory for more specific instructions. 
+This repository contains samples for usage of the Google Cloud Machine Learning Engine (Cloud ML Engine). For installation instructions and overview, please see [the documentation](https://cloud.google.com/ml-engine/docs/). Please refer to **README.md** in each sample directory for more specific instructions.
 
-- - - 
+- - -
 ## ML on GCP guides
 Please checkout [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp) guides on how to bring your code from various ML frameworks to [Google Cloud Platform](https://cloud.google.com/).
 
@@ -10,7 +10,8 @@ Please checkout [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp) gu
 
 ### CPU and GPU
 
-* [TensorFlow Estimator Trainer Package Template](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/master/cloudml-template) - Simplifies creating a trainer package for Cloud ML Engine.
+* [TensorFlow Estimator Trainer Package Template](cloudml-template) -
+  Simplifies creating a trainer package for Cloud ML Engine.
 * [Census](census) - Predict a person's income level
   * [Keras Census](census/keras) - [Keras](https://keras.io/) single node model
   * [Canned Estimator](census/estimator) - [TensorFlow canned estimator](https://www.tensorflow.org/programmers_guide/estimators#pre-made_estimators) model
@@ -25,8 +26,13 @@ Please checkout [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp) gu
 * [Reddit](reddit_tft) - Predict the score of a Reddit thread using a wide and deep model
 * [Cifar10](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10_estimator) - Classify image content (training on multiple GPUs)
 
-### TPU (Contrib)
-* [Resnet TPU](tpu)
+## Cloud TPU
+* [MNIST on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/mnist)
+* [ResNet-50 on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/resnet)
+* [Inception on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/inception)
+* [Advanced Inception v3 on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/inception-v3-advanced)
+* [RetinaNet on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/retinanet)
+* [Transformer with Tensor2Tensor on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/transformer)
 
 - - -
 

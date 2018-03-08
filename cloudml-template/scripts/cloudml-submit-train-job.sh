@@ -23,7 +23,7 @@ gcloud ml-engine jobs submit training ${JOB_NAME} \
         --region=${REGION} \
         --scale-tier=${TIER} \
         --module-name=trainer.task \
-        --package-path=${PACKAGE_PATH} # use --packages if gcs location \
+        --package-path=${PACKAGE_PATH}  \
         --config=config.yaml \
         -- \
         --train-files=${TRAIN_FILES} \
@@ -35,10 +35,9 @@ gcloud ml-engine jobs submit training ${JOB_NAME} \
         --learning-rate=0.01 \
         --hidden-units="64,32,10" \
         --layer-sizes-scale-factor=0.5 \
-        --num-layers=3 \
-        #--reuse-job-dir # use to resume training
+        --num-layers=3
 
 
-
-
-
+# notes:
+# use --packages instead of --package-path if gcs location
+# add --reuse-job-dir to resume training
