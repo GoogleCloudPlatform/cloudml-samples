@@ -13,7 +13,7 @@ Although the template provides standard implementation to different functionalit
 
 
 ### Repository Structure
-1. **template**: The directory includes 1) trainer template withh all the python modules to adapt to your data, 2) setup.py, and 3) confg.yaml file for hyper-parameter tuning and specifying the Cloude MLE scale-tier.
+1. **template**: The directory includes 1) trainer template with all the python modules to adapt to your data, 2) setup.py, and 3) confg.yaml file for hyper-parameter tuning and specifying the Cloude MLE scale-tier.
 
 2. **scripts**: The directory includes scripts to 1) train the model locally, 2) train the model on Cloud ML Engine, 
 and 3) deploy the model on GCP as well as to make prediction (inference) using the deployed model.
