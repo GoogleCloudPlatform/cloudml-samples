@@ -13,12 +13,12 @@ Although the template provides standard implementation to different functionalit
 
 
 ### Repository Structure
-1. **template**: The directory includes 1) trainer template withh all the python modules to adapt to your data, 2) setup.py, and 3) confg.yaml file for hyper-parameter tuning and specifying the Cloude MLE scale-tier.
+1. **[template](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/master/cloudml-template/template)**: The directory includes 1) trainer template with all the python modules to adapt to your data, 2) setup.py, and 3) confg.yaml file for hyper-parameter tuning and specifying the Cloude MLE scale-tier.
 
-2. **scripts**: The directory includes scripts to 1) train the model locally, 2) train the model on Cloud ML Engine, 
+2. **[scripts](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/master/cloudml-template/scripts)**: The directory includes scripts to 1) train the model locally, 2) train the model on Cloud ML Engine, 
 and 3) deploy the model on GCP as well as to make prediction (inference) using the deployed model.
 
-3. **examples**: Currently three different examples are included, 1) classification, using the [Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) (UCI Machine Learning Repository) dataset, 2) regression, using the [House Pricing](https://www.kaggle.com/apratim87/housingdata/data) (Kaggle) dataset,
+3. **[examples](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/master/cloudml-template/examples)**: Currently three different examples are included, 1) classification, using the [Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) (UCI Machine Learning Repository) dataset, 2) regression, using the [House Pricing](https://www.kaggle.com/apratim87/housingdata/data) (Kaggle) dataset,
 and 3) regression, with a custom estimator, using [Natality Baby Weight](https://catalog.data.gov/dataset?tags=birth-weight) (data.gov) dataset.
 
 The examples show how the template is adapted given a dataset. The datasets are found in the examples' folders (under "data" sub-directory).

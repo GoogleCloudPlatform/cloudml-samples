@@ -19,99 +19,31 @@ import tensorflow as tf
 
 import featurizer
 import task
-import metadata
-
-# ****************************************************************************************
-# YOU MAY MODIFY THESE FUNCTIONS TO USE DIFFERENT ESTIMATORS OR CONFIGURE THE CURRENT ONES
-# ****************************************************************************************
-
-
-def create_classifier(config):
-    """ Create a DNNLinearCombinedClassifier based on the HYPER_PARAMS in task.py
-
-    Args:
-        config - used for model directory
-    Returns:
-        DNNLinearCombinedClassifier
-    """
-
-    feature_columns = list(featurizer.create_feature_columns().values())
-
-    deep_columns, wide_columns = featurizer.get_deep_and_wide_columns(
-        feature_columns
-    )
-
-    linear_optimizer = tf.train.FtrlOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
-    dnn_optimizer = tf.train.AdagradOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
-
-    classifier = tf.estimator.DNNLinearCombinedClassifier(
-
-        n_classes=len(metadata.TARGET_LABELS),
-        label_vocabulary=metadata.TARGET_LABELS,
-
-        linear_optimizer=linear_optimizer,
-        linear_feature_columns=wide_columns,
-
-        dnn_feature_columns=deep_columns,
-        dnn_optimizer=dnn_optimizer,
-
-        weight_column=metadata.WEIGHT_COLUMN_NAME,
-
-        dnn_hidden_units=construct_hidden_units(),
-        dnn_activation_fn=tf.nn.relu,
-        dnn_dropout=task.HYPER_PARAMS.dropout_prob,
-
-        config=config,
-    )
-
-    print("creating a classification model: {}".format(classifier))
-
-    return classifier
-
-
-def create_regressor(config):
-    """ Create a DNNLinearCombinedRegressor based on the HYPER_PARAMS in task.py
-
-    Args:
-        config - used for model directory
-    Returns:
-        DNNLinearCombinedRegressor
-    """
-
-    feature_columns = list(featurizer.create_feature_columns().values())
-
-    deep_columns, wide_columns = featurizer.get_deep_and_wide_columns(
-        feature_columns
-    )
-
-    linear_optimizer = tf.train.FtrlOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
-    dnn_optimizer = tf.train.AdagradOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
-
-    regressor = tf.estimator.DNNLinearCombinedRegressor(
-
-        linear_optimizer=linear_optimizer,
-        linear_feature_columns=wide_columns,
-
-        dnn_feature_columns=deep_columns,
-        dnn_optimizer=dnn_optimizer,
-
-        weight_column=metadata.WEIGHT_COLUMN_NAME,
-
-        dnn_hidden_units=construct_hidden_units(),
-        dnn_activation_fn=tf.nn.relu,
-        dnn_dropout=task.HYPER_PARAMS.dropout_prob,
-
-        config=config,
-    )
-
-    print("creating a regression model: {}".format(regressor))
-
-    return regressor
 
 
 # ***************************************************************************************
 # YOU NEED TO MODIFY THIS FUNCTIONS IF YOU WANT TO IMPLEMENT A CUSTOM ESTIMATOR
 # ***************************************************************************************
+
+
+def metric_fn(labels, predictions):
+    """ Defines extra evaluation metrics to canned and custom estimators.
+    By default, this returns an empty dictionary
+
+    Args:
+        labels: A Tensor of the same shape as predictions
+        predictions: A Tensor of arbitrary shape
+    Returns:
+        dictionary of string:metric
+    """
+    metrics = {}
+
+    pred_values = predictions['scores']
+
+    metrics["mae"] = tf.metrics.mean_absolute_error(labels, pred_values)
+    metrics["rmse"] = tf.metrics.root_mean_squared_error(labels, pred_values)
+
+    return metrics
 
 
 def create_estimator(config):
@@ -174,9 +106,12 @@ def create_estimator(config):
             loss = tf.losses.mean_squared_error(labels, output)
 
         if mode == tf.estimator.ModeKeys.TRAIN:
+            # Update learning rate using exponential decay method
+            current_learning_rate = update_learning_rate()
+
             # Create Optimiser
             optimizer = tf.train.AdamOptimizer(
-                learning_rate=task.HYPER_PARAMS.learning_rate)
+                learning_rate=current_learning_rate)
 
             # Create training operation
             train_op = optimizer.minimize(
@@ -184,9 +119,7 @@ def create_estimator(config):
 
         if mode == tf.estimator.ModeKeys.EVAL:
             # Specify root mean squared error as additional eval metric
-            eval_metric_ops = {
-                "rmse": tf.metrics.root_mean_squared_error(labels, output)
-            }
+            eval_metric_ops = metric_fn(labels, predictions)
 
         # Provide an estimator spec
         estimator_spec = tf.estimator.EstimatorSpec(mode=mode,
@@ -205,7 +138,7 @@ def create_estimator(config):
 
 
 # ***************************************************************************************
-# THIS IS A HELPER FUNCTION TO CREATE GET THE HIDDEN LAYER UNITS
+# HELPER FUNCTIONS USED FOR CONSTRUCTING THE MODELS
 # ***************************************************************************************
 
 
@@ -234,3 +167,24 @@ def construct_hidden_units():
     print("Hidden units structure: {}".format(hidden_units))
 
     return hidden_units
+
+
+def update_learning_rate():
+    """ Updates learning rate using an exponential decay method
+
+    Returns:
+       float - updated (decayed) learning rate
+    """
+    initial_learning_rate = task.HYPER_PARAMS.learning_rate
+    decay_steps = task.HYPER_PARAMS.num_epochs  # decay after each epoch
+    decay_factor = task.HYPER_PARAMS.learning_rate_decay_factor  # if set to 1, then no decay.
+
+    global_step = tf.train.get_global_step()
+
+    # decayed_learning_rate = learning_rate * decay_rate ^ (global_step / decay_steps)
+    learning_rate = tf.train.exponential_decay(initial_learning_rate,
+                                               global_step,
+                                               decay_steps,
+                                               decay_factor)
+
+    return learning_rate
