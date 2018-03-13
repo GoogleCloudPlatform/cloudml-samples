@@ -2,10 +2,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
-sys.path.insert(0, "/Users/lfloretta/Documents/lfloretta/cloudml-samples/census/tftransformestimator")
-
-
 import six
 import os
 import tensorflow as tf
@@ -58,25 +54,6 @@ def vocabulary_size_by_name(working_dir, key):
   with tf.gfile.Open(vocabulary, 'r') as f:
     return sum(1 for _ in f)
 
-def feature_column_by_name(name, feature_column_list):
-  """Retrieves a feature_column by name.
-
-  Args:
-    name: Name of the feature_column to retrieve
-    feature_column_list: List of feature_column_list to search.
-
-  Returns:
-    The feture_column in |feature_column_list| with the |name|.
-
-  Raises:
-    KeyError: If no feature_column among the |feature_column_list| has |name|.
-  """
-  for feature_column in feature_column_list:
-    if feature_column.name == name:
-      return feature_column
-
-  raise KeyError('Feature column "%s" not found in feature_column_list: %s' % (key,
-                                                               feature_column_list))
 
 # Functions for training
 def _make_training_input_fn(tft_working_dir,
@@ -172,8 +149,16 @@ def _get_transformed_features(tft_working_dir):
 
 
 def _make_serving_input_fn(tft_working_dir):
-  raw_feature_spec = RAW_DATA_METADATA.schema.as_feature_spec()
+  """Creates an input function from serving.
 
+  Args:
+    tft_working_dir: Directory to read transformed data and metadata from and to
+        write exported model to.
+
+  Returns:
+    The input function for serving.
+  """
+  raw_feature_spec = RAW_DATA_METADATA.schema.as_feature_spec()
 
 
   def input_fn():
