@@ -76,7 +76,9 @@ def transform_data(train_data_file,
 
     # For categorical columns with a small vocabulary
     for key in STRING_TO_INT_FEATURE_KEYS:
-      outputs[key] = tft.string_to_int(inputs[key], vocab_filename=key)
+      outputs[key] = tft.string_to_int(
+          inputs[key],
+          vocab_filename=key)
 
     for key in HASH_STRING_FEATURE_KEYS:
       outputs[key] = tft.hash_strings(inputs[key], HASH_STRING_FEATURE_KEYS[key])
