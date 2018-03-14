@@ -21,7 +21,6 @@ import metadata
 import featurizer
 import task
 
-
 # ****************************************************************************************
 # YOU MAY MODIFY THESE FUNCTIONS TO USE DIFFERENT ESTIMATORS OR CONFIGURE THE CURRENT ONES
 # ****************************************************************************************
@@ -38,22 +37,16 @@ def metric_fn(labels, predictions):
         dictionary of string:metric
     """
     metrics = {}
-
-    pred_values = predictions['predictions']
-
-    metrics["mae"] = tf.metrics.mean_absolute_error(labels, pred_values)
-    metrics["rmse"] = tf.metrics.root_mean_squared_error(labels, pred_values)
-
     return metrics
 
 
-def create_regressor(config):
-    """ Create a DNNLinearCombinedRegressor based on the HYPER_PARAMS in task.py
+def create_classifier(config):
+    """ Create a DNNLinearCombinedClassifier based on the HYPER_PARAMS in task.py
 
     Args:
         config - used for model directory
     Returns:
-        DNNLinearCombinedRegressor
+        DNNLinearCombinedClassifier
     """
 
     feature_columns = list(featurizer.create_feature_columns().values())
@@ -62,12 +55,14 @@ def create_regressor(config):
         feature_columns
     )
 
-
     # Change the optimisers for the wide and deep parts of the model if you wish
     linear_optimizer = tf.train.FtrlOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
     dnn_optimizer = tf.train.AdagradOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
 
-    estimator = tf.estimator.DNNLinearCombinedRegressor(
+    estimator = tf.estimator.DNNLinearCombinedClassifier(
+
+        n_classes=len(metadata.TARGET_LABELS),
+        label_vocabulary=metadata.TARGET_LABELS,
 
         linear_optimizer=linear_optimizer,
         linear_feature_columns=wide_columns,
@@ -86,7 +81,7 @@ def create_regressor(config):
 
     estimator = tf.contrib.estimator.add_metrics(estimator, metric_fn)
 
-    print("creating a regression model: {}".format(estimator))
+    print("creating a classification model: {}".format(estimator))
 
     return estimator
 
@@ -113,10 +108,14 @@ def create_estimator(config):
 
         feature_columns = list(featurizer.create_feature_columns().values())
 
+
+
         # create the deep columns: dense + indicators
         deep_columns, _ = featurizer.get_deep_and_wide_columns(
             feature_columns
         )
+
+        print(deep_columns)
 
         # Create input layer based on features
         input_layer = tf.feature_column.input_layer(features=features,
@@ -143,7 +142,7 @@ def create_estimator(config):
         current_learning_rate = update_learning_rate()
 
         # Create Optimiser
-        optimizer = tf.train.AdamOptimizer(
+        optimizer = tf.train.AdagradOptimizer(
             learning_rate=current_learning_rate)
 
         # Create training operation
@@ -157,12 +156,12 @@ def create_estimator(config):
 
         logits = _inference(features)
 
-        head = tf.contrib.estimator.regression_head(
+        head = tf.contrib.estimator.binary_classification_head(
             weight_column=metadata.WEIGHT_COLUMN_NAME,
-            label_dimension=1,
+            label_vocabulary=metadata.TARGET_LABELS,
             # loss_reduction=tf.losses.Reduction.SUM, # tf v1.6
             # loss_fn=_loss_fn, # tf v1.6
-            name='regression_head'
+            name='classification_head'
         )
 
         return head.create_estimator_spec(

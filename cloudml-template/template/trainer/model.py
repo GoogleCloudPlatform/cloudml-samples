@@ -159,8 +159,8 @@ def create_estimator(config):
         Estimator
     """
 
-    def _model_fn(features, labels, mode):
-        """ model function for the custom estimator"""
+    def _inference(features):
+        """ Create the model structure and compute the logits """
 
         # Create input layer based on features
         # input_layer = None
@@ -168,19 +168,13 @@ def create_estimator(config):
         # Create hidden layers (dense, fully_connected, cnn, rnn, dropouts, etc.) given the input layer
         # hidden_layers = None
 
-        # Create output layer given the hidden layers
-        # output_layer = None
+        # Create output (logits) layer given the hidden layers (usually without applying any activation functions)
+        logits = None
 
-        # Specify the model output (i.e. predictions) given the output layer
-        predictions = None
+        return logits
 
-        # Specify the export output based on the predictions
-        export_outputs = {
-            'predictions': tf.estimator.export.PredictOutput(predictions)
-        }
-
-        # Calculate loss based on output and labels
-        loss = None
+    def _train_op_fn(loss):
+        """Returns the op to optimize the loss."""
 
         # Update learning rate using exponential decay method
         current_learning_rate = update_learning_rate()
@@ -193,23 +187,36 @@ def create_estimator(config):
         train_op = optimizer.minimize(
             loss=loss, global_step=tf.train.get_global_step())
 
-        # Specify additional evaluation metrics
-        eval_metric_ops = metric_fn(labels, predictions=predictions)
+        return train_op
 
-        # Provide an estimator spec
-        estimator_spec = tf.estimator.EstimatorSpec(mode=mode,
-                                                    loss=loss,
-                                                    train_op=train_op,
-                                                    eval_metric_ops=eval_metric_ops,
-                                                    predictions=predictions,
-                                                    export_outputs=export_outputs
-                                                    )
-        return estimator_spec
+    def _model_fn(features, labels, mode):
+        """ model function for the custom estimator"""
 
-    print("creating a custom estimator")
+        # Create the model structure and compute the logits
+        logits = _inference(features)
 
-    return tf.estimator.Estimator(model_fn=_model_fn,
-                                  config=config)
+        # Create the model's head:
+        # - tf.contrib.estimator.regression_head
+        # - tf.contrib.estimator.binary_classification_head
+        # - tf.contrib.estimator.multi_lablel_head
+        # - tf.contrib.estimator.multi_head
+        head = None
+
+        return head.create_estimator_spec(
+            features,
+            mode,
+            logits,
+            labels=labels,
+            train_op_fn=_train_op_fn
+        )
+
+    print("creating a custom model...")
+
+    estimator = tf.estimator.Estimator(model_fn=_model_fn, config=config)
+
+    estimator = tf.contrib.estimator.add_metrics(estimator, metric_fn)
+
+    return estimator
 
 
 # ***************************************************************************************
