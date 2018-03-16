@@ -9,14 +9,20 @@ trainingInput:
 #  parameterServerCount: 3
 ######### example of hyper-parameter tuning config ##############
 #  hyperparameters:
-#    goal: MINIMIZE #MINIMIZE -> loss | MAXIMIZE -> accuracy
-#    maxTrials: 10
-#    maxParallelTrials: 1
+#    goal: MINIMIZE # Set to MINIMIZE or MAXIMIZE (e.g. rmse vs. accuracy)
+#    hyperparameterMetricTag: rmse # Set to the name of the metric you assigned to the estimator
+#    enableTrialEarlyStopping: True
+#    maxTrials: 30
+#    maxParallelTrials: 4
+######### params to tune ##############
 #    params:
 #    - parameterName: num-layers
-#      type: INTEGER
-#      minValue: 2
-#      maxValue: 6
+#      type: DISCRETE
+#      discreteValues:
+#      - 2
+#      - 3
+#      - 4
+#      - 5
 #      scaleType: UNIT_LINEAR_SCALE
 #    - parameterName: layer-sizes-scale-factor
 #      type: DOUBLE
@@ -28,3 +34,5 @@ trainingInput:
 #      minValue: 0.0001
 #      maxValue: 0.01
 #      scaleType: UNIT_LOG_SCALE
+#
+##### add more parameters that you want to tune...
