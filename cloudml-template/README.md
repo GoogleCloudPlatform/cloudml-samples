@@ -16,7 +16,7 @@ Although the template provides standard implementation to different functionalit
 1. **[template](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/master/cloudml-template/template)**: The directory includes: 
     1) trainer template with all the python modules to adapt to your data.
     2) setup.py.
-    3) config.yaml file for hyper-parameter tuning and specifying the Cloude ML Engine scale-tier.
+    3) config.yaml file for hyper-parameter tuning and specifying the Cloud ML Engine scale-tier.
     4) inference.py python (sample) script to perform prediction using a deployed model's API on Cloud ML Engine.
 
 2. **[scripts](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/master/cloudml-template/scripts)**: The directory includes command-line scripts to:
