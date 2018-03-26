@@ -151,7 +151,8 @@ def initialise_hyper_params(args_parser):
              The factor by which the learning rate should decay by the end of the training.
              decayed_learning_rate = learning_rate * decay_rate ^ (global_step / decay_steps)
              If set to 1.0 (default), then no decay will occur
-             If set to 0.5, then the learning rate should reach 0.5 of its original value  \
+             If set to 0.5, then the learning rate should reach 0.5 of its original value at the end of the training. 
+             Note that, decay_steps is set to train_steps\
              """,
         default=1.0,
         type=float

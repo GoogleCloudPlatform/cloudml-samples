@@ -220,7 +220,7 @@ def update_learning_rate():
        float - updated (decayed) learning rate
     """
     initial_learning_rate = task.HYPER_PARAMS.learning_rate
-    decay_steps = task.HYPER_PARAMS.num_epochs  # decay after each epoch
+    decay_steps = task.HYPER_PARAMS.train_steps  # decay after each training step
     decay_factor = task.HYPER_PARAMS.learning_rate_decay_factor  # if set to 1, then no decay.
 
     global_step = tf.train.get_global_step()

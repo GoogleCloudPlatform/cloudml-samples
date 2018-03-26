@@ -164,7 +164,7 @@ def create_feature_columns():
 
 
 # **************************************************************************
-# YOU MAY NOT CHANGE THIS FUNCTION TO DEFINE WIDE AND DEEP COLUMNS
+# YOU NEED NOT TO CHANGE THIS FUNCTION TO DEFINE WIDE AND DEEP COLUMNS
 # **************************************************************************
 
 

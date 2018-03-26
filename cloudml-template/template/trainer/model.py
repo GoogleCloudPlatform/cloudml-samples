@@ -44,7 +44,7 @@ def metric_fn(labels, predictions):
     # metrics['rmse'] = tf.metrics.root_mean_squared_error(labels=labels,
     #                                                      predictions=pred_values)
 
-    # Example of implementing Sensitivity at Specificity for classification
+    # Example of implementing Mean per Class Accuracy for classification
 
     # indices = parse_label_column(labels)
     # pred_class = predictions['class_ids']
@@ -220,7 +220,7 @@ def create_estimator(config):
 
 
 # ***************************************************************************************
-# HELPER FUNCTIONS USED FOR CONSTRUCTING THE MODELS
+# YOU NEED NOT TO CHANGE THESE HELPER FUNCTIONS USED FOR CONSTRUCTING THE MODELS
 # ***************************************************************************************
 
 
@@ -258,7 +258,7 @@ def update_learning_rate():
        float - updated (decayed) learning rate
     """
     initial_learning_rate = task.HYPER_PARAMS.learning_rate
-    decay_steps = task.HYPER_PARAMS.num_epochs  # decay after each epoch
+    decay_steps = task.HYPER_PARAMS.train_steps  # decay after each training step
     decay_factor = task.HYPER_PARAMS.learning_rate_decay_factor  # if set to 1, then no decay.
 
     global_step = tf.train.get_global_step()
