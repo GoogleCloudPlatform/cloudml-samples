@@ -239,7 +239,7 @@ def generate_input_fn(file_names_pattern,
 
         return features, target
 
-    return _input_fn()
+    return _input_fn
 
 
 # **************************************************************************
