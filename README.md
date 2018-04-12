@@ -10,7 +10,7 @@ Please checkout [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp) gu
 
 ### CPU and GPU
 
-* [TensorFlow Estimator Trainer Package Template](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/master/cloudml-template/template/) -
+* [TensorFlow Estimator Trainer Package Template](cloudml-template) -
   Simplifies creating a trainer package for Cloud ML Engine.
 * [Census](census) - Predict a person's income level
   * [Keras Census](census/keras) - [Keras](https://keras.io/) single node model
