@@ -58,7 +58,7 @@ def initialise_hyper_params(args_parser):
         '--feature-stats-file',
         help='GCS or local paths to feature statistics json file',
         nargs='+',
-        default='data/stats.json'
+        default=None
     )
     ###########################################
 
@@ -78,7 +78,7 @@ def initialise_hyper_params(args_parser):
         '--train-batch-size',
         help='Batch size for each training step',
         type=int,
-        default=200
+        default=500
     )
     args_parser.add_argument(
         '--train-size',
@@ -93,7 +93,7 @@ def initialise_hyper_params(args_parser):
         If both --train-size and --num-epochs are specified,
         --train-steps will be: (train-size/train-batch-size) * num-epochs.\
         """,
-        default=10,
+        default=100,
         type=int,
     )
     ###########################################
@@ -132,7 +132,7 @@ def initialise_hyper_params(args_parser):
     args_parser.add_argument(
         '--embedding-size',
         help='Number of embedding dimensions for categorical columns. value of 0 means no embedding',
-        default=4,
+        default=10,
         type=int
     )
     ###########################################
@@ -145,13 +145,25 @@ def initialise_hyper_params(args_parser):
         type=float
     )
     args_parser.add_argument(
+        '--learning-rate-decay-factor',
+        help="""\
+             **VALID FOR CUSTOM MODELS**
+             The factor by which the learning rate should decay by the end of the training.
+             decayed_learning_rate = learning_rate * decay_rate ^ (global_step / decay_steps)
+             If set to 1.0 (default), then no decay will occur
+             If set to 0.5, then the learning rate should reach 0.5 of its original value  \
+             """,
+        default=0.01,
+        type=float
+    )
+    args_parser.add_argument(
         '--hidden-units',
         help="""\
              Hidden layer sizes to use for DNN feature columns, provided in comma-separated layers. 
              If --scale-factor > 0, then only the size of the first layer will be used to compute 
              the sizes of subsequent layers \
              """,
-        default='20,10'
+        default='64,32,16'
     )
     args_parser.add_argument(
         '--layer-sizes-scale-factor',
@@ -159,13 +171,13 @@ def initialise_hyper_params(args_parser):
             Determine how the size of the layers in the DNN decays. 
             If value = 0 then the provided --hidden-units will be taken as is\
             """,
-        default=0.0,
+        default=0,
         type=float
     )
     args_parser.add_argument(
         '--num-layers',
         help='Number of layers in the DNN. If --scale-factor > 0, then this parameter is ignored',
-        default=3,
+        default=0,
         type=int
     )
     args_parser.add_argument(
@@ -188,7 +200,7 @@ def initialise_hyper_params(args_parser):
         If set to True, the categorical columns will be used in the wide part of the DNN model
         """,
         action='store_true',
-        default=True,
+        default=False,
     )
     ###########################################
 

@@ -26,6 +26,35 @@ import metadata
 # ****************************************************************************************
 
 
+def metric_fn(labels, predictions):
+    """ Defines extra evaluation metrics to canned and custom estimators.
+    By default, this returns an empty dictionary
+
+    Args:
+        labels: A Tensor of the same shape as predictions
+        predictions: A Tensor of arbitrary shape
+    Returns:
+        dictionary of string:metric
+    """
+    metrics = {}
+
+    # Example of implementing Root Mean Squared Error for regression
+
+    # pred_values = predictions['predictions']
+    # metrics['rmse'] = tf.metrics.root_mean_squared_error(labels=labels,
+    #                                                      predictions=pred_values)
+
+    # Example of implementing Mean per Class Accuracy for classification
+
+    # indices = parse_label_column(labels)
+    # pred_class = predictions['class_ids']
+    # metrics['mirco_accuracy'] = tf.metrics.mean_per_class_accuracy(labels=indices,
+    #                                                                predictions=pred_class,
+    #                                                                num_classes=len(metadata.TARGET_LABELS))
+
+    return metrics
+
+
 def create_classifier(config):
     """ Create a DNNLinearCombinedClassifier based on the HYPER_PARAMS in task.py
 
@@ -41,10 +70,11 @@ def create_classifier(config):
         feature_columns
     )
 
+    # Change the optimisers for the wide and deep parts of the model if you wish
     linear_optimizer = tf.train.FtrlOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
     dnn_optimizer = tf.train.AdagradOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
 
-    classifier = tf.estimator.DNNLinearCombinedClassifier(
+    estimator = tf.estimator.DNNLinearCombinedClassifier(
 
         n_classes=len(metadata.TARGET_LABELS),
         label_vocabulary=metadata.TARGET_LABELS,
@@ -64,9 +94,11 @@ def create_classifier(config):
         config=config,
     )
 
-    print("creating a classification model: {}".format(classifier))
+    estimator = tf.contrib.estimator.add_metrics(estimator, metric_fn)
 
-    return classifier
+    print("creating a classification model: {}".format(estimator))
+
+    return estimator
 
 
 def create_regressor(config):
@@ -84,10 +116,12 @@ def create_regressor(config):
         feature_columns
     )
 
+
+    # Change the optimisers for the wide and deep parts of the model if you wish
     linear_optimizer = tf.train.FtrlOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
     dnn_optimizer = tf.train.AdagradOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
 
-    regressor = tf.estimator.DNNLinearCombinedRegressor(
+    estimator = tf.estimator.DNNLinearCombinedRegressor(
 
         linear_optimizer=linear_optimizer,
         linear_feature_columns=wide_columns,
@@ -104,9 +138,11 @@ def create_regressor(config):
         config=config,
     )
 
-    print("creating a regression model: {}".format(regressor))
+    estimator = tf.contrib.estimator.add_metrics(estimator, metric_fn)
 
-    return regressor
+    print("creating a regression model: {}".format(estimator))
+
+    return estimator
 
 
 # ***************************************************************************************
@@ -123,8 +159,8 @@ def create_estimator(config):
         Estimator
     """
 
-    def _model_fn(features, labels, mode):
-        """ model function for the custom estimator"""
+    def _inference(features):
+        """ Create the model structure and compute the logits """
 
         # Create input layer based on features
         # input_layer = None
@@ -132,49 +168,59 @@ def create_estimator(config):
         # Create hidden layers (dense, fully_connected, cnn, rnn, dropouts, etc.) given the input layer
         # hidden_layers = None
 
-        # Create output layer given the hidden layers
-        # output_layer = None
+        # Create output (logits) layer given the hidden layers (usually without applying any activation functions)
+        logits = None
 
-        # Specify the model output (i.e. predictions) given the output layer
-        predictions = None
+        return logits
 
-        # Specify the export output based on the predictions
-        export_outputs = {
-            'predictions': tf.estimator.export.PredictOutput(predictions)
-        }
+    def _train_op_fn(loss):
+        """Returns the op to optimize the loss."""
 
-        # Calculate loss based on output and labels
-        loss = None
+        # Update learning rate using exponential decay method
+        current_learning_rate = update_learning_rate()
 
         # Create Optimiser
         optimizer = tf.train.AdamOptimizer(
-            learning_rate=task.HYPER_PARAMS.learning_rate)
+            learning_rate=current_learning_rate)
 
         # Create training operation
         train_op = optimizer.minimize(
             loss=loss, global_step=tf.train.get_global_step())
 
-        # Specify additional evaluation metrics
-        eval_metric_ops = None
+        return train_op
 
-        # Provide an estimator spec
-        estimator_spec = tf.estimator.EstimatorSpec(mode=mode,
-                                                    loss=loss,
-                                                    train_op=train_op,
-                                                    eval_metric_ops=eval_metric_ops,
-                                                    predictions=predictions,
-                                                    export_outputs=export_outputs
-                                                    )
-        return estimator_spec
+    def _model_fn(features, labels, mode):
+        """ model function for the custom estimator"""
 
-    print("creating a custom estimator")
+        # Create the model structure and compute the logits
+        logits = _inference(features)
 
-    return tf.estimator.Estimator(model_fn=_model_fn,
-                                  config=config)
+        # Create the model's head:
+        # - tf.contrib.estimator.regression_head
+        # - tf.contrib.estimator.binary_classification_head
+        # - tf.contrib.estimator.multi_lablel_head
+        # - tf.contrib.estimator.multi_head
+        head = None
+
+        return head.create_estimator_spec(
+            features,
+            mode,
+            logits,
+            labels=labels,
+            train_op_fn=_train_op_fn
+        )
+
+    print("creating a custom model...")
+
+    estimator = tf.estimator.Estimator(model_fn=_model_fn, config=config)
+
+    estimator = tf.contrib.estimator.add_metrics(estimator, metric_fn)
+
+    return estimator
 
 
 # ***************************************************************************************
-# THIS IS A HELPER FUNCTION TO CREATE GET THE HIDDEN LAYER UNITS
+# YOU NEED NOT TO CHANGE THESE HELPER FUNCTIONS USED FOR CONSTRUCTING THE MODELS
 # ***************************************************************************************
 
 
@@ -203,3 +249,34 @@ def construct_hidden_units():
     print("Hidden units structure: {}".format(hidden_units))
 
     return hidden_units
+
+
+def update_learning_rate():
+    """ Updates learning rate using an exponential decay method
+
+    Returns:
+       float - updated (decayed) learning rate
+    """
+    initial_learning_rate = task.HYPER_PARAMS.learning_rate
+    decay_steps = task.HYPER_PARAMS.train_steps  # decay after each training step
+    decay_factor = task.HYPER_PARAMS.learning_rate_decay_factor  # if set to 1, then no decay.
+
+    global_step = tf.train.get_global_step()
+
+    # decayed_learning_rate = learning_rate * decay_rate ^ (global_step / decay_steps)
+    learning_rate = tf.train.exponential_decay(initial_learning_rate,
+                                               global_step,
+                                               decay_steps,
+                                               decay_factor)
+
+    return learning_rate
+
+
+def parse_label_column(label_string_tensor):
+    """ Convert string class labels to indices
+
+    Returns:
+       Tensor of type int
+    """
+    table = tf.contrib.lookup.index_table_from_tensor(tf.constant(metadata.TARGET_LABELS))
+    return table.lookup(label_string_tensor)

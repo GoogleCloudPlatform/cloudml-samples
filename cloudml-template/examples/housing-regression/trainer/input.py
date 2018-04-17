@@ -31,7 +31,7 @@ import task
 # **************************************************************************
 
 
-def parse_csv(csv_row, is_serving=False):
+def parse_csv(csv_row, is_serving=False, separator=','):
     """Takes the string input tensor (csv) and returns a dict of rank-2 tensors.
 
     Takes a rank-1 tensor and converts it into rank-2 tensor, with respect to its data type
@@ -41,6 +41,7 @@ def parse_csv(csv_row, is_serving=False):
         csv_row: rank-2 tensor of type string (csv)
         is_serving: boolean to indicate whether this function is called during serving or training
         since the serving csv_row input is different than the training input (i.e., no target column)
+        separator: field delimiter
     Returns:
         rank-2 tensor of the correct data type
     """
@@ -52,7 +53,7 @@ def parse_csv(csv_row, is_serving=False):
         column_names = metadata.HEADER
         defaults = metadata.HEADER_DEFAULTS
 
-    columns = tf.decode_csv(tf.expand_dims(csv_row, -1), record_defaults=defaults)
+    columns = tf.decode_csv(tf.expand_dims(csv_row, -1), record_defaults=defaults, field_delim=separator)
     features = dict(zip(column_names, columns))
 
     return features
@@ -74,10 +75,10 @@ def parse_tf_example(example_proto, is_serving=False):
 
     feature_spec = {}
 
-    for feature_name in metadata.NUMERIC_FEATURE_NAMES:
+    for feature_name in metadata.INPUT_FEATURE_NAMES:
         feature_spec[feature_name] = tf.FixedLenFeature(shape=1, dtype=tf.float32)
 
-    for feature_name in metadata.CATEGORICAL_FEATURE_NAMES:
+    for feature_name in metadata.INPUT_CATEGORICAL_FEATURE_NAMES:
         feature_spec[feature_name] = tf.FixedLenFeature(shape=1, dtype=tf.string)
 
     if not is_serving:

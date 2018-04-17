@@ -41,27 +41,26 @@ def initialise_hyper_params(args_parser):
         args_parser
     """
 
-    # data files arguments
+    # Data files arguments
     args_parser.add_argument(
         '--train-files',
         help='GCS or local paths to training data',
         nargs='+',
         required=True
     )
-
     args_parser.add_argument(
         '--eval-files',
         help='GCS or local paths to evaluation data',
         nargs='+',
         required=True
     )
-
     args_parser.add_argument(
         '--feature-stats-file',
         help='GCS or local paths to feature statistics json file',
         nargs='+',
         default=None
     )
+    ###########################################
 
     # Experiment arguments - training
     args_parser.add_argument(
@@ -81,14 +80,12 @@ def initialise_hyper_params(args_parser):
         type=int,
         default=200
     )
-
     args_parser.add_argument(
         '--train-size',
         help='Size of training set (instance count)',
         type=int,
         default=32561  # 63122
     )
-
     args_parser.add_argument(
         '--num-epochs',
         help="""\
@@ -99,6 +96,7 @@ def initialise_hyper_params(args_parser):
         default=10,
         type=int,
     )
+    ###########################################
 
     # Experiment arguments - evaluation
     args_parser.add_argument(
@@ -107,7 +105,6 @@ def initialise_hyper_params(args_parser):
         default=120,
         type=int
     )
-
     args_parser.add_argument(
         '--eval-steps',
         help="""\
@@ -124,6 +121,7 @@ def initialise_hyper_params(args_parser):
         type=int,
         default=200
     )
+    ###########################################
 
     # features processing arguments
     args_parser.add_argument(
@@ -138,6 +136,7 @@ def initialise_hyper_params(args_parser):
         default=4,
         type=int
     )
+    ###########################################
 
     # Estimator arguments
     args_parser.add_argument(
@@ -192,6 +191,7 @@ def initialise_hyper_params(args_parser):
         action='store_true',
         default=True,
     )
+    ###########################################
 
     # Saved model arguments
     args_parser.add_argument(
@@ -199,7 +199,6 @@ def initialise_hyper_params(args_parser):
         help='GCS location to write checkpoints and export models',
         required=True
     )
-
     args_parser.add_argument(
         '--reuse-job-dir',
         action='store_true',
@@ -209,13 +208,13 @@ def initialise_hyper_params(args_parser):
             be re-used from the job-dir. If False then the
             job-dir will be deleted"""
     )
-
     args_parser.add_argument(
         '--export-format',
         help='The input format of the exported SavedModel binary',
         choices=['JSON', 'CSV', 'EXAMPLE'],
         default='JSON'
     )
+    ###########################################
 
     # Argument to turn on all logging
     args_parser.add_argument(

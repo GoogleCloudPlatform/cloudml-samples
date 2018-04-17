@@ -26,6 +26,8 @@ import featurizer
 import task
 
 
+SEPARATOR = '|'
+
 # **************************************************************************
 # YOU NEED NOT TO CHANGE THESE FUNCTIONS TO PARSE THE INPUT RECORDS
 # **************************************************************************
@@ -41,10 +43,10 @@ def parse_csv(csv_row, is_serving=False):
         csv_row: rank-2 tensor of type string (csv)
         is_serving: boolean to indicate whether this function is called during serving or training
         since the serving csv_row input is different than the training input (i.e., no target column)
+        separator: field delimiter
     Returns:
         rank-2 tensor of the correct data type
     """
-
     if is_serving:
         column_names = metadata.SERVING_COLUMNS
         defaults = metadata.SERVING_DEFAULTS
@@ -52,7 +54,8 @@ def parse_csv(csv_row, is_serving=False):
         column_names = metadata.HEADER
         defaults = metadata.HEADER_DEFAULTS
 
-    columns = tf.decode_csv(tf.expand_dims(csv_row, -1), record_defaults=defaults)
+    columns = tf.decode_csv(tf.expand_dims(csv_row, -1), record_defaults=defaults,
+                            field_delim=SEPARATOR)
     features = dict(zip(column_names, columns))
 
     return features

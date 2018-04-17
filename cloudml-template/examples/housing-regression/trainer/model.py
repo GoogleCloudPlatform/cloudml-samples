@@ -26,47 +26,23 @@ import metadata
 # ****************************************************************************************
 
 
-def create_classifier(config):
-    """ Create a DNNLinearCombinedClassifier based on the HYPER_PARAMS in task.py
+def get_eval_metrics(labels, predictions):
+    """ Defines extra evaluation metrics to canned and custom estimators.
+    By default, this returns an empty dictionary
 
     Args:
-        config - used for model directory
+        labels: A Tensor of the same shape as predictions
+        predictions: A Tensor of arbitrary shape
     Returns:
-        DNNLinearCombinedClassifier
+        dictionary of string:metric
     """
+    metrics = {}
 
-    feature_columns = list(featurizer.create_feature_columns().values())
+    pred_values = predictions['predictions']
+    metrics['rmse'] = tf.metrics.root_mean_squared_error(labels=labels,
+                                                         predictions=pred_values)
 
-    deep_columns, wide_columns = featurizer.get_deep_and_wide_columns(
-        feature_columns
-    )
-
-    linear_optimizer = tf.train.FtrlOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
-    dnn_optimizer = tf.train.AdagradOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
-
-    classifier = tf.estimator.DNNLinearCombinedClassifier(
-
-        n_classes=len(metadata.TARGET_LABELS),
-        label_vocabulary=metadata.TARGET_LABELS,
-
-        linear_optimizer=linear_optimizer,
-        linear_feature_columns=wide_columns,
-
-        dnn_feature_columns=deep_columns,
-        dnn_optimizer=dnn_optimizer,
-
-        weight_column=metadata.WEIGHT_COLUMN_NAME,
-
-        dnn_hidden_units=construct_hidden_units(),
-        dnn_activation_fn=tf.nn.relu,
-        dnn_dropout=task.HYPER_PARAMS.dropout_prob,
-
-        config=config,
-    )
-
-    print("creating a classification model: {}".format(classifier))
-
-    return classifier
+    return metrics
 
 
 def create_regressor(config):
@@ -87,7 +63,7 @@ def create_regressor(config):
     linear_optimizer = tf.train.FtrlOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
     dnn_optimizer = tf.train.AdagradOptimizer(learning_rate=task.HYPER_PARAMS.learning_rate)
 
-    regressor = tf.estimator.DNNLinearCombinedRegressor(
+    estimator = tf.estimator.DNNLinearCombinedRegressor(
 
         linear_optimizer=linear_optimizer,
         linear_feature_columns=wide_columns,
@@ -104,77 +80,15 @@ def create_regressor(config):
         config=config,
     )
 
-    print("creating a regression model: {}".format(regressor))
+    estimator = tf.contrib.estimator.add_metrics(estimator, get_eval_metrics)
 
-    return regressor
+    print("creating a regression model: {}".format(estimator))
 
-
-# ***************************************************************************************
-# YOU NEED TO MODIFY THIS FUNCTIONS IF YOU WANT TO IMPLEMENT A CUSTOM ESTIMATOR
-# ***************************************************************************************
-
-
-def create_estimator(config):
-    """ Create a custom estimator based on _model_fn
-
-    Args:
-        config - used for model directory
-    Returns:
-        Estimator
-    """
-
-    def _model_fn(features, labels, mode):
-        """ model function for the custom estimator"""
-
-        # Create input layer based on features
-        # input_layer = None
-
-        # Create hidden layers (dense, fully_connected, cnn, rnn, dropouts, etc.) given the input layer
-        # hidden_layers = None
-
-        # Create output layer given the hidden layers
-        # output_layer = None
-
-        # Specify the model output (i.e. predictions) given the output layer
-        predictions = None
-
-        # Specify the export output based on the predictions
-        export_outputs = {
-            'predictions': tf.estimator.export.PredictOutput(predictions)
-        }
-
-        # Calculate loss based on output and labels
-        loss = None
-
-        # Create Optimiser
-        optimizer = tf.train.AdamOptimizer(
-            learning_rate=task.HYPER_PARAMS.learning_rate)
-
-        # Create training operation
-        train_op = optimizer.minimize(
-            loss=loss, global_step=tf.train.get_global_step())
-
-        # Specify additional evaluation metrics
-        eval_metric_ops = None
-
-        # Provide an estimator spec
-        estimator_spec = tf.estimator.EstimatorSpec(mode=mode,
-                                                    loss=loss,
-                                                    train_op=train_op,
-                                                    eval_metric_ops=eval_metric_ops,
-                                                    predictions=predictions,
-                                                    export_outputs=export_outputs
-                                                    )
-        return estimator_spec
-
-    print("creating a custom estimator")
-
-    return tf.estimator.Estimator(model_fn=_model_fn,
-                                  config=config)
+    return estimator
 
 
 # ***************************************************************************************
-# THIS IS A HELPER FUNCTION TO CREATE GET THE HIDDEN LAYER UNITS
+# HELPER FUNCTIONS USED FOR CONSTRUCTING THE MODELS
 # ***************************************************************************************
 
 

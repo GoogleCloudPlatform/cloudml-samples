@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import numpy as np
 import tensorflow as tf
 from tensorflow.python.feature_column import feature_column
 
@@ -29,51 +29,28 @@ import input
 
 
 def extend_feature_columns(feature_columns):
-    """ Use to define additional feature columns, such as bucketized_column, crossed_column,
-    and embedding_column. parameters.HYPER_PARAMS can be used to parameterise the creation
-    of the extended columns (e.g., embedding dimensions, number of buckets, etc.
-    Note that, extensions can be applied on features constructed in process_features function
+    """ Use to define additional feature columns, such as bucketized_column(s), crossed_column(s),
+    and embedding_column(s). task.HYPER_PARAMS can be used to parameterise the creation
+    of the extended columns (e.g., embedding dimensions, number of buckets, etc.).
 
     Default behaviour is to return the original feature_columns list as-is.
- 
+
     Args:
-        feature_columns: [tf.feature_column] - list of base feature_columns to be extended
+        feature_columns: {column_name: tf.feature_column} - dictionary of base feature_column(s)
     Returns:
-        [tf.feature_column]: extended feature_column list
+        {string: tf.feature_column}: extended feature_column(s) dictionary
     """
 
-    age_buckets = tf.feature_column.bucketized_column(
-        feature_columns['age'], boundaries=[18, 25, 30, 35, 40, 45, 50, 55, 60, 65])
+    #size = np.prod([len(values) for values in metadata.INPUT_CATEGORICAL_FEATURE_NAMES_WITH_VOCABULARY.items()])
 
-    education_X_occupation = tf.feature_column.crossed_column(
-        ['education', 'occupation'], hash_bucket_size=int(1e4))
+    interactions_feature = tf.feature_column.crossed_column(
+        keys=metadata.INPUT_CATEGORICAL_FEATURE_NAMES_WITH_VOCABULARY.keys(),
+        hash_bucket_size=10000
+    )
 
-    age_buckets_X_race = tf.feature_column.crossed_column(
-        [age_buckets, feature_columns['race']], hash_bucket_size=int(1e4))
+    interactions_feature_embedded = tf.feature_column.embedding_column( interactions_feature, dimension=task.HYPER_PARAMS.embedding_size)
 
-    native_country_X_occupation = tf.feature_column.crossed_column(
-        ['native_country', 'occupation'], hash_bucket_size=int(1e4))
-
-    native_country_embedded = tf.feature_column.embedding_column(
-        feature_columns['native_country'], dimension=task.HYPER_PARAMS.embedding_size)
-
-    occupation_embedded = tf.feature_column.embedding_column(
-        feature_columns['occupation'], dimension=task.HYPER_PARAMS.embedding_size)
-
-    education_X_occupation_embedded = tf.feature_column.embedding_column(
-        education_X_occupation, dimension=task.HYPER_PARAMS.embedding_size)
-
-    native_country_X_occupation_embedded = tf.feature_column.embedding_column(
-        native_country_X_occupation, dimension=task.HYPER_PARAMS.embedding_size)
-
-    feature_columns['age_buckets'] = age_buckets
-    feature_columns['education_X_occupation'] = education_X_occupation
-    feature_columns['age_buckets_X_race'] = age_buckets_X_race
-    feature_columns['native_country_X_occupation'] = native_country_X_occupation
-    feature_columns['native_country_embedded'] = native_country_embedded
-    feature_columns['occupation_embedded'] = occupation_embedded
-    feature_columns['education_X_occupation_embedded'] = education_X_occupation_embedded
-    feature_columns['native_country_X_occupation_embedded'] = native_country_X_occupation_embedded
+    feature_columns['interactions_feature_embedded'] = interactions_feature_embedded
 
     return feature_columns
 
@@ -100,14 +77,40 @@ def create_feature_columns():
       {string: tf.feature_column}: dictionary of name:feature_column .
     """
 
-    # all the numerical feature including the input and constructed ones
+    # load the numeric feature stats (if exists)
+    feature_stats = input.load_feature_stats()
+
+    # all the numerical features including the input and constructed ones
     numeric_feature_names = set(metadata.INPUT_NUMERIC_FEATURE_NAMES + metadata.CONSTRUCTED_NUMERIC_FEATURE_NAMES)
 
     # create t.feature_column.numeric_column columns without scaling
-    numeric_columns = {feature_name: tf.feature_column.numeric_column(feature_name, normalizer_fn=None)
-                       for feature_name in numeric_feature_names}
+    if feature_stats is None:
+        numeric_columns = {feature_name: tf.feature_column.numeric_column(feature_name, normalizer_fn=None)
+                           for feature_name in numeric_feature_names}
 
-    # all the categorical feature with identity including the input and constructed ones
+    # create t.feature_column.numeric_column columns with scaling
+    else:
+        numeric_columns = {}
+
+        for feature_name in numeric_feature_names:
+            try:
+                # standard scaling
+                mean = feature_stats[feature_name]['mean']
+                stdv = feature_stats[feature_name]['stdv']
+                normalizer_fn = lambda x: (x - mean) / stdv
+
+                # max_min scaling
+                # min_value = feature_stats[feature_name]['min']
+                # max_value = feature_stats[feature_name]['max']
+                # normalizer_fn = lambda x: (x-min_value)/(max_value-min_value)
+
+                numeric_columns[feature_name] = tf.feature_column.numeric_column(feature_name,
+                                                                                 normalizer_fn=normalizer_fn)
+            except:
+                numeric_columns[feature_name] = tf.feature_column.numeric_column(feature_name,
+                                                                                 normalizer_fn=None)
+
+    # all the categorical features with identity including the input and constructed ones
     categorical_feature_names_with_identity = metadata.INPUT_CATEGORICAL_FEATURE_NAMES_WITH_IDENTITY
     categorical_feature_names_with_identity.update(metadata.CONSTRUCTED_CATEGORICAL_FEATURE_NAMES_WITH_IDENTITY)
 
@@ -126,6 +129,7 @@ def create_feature_columns():
         {item[0]: tf.feature_column.categorical_column_with_hash_bucket(item[0], item[1])
          for item in metadata.INPUT_CATEGORICAL_FEATURE_NAMES_WITH_HASH_BUCKET.items()}
 
+    # this will include all the feature columns of various types
     feature_columns = {}
 
     if numeric_columns is not None:
@@ -140,7 +144,7 @@ def create_feature_columns():
     if categorical_columns_with_hash_bucket is not None:
         feature_columns.update(categorical_columns_with_hash_bucket)
 
-    # add extended feature definitions before returning the feature_columns list
+    # add extended feature_column(s) before returning the complete feature_column dictionary
     return extend_feature_columns(feature_columns)
 
 
@@ -203,9 +207,6 @@ def get_deep_and_wide_columns(feature_columns):
             map(lambda column: tf.feature_column.indicator_column(column),
                 categorical_columns)
         )
-
-    # deep_columns = dense_columns + indicator_columns
-    # wide_columns = categorical_columns + sparse_columns
 
     deep_columns = dense_columns + indicator_columns
     wide_columns = sparse_columns + (categorical_columns if as_wide_columns else [])
