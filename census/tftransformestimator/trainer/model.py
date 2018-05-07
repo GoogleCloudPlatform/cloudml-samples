@@ -121,32 +121,6 @@ def _make_training_input_fn(tft_working_dir,
   return input_fn
 
 
-def _get_transformed_features(tft_working_dir):
-  """Return the transformed features
-
-  Args:
-    tft_working_dir : Directory pointed from the tf transform pipeline
-
-  Returns:
-    A dictionary of the transformed features
-  """
-  raw_feature_spec = RAW_DATA_METADATA.schema.as_feature_spec()
-  raw_feature_spec.pop(LABEL_KEY)
-
-  raw_input_fn = tf.estimator.export.build_parsing_serving_input_receiver_fn(
-      raw_feature_spec)
-  raw_features, _ , _ = raw_input_fn()
-
-  # Apply the transform function that was used to generate the materialized
-  # data.
-  _, transformed_features = (
-      saved_transform_io.partially_apply_saved_transform(
-          os.path.join(tft_working_dir, transform_fn_io.TRANSFORM_FN_DIR),
-          raw_features))
-
-  return transformed_features
-
-
 def _make_serving_input_fn(tft_working_dir):
   """Creates an input function from serving.
 
@@ -157,18 +131,14 @@ def _make_serving_input_fn(tft_working_dir):
   Returns:
     The input function for serving.
   """
-  raw_feature_spec = RAW_DATA_METADATA.schema.as_feature_spec()
-
 
   def input_fn():
     """Serving input function that reads raw data and applies transforms."""
-    raw_placeholder_spec={}
-
     raw_placeholder_spec = RAW_DATA_METADATA.schema.as_batched_placeholders()
     # remove label key that is not going to be available at seving
     raw_placeholder_spec.pop(LABEL_KEY)
 
-    # we are defining the feature_column (raw_featutes) and the tensort
+    # we are defining the feature_column (raw_featutes) and the tensor
     # (receiver_tensors) for the raw data
     raw_input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn(
         raw_placeholder_spec)
@@ -212,10 +182,10 @@ def build_estimator(config, tft_working_dir, embedding_size, hidden_units):
       input_metadata.py
 
   """
-
-  transformed_features = _get_transformed_features(
-      tft_working_dir
-  )
+  transformed_metadata = metadata_io.read_metadata(
+      os.path.join(
+          tft_working_dir, transform_fn_io.TRANSFORMED_METADATA_DIR))
+  transformed_features = transformed_metadata.schema.as_feature_spec()
 
 
   transformed_features.pop(LABEL_KEY)
