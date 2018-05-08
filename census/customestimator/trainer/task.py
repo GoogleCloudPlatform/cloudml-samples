@@ -27,6 +27,7 @@ def run_experiment(hparams):
       shuffle=False
   )
 
+  # TODO: How should these train/eval spec's be further adjusted for using tf.estimator.train_and_evaluate()?
   train_spec = tf.estimator.TrainSpec(train_input,
                                       max_steps=hparams.train_steps
                                       )
@@ -49,7 +50,23 @@ def run_experiment(hparams):
                 ],
                 learning_rate=hparams.learning_rate)
 
-  estimator = tf.estimator.Estimator(model_fn=model_fn, model_dir=hparams.job_dir)
+  # TODO: unclear what config settings are needed for my model
+  config = tpu_config.RunConfig(
+      master=tpu_grpc_url,
+      evaluation_master=tpu_grpc_url,
+      model_dir=FLAGS.model_dir,
+      cluster=tpu_cluster_resolver,
+      tpu_config=tpu_config.TPUConfig(
+          iterations_per_loop=FLAGS.iterations_per_loop,
+          num_shards=FLAGS.num_cores))
+
+  estimator = tpu_estimator.Estimator(
+    use_tpu = True,
+    model_fn=model_fn, 
+    model_dir=hparams.job_dir,
+    config = run_config,
+    # train_batch_size --> not being passed as I believe this should be handled in the train_spec...
+    )
   tf.estimator.train_and_evaluate(estimator,
                                   train_spec,
                                   eval_spec)
