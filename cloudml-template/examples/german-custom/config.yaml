@@ -1,0 +1,3 @@
+trainingInput:
+  scaleTier: BASIC # BASIC | BASIC_GPU | STANDARD_1 | PREMIUM_1
+

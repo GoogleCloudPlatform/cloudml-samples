@@ -1,7 +1,7 @@
 import argparse
 import os
 
-import model
+import trainer.model as model
 
 import tensorflow as tf
 from tensorflow.contrib.learn import learn_runner
@@ -11,47 +11,35 @@ from tensorflow.contrib.training.python.training import hparam
 from tensorflow.contrib.tpu.python.tpu import tpu_estimator
 
 
-def generate_experiment_fn(**experiment_args):
-  """Create an experiment function.
+def run_experiment(hparams):
+  """Run the training and evaluate using the high level API"""
 
-  See command line help text for description of args.
-  Args:
-    experiment_args: keyword arguments to be passed through to experiment
-      See `tf.contrib.learn.Experiment` for full args.
-  Returns:
-    A function:
-      (tf.contrib.learn.RunConfig, tf.contrib.training.HParams) -> Experiment
+  train_input = lambda: model.input_fn(
+      hparams.train_files,
+      num_epochs=hparams.num_epochs,
+      batch_size=hparams.train_batch_size
+  )
 
-    This function is used by learn_runner to create an Experiment which
-    executes model code provided in the form of an Estimator and
-    input functions.
-  """
-  def _experiment_fn(run_config, hparams):
-    # num_epochs can control duration if train_steps isn't
-    # passed to Experiment
-    train_input = lambda: model.generate_input_fn(
-        hparams.train_files,
-        num_epochs=hparams.num_epochs,
-        batch_size=hparams.train_batch_size,
-    )
-    # Don't shuffle evaluation data
-    eval_input = lambda: model.generate_input_fn(
-        hparams.eval_files,
-        batch_size=hparams.eval_batch_size,
-        shuffle=False
-    )
+  # Don't shuffle evaluation data
+  eval_input = lambda: model.input_fn(
+      hparams.eval_files,
+      batch_size=hparams.eval_batch_size,
+      shuffle=False
+  )
 
-    '''run_config = tf.contrib.tpu.RunConfig(
-      cluster=tpu_cluster_resolver,
-      model_dir=FLAGS.model_dir,
-      session_config=tf.ConfigProto(
-          allow_soft_placement=True, log_device_placement=True),
-      tpu_config=tf.contrib.tpu.TPUConfig(FLAGS.iterations, FLAGS.num_shards),
-      )''' # MNIST RUN CONFIG CHANGES
+  train_spec = tf.estimator.TrainSpec(train_input,
+                                      max_steps=hparams.train_steps
+                                      )
 
-    return tf.contrib.learn.Experiment(
-        tpu_estimator.TPUEstimator( # TODO: Do any other changes for TPUEstimator need to be considered?
-            model.generate_model_fn(
+  exporter = tf.estimator.FinalExporter('census',
+          model.SERVING_FUNCTIONS[hparams.export_format])
+  eval_spec = tf.estimator.EvalSpec(eval_input,
+                                    steps=hparams.eval_steps,
+                                    exporters=[exporter],
+                                    name='census-eval'
+                                    )
+
+  model_fn = model.generate_model_fn(
                 embedding_size=hparams.embedding_size,
                 # Construct layers sizes with exponetial decay
                 hidden_units=[
@@ -59,17 +47,12 @@ def generate_experiment_fn(**experiment_args):
                                hparams.scale_factor**i))
                     for i in range(hparams.num_layers)
                 ],
-                learning_rate=hparams.learning_rate
-            ),
-            use_tpu=True,
-            config=run_config # TODO: any changes needed to run_config?
-        ),
-        train_input_fn=train_input,
-        eval_input_fn=eval_input,
-        **experiment_args
-    )
-  return _experiment_fn
+                learning_rate=hparams.learning_rate)
 
+  estimator = tf.estimator.Estimator(model_fn=model_fn, model_dir=hparams.job_dir)
+  tf.estimator.train_and_evaluate(estimator,
+                                  train_spec,
+                                  eval_spec)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -158,18 +141,6 @@ if __name__ == '__main__':
   )
   # Experiment arguments
   parser.add_argument(
-      '--eval-delay-secs',
-      help='How long to wait before running first evaluation',
-      default=10,
-      type=int
-  )
-  parser.add_argument(
-      '--min-eval-frequency',
-      help='Minimum number of training steps between evaluations',
-      default=1,
-      type=int
-  )
-  parser.add_argument(
       '--train-steps',
       help="""\
       Steps to run the training job for. If --num-epochs is not specified,
@@ -202,20 +173,5 @@ if __name__ == '__main__':
       tf.logging.__dict__[args.verbosity] / 10)
 
   # Run the training job
-  # learn_runner pulls configuration information from environment
-  # variables using tf.learn.RunConfig and uses this configuration
-  # to conditionally execute Experiment, or param server code
-  learn_runner.run(
-      generate_experiment_fn(
-          min_eval_frequency=args.min_eval_frequency,
-          eval_delay_secs=args.eval_delay_secs,
-          train_steps=args.train_steps,
-          eval_steps=args.eval_steps,
-          export_strategies=[saved_model_export_utils.make_export_strategy(
-              model.SERVING_FUNCTIONS[args.export_format],
-              exports_to_keep=1
-          )]
-      ),
-      run_config=tf.contrib.learn.RunConfig(model_dir=args.job_dir),
-      hparams=hparam.HParams(**args.__dict__)
-  )
+  hparams=hparam.HParams(**args.__dict__)
+  run_experiment(hparams)
