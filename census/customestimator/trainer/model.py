@@ -197,7 +197,7 @@ def generate_model_fn(embedding_size=8,
       loss = tf.reduce_mean(
           tf.nn.sparse_softmax_cross_entropy_with_logits(
               logits=logits, labels=label_indices_vector))
-      tf.summary.scalar('loss', loss)
+      tf.summary.scalar('loss', loss) # TODO: does this need to be handled with host_call?
 
     if mode == Modes.PREDICT:
       # Convert predicted_indices back into strings
@@ -208,7 +208,7 @@ def generate_model_fn(embedding_size=8,
       export_outputs = {
           'prediction': tf.estimator.export.PredictOutput(predictions)
       }
-      return tpu_estimator.TPUEstimatorSpec(
+      return tpu_estimator.TPUEstimatorSpec( # TODO: do these need to be changed?
           mode, predictions=predictions, export_outputs=export_outputs)
 
     if mode == Modes.TRAIN:
@@ -238,9 +238,23 @@ def generate_model_fn(embedding_size=8,
           'accuracy': tf.metrics.accuracy(label_indices, predicted_indices),
           'auroc': tf.metrics.auc(labels_one_hot, probabilities)
       }
+      def metric_fn(label_indices, label_indices_vector, predicted_indices, probabilities):
+        labels_one_hot = tf.one_hot(
+          label_indices_vector,
+          depth=label_values.shape[0],
+          on_value=True,
+          off_value=False,
+          dtype=tf.bool
+      )
+        return {
+          'accuracy': tf.metrics.accuracy(label_indices, predicted_indices),
+          'auroc': tf.metrics.auc(labels_one_hot, probabilities)
+        }
+
       return tpu_estimator.TPUEstimatorSpec(
           mode, loss=loss, 
-          eval_metric_ops=eval_metric_ops # TODO: needs to be adjusted to eval_metrics
+          #eval_metric_ops=eval_metric_ops # TODO: is this the right way to handle multiple eval metrics? (Yes, I know it can be more efficient with naming, but just an example)
+          eval_metrics = (metric_fn, [label_indices, label_indices_vector, predicted_indices, probabilities])
           )
   return _model_fn
 
