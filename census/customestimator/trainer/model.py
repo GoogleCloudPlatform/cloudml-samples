@@ -21,6 +21,9 @@ import six
 
 import tensorflow as tf
 from tensorflow.python.estimator.model_fn import ModeKeys as Modes
+from tensorflow.contrib.tpu.python.tpu import tpu_optimizer
+from tensorflow.contrib.tpu.python.tpu import tpu_config
+from tensorflow.contrib.tpu.python.tpu import tpu_estimator
 
 # See tutorial on wide and deep
 # https://www.tensorflow.org/tutorials/wide_and_deep/
@@ -205,17 +208,20 @@ def generate_model_fn(embedding_size=8,
       export_outputs = {
           'prediction': tf.estimator.export.PredictOutput(predictions)
       }
-      return tf.estimator.EstimatorSpec(
+      return tpu_estimator.TPUEstimatorSpec(
           mode, predictions=predictions, export_outputs=export_outputs)
 
     if mode == Modes.TRAIN:
       # Build training operation.
-      train_op = tf.train.FtrlOptimizer(
+      optimizer = tf.train.FtrlOptimizer(
           learning_rate=learning_rate,
           l1_regularization_strength=3.0,
           l2_regularization_strength=10.0
-      ).minimize(loss, global_step=global_step)
-      return tf.estimator.EstimatorSpec(mode, loss=loss, train_op=train_op)
+      )
+      optimizer = tpu_optimizer.CrossShardOptimizer(optimizer)
+      train_op = optimizer.minimize(loss, global_step=global_step)
+      
+      return tpu_estimator.TPUEstimatorSpec(mode, loss=loss, train_op=train_op)
 
     if mode == Modes.EVAL:
       # Return accuracy and area under ROC curve metrics
@@ -232,8 +238,10 @@ def generate_model_fn(embedding_size=8,
           'accuracy': tf.metrics.accuracy(label_indices, predicted_indices),
           'auroc': tf.metrics.auc(labels_one_hot, probabilities)
       }
-      return tf.estimator.EstimatorSpec(
-          mode, loss=loss, eval_metric_ops=eval_metric_ops)
+      return tpu_estimator.TPUEstimatorSpec(
+          mode, loss=loss, 
+          eval_metric_ops=eval_metric_ops # TODO: needs to be adjusted to eval_metrics
+          )
   return _model_fn
 
 

@@ -8,6 +8,7 @@ from tensorflow.contrib.learn import learn_runner
 from tensorflow.contrib.learn.python.learn.utils import (
     saved_model_export_utils)
 from tensorflow.contrib.training.python.training import hparam
+from tensorflow.contrib.tpu.python.tpu import tpu_estimator
 
 
 def generate_experiment_fn(**experiment_args):
@@ -39,8 +40,17 @@ def generate_experiment_fn(**experiment_args):
         batch_size=hparams.eval_batch_size,
         shuffle=False
     )
+
+    '''run_config = tf.contrib.tpu.RunConfig(
+      cluster=tpu_cluster_resolver,
+      model_dir=FLAGS.model_dir,
+      session_config=tf.ConfigProto(
+          allow_soft_placement=True, log_device_placement=True),
+      tpu_config=tf.contrib.tpu.TPUConfig(FLAGS.iterations, FLAGS.num_shards),
+      )''' # MNIST RUN CONFIG CHANGES
+
     return tf.contrib.learn.Experiment(
-        tf.estimator.Estimator(
+        tpu_estimator.TPUEstimator( # TODO: Do any other changes for TPUEstimator need to be considered?
             model.generate_model_fn(
                 embedding_size=hparams.embedding_size,
                 # Construct layers sizes with exponetial decay
@@ -51,7 +61,8 @@ def generate_experiment_fn(**experiment_args):
                 ],
                 learning_rate=hparams.learning_rate
             ),
-            config=run_config
+            use_tpu=True,
+            config=run_config # TODO: any changes needed to run_config?
         ),
         train_input_fn=train_input,
         eval_input_fn=eval_input,
