@@ -28,7 +28,7 @@ Please checkout [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp) gu
 
 ### TPU
 * [MNIST on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/mnist)
-* [ResNet on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/resnet)
+* [ResNet-50 on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/resnet)
 * [Inception on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/inception)
 * [Inception V3 on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/inception-v3-advanced)
 * [RetinaNet on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/retinanet)
