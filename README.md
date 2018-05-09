@@ -32,7 +32,7 @@ Please checkout [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp) gu
 * [Inception on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/inception)
 * [Advanced Inception v3 on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/inception-v3-advanced)
 * [RetinaNet on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/retinanet)
-* [Transformed - Attention Model on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/transformer)
+* [Transformer model on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/transformer) for natural-language translation, language modeling, and sentiment classification
 
 - - -
 
