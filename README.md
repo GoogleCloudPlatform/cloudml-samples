@@ -32,7 +32,7 @@ Please checkout [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp) gu
 * [Inception on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/inception)
 * [Advanced Inception v3 on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/inception-v3-advanced)
 * [RetinaNet on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/retinanet)
-* [Transformer with Tensor2Tensor](https://cloud.google.com/tpu/docs/tutorials/transformer)
+* [Transformer with Tensor2Tensor on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/transformer)
 
 - - -
 
