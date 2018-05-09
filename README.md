@@ -26,7 +26,7 @@ Please checkout [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp) gu
 * [Reddit](reddit_tft) - Predict the score of a Reddit thread using a wide and deep model
 * [Cifar10](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10_estimator) - Classify image content (training on multiple GPUs)
 
-### TPU
+## TPU
 * [MNIST on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/mnist)
 * [ResNet-50 on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/resnet)
 * [Inception on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/inception)
