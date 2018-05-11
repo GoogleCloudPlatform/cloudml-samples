@@ -16,8 +16,8 @@
 #[TODO] Hardcoded for now, fix when this works
 cd estimator
 
-GCS_TRAIN_FILE=gs://cloudml-public/census/data/adult.data.csv
-GCS_EVAL_FILE=gs://cloudml-public/census/data/adult.test.csv
+GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+GCS_EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 CENSUS_DATA=census_data
 
 TRAIN_FILE=$CENSUS_DATA/adult.data.csv
