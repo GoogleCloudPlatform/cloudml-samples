@@ -1,15 +1,13 @@
 If you want to try TPU on Cloud ML Engine, please contact
 `cloudml-feedback@google.com`
 
-For TPU training, we recommend users to use the sample from [Cloud TPU Demos](
-https://github.com/tensorflow/tpu-demos).
+For TPU training, we recommend users to use the sample from [Cloud TPU Demos](https://github.com/tensorflow/tpu).
 
 
 Take the resnet garden model as example, to train this model,
 follow the training quickstart [here](https://cloud.google.com/ml/docs/quickstarts/training).
 The only difference is that you should download the sample zip file from
-[Cloud TPU github repository](
-https://github.com/tensorflow/tpu-demos).
+[Cloud TPU github repository](https://github.com/tensorflow/tpu).
 
 After downloading and extracting the Cloud TPU samples, navigate to
 the tpu sample directory:
@@ -25,7 +23,7 @@ cat > config.yaml << EOF
 trainingInput:
   scaleTier: CUSTOM
   masterType: standard
-  workerType: standard_tpu
+  workerType: cloud_tpu
   workerCount: 1
 EOF
 ```
