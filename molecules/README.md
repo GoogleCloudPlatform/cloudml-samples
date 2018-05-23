@@ -1,16 +1,17 @@
 # Molecules
-This sample shows how to train and create an ML model to predict the energy on molecules, including how to preprocess raw data files.
+This sample shows how to train and create an ML model to predict the molecular energy, including how to preprocess raw data files.
 
 The dataset for this sample comes from this [Kaggle Dataset](https://www.kaggle.com/burakhmmtgl/predict-molecular-properties). However, the number of preprocessed JSON files was too small, so this sample will download the raw data files directly from this [FTP source](ftp://ftp.ncbi.nlm.nih.gov/pubchem/Compound_3D/01_conf_per_cmpd/SDF) (in [`SDF`](https://en.wikipedia.org/wiki/Chemical_table_file#SDF) fromat instead of `JSON`). Here's a more detailed description of the [MDL/SDF file format](http://c4.cabrillo.edu/404/ctfile.pdf).
 
-Roughly the steps are the following:
- 1. Validate the command line arguments
- 2. Extract the raw data
- 3. Preprocessing ([Apache Beam](https://beam.apache.org/) for element-wise transformations, and [tf.Transform](https://github.com/tensorflow/transform)) for transformations that require a full pass of the dataset. This can be run distributed in [Google Cloud Dataflow](https://cloud.google.com/dataflow/)
- 4. Training ([Tensorflow](https://www.tensorflow.org/)), this can be run distributed in [Google Cloud ML Engine](https://cloud.google.com/ml-engine/)
+These are the rough steps:
+ 1. data-extractor.py: extracts the data files
+ 2. preprocess.py: runs an [Apache Beam](https://beam.apache.org/) pipeline for element-wise transformations, and [tf.Transform](https://github.com/tensorflow/transform) for full-pass transformations. This can be run in [Google Cloud Dataflow](https://cloud.google.com/dataflow/)
+ 4. trainer/task.py: trains and evaluates the ([Tensorflow](https://www.tensorflow.org/)) model. This can be run in [Google Cloud ML Engine](https://cloud.google.com/ml-engine/)
 
-## Installing
-This requires `python2`, Apache Beam does not currently support `python3`.
+This model only does a very simple preprocessing. It uses Apache beam to parse the SDF files and count how many Carbon, Hydrogen, Oxygen, and Nitrogen atoms a molecule has. Then it uses tf.Transform to normalize to values between 0 and 1. Finally, the normalized counts are fed into a TensorFlow Deep Neural Network. There are much more interesting features that could be extracted that will make more accurate predictions.
+
+## Initial setup
+> NOTE: This requires `python2`, Apache Beam does not currently support `python3`.
 
 ### Getting the source code
 You can clone the github repository and then navigate to the `molecules` sample directory. The rest of the instructions assume that you are in that directory.
@@ -20,7 +21,7 @@ cd cloudml-samples/molecules
 ```
 
 ### Python virtual environment
-Using [virtualenv](https://virtualenv.pypa.io/en/stable/) to isolate your dependencies is recommended. To set up make
+Using [virtualenv](https://virtualenv.pypa.io/en/stable/) to isolate your dependencies is recommended. To set up, make
 sure you have the `virtualenv` package installed.
 ```bash
 pip install --user virtualenv
@@ -46,111 +47,122 @@ pip install -r requirements.txt
 ```
 
 ## Running locally
-You can run locally a small job by executing:
+By default, all the scripts will store temporary data into `/tmp/cloudml-samples/molecules/`. Also, by default, this will only use 5 data files, each of them containing 250,000 molecules.
 ```bash
-python main.py
+# Extract the data files
+python data-extractor.py
+
+# Preprocess the datasets
+python preprocess.py
+
+# Train and evaluate the model
+python trainer/task.py
+
+# Get the model path
+MODEL_DIR=$(ls -d -1 /tmp/cloudml-samples/molecules/model/export/molecules/* | sort -r | head -n 1)
+echo "Model: $MODEL_DIR"
+
+# Make local predictions
+gcloud ml-engine local predict \
+  --model-dir $MODEL_DIR \
+  --json-instances sample-requests.json
 ```
 
-The data sets and any other temporary file will be written to the working directory, by default it is set to `/tmp/cloudml-samples/molecules`. To change it you can use the `--work-dir` option:
-
+An end-to-end script has been included for your convenience, where you can specify a different number of data files using the `--total-data-files` option, as well as a different working directory using the `--work-dir` option.
 ```bash
-# It can be a local path
-python main.py --work-dir ~/cloudml-samples/molecules
+# Simple run
+bash run-local
 
-# It can also be a path in Google Cloud Storage
-BUCKET=gs://<YOUR_BUCKET_NAME>
-python main.py --work-dir $BUCKET/cloudml-samples/molecules
+# Run in your home directory
+bash run-local --work-dir ~/cloudml-samples/molecules
 ```
 
-This will automatically download the data files, do all the preprocessing and model training. By default it will use 5 data files, each one with 25,000 molecules. To change the number of data files to use, use the `--total-data-files` option:
+For reference, this are the *real* energy values for the `sample-requests.json` file.
 ```bash
-# To use 10 files, that would be 250,000 molecules
-python main.py --total-data-files 10
-```
-
-For more help, you can always use the `--help` option:
-```bash
-python main.py --help
+PREDICTIONS
+[37.801]
+[44.1107]
+[19.4085]
+[-0.1086]
 ```
 
 ## Running in Google Cloud
-To run in Google Cloud, you just have to add the `--cloud` flag. Running in cloud also requires to provide your Project ID via the `--project` option. The `--work-dir` also has to be set to a location in Google Cloud Storage.
-
+To run on Google Cloud, all the files must reside in Google Cloud Storage. We'll start by defining our work directory.
 ```bash
+WORK_DIR=gs://<Your bucket name>/cloudml-samples/molecules
+```
+
+After specifying our work directory, we can then extract the data files, preprocess, and train in Google Cloud using that location.
+```bash
+# Extract the data files
+DATA_DIR=$WORK_DIR/data
+python data-extractor.py \
+  --data-dir $DATA_DIR \
+  --total-data-files 10
+
+# Preprocess the datasets using Apache Beam's DataflowRunner
 PROJECT=$(gcloud config get-value project)
-BUCKET=gs://<YOUR_BUCKET_NAME>
-
-WORK_DIR=$BUCKET/cloudml-samples/molecules
-
-python main.py \
-  --cloud \
+TEMP_DIR=$WORK_DIR/temp
+PREPROCESS_DATA=$WORK_DIR/PreprocessData
+python preprocess.py \
+  --data-dir $DATA_DIR \
+  --temp-dir $TEMP_DIR \
+  --preprocess-data $PREPROCESS_DATA \
+  --runner DataflowRunner \
   --project $PROJECT \
-  --work-dir $WORK_DIR \
-  --total-data-files 100
-```
+  --temp_location $TEMP_DIR \
+  --setup_file ./setup.py
 
-## Requesting predictions
-First, we have to create a model in Cloud ML Engine.
-```bash
+# Train and evaluate the model in Google ML Engine
+JOB="cloudml_samples_molecules_$(date +%Y%m%d_%H%M%S)"
+BUCKET=$(echo $WORK_DIR | egrep -o gs://[-_.a-z0-9]+)
+EXPORT_DIR=$WORK_DIR/model
+gcloud ml-engine jobs submit training $JOB \
+  --stream-logs \
+  --module-name trainer.task \
+  --package-path trainer \
+  --staging-bucket $BUCKET \
+  -- \
+  --preprocess-data $PREPROCESS_DATA \
+  --export-dir $EXPORT_DIR
+
+# Get the model path
+MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/export/molecules/* | sort -r | head -n 1)
+echo "Model: $MODEL_DIR"
+
+# Create a model in Google Cloud ML Engine
 MODEL=molecules
-REGION=us-central1
+gcloud ml-engine models create $MODEL
 
-gcloud ml-engine models create $MODEL \
-  --regions $REGION
-```
-
-Then, we have to create a version for that model.
-```bash
-VERSION=v1
-MODEL_DIR=$WORK_DIR/model/export/$MODEL/<TIMESTAMP>
-
-gcloud ml-engine versions create $VERSION \
-  --model $MODEL \
-  --origin $MODEL_DIR
-```
-
-Having a model version, we can now send prediction requests via gcloud too. This is a file with one JSON request per line.
-```bash
-gcloud ml-engine predict \
-  --model $MODEL \
-  --version $VERSION \
-  --json-instances sample_request.json
-```
-
-## End-to-end run
-```bash
-PROJECT=<YOUR_PROJECT_ID>
-BUCKET=gs://<YOUR_BUCKET_NAME>
-
-# Settings
-WORK_DIR=$BUCKET/cloudml-samples/molecules
-MODEL=molecules
-VERSION=v1
-REGION=us-central1
-
-# Preprocess and train the model
-python main.py \
-  --cloud \
-  --project $PROJECT \
-  --model-name $MODEL \
-  --work-dir $WORK_DIR \
-  --total-data-files 1000
-
-# This is assuming that this is the only exported model available
-MODEL_DIR=$(gsutil ls $WORK_DIR/model/export/$MODEL | egrep "$MODEL/[0-9]+")
-
-# Create the model for predictions
-gcloud ml-engine models create $MODEL \
-  --regions $REGION
-
-# Create the model version for predictions
+# Create a model version
+VERSION=$JOB
 gcloud ml-engine versions create $VERSION \
   --model $MODEL \
   --origin $MODEL_DIR
 
-# Send the predictions
+# Make predictions
 gcloud ml-engine predict \
   --model $MODEL \
   --version $VERSION \
-  --json-instances sample_request.json
+  --json-instances sample-requests.json
+```
+
+There's also an end-to-end script for a cloud run. You can also specify the number of data files with the `--total-data-files` option, and the `--work-dir` has to be specified to a Google Cloud Storage location.
+```bash
+WORK_DIR=gs://<Your bucket name>/cloudml-samples/molecules
+
+# Simple run
+bash run-cloud --work-dir $WORK_DIR
+
+# Run using 10 data files
+bash run-cloud --work-dir $WORK_DIR --total-data-files 10
+```
+
+For reference, this are the *real* energy values for the `sample-requests.json` file.
+```bash
+PREDICTIONS
+[37.801]
+[44.1107]
+[19.4085]
+[-0.1086]
 ```

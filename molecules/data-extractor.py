@@ -59,14 +59,13 @@ def parallel_map(function, iterable):
   return results
 
 
-def extract_data_file(i, N, ftp_path, data_dir):
+def extract_data_file(ftp_path, data_dir):
   """Function to extract a single PubChem data file."""
   basename = os.path.basename(ftp_path)
   sdf_file = os.path.join(data_dir, os.path.splitext(basename)[0])
-  progress = '[{i:{n}}/{N}]'.format(i=i+1, n=len(str(N)), N=N)
 
   if not tf.gfile.Exists(sdf_file):
-    print('{} Extracting data file: {}'.format(progress, sdf_file))
+    print('Extracting data file: {}'.format(sdf_file))
     # The `ftp` object cannot be pickled for multithreading, so we open a
     # new connection here
     memfile = StringIO.StringIO()
@@ -81,7 +80,7 @@ def extract_data_file(i, N, ftp_path, data_dir):
       f.write(contents)
 
   else:
-    print('{} Found data file: {}'.format(progress, sdf_file))
+    print('Found data file: {}'.format(sdf_file))
 
 
 def run(total_data_files, data_dir):
@@ -102,7 +101,7 @@ def run(total_data_files, data_dir):
   print('Found {} files, using {}'.format(len(ftp_files), total_data_files))
   ftp_files = ftp_files[:total_data_files]
   parallel_map(
-      extract_data_file, ((i, len(ftp_files), ftp_path, data_dir)
+      extract_data_file, ((ftp_path, data_dir)
         for i, ftp_path in enumerate(ftp_files)))
 
 
@@ -110,17 +109,17 @@ if __name__ == '__main__':
   """Main function"""
   parser = argparse.ArgumentParser(
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  parser.add_argument('--data-dir',
+                      type=str,
+                      default=os.path.join(DEFAULT_TEMP_DIR, 'data'),
+                      help='Directory to store the data files to. '
+                           'This can be a Google Cloud Storage path.')
   parser.add_argument('--total-data-files',
                       type=int,
                       default=5,
                       help='Total number of data files to use, '
                            'set to `-1` to use all data files. '
                            'Each data file contains 25,000 molecules')
-  parser.add_argument('--raw-data-dir',
-                      type=str,
-                      default=os.path.join(DEFAULT_TEMP_DIR, 'data'),
-                      help='Directory to store the data files to. '
-                           'This can be a Google Cloud Storage path.')
   args = parser.parse_args()
 
   if args.total_data_files < 1 and args.total_data_files != -1:
@@ -131,4 +130,4 @@ if __name__ == '__main__':
   if args.total_data_files == -1:
     total_data_files = None
 
-  run(total_data_files, args.raw_data_dir)
+  run(total_data_files, args.data_dir)

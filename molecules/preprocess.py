@@ -354,10 +354,8 @@ def run(
         'Given: {} {}'.format(PipelineOptions,
             beam_options, type(beam_options)))
 
-  transform_fn_dir = os.path.join(temp_dir, transform_fn_io.TRANSFORM_FN_DIR)
-  if tf.gfile.Exists(transform_fn_dir):
-    print('error: transform_fn_dir already exists: {}'.format(transform_fn_dir))
-    sys.exit(1)
+  if tf.gfile.Exists(temp_dir):
+    tf.gfile.DeleteRecursively(temp_dir)
 
   # Build and run a Beam Pipeline
   input_metadata = dataset_metadata.DatasetMetadata(
@@ -411,7 +409,7 @@ def run(
       labels,
       input_metadata.schema.as_feature_spec(),
       metadata.schema.as_feature_spec(),
-      transform_fn_dir,
+      os.path.join(temp_dir, transform_fn_io.TRANSFORM_FN_DIR),
       train_dataset_prefix + '*',
       eval_dataset_prefix + '*')
 
@@ -420,7 +418,7 @@ if __name__ == '__main__':
   """Main function"""
   parser = argparse.ArgumentParser(
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-  parser.add_argument('--raw-data-dir',
+  parser.add_argument('--data-dir',
                       type=str,
                       default=os.path.join(DEFAULT_TEMP_DIR, 'data'),
                       help='Directory to load the data files from. '
@@ -446,12 +444,12 @@ if __name__ == '__main__':
   beam_options = PipelineOptions(pipeline_args)
   beam_options.view_as(SetupOptions).save_main_session = True
 
-  raw_data_files_pattern = os.path.join(args.raw_data_dir, '*')
+  data_files_pattern = os.path.join(args.data_dir, '*')
 
   preprocess_data = run(
       INPUT_SCHEMA,
       LABELS,
-      PreprocessingPipeline(raw_data_files_pattern),
+      PreprocessingPipeline(data_files_pattern),
       full_pass_preprocessing_fn,
       eval_percent=args.eval_percent,
       beam_options=beam_options,

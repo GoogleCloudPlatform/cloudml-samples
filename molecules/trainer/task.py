@@ -188,6 +188,11 @@ if __name__ == '__main__':
                       type=str,
                       default=os.path.join(DEFAULT_TEMP_DIR, 'PreprocessData'),
                       help='Path to a pickled PreprocessData object.')
+  parser.add_argument('--export-dir',
+                      type=str,
+                      default=os.path.join(DEFAULT_TEMP_DIR, 'model'),
+                      help='Path to export the TensorFlow model to. '
+                           'This can be a Google Cloud Storage path.')
   parser.add_argument('--model-name',
                       type=str,
                       default='molecules',
@@ -201,17 +206,12 @@ if __name__ == '__main__':
                       type=int,
                       default=1000,
                       help='Number of steps to train the model')
-  parser.add_argument('--model-dir',
-                      type=str,
-                      default=os.path.join(DEFAULT_TEMP_DIR, 'model'),
-                      help='Path to store the TensorFlow model to. '
-                           'This can be a Google Cloud Storage path.')
   args = parser.parse_args()
 
   preprocess_data = load(args.preprocess_data)
 
   run_config = tf.estimator.RunConfig()
-  run_config = run_config.replace(model_dir=args.model_dir)
+  run_config = run_config.replace(model_dir=args.export_dir)
   estimator = make_estimator(run_config)
 
   train_and_evaluate(
