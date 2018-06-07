@@ -28,7 +28,7 @@ gcloud ml-engine jobs submit training ${JOB_NAME} \
         -- \
         --train-files=${TRAIN_FILES} \
         --eval-files=${EVAL_FILES} \
-		--train-steps=10000
+	--train-steps=10000
 
 
 # notes:
