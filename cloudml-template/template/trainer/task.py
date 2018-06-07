@@ -93,7 +93,7 @@ def initialise_hyper_params(args_parser):
         If both --train-size and --num-epochs are specified,
         --train-steps will be: (train-size/train-batch-size) * num-epochs.\
         """,
-        default=10,
+        default=None,
         type=int,
     )
     ###########################################
@@ -287,7 +287,6 @@ def run_experiment(run_config):
         eval_input_fn,
         steps=HYPER_PARAMS.eval_steps,
         exporters=[exporter],
-        name='estimator-eval',
         throttle_secs=HYPER_PARAMS.eval_every_secs,
     )
 
@@ -346,13 +345,13 @@ def main():
     # If job_dir_reuse is False then remove the job_dir if it exists
     print("Resume training:", HYPER_PARAMS.reuse_job_dir)
     if not HYPER_PARAMS.reuse_job_dir:
-        if tf.gfile.Exists(HYPER_PARAMS.job_dir):
-            tf.gfile.DeleteRecursively(HYPER_PARAMS.job_dir)
-            print("Deleted job_dir {} to avoid re-use".format(HYPER_PARAMS.job_dir))
+        if tf.gfile.Exists(model_dir):
+            tf.gfile.DeleteRecursively(model_dir)
+            print("Deleted job_dir {} to avoid re-use".format(model_dir))
         else:
             print("No job_dir available to delete")
     else:
-        print("Reusing job_dir {} if it exists".format(HYPER_PARAMS.job_dir))
+        print("Reusing job_dir {} if it exists".format(model_dir))
 
     run_config = tf.estimator.RunConfig(
         tf_random_seed=19830610,
