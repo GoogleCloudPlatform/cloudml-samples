@@ -13,31 +13,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#[TODO] Hardcoded for now, fix when this works
-cd estimator
+run_script_local() {
+	cd $1
+	GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+	GCS_EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
+	CENSUS_DATA=census_data
 
-GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
-GCS_EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
-CENSUS_DATA=census_data
+	TRAIN_FILE=$CENSUS_DATA/adult.data.csv
+	EVAL_FILE=$CENSUS_DATA/adult.test.csv
 
-TRAIN_FILE=$CENSUS_DATA/adult.data.csv
-EVAL_FILE=$CENSUS_DATA/adult.test.csv
+	gsutil cp $GCS_TRAIN_FILE $TRAIN_FILE
+	gsutil cp $GCS_EVAL_FILE $EVAL_FILE
 
-gsutil cp $GCS_TRAIN_FILE $TRAIN_FILE
-gsutil cp $GCS_EVAL_FILE $EVAL_FILE
+	export TRAIN_STEPS=1000
+	DATE=`date '+%Y%m%d_%H%M%S'`
+	export OUTPUT_DIR=census_$DATE
 
-export TRAIN_STEPS=1000
-DATE=`date '+%Y%m%d_%H%M%S'`
-export OUTPUT_DIR=census_$DATE
+	#Local training
+	python -m trainer.task --train-files $TRAIN_FILE \
+	                       --eval-files $EVAL_FILE \
+	                       --job-dir $OUTPUT_DIR \
+	                       --train-steps $TRAIN_STEPS \
+	                       --eval-steps 100
 
-#Local training
-python -m trainer.task --train-files $TRAIN_FILE \
-                       --eval-files $EVAL_FILE \
-                       --job-dir $OUTPUT_DIR \
-                       --train-steps $TRAIN_STEPS \
-                       --eval-steps 100
+	if [ $? = 0 ]; then
+		echo "python script succeeded"
+		rm -rf $CENSUS_DATA
+		rm -rf $OUTPUT_DIR
+		cd ..
+		return 0
+	fi
+	echo "python script failed"
+	return 1
+}
 
+run_script_local estimator
+if [ $? = 1 ]; then
+	exit 1
+fi
 
-rm -rf $CENSUS_DATA
-rm -rf $OUTPUT_DIR
-cd ..
+run_script_local customestimator
