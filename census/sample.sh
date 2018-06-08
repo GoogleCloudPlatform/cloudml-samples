@@ -31,13 +31,13 @@ DATE=`date '+%Y%m%d_%H%M%S'`
 export OUTPUT_DIR=census_$DATE
 
 #Local training
-python trainer/task.py --train-files $TRAIN_FILE \
+python -m trainer.task --train-files $TRAIN_FILE \
                        --eval-files $EVAL_FILE \
                        --job-dir $OUTPUT_DIR \
                        --train-steps $TRAIN_STEPS \
                        --eval-steps 100
 
 
-
 rm -rf $CENSUS_DATA
 rm -rf $OUTPUT_DIR
+cd ..
