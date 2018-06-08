@@ -1,0 +1,96 @@
+#!/bin/bash
+
+set -e
+
+# Parse command line arguments
+TOTAL_DATA_FILES=5
+PROJECT=$(gcloud config get-value project)
+REGION=us-central1
+unset WORK_DIR
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --work-dir)
+      WORK_DIR=$2
+      shift
+      ;;
+    --total-data-files)
+      TOTAL_DATA_FILES=$2
+      shift
+      ;;
+    --project)
+      PROJECT=$2
+      shift
+      ;;
+    --region)
+      REGION=$2
+      shift
+      ;;
+  esac
+  shift
+done
+
+if [[ -z $WORK_DIR ]]; then
+  echo "error: argument --work-dir is required"
+  exit 1
+fi
+
+if [[ $WORK_DIR != gs://* ]]; then
+  echo "error: --work-dir must be a Google Cloud Storage path"
+  echo "       example: gs://your-bucket/cloudml-samples/molecules"
+  exit 1
+fi
+
+# Extract the data files
+DATA_DIR=$WORK_DIR/data
+python data-extractor.py \
+  --total-data-files $TOTAL_DATA_FILES \
+  --data-dir $DATA_DIR
+
+# Preprocess the datasets using Apache Beam's DataflowRunner
+TEMP_DIR=$WORK_DIR/temp
+PREPROCESS_DATA=$WORK_DIR/PreprocessData
+python preprocess.py \
+  --data-dir $DATA_DIR \
+  --temp-dir $TEMP_DIR \
+  --preprocess-data $PREPROCESS_DATA \
+  --runner DataflowRunner \
+  --project $PROJECT \
+  --temp_location $TEMP_DIR \
+  --setup_file ./setup.py
+
+# Train and evaluate the model in Google Cloud ML Engine
+JOB="cloudml_samples_molecules_$(date +%Y%m%d_%H%M%S)"
+BUCKET=$(echo $WORK_DIR | egrep -o gs://[-_.a-z0-9]+)
+EXPORT_DIR=$WORK_DIR/model
+gcloud ml-engine jobs submit training $JOB \
+  --stream-logs \
+  --module-name trainer.task \
+  --package-path trainer \
+  --staging-bucket $BUCKET \
+  --region $REGION \
+  -- \
+  --preprocess-data $PREPROCESS_DATA \
+  --export-dir $EXPORT_DIR
+
+# Get the model path
+MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/export/molecules/* | sort -r | head -n 1)
+echo "Model: $MODEL_DIR"
+
+# Create a model in Google Cloud ML Engine if it doesn't exist
+MODEL=molecules
+if [[ -z $(gcloud ml-engine models list | awk '{print $1}' | grep ^$MODEL$) ]]; then
+  gcloud ml-engine models create $MODEL \
+    --region $REGION
+fi
+
+# Create a model version
+VERSION=$JOB
+gcloud ml-engine versions create $VERSION \
+  --model $MODEL \
+  --origin $MODEL_DIR
+
+# Make predictions
+gcloud ml-engine predict \
+  --model $MODEL \
+  --version $VERSION \
+  --json-instances sample-requests.json
