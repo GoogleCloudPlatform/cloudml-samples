@@ -53,3 +53,9 @@ if [ $? = 1 ]; then
 fi
 
 run_script_local customestimator
+if [ $? = 1 ]; then
+	exit 1
+fi
+
+run_script_local tensorflowcore
+
