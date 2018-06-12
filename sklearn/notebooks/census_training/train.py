@@ -1,4 +1,5 @@
 # %load iris.py
+# [START setup]
 import datetime
 import os
 import pandas as pd
@@ -13,12 +14,14 @@ from sklearn.preprocessing import LabelBinarizer
 
 # TODO: REPLACE 'true-ability-192918' with your GCS BUCKET_ID
 BUCKET_ID = 'true-ability-192918'
+# [END setup]
 
 
 # ---------------------------------------
 # 1. Add code to download the data from GCS (in this case, using the publicly hosted data).
 # ML Engine will then be able to use the data when training your model.
 # ---------------------------------------
+# [START download-data]
 census_data_filename = 'adult.data'
 census_test_filename = 'adult.test'
 data_dir = 'gs://cloud-samples-data/ml-engine/sklearn/census_data'
@@ -28,12 +31,13 @@ subprocess.check_call(['gsutil', 'cp',
 subprocess.check_call(['gsutil', 'cp',
                        os.path.join(data_dir, census_test_filename),
                        census_test_filename])
+# [END download-data]
 
 
 # ---------------------------------------
-# This is where your model code would go.
+# This is where your model code would go. Below is an example model using the census dataset.
 # ---------------------------------------
-
+# [START define-and-load-data]
 # Define the format of your input data including unused columns (These are the columns from the census data files)
 COLUMNS = (
     'age',
@@ -85,8 +89,10 @@ with open('./adult.test', 'r') as test_data:
 test_features = raw_testing_data.drop('income-level', axis=1).as_matrix().tolist()
 # Create our training labels list, convert the Dataframe to a lists of lists
 test_labels = (raw_testing_data['income-level'] == ' >50K.').as_matrix().tolist()
+# [END define-and-load-data]
 
 
+# [START categorical-feature-conversion]
 # Since the census data set has categorical features, we need to convert
 # them to numerical values. We'll use a list of pipelines to convert each
 # categorical column and then use FeatureUnion to combine them before calling
@@ -125,7 +131,9 @@ for i, col in enumerate(COLUMNS[:-1]):
             ('categorical-{}'.format(i), Pipeline([
                 ('SKB-{}'.format(i), skb),
                 ('LBN-{}'.format(i), lbn)])))
+# [END categorical-feature-conversion]
 
+# [START create-pipeline]
 # Create pipeline to extract the numerical features
 skb = SelectKBest(k=6)
 # From COLUMNS use the features that are numerical
@@ -146,12 +154,13 @@ pipeline = Pipeline([
     ('union', preprocess),
     ('classifier', classifier)
 ])
+# [END create-pipeline]
 
 
 # ---------------------------------------
 # 2. Export and save the model to GCS
 # ---------------------------------------
-
+# [START export-to-gcs]
 # Export the model to a file
 model = 'model.joblib'
 joblib.dump(pipeline, model)
@@ -164,3 +173,4 @@ model_path = os.path.join(
     model)
 
 subprocess.check_call(['gsutil', 'cp', model, model_path])
+# [END export-to-gcs]
