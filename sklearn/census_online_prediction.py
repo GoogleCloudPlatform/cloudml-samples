@@ -1,3 +1,4 @@
+# [START imports]
 import googleapiclient.discovery
 import json
 import numpy as np
@@ -10,7 +11,20 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.pipeline import FeatureUnion
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelBinarizer
+# [END imports]
 
+# [START setup]
+
+# Define variables for your project ID, version name, and model name after
+# you set them up on Cloud ML Engine.
+
+PROJECT_ID = <YOUR PROJECT_ID HERE>
+VERSION_NAME = <YOUR VERSION_NAME HERE>
+MODEL_NAME = <YOUR MODEL_NAME HERE>
+
+# [END setup]
+
+# [START define-input-data]
 # Define the format of your input data, including unused columns.
 # These are the columns from the census data files.
 COLUMNS = (
@@ -31,7 +45,8 @@ COLUMNS = (
     'income-level'
 )
 
-# Categorical columns are columns that need to be turned into a numerical value to be used by scikit-learn
+# Categorical columns are columns that need to be turned into a numerical value
+# to be used by scikit-learn
 CATEGORICAL_COLUMNS = (
     'workclass',
     'education',
@@ -42,7 +57,9 @@ CATEGORICAL_COLUMNS = (
     'sex',
     'native-country'
 )
+# [END define-input-data]
 
+# [START load-and-convert-data]
 # Load the training census dataset
 with open('./census_data/adult.data', 'r') as train_data:
     raw_training_data = pd.read_csv(train_data, header=None, names=COLUMNS)
@@ -61,7 +78,10 @@ with open('./census_data/adult.test', 'r') as test_data:
 test_features = raw_testing_data.drop('income-level', axis=1).as_matrix().tolist()
 # Create our training labels list, convert the Dataframe to a lists of lists
 test_labels = (raw_testing_data['income-level'] == ' >50K.').as_matrix().tolist()
+# [END load-and-convert-data]
 
+
+# [START categorical-feature-conversion]
 # Since the census data set has categorical features, we need to convert
 # them to numerical values. We'll use a list of pipelines to convert each
 # categorical column and then use FeatureUnion to combine them before calling
@@ -100,7 +120,9 @@ for i, col in enumerate(COLUMNS[:-1]):
             ('categorical-{}'.format(i), Pipeline([
                 ('SKB-{}'.format(i), skb),
                 ('LBN-{}'.format(i), lbn)])))
+# [END categorical-feature-conversion]
 
+# [START create-pipeline]
 # Create pipeline to extract the numerical features
 skb = SelectKBest(k=6)
 # From COLUMNS use the features that are numerical
@@ -121,14 +143,14 @@ pipeline = Pipeline([
     ('union', preprocess),
     ('classifier', classifier)
 ])
+# [END create-pipeline]
 
+# [START export-model-locally]
 # Export the model to a file
 joblib.dump(pipeline, 'model.joblib')
+# [END export-model-locally]
 
-PROJECT_ID = os.environ['PROJECT_ID']
-VERSION_NAME = os.environ['VERSION_NAME']
-MODEL_NAME = os.environ['MODEL_NAME']
-
+# [START send-prediction-request]
 service = googleapiclient.discovery.build('ml', 'v1')
 name = 'projects/{}/models/{}'.format(PROJECT_ID, MODEL_NAME)
 name += '/versions/{}'.format(VERSION_NAME)
@@ -152,3 +174,4 @@ for data in [first_half, second_half]:
 # Print the first 10 responses
 for i, response in enumerate(complete_results[:10]):
     print('Prediction: {}\tLabel: {}'.format(response, test_labels[i]))
+# [END send-prediction-request]
