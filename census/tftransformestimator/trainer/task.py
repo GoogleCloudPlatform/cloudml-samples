@@ -1,7 +1,6 @@
 import argparse
 import os
 
-#import trainer.model as model
 import model
 
 import tensorflow as tf
