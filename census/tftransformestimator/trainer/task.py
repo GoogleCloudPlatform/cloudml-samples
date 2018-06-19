@@ -1,7 +1,6 @@
 import argparse
 import os
 
-#import trainer.model as model
 import model
 
 import tensorflow as tf
@@ -10,7 +9,6 @@ from tensorflow.contrib.training.python.training import hparam
 
 def run_experiment(hparams):
   """Run the training and evaluate using the high level API"""
-  print("run")
   train_input = model._make_training_input_fn(
       hparams.tft_working_dir,
       hparams.train_filebase,
