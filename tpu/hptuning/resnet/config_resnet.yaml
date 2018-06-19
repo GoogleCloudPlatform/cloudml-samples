@@ -1,0 +1,28 @@
+trainingInput:
+  scaleTier: CUSTOM
+  masterType: standard
+  workerCount: 1
+  workerType: cloud_tpu
+  hyperparameters:
+    goal: MAXIMIZE
+    enableTrialEarlyStopping: true
+    hyperparameterMetricTag: top_5_accuracy
+    maxTrials: 3
+    maxParallelTrials: 3
+    params:
+      - parameterName: base_learning_rate
+        type: DOUBLE
+        scaleType: UNIT_REVERSE_LOG_SCALE
+        minValue: 0.02
+        maxValue: 0.5
+      - parameterName: momentum
+        type: DOUBLE
+        scaleType: UNIT_LINEAR_SCALE
+        minValue: 0.1
+        maxValue: 1.0
+      - parameterName: weight_decay
+        type: DOUBLE
+        scaleType: UNIT_LINEAR_SCALE
+        minValue: 0.00002
+        maxValue: 0.0005
+      
