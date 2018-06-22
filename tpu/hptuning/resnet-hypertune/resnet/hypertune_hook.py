@@ -13,7 +13,7 @@ class HypertuneHook(tf.train.SessionRunHook):
         step_variable = session.graph.get_collection('global_step')
         global_step = session.run(step_variable)[0]
 
-        tf.logging.info('DEBUG: HypertuneHook called, tag: {}, trial_id: {}, global_step: {}'.format(self.hp_metric_tag, self.trial_id, global_step))
+        tf.logging.info('HypertuneHook called, tag: {}, trial_id: {}, global_step: {}'.format(self.hp_metric_tag, self.trial_id, global_step))
 
         # The name of the tensor is given in metric_fn in resnet_main_hypertune.py.
         metric_tensor = session.graph.get_tensor_by_name('top_5_accuracy/value:0')
