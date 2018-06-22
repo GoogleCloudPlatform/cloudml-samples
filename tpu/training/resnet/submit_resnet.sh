@@ -14,10 +14,10 @@ OUTPUT_PATH=$JOB_DIR
 gcloud ml-engine jobs submit training $JOB_NAME \
     --staging-bucket $STAGING_BUCKET \
     --runtime-version 1.8 \
+    --scale-tier BASIC_TPU \
     --module-name resnet.resnet_main \
     --package-path resnet/ \
     --region $REGION \
-    --config config_resnet.yaml \
     -- \
     --data_dir=$DATA_DIR \
     --model_dir=$OUTPUT_PATH \
