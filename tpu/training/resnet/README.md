@@ -30,7 +30,7 @@ This sample is adapted from [the official samples for training ResNet-50 with Cl
     export GCS_BUCKET="gs://[YOUR_GCS_BUCKET]"
     ```
 
-1. Run the sample.  The included script will train ResNet-101 for 1024 steps using a fake dataset.
+1. Run the sample.  The included script will train ResNet-50 for 1024 steps using a fake dataset.
 
     ```
     cd cloudml-samples/tpu/training/resnet
