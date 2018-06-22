@@ -10,5 +10,28 @@ This sample is adapted from [the official samples for training ResNet-50 with Cl
 
 - Install [Google Cloud Platform SDK](https://cloud.google.com/sdk/).  The SDK includes the commandline tools `gcloud` for submitting training jobs to [Cloud Machine Learning Engine](https://cloud.google.com/ml-engine/).
 
+- Enable [Cloud Storage](https://cloud.google.com/storage).
+
 - Follow the steps [here](https://cloud.google.com/ml-engine/docs/tensorflow/using-tpus#authorize_your_tpu_name_short_to_access_your_project) to authorize Cloud TPU to access your project.
 
+
+## Steps
+
+1. Clone the repository.
+
+    ```
+    git clone https://github.com/GoogleCloudPlatform/cloudml-samples.git
+    ```
+
+1. If you do not already have a Cloud Storage bucket, create one to be used for the training job.
+
+    ```
+    gsutil mb gs://[YOUR_GCS_BUCKET]
+    ```
+
+1. Run the sample.  The included script will train ResNet-101 for 1024 steps using a fake dataset.
+
+    ```
+    cd cloudml-samples/tpu/training/resnet
+    bash submit.sh
+    ```
