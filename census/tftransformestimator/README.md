@@ -25,8 +25,8 @@ warranty, or other guarantees about the validity or any other aspects of this da
 Please run the export and copy statements first:
 
 ```
-TRAIN_FILE=gs://cloudml-public/census/data/adult.data.csv
-EVAL_FILE=gs://cloudml-public/census/data/adult.test.csv
+TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 ```
 
 ### Use local training files.
@@ -121,9 +121,9 @@ rm -rf $OUTPUT_DIR
 ```
 
 ### Model location reuse
-Its worth calling out that unless you want to reuse the old model output dir,
-model location should be a new location so that old model doesn't conflict with new
-one.
+Its worth calling out that unless you want to restore training from the
+[checkpoints](https://www.tensorflow.org/get_started/checkpoints) saved
+in the old model output dir, model location should be a new location.
 
 ```
 python -m trainer.task --tft-working-dir $TFT_OUTPUT_DIR_LOCAL \
@@ -160,7 +160,8 @@ gcloud ml-engine local train --module-name trainer.task \
 ### Using Cloud ML Engine
 Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
 before `--` while training on the cloud and this is so that we can have
-different trial runs during Hyperparameter tuning.
+different trial runs during Hyperparameter tuning. See more information about
+[training job arguments](https://cloud.google.com/ml-engine/docs/tensorflow/training-jobs#submitting_the_job).
 
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
@@ -199,9 +200,9 @@ You should see the output for default number of training steps and approx accura
 
 # Distributed Node Training
 Distributed node training uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed).
-The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml/reference/configuration-data-structures#tf_config_environment_variable)
+The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml-engine/docs/tensorflow/distributed-training-details)
 environment variable. The environment variable is generated using `gcloud` and parsed to create a
-[ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster). See the [ScaleTier](https://cloud.google.com/ml/pricing#ml_training_units_by_scale_tier) for predefined tiers
+[ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster). See the [ScaleTier](https://cloud.google.com/ml-engine/docs/pricing#scale-tier) for predefined tiers.
 
 ## How to run the code
 You can run the code either locally or on cloud using `gcloud`.
@@ -261,7 +262,8 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 
 # Hyperparameter Tuning
 Cloud ML Engine allows you to perform Hyperparameter tuning to find out the
-most optimal hyperparameters. See [Overview of Hyperparameter Tuning](https://cloud.google.com/ml/docs/concepts/hyperparameter-tuning-overview) for more details.
+most optimal hyperparameters. See [Overview of Hyperparameter Tuning](https://cloud.google.com/ml-engine/docs/tensorflow/hyperparameter-tuning-overview)
+for more details.
 
 ## Running Hyperparameter Job
 
