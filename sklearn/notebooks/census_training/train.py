@@ -1,9 +1,11 @@
-# %load iris.py
 # [START setup]
 import datetime
 import os
 import pandas as pd
 import subprocess
+
+from google.cloud import storage
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.externals import joblib
 from sklearn.feature_selection import SelectKBest
@@ -24,13 +26,19 @@ BUCKET_ID = 'true-ability-192918'
 # [START download-data]
 census_data_filename = 'adult.data'
 census_test_filename = 'adult.test'
-data_dir = 'gs://cloud-samples-data/ml-engine/sklearn/census_data'
-subprocess.check_call(['gsutil', 'cp',
-                       os.path.join(data_dir,census_data_filename),
-                       census_data_filename])
-subprocess.check_call(['gsutil', 'cp',
-                       os.path.join(data_dir, census_test_filename),
-                       census_test_filename])
+
+# Public bucket holding the census data
+bucket = storage.Client().bucket('cloud-samples-data')
+
+# Path to the data inside the public bucket
+data_dir = 'ml-engine/sklearn/census_data/'
+
+# Download the data
+blob = bucket.blob(''.join([data_dir, census_data_filename]))
+blob.download_to_filename(census_data_filename)
+
+blob = bucket.blob(''.join([data_dir, census_test_filename]))
+blob.download_to_filename(census_test_filename)
 # [END download-data]
 
 
@@ -166,11 +174,9 @@ model = 'model.joblib'
 joblib.dump(pipeline, model)
 
 # Upload the model to GCS
-model_path = os.path.join(
-    'gs://', 
-    BUCKET_ID, 
+bucket = storage.Client().bucket(BUCKET_ID)
+blob = bucket.blob('{}/{}'.format(
     datetime.datetime.now().strftime('census_%Y%m%d_%H%M%S'),
-    model)
-
-subprocess.check_call(['gsutil', 'cp', model, model_path])
+    model))
+blob.upload_from_filename(model)
 # [END export-to-gcs]
