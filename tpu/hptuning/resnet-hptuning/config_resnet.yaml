@@ -7,8 +7,8 @@ trainingInput:
     goal: MAXIMIZE
     enableTrialEarlyStopping: true
     hyperparameterMetricTag: top_5_accuracy
-    maxTrials: 3
-    maxParallelTrials: 3
+    maxTrials: 32
+    maxParallelTrials: 2
     params:
       - parameterName: base_learning_rate
         type: DOUBLE
@@ -24,5 +24,4 @@ trainingInput:
         type: DOUBLE
         scaleType: UNIT_LINEAR_SCALE
         minValue: 0.00002
-        maxValue: 0.0005
-      
+        maxValue: 0.0005 

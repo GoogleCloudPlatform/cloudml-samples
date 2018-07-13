@@ -3,7 +3,7 @@ now=$(date +"%Y%m%d_%H%M%S")
 # GCS_BUCKET="gs://my-gcs-bucket"
 BUCKET=$GCS_BUCKET
 
-JOB_NAME="tpu_hptuning_$now"
+JOB_NAME="tpu_hptuning_"$now""
 JOB_DIR=$BUCKET"/"$JOB_NAME
 
 STAGING_BUCKET=$BUCKET
