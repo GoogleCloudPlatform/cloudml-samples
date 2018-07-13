@@ -34,6 +34,6 @@ This sample is adapted from [the official samples for training ResNet-50 with Cl
 
     ```
     cd cloudml-samples/tpu/training/resnet
-    bash submit.sh
+    bash submit_resnet.sh
     ```
 
