@@ -1,0 +1,9 @@
+# Dockerfile
+FROM pytorch/pytorch:0.4_cuda9_cudnn7
+
+WORKDIR /root
+
+RUN mkdir /root/mnist
+COPY mnist/mnist.py /root/mnist/mnist.py
+
+ENTRYPOINT ["python", "mnist/mnist.py"]
