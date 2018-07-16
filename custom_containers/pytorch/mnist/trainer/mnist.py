@@ -69,6 +69,7 @@ def test(args, model, device, test_loader, epoch):
       100. * correct / len(test_loader.dataset)))
 
   # Uses hypertune to report metrics for hyperparameter tuning.
+  
   hpt = hypertune.HyperTune()
   hpt.report_hyperparameter_tuning_metric(
       hyperparameter_metric_tag='my_loss',

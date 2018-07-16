@@ -5,11 +5,13 @@ WORKDIR /root
 # Installs pytorch and torchvision.
 RUN pip install torch torchvision
 
-# This is for cloud ml hyperparameter tuning.
+# Installs cloudml-hypertune for hyperparameter tuning.
+# It’s not needed if you don’t want to do hyperparameter tuning.
 RUN pip install cloudml-hypertune
 
-# Installs google cloud sdk, this is mostly for using GCS to store the model.
-RUN wget -nv https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz && \
+# Installs google cloud sdk, this is mostly for using gsutil to export model.
+RUN wget -nv \
+    https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz && \
     mkdir /root/tools && \
     tar xvzf google-cloud-sdk.tar.gz -C /root/tools && \
     rm google-cloud-sdk.tar.gz && \
@@ -25,7 +27,9 @@ ENV PATH $PATH:/root/tools/google-cloud-sdk/bin
 # Make sure gsutil will use the default service account
 RUN echo '[GoogleCompute]\nservice_account = default' > /etc/boto.cfg
 
+# Copies the trainer code 
 RUN mkdir /root/trainer
 COPY trainer/mnist.py /root/trainer/mnist.py
 
+# Setups the entry point to invoke the trainer.
 ENTRYPOINT ["python", "trainer/mnist.py"]
