@@ -25,7 +25,6 @@ BUCKET_ID = 'true-ability-192918'
 # ---------------------------------------
 # [START download-data]
 census_data_filename = 'adult.data'
-census_test_filename = 'adult.test'
 
 # Public bucket holding the census data
 bucket = storage.Client().bucket('cloud-samples-data')
@@ -36,9 +35,6 @@ data_dir = 'ml-engine/sklearn/census_data/'
 # Download the data
 blob = bucket.blob(''.join([data_dir, census_data_filename]))
 blob.download_to_filename(census_data_filename)
-
-blob = bucket.blob(''.join([data_dir, census_test_filename]))
-blob.download_to_filename(census_test_filename)
 # [END download-data]
 
 
@@ -87,16 +83,6 @@ with open('./adult.data', 'r') as train_data:
 train_features = raw_training_data.drop('income-level', axis=1).as_matrix().tolist()
 # Create our training labels list, convert the Dataframe to a lists of lists
 train_labels = (raw_training_data['income-level'] == ' >50K').as_matrix().tolist()
-
-
-# Load the test census dataset
-with open('./adult.test', 'r') as test_data:
-    raw_testing_data = pd.read_csv(test_data, names=COLUMNS, skiprows=1)
-# Remove the column we are trying to predict ('income-level') from our features list
-# Convert the Dataframe to a lists of lists
-test_features = raw_testing_data.drop('income-level', axis=1).as_matrix().tolist()
-# Create our training labels list, convert the Dataframe to a lists of lists
-test_labels = (raw_testing_data['income-level'] == ' >50K.').as_matrix().tolist()
 # [END define-and-load-data]
 
 
