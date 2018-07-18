@@ -24,17 +24,13 @@ BUCKET_ID = 'true-ability-192918'
 # ML Engine will then be able to use the data when training your model.
 # ---------------------------------------
 # [START download-data]
-census_data_filename = 'adult.data'
-
 # Public bucket holding the census data
 bucket = storage.Client().bucket('cloud-samples-data')
 
 # Path to the data inside the public bucket
-data_dir = 'ml-engine/sklearn/census_data/'
-
+blob = bucket.blob('ml-engine/sklearn/census_data/adult.data')
 # Download the data
-blob = bucket.blob(''.join([data_dir, census_data_filename]))
-blob.download_to_filename(census_data_filename)
+blob.download_to_filename('adult.data')
 # [END download-data]
 
 
