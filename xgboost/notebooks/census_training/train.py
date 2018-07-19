@@ -86,17 +86,15 @@ for col in CATEGORICAL_COLUMNS:
     train_features[col] = encoders[col].fit_transform(train_features[col])
 # [END categorical-feature-conversion]
 
-# [START load-into-dmatrix]
+# [START load-into-dmatrix-and-train]
 # load data into DMatrix object
 dtrain = xgb.DMatrix(train_features, train_labels)
-# [END load-into-dmatrix]
-
-# [START train-model]
+# train model
 bst = xgb.train({}, dtrain, 20)
-# [END train-model]
+# [END load-into-dmatrix-and-train]
 
 # ---------------------------------------
-# 2. Export and save the model to GCS
+# 2. Train and save the model to GCS
 # ---------------------------------------
 # [START export-to-gcs]
 # Export the model to a file
