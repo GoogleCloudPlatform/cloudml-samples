@@ -1,3 +1,5 @@
+# This file is for training on Cloud ML Engine with scikit-learn.
+
 import datetime
 import os
 import subprocess
