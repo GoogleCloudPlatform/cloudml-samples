@@ -52,7 +52,7 @@ joblib.dump(classifier, model)
 
 # [START upload-model]
 # Upload the saved model file to Cloud Storage
-model_path = os.path.join('gs://', bucket, datetime.datetime.now().strftime(
+model_path = os.path.join('gs://', BUCKET_ID, datetime.datetime.now().strftime(
     'iris_%Y%m%d_%H%M%S'), model)
 subprocess.check_call(['gsutil', 'cp', model, model_path], stderr=sys.stdout)
 # [END upload-model]
