@@ -3,7 +3,7 @@
 - - -
 
 ### Setup GCP environment
-Please fllow this [instruction](https://cloud.google.com/ml-engine/docs/scikit/getting-started-training#before_you_begin) to set up your environment to run scikit-learn on your local environment and GCP.
+Please fllow this [instruction](https://cloud.google.com/ml-engine/docs/scikit/getting-started-training#before_you_begin) to set up your environment to run scikit-learn on your local environment and Google Cloud ML Engine.
 
 
 ### Install required packages for training in local environment.
@@ -18,24 +18,23 @@ pip install pandas
 pip install cloudml-hypertune
 ```
 
-### Using `gcloud local`
+### Using `gcloud ml-engine local train`
 In the command line, set the following environment variables, replacing [VALUES-IN-BRACKETS] with the appropriate values:
 ```
 TRAINING_PACKAGE_PATH="[YOUR-LOCAL-PATH-TO-TRAINING-PACKAGE]/iris_sklearn_trainer/"
 MAIN_TRAINER_MODULE="iris_sklearn_trainer.iris"
 OUTPUT_PATH="[YOU-LOCAL-PATH-TO-STORE-OUTPUT-MODEL]"
 ```
-Test your training job locally:
+Run your training job locally:
 ```
 gcloud ml-engine local train \
+  --job-dir $OUTPUT_PATH \
   --package-path $TRAINING_PACKAGE_PATH \
-  --module-name $MAIN_TRAINER_MODULE \
-  -- \
-  --job-dir $OUTPUT_PATH
+  --module-name $MAIN_TRAINER_MODULE
 ```
 
-### Using Cloud ML Engine
-For your convenience, the environment variables for this tutorial are below:
+### Training on Cloud ML Engine
+For your convenience, set the environment variables as below:
 ```
 PROJECT_ID=[YOUR-PROJECT-ID]
 BUCKET_ID=[YOUR-BUCKET-ID]
@@ -48,7 +47,7 @@ SCALE_TIER=BASIC
 JOB_NAME="iris_scikit_learn_$(date +"%Y%m%d_%H%M%S")"
 JOB_DIR=gs://$BUCKET_ID/$JOB_NAME
 ```
-Submit the training job request:
+Submit the training job to Cloud ML Engine:
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
   --job-dir $JOB_DIR \
@@ -105,4 +104,3 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 
 ### Online Predcition
 If you have done with tuning a model and hope to serve the model for online prediction, please follow instruciton in the [Online Prediction with scikit-learn on Google Cloud Machine Learning Engine](https://github.com/GoogleCloudPlatform/cloudml-samples/blob/master/sklearn/notebooks/Online%20Prediction%20with%20scikit-learn.ipynb).
-
