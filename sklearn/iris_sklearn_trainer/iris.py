@@ -22,7 +22,7 @@ parser.add_argument(
     '--kernel',
     help='Specifies the kernel type to be used in the '
          'algorithm.It must be one of `linear`, `poly`, '
-         '`rbf`, `sigmoid`, `precomputed` or a callable',
+         '`rbf`, `sigmoid` or a callable',
     default='rbf'
 )
 parser.add_argument(

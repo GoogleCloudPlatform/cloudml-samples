@@ -78,8 +78,7 @@ trainingInput:
           "linear",
           "poly",
           "rbf",
-          "sigmoid",
-          "precomputed"
+          "sigmoid"
       ]
     - parameterName: c
       type: DOUBLE

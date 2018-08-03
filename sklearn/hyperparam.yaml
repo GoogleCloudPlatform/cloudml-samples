@@ -1,0 +1,23 @@
+# hyperparam.yaml
+trainingInput:
+  hyperparameters:
+    goal: MAXIMIZE
+    maxTrials: 30
+    maxParallelTrials: 5
+    hyperparameterMetricTag: my_metric_tag
+    enableTrialEarlyStopping: TRUE 
+    params:
+    - parameterName: kernel
+      type: CATEGORICAL
+      categoricalValues: [
+          "linear",
+          "poly",
+          "rbf",
+          "sigmoid"
+      ]
+    - parameterName: c
+      type: DOUBLE
+      minValue: 0.01
+      maxValue: 2
+      scaleType: UNIT_LINEAR_SCALE
+
