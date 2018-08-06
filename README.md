@@ -17,6 +17,7 @@ Please checkout [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp) gu
   * [Canned Estimator](census/estimator) - [TensorFlow canned estimator](https://www.tensorflow.org/programmers_guide/estimators#pre-made_estimators) model
   * [Custom Estimator](census/customestimator) - [TensorFlow custom estimator](https://www.tensorflow.org/programmers_guide/estimators#custom_estimators) model
   * [Low Level TF](census/tensorflowcore) - TensorFlow low level API model
+  * [scikit-learn Training](sklearn/notebooks/ml_engine_training.ipynb)
   * [scikit-learn Online Prediction](sklearn/notebooks/Online%20Prediction%20with%20scikit-learn.ipynb)
   * [XGBoost Online Prediction](xgboost/notebooks/Online%20Prediction%20with%20XGBoost.ipynb)
 * [Criteo](criteo_tft) - Predict how likely a person is to click on an
