@@ -61,7 +61,6 @@ train_data, test_data, train_target, test_target = train_test_split(
 
 # [START train-and-save-model]
 # Train the model
-classifier = svm.SVC(verbose=True)
 classifier = svm.SVC(verbose=True, kernel=args.kernel, C=args.c)
 classifier.fit(train_data, train_target)
 # Export the classifier to a file
