@@ -75,7 +75,7 @@ Please see the [Cloud TPU guide](CLOUD_TPU_README.md) for how to use Cloud TPU.
 
 # What do you want to see?
 
-If you came looking for a sample we don’t have, please file an issue using the *Sample / Feature Request* template on this repository and add the label `SAMPLE_REQUEST`. Please provide as much detail as possible about the ML Engine sample you were looking for, what framework (Tensorflow, Keras, scikit-learn, XGBoost, ...), the type of model, and what kind of dataset you were hoping to use! 
+If you came looking for a sample we don’t have, please file an issue using the [Sample / Feature Request](https://github.com/GoogleCloudPlatform/cloudml-samples/issues/new?template=sample-feature-request.md) template on this repository. Please provide as much detail as possible about the ML Engine sample you were looking for, what framework (Tensorflow, Keras, scikit-learn, XGBoost, ...), the type of model, and what kind of dataset you were hoping to use! 
 
 Jump below if you want to contribute and add that missing sample.
 
