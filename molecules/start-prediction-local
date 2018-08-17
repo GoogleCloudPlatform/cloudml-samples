@@ -1,0 +1,72 @@
+#!/bin/bash
+
+set -e
+
+# Parse command line arguments
+WORK_DIR=/tmp/cloudml-samples/molecules
+PROJECT=$(gcloud config get-value project || echo $PROJECT)
+INPUTS_TOPIC=molecules-inputs
+OUTPUTS_TOPIC=molecules-predictions
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --work-dir)
+      WORK_DIR=$2
+      shift
+      ;;
+    --project)
+      PROJECT=$2
+      shift
+      ;;
+    --inputs-topic)
+      INPUTS_TOPIC=$2
+      shift
+      ;;
+    --outputs-topic)
+      OUTPUTS_TOPIC=$2
+      shift
+      ;;
+    *)
+      echo "error: unrecognized argument $1"
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+# Wrapper function to print the command being run
+function run {
+  set -x
+  "$@"
+  set +x
+}
+
+# Create the PubSub topics
+if [[ -z $(gcloud pubsub topics list | grep $INPUTS_TOPIC) ]]; then
+  run gcloud pubsub topics create $INPUTS_TOPIC
+fi
+
+if [[ -z $(gcloud pubsub topics list | grep $OUTPUTS_TOPIC) ]]; then
+  run gcloud pubsub topics create $OUTPUTS_TOPIC
+fi
+
+# Get the model path
+EXPORT_DIR=$WORK_DIR/model/export
+if [[ $EXPORT_DIR == gs://* ]]; then
+  MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
+else
+  MODEL_DIR=$(ls -d -1 $EXPORT_DIR/* | sort -r | head -n 1)
+fi
+echo "Model: $MODEL_DIR"
+echo ''
+
+echo 'Press Ctrl+C to exit'
+echo ''
+
+# Start the streaming prediction service
+run python predict.py \
+  --work-dir $WORK_DIR \
+  --model-dir $MODEL_DIR \
+  stream \
+  --project $PROJECT \
+  --inputs-topic $INPUTS_TOPIC \
+  --outputs-topic $OUTPUTS_TOPIC

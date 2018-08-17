@@ -4,9 +4,9 @@ This sample shows how to train and create an ML model to predict the molecular e
 The dataset for this sample comes from this [Kaggle Dataset](https://www.kaggle.com/burakhmmtgl/predict-molecular-properties). However, the number of preprocessed JSON files was too small, so this sample will download the raw data files directly from this [FTP source](ftp://ftp.ncbi.nlm.nih.gov/pubchem/Compound_3D/01_conf_per_cmpd/SDF) (in [`SDF`](https://en.wikipedia.org/wiki/Chemical_table_file#SDF) fromat instead of `JSON`). Here's a more detailed description of the [MDL/SDF file format](http://c4.cabrillo.edu/404/ctfile.pdf).
 
 These are the rough steps:
- 1. data-extractor.py: extracts the data files
- 2. preprocess.py: runs an [Apache Beam](https://beam.apache.org/) pipeline for element-wise transformations, and [tf.Transform](https://github.com/tensorflow/transform) for full-pass transformations. This can be run in [Google Cloud Dataflow](https://cloud.google.com/dataflow/)
- 4. trainer/task.py: trains and evaluates the ([Tensorflow](https://www.tensorflow.org/)) model. This can be run in [Google Cloud ML Engine](https://cloud.google.com/ml-engine/)
+ 1. `data-extractor.py`: extracts the data files
+ 2. `preprocess.py`: runs an [Apache Beam](https://beam.apache.org/) pipeline for element-wise transformations, and [tf.Transform](https://github.com/tensorflow/transform) for full-pass transformations. This can be run in [Google Cloud Dataflow](https://cloud.google.com/dataflow/)
+ 4. `trainer/task.py`: trains and evaluates the ([Tensorflow](https://www.tensorflow.org/)) model. This can be run in [Google Cloud ML Engine](https://cloud.google.com/ml-engine/)
 
 This model only does a very simple preprocessing. It uses Apache beam to parse the SDF files and count how many Carbon, Hydrogen, Oxygen, and Nitrogen atoms a molecule has. Then it uses tf.Transform to normalize to values between 0 and 1. Finally, the normalized counts are fed into a TensorFlow Deep Neural Network. There are much more interesting features that could be extracted that will make more accurate predictions.
 
@@ -79,7 +79,6 @@ bash run-local --work-dir ~/cloudml-samples/molecules
 
 For reference, this are the *real* energy values for the `sample-requests.json` file.
 ```bash
-PREDICTIONS
 [37.801]
 [44.1107]
 [19.4085]
@@ -95,39 +94,33 @@ WORK_DIR=gs://<Your bucket name>/cloudml-samples/molecules
 After specifying our work directory, we can then extract the data files, preprocess, and train in Google Cloud using that location.
 ```bash
 # Extract the data files
-DATA_DIR=$WORK_DIR/data
-python data-extractor.py \
-  --data-dir $DATA_DIR \
-  --total-data-files 10
+python data-extractor.py --work-dir $WORK_DIR --max-data-files 10
 
 # Preprocess the datasets using Apache Beam's DataflowRunner
-PROJECT=$(gcloud config get-value project)
-TEMP_DIR=$WORK_DIR/temp
-PREPROCESS_DATA=$WORK_DIR/PreprocessData
 python preprocess.py \
-  --data-dir $DATA_DIR \
-  --temp-dir $TEMP_DIR \
-  --preprocess-data $PREPROCESS_DATA \
   --runner DataflowRunner \
   --project $PROJECT \
-  --temp_location $TEMP_DIR \
-  --setup_file ./setup.py
+  --temp_location $WORK_DIR/beam-temp \
+  --setup_file ./setup.py \
+  --work-dir $WORK_DIR
 
-# Train and evaluate the model in Google ML Engine
+# Train and evaluate the model in Google Cloud ML Engine
 JOB="cloudml_samples_molecules_$(date +%Y%m%d_%H%M%S)"
-BUCKET=$(echo $WORK_DIR | egrep -o gs://[-_.a-z0-9]+)
-EXPORT_DIR=$WORK_DIR/model
+BUCKET=$(echo $WORK_DIR | egrep -o gs://[-_.a-zA-Z0-9]+)
+MODEL=molecules
 gcloud ml-engine jobs submit training $JOB \
-  --stream-logs \
   --module-name trainer.task \
   --package-path trainer \
   --staging-bucket $BUCKET \
+  --runtime-version 1.8 \
+  --stream-logs \
   -- \
-  --preprocess-data $PREPROCESS_DATA \
-  --export-dir $EXPORT_DIR
+  --work-dir $WORK_DIR \
+  --model $MODEL
 
 # Get the model path
-MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/export/molecules/* | sort -r | head -n 1)
+EXPORT_DIR=$WORK_DIR/model/export/$MODEL
+MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
 echo "Model: $MODEL_DIR"
 
 # Create a model in Google Cloud ML Engine
@@ -136,9 +129,8 @@ gcloud ml-engine models create $MODEL
 
 # Create a model version
 VERSION=$JOB
-gcloud ml-engine versions create $VERSION \
-  --model $MODEL \
-  --origin $MODEL_DIR
+gcloud ml-engine versions create $VERSION --model $MODEL --origin $MODEL_DIR
+gcloud ml-engine versions set-default $VERSION --model $MODEL
 
 # Make predictions
 gcloud ml-engine predict \
@@ -160,7 +152,6 @@ bash run-cloud --work-dir $WORK_DIR --total-data-files 10
 
 For reference, this are the *real* energy values for the `sample-requests.json` file.
 ```bash
-PREDICTIONS
 [37.801]
 [44.1107]
 [19.4085]
