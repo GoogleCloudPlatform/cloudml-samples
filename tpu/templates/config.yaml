@@ -1,0 +1,5 @@
+trainingInput:
+  scaleTier: CUSTOM
+  masterType: standard
+  workerCount: 1
+  workerType: cloud_tpu
