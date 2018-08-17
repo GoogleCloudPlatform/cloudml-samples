@@ -16,8 +16,9 @@ import setuptools
 #       cloud runs.
 
 REQUIRED_PACKAGES = [
-    'tensorflow-transform==0.6.0',
-    'tensorflow==1.8.0',
+    'apache-beam[gcp]==2.5',
+    'tensorflow-transform==0.8',
+    'tensorflow==1.8',
 ]
 
 setuptools.setup(
