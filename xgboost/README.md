@@ -1,4 +1,4 @@
-# Training a XGBoost model on Cloud ML Engine using the Iris dataset
+# Training an XGBoost model on Cloud ML Engine using the Iris dataset
 
 - - -
 
