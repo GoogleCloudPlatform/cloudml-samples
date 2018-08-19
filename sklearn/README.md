@@ -1,4 +1,4 @@
-#Training a scikit-learn model on Cloud ML Engine using the Iris dataset
+# Training a scikit-learn model on Cloud ML Engine using the Iris dataset
 
 - - -
 
@@ -10,12 +10,7 @@ Please fllow this [instruction](https://cloud.google.com/ml-engine/docs/scikit/g
 In order to run the sample in your local enviroment, you need to
 run the following commands to install required python packages.
 ```
-pip install scikit-learn
-pip install pandas
-
-# The package is used for reporting hyperparameter tuning 
-# metrics on CloudML Engine.  
-pip install cloudml-hypertune
+pip install -r requirements.txt
 ```
 
 ### Using `gcloud ml-engine local train`
