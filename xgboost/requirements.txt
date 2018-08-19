@@ -1,0 +1,6 @@
+scikit-learn==0.19.1
+pandas==0.23.3
+xgboost=0.72.1
+# The package is used for reporting hyperparameter tuning
+# metrics on CloudML Engine.
+cloudml-hypertune
