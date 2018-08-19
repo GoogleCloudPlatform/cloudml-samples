@@ -1,0 +1,14 @@
+# hyperparam.yaml
+trainingInput:
+  hyperparameters:
+    goal: MINIMIZE
+    maxTrials: 20
+    maxParallelTrials: 5
+    hyperparameterMetricTag: my_metric_tag
+    enableTrialEarlyStopping: TRUE 
+    params:
+    - parameterName: num-boost-round
+      type: INTEGER
+      minValue: 1
+      maxValue: 30
+      scaleType: UNIT_LINEAR_SCALE
