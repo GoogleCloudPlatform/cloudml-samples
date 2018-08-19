@@ -1,5 +1,6 @@
 # This file is for training on Cloud ML Engine with scikit-learn.
-
+# TODO(0olwzo0): Remove this file after stopping referring this file from CMLE
+# public doc.
 
 # [START setup]
 import datetime

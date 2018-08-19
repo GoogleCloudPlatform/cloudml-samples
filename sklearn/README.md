@@ -1,9 +1,9 @@
-# Training Iris model with scikit-learn on Cloud ML Engine
+#Training a scikit-learn model on Cloud ML Engine using the Iris dataset
 
 - - -
 
 ### Setup GCP environment
-Please fllow this [instruction](https://cloud.google.com/ml-engine/docs/scikit/getting-started-training#before_you_begin) to set up your environment to run scikit-learn on your local environment and Google Cloud ML Engine.
+Please fllow this [instruction](https://cloud.google.com/ml-engine/docs/scikit/getting-started-training#before_you_begin) to set up your environment with scikit-learn and your Google Cloud Project to train your model on Google Cloud ML Engine.
 
 
 ### Install required packages for training in local environment.
@@ -59,9 +59,11 @@ gcloud ml-engine jobs submit training $JOB_NAME \
   --scale-tier $SCALE_TIER
 ```
 ### Tuning Hyperparameters on Cloud ML Engine
+You're also able to do hyperparameter tuning with scikit-learn on Cloud ML Engine. The python package [cloudml-hypertune](https://pypi.org/project/cloudml-hypertune/) is used to help you report hyperparameter tuning objective metrics when running on Cloud ML Engine. cloudml-hypertune can work with any ML framework.
+
 You're also able to do hyperparameter tuning with Scikit-Learn on Cloud ML Engine. We introduce a new python package [cloudml-hypertune](https://pypi.org/project/cloudml-hypertune/) to help you report hyperparameter tuning objective metrics when running on Cloud ML Engine. It can work with any ML framework.
 
-In this sample, `kernel` and `c` are the two hyperparameters we hope to tune for the model. Here is the .yaml file for the hyperparameter tuning configuration.
+In this sample, `kernel`(kernel type) and `c`(penalty parameter) are the two hyperparameters we hope to tune for the model. Here is the .yaml file for the hyperparameter tuning configuration.
 ```
 # hyperparam.yaml
 trainingInput:
@@ -102,4 +104,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 ```
 
 ### Online Predcition
-If you have done with tuning a model and hope to serve the model for online prediction, please follow instruciton in the [Online Prediction with scikit-learn on Google Cloud Machine Learning Engine](https://github.com/GoogleCloudPlatform/cloudml-samples/blob/master/sklearn/notebooks/Online%20Prediction%20with%20scikit-learn.ipynb).
+Once you are done training / tuning your model. Check out our guides on how to serve the model for online prediction.
+* [Online Prediction with scikit-learn on Google Cloud Machine Learning Engine](https://github.com/GoogleCloudPlatform/cloudml-samples/blob/master/sklearn/notebooks/Online%20Prediction%20with%20scikit-learn.ipynb).
+* [Getting Started with scikit-learn and XGBoost online predictions](https://cloud.google.com/ml-engine/docs/scikit/quickstart)
+* [Online Predictions with scikit-learn Pipelines](https://cloud.google.com/ml-engine/docs/scikit/using-pipelines)
