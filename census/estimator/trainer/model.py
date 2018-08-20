@@ -216,7 +216,7 @@ def example_serving_input_fn():
       tf.feature_column.make_parse_example_spec(INPUT_COLUMNS)
   )
   return tf.estimator.export.ServingInputReceiver(
-      features,
+      feature_scalars,
       {'example_proto': example_bytestring}
   )
 
