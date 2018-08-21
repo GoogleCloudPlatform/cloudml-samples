@@ -1,0 +1,87 @@
+#!/bin/bash
+
+set -e
+
+# Parse command line arguments
+unset WORK_DIR
+PROJECT=$(gcloud config get-value project || echo $PROJECT)
+INPUTS_TOPIC=molecules-inputs
+OUTPUTS_TOPIC=molecules-predictions
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --work-dir)
+      WORK_DIR=$2
+      shift
+      ;;
+    --project)
+      PROJECT=$2
+      shift
+      ;;
+    --inputs-topic)
+      INPUTS_TOPIC=$2
+      shift
+      ;;
+    --outputs-topic)
+      OUTPUTS_TOPIC=$2
+      shift
+      ;;
+    *)
+      echo "error: unrecognized argument $1"
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+if [[ -z $WORK_DIR ]]; then
+  echo "error: argument --work-dir is required"
+  exit 1
+fi
+
+if [[ $WORK_DIR != gs://* ]]; then
+  echo "error: --work-dir must be a Google Cloud Storage path"
+  echo "       example: gs://your-bucket/cloudml-samples/molecules"
+  exit 1
+fi
+
+if [[ -z $PROJECT ]]; then
+  echo 'error: --project is required to run in Google Cloud Platform.'
+  exit 1
+fi
+
+# Wrapper function to print the command being run
+function run {
+  set -x
+  "$@"
+  set +x
+}
+
+# Create the PubSub topics
+if [[ -z $(gcloud pubsub topics list | grep $INPUTS_TOPIC) ]]; then
+  run gcloud pubsub topics create $INPUTS_TOPIC
+fi
+
+if [[ -z $(gcloud pubsub topics list | grep $OUTPUTS_TOPIC) ]]; then
+  run gcloud pubsub topics create $OUTPUTS_TOPIC
+fi
+
+# Get the model path
+EXPORT_DIR=$WORK_DIR/model/export
+MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
+echo "Model: $MODEL_DIR"
+echo ''
+
+echo 'Press Ctrl+C to exit'
+echo ''
+
+# Start the streaming prediction service
+run python predict.py \
+  --work-dir $WORK_DIR \
+  --model-dir $MODEL_DIR \
+  stream \
+  --project $PROJECT \
+  --runner DataflowRunner \
+  --temp_location $WORK_DIR/beam-temp \
+  --setup_file ./setup.py \
+  --inputs-topic $INPUTS_TOPIC \
+  --outputs-topic $OUTPUTS_TOPIC

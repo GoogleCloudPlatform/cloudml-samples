@@ -3,51 +3,80 @@
 set -e
 
 # Parse command line arguments
-TOTAL_DATA_FILES=5
 WORK_DIR=/tmp/cloudml-samples/molecules
+MAX_DATA_FILES=5
 while [[ $# -gt 0 ]]; do
   case $1 in
     --work-dir)
       WORK_DIR=$2
       shift
       ;;
-    --total-data-files)
-      TOTAL_DATA_FILES=$2
+    --max-data-files)
+      MAX_DATA_FILES=$2
       shift
+      ;;
+    *)
+      echo "error: unrecognized argument $1"
+      exit 1
       ;;
   esac
   shift
 done
 
+# Wrapper function to print the command being run
+function run {
+  echo "$ $@"
+  "$@"
+}
+
 # Extract the data files
-DATA_DIR=$WORK_DIR/data
-python data-extractor.py \
-  --total-data-files $TOTAL_DATA_FILES \
-  --data-dir $DATA_DIR
+echo '>> Extracting data'
+run python data-extractor.py \
+  --work-dir $WORK_DIR \
+  --max-data-files $MAX_DATA_FILES
+echo ''
 
 # Preprocess the datasets
-TEMP_DIR=$WORK_DIR/temp
-PREPROCESS_DATA=$WORK_DIR/PreprocessData
-python preprocess.py \
-  --data-dir $DATA_DIR \
-  --temp-dir $TEMP_DIR \
-  --preprocess-data $PREPROCESS_DATA
+echo '>> Preprocessing'
+run python preprocess.py \
+  --work-dir $WORK_DIR
+echo ''
 
 # Train and evaluate the model
-EXPORT_DIR=$WORK_DIR/model
-python trainer/task.py \
-  --preprocess-data $PREPROCESS_DATA \
-  --export-dir $EXPORT_DIR
+echo '>> Training'
+run python trainer/task.py \
+  --work-dir $WORK_DIR
+echo ''
 
 # Get the model path
+EXPORT_DIR=$WORK_DIR/model/export
 if [[ $EXPORT_DIR == gs://* ]]; then
-  MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/export/molecules/* | sort -r | head -n 1)
+  MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
 else
-  MODEL_DIR=$(ls -d -1 $EXPORT_DIR/export/molecules/* | sort -r | head -n 1)
+  MODEL_DIR=$(ls -d -1 $EXPORT_DIR/* | sort -r | head -n 1)
 fi
 echo "Model: $MODEL_DIR"
+echo ''
 
-# Make local predictions
-gcloud ml-engine local predict \
+# Make predictions via JSON requests
+echo '>> JSON predictions'
+run gcloud ml-engine local predict \
   --model-dir $MODEL_DIR \
   --json-instances sample-requests.json
+echo ''
+
+# Make batch predictions with full-stack preprocessing
+echo '>> Full-stack batch prediction'
+run python predict.py \
+  --work-dir $WORK_DIR \
+  --model-dir $MODEL_DIR \
+  batch \
+  --inputs-dir $WORK_DIR/data \
+  --outputs-dir $WORK_DIR/predictions
+
+# Display some sample predictions
+if [[ $WORK_DIR == gs://* ]]; then
+  gsutil cat $WORK_DIR/predictions/* | head -n 10
+else
+  head -n 10 $WORK_DIR/predictions/*
+fi
