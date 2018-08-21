@@ -211,12 +211,12 @@ def example_serving_input_fn():
       shape=[None],
       dtype=tf.string,
   )
-  feature_scalars = tf.parse_example(
+  features = tf.parse_example(
       example_bytestring,
       tf.feature_column.make_parse_example_spec(INPUT_COLUMNS)
   )
   return tf.estimator.export.ServingInputReceiver(
-      feature_scalars,
+      features,
       {'example_proto': example_bytestring}
   )
 
