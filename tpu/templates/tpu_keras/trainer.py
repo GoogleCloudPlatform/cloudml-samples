@@ -1,4 +1,4 @@
-# Copyright 2018 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2018 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 
 import argparse
 import os
@@ -42,11 +42,13 @@ def main(args):
     model = build_model()
 
     if args.use_tpu:
+        # distribute over TPU cores
+        # Note: only in TensorFlow 1.10+
         strategy = tf.contrib.tpu.TPUDistributionStrategy(num_cores_per_host=8)
         model = tf.contrib.tpu.keras_to_tpu_model(
             model, strategy=strategy, tpu_name_or_address=args.tpu)
 
-    optimizer = tf.train.AdamOptimizer(learning_rate=0.05)
+    optimizer = tf.train.RMSPropOptimizer(learning_rate=0.05)
     loss_fn = tf.losses.log_loss
     model.compile(optimizer, loss_fn)
 

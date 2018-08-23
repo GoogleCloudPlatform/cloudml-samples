@@ -21,16 +21,33 @@ import tensorflow as tf
 def model_fn(features, labels, mode, params):
     # build model
     global_step = tf.train.get_global_step()
-    hidden = tf.layers.dense(features, 10, activation=tf.nn.relu)
-    output = tf.layers.dense(hidden, 1)
 
-    predictions = output
+    # there are 10 different labels in the fake data
+    embedding_dim = 7
+    embedding_table = tf.get_variable('embedding_table', shape=(10, embedding_dim), dtype=tf.float32)
+
+    embeddings = tf.nn.embedding_lookup(embedding_table, features)
+
+    # lstm model
+    batch_size = params['batch_size']
+    sequence_length = params['sequence_length']
+
+    cell = tf.nn.rnn_cell.BasicLSTMCell(7)
+    outputs, final_state = tf.nn.dynamic_rnn(cell, embeddings, dtype=tf.float32)
+
+    # flatten the batch and sequence dimensions
+    flattened = tf.reshape(outputs, (batch_size*sequence_length, embedding_dim))
+    flattened_logits = tf.layers.dense(flattened, 10)
+
+    logits = tf.reshape(flattened_logits, (batch_size, sequence_length, 10))
+
+    predictions = tf.multinomial(flattened_logits, num_samples=1)
     loss = None
     train_op = None
 
     if mode == tf.estimator.ModeKeys.TRAIN:
         # define loss
-        loss = tf.nn.l2_loss(predictions - labels)
+        loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits))
 
         # define train_op
         optimizer = tf.train.RMSPropOptimizer(learning_rate=0.05)
@@ -59,35 +76,39 @@ def model_fn(features, labels, mode, params):
 
 
 def train_input_fn(params={}):
-    # make some fake data
-    x = np.random.rand(100, 5)
-    w = np.random.rand(5)
-    y = np.sum(x * w, axis=1)
+    # make some fake data of labels
+    data_length = 100
+    x = np.random.randint(0, 10, data_length)
+    y = np.random.randint(0, 10, data_length)
 
-    # TPUs currently do not support float64
-    x_tensor = tf.constant(x, dtype=tf.float32)
-    y_tensor = tf.constant(y, dtype=tf.float32)
+    x_tensor = tf.constant(x, dtype=tf.int32)
+    y_tensor = tf.constant(y, dtype=tf.int32)
 
-    # create tf.data.Dataset
-    dataset = tf.data.Dataset.from_tensor_slices((x_tensor, y_tensor))
+    dataset = tf.data.Dataset.from_tensors((x_tensor, y_tensor))
+    dataset = dataset.repeat()
+
+    # TPUs need to know the full shape of tensors
+    # so we use a fixed sequence length
+    sequence_length = params.get('sequence_length', 5)
+
+    def get_sequences(x_tensor, y_tensor):
+        index = tf.random_uniform([1], minval=0, maxval=data_length-sequence_length, dtype=tf.int32)[0]
+
+        x_sequence = x_tensor[index:index+sequence_length]
+        y_sequence = y_tensor[index:index+sequence_length]
+
+        # TPUs need to know all dimensions when the graph is built 
+        x_sequence.set_shape((sequence_length,))
+        y_sequence.set_shape((sequence_length,))
+
+        return (x_sequence, y_sequence)
+
+    dataset = dataset.map(get_sequences)
 
     # TPUEstimator passes params when calling input_fn
     batch_size = params.get('batch_size', 16)
+    dataset = dataset.batch(batch_size)
 
-    dataset = dataset.repeat().shuffle(32).batch(batch_size)
-
-    # TPUs need to know all dimensions when the graph is built
-    # Datasets know the batch size only when the graph is run
-    def set_shapes(features, labels):
-        features_shape = features.get_shape().merge_with([batch_size, None])
-        labels_shape = labels.get_shape().merge_with([batch_size])
-
-        features.set_shape(features_shape)
-        labels.set_shape(labels_shape)
-
-        return features, labels
-
-    dataset = dataset.map(set_shapes)
     dataset = dataset.prefetch(tf.contrib.data.AUTOTUNE)
 
     return dataset
@@ -119,7 +140,7 @@ def main(args):
             model_fn=model_fn,
             config=config,
             params=params,
-            train_batch_size=args.batch_size, # FIXME
+            train_batch_size=args.batch_size,
             eval_batch_size=32, # FIXME
             export_to_tpu=False
         )
@@ -134,6 +155,8 @@ def main(args):
 
     estimator.train(train_input_fn, max_steps=args.max_steps)
 
+    return estimator
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -147,6 +170,11 @@ if __name__ == '__main__':
         '--max-steps',
         type=int,
         default=1000
+    )
+    parser.add_argument(
+        '--sequence-length',
+        type=int,
+        default=5
     )
     parser.add_argument(
         '-batch-size',
@@ -164,4 +192,4 @@ if __name__ == '__main__':
 
     args, _ = parser.parse_known_args()
 
-    main(args)
+    estimator = main(args)
