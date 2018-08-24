@@ -18,13 +18,14 @@ import numpy as np
 import tensorflow as tf
 
 NUM_CLASSES = 10
+EMBEDDING_DIM = 7
+
 
 def model_fn(features, labels, mode, params):
     # build model
     global_step = tf.train.get_global_step()
 
-    embedding_dim = 7
-    embedding_table = tf.get_variable('embedding_table', shape=(NUM_CLASSES, embedding_dim), dtype=tf.float32)
+    embedding_table = tf.get_variable('embedding_table', shape=(NUM_CLASSES, EMBEDDING_DIM), dtype=tf.float32)
 
     embeddings = tf.nn.embedding_lookup(embedding_table, features)
 
@@ -32,14 +33,14 @@ def model_fn(features, labels, mode, params):
     batch_size = params['train_batch_size']
     sequence_length = params['sequence_length']
 
-    cell = tf.nn.rnn_cell.BasicLSTMCell(embedding_dim)
+    cell = tf.nn.rnn_cell.BasicLSTMCell(EMBEDDING_DIM)
     outputs, final_state = tf.nn.dynamic_rnn(cell, embeddings, dtype=tf.float32)
 
     # flatten the batch and sequence dimensions
-    flattened = tf.reshape(outputs, (batch_size*sequence_length, embedding_dim))
+    flattened = tf.reshape(outputs, (-1, EMBEDDING_DIM))
     flattened_logits = tf.layers.dense(flattened, NUM_CLASSES)
 
-    logits = tf.reshape(flattened_logits, (batch_size, sequence_length, NUM_CLASSES))
+    logits = tf.reshape(flattened_logits, (-1, sequence_length, NUM_CLASSES))
 
     predictions = tf.multinomial(flattened_logits, num_samples=1)
     loss = None
@@ -97,10 +98,6 @@ def train_input_fn(params={}):
         x_sequence = x_tensor[index:index+sequence_length]
         y_sequence = y_tensor[index:index+sequence_length]
 
-        # # TPUs need to know all dimensions when the graph is built 
-        # x_sequence.set_shape((sequence_length,))
-        # y_sequence.set_shape((sequence_length,))
-
         return (x_sequence, y_sequence)
 
     dataset = dataset.map(get_sequences)
@@ -112,14 +109,15 @@ def train_input_fn(params={}):
     # TPUs need to know all dimensions when the graph is built
     # Datasets know the batch size only when the graph is run
     def set_shapes(features, labels):
-        features_shape = features.get_shape().merge_with([batch_size, None])
-        labels_shape = labels.get_shape().merge_with([batch_size, None])
+        features_shape = features.get_shape().merge_with([batch_size, sequence_length])
+        labels_shape = labels.get_shape().merge_with([batch_size, sequence_length])
 
         features.set_shape(features_shape)
         labels.set_shape(labels_shape)
 
         return features, labels
 
+    dataset = dataset.map(set_shapes)
     dataset = dataset.prefetch(tf.contrib.data.AUTOTUNE)
 
     return dataset
