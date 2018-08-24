@@ -17,14 +17,14 @@ import argparse
 import numpy as np
 import tensorflow as tf
 
+NUM_CLASSES = 10
 
 def model_fn(features, labels, mode, params):
     # build model
     global_step = tf.train.get_global_step()
 
-    # there are 10 different labels in the fake data
     embedding_dim = 7
-    embedding_table = tf.get_variable('embedding_table', shape=(10, embedding_dim), dtype=tf.float32)
+    embedding_table = tf.get_variable('embedding_table', shape=(NUM_CLASSES, embedding_dim), dtype=tf.float32)
 
     embeddings = tf.nn.embedding_lookup(embedding_table, features)
 
@@ -32,14 +32,14 @@ def model_fn(features, labels, mode, params):
     batch_size = params['train_batch_size']
     sequence_length = params['sequence_length']
 
-    cell = tf.nn.rnn_cell.BasicLSTMCell(7)
+    cell = tf.nn.rnn_cell.BasicLSTMCell(embedding_dim)
     outputs, final_state = tf.nn.dynamic_rnn(cell, embeddings, dtype=tf.float32)
 
     # flatten the batch and sequence dimensions
     flattened = tf.reshape(outputs, (batch_size*sequence_length, embedding_dim))
-    flattened_logits = tf.layers.dense(flattened, 10)
+    flattened_logits = tf.layers.dense(flattened, NUM_CLASSES)
 
-    logits = tf.reshape(flattened_logits, (batch_size, sequence_length, 10))
+    logits = tf.reshape(flattened_logits, (batch_size, sequence_length, NUM_CLASSES))
 
     predictions = tf.multinomial(flattened_logits, num_samples=1)
     loss = None
@@ -78,8 +78,8 @@ def model_fn(features, labels, mode, params):
 def train_input_fn(params={}):
     # make some fake data of labels
     data_length = 100
-    x = np.random.randint(0, 10, data_length)
-    y = np.random.randint(0, 10, data_length)
+    x = np.random.randint(0, NUM_CLASSES, data_length)
+    y = np.random.randint(0, NUM_CLASSES, data_length)
 
     x_tensor = tf.constant(x, dtype=tf.int32)
     y_tensor = tf.constant(y, dtype=tf.int32)
@@ -97,9 +97,9 @@ def train_input_fn(params={}):
         x_sequence = x_tensor[index:index+sequence_length]
         y_sequence = y_tensor[index:index+sequence_length]
 
-        # TPUs need to know all dimensions when the graph is built 
-        x_sequence.set_shape((sequence_length,))
-        y_sequence.set_shape((sequence_length,))
+        # # TPUs need to know all dimensions when the graph is built 
+        # x_sequence.set_shape((sequence_length,))
+        # y_sequence.set_shape((sequence_length,))
 
         return (x_sequence, y_sequence)
 
@@ -108,6 +108,17 @@ def train_input_fn(params={}):
     # TPUEstimator passes params when calling input_fn
     batch_size = params.get('train_batch_size', 16)
     dataset = dataset.batch(batch_size)
+
+    # TPUs need to know all dimensions when the graph is built
+    # Datasets know the batch size only when the graph is run
+    def set_shapes(features, labels):
+        features_shape = features.get_shape().merge_with([batch_size, None])
+        labels_shape = labels.get_shape().merge_with([batch_size, None])
+
+        features.set_shape(features_shape)
+        labels.set_shape(labels_shape)
+
+        return features, labels
 
     dataset = dataset.prefetch(tf.contrib.data.AUTOTUNE)
 
