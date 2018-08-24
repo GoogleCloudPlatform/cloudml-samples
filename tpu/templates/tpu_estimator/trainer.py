@@ -119,7 +119,7 @@ def main(args):
             model_fn=model_fn,
             config=config,
             params=params,
-            train_batch_size=args.batch_size, # FIXME
+            train_batch_size=args.train_batch_size,
             eval_batch_size=32, # FIXME
             export_to_tpu=False
         )
@@ -149,7 +149,7 @@ if __name__ == '__main__':
         default=1000
     )
     parser.add_argument(
-        '-batch-size',
+        '--train-batch-size',
         type=int,
         default=16
     )

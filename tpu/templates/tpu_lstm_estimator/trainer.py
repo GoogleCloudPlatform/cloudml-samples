@@ -29,7 +29,7 @@ def model_fn(features, labels, mode, params):
     embeddings = tf.nn.embedding_lookup(embedding_table, features)
 
     # lstm model
-    batch_size = params['batch_size']
+    batch_size = params['train_batch_size']
     sequence_length = params['sequence_length']
 
     cell = tf.nn.rnn_cell.BasicLSTMCell(7)
@@ -106,7 +106,7 @@ def train_input_fn(params={}):
     dataset = dataset.map(get_sequences)
 
     # TPUEstimator passes params when calling input_fn
-    batch_size = params.get('batch_size', 16)
+    batch_size = params.get('train_batch_size', 16)
     dataset = dataset.batch(batch_size)
 
     dataset = dataset.prefetch(tf.contrib.data.AUTOTUNE)
@@ -140,7 +140,7 @@ def main(args):
             model_fn=model_fn,
             config=config,
             params=params,
-            train_batch_size=args.batch_size,
+            train_batch_size=args.train_batch_size,
             eval_batch_size=32, # FIXME
             export_to_tpu=False
         )
@@ -177,7 +177,7 @@ if __name__ == '__main__':
         default=5
     )
     parser.add_argument(
-        '-batch-size',
+        '--train-batch-size',
         type=int,
         default=16
     )
