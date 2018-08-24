@@ -164,8 +164,6 @@ def main(args):
 
     estimator.train(train_input_fn, max_steps=args.max_steps)
 
-    return estimator
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -201,4 +199,4 @@ if __name__ == '__main__':
 
     args, _ = parser.parse_known_args()
 
-    estimator = main(args)
+    main(args)
