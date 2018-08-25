@@ -77,6 +77,7 @@ def train_input_fn(params={}):
     x_tensor = tf.constant(x, dtype=tf.float32)
     y_tensor = tf.constant(y, dtype=tf.int32)
     dataset = tf.data.Dataset.from_tensor_slices((x_tensor, y_tensor))
+    dataset = dataset.repeat()
 
     # TPUEstimator passes params when calling input_fn
     batch_size = params.get('train_batch_size', 16)
