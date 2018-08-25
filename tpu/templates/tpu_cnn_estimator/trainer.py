@@ -18,31 +18,23 @@ import numpy as np
 import tensorflow as tf
 
 NUM_CLASSES = 10
-EMBEDDING_DIM = 7
 
 
 def model_fn(features, labels, mode, params):
     # build model
     global_step = tf.train.get_global_step()
 
-    embedding_table = tf.get_variable('embedding_table', shape=(NUM_CLASSES, EMBEDDING_DIM), dtype=tf.float32)
+    conv = tf.layers.conv2d(features, filters=16, kernel_size=(4, 4), strides=(2, 2))
+    max_pool = tf.layers.max_pooling2d(conv, pool_size=(4, 4), strides=(2, 2))
 
-    embeddings = tf.nn.embedding_lookup(embedding_table, features)
+    conv_1 = tf.layers.conv2d(max_pool, filters=32, kernel_size=(1, 1), strides=(1, 1))
+    max_pool_1 = tf.layers.max_pooling2d(conv_1, pool_size=(2, 2), strides=(2, 2))
 
-    # lstm model
-    batch_size = params['train_batch_size']
-    sequence_length = params['sequence_length']
+    batch_size = features.shape[0]
+    flattened = tf.reshape(max_pool_1, (batch_size, -1))
+    logits = tf.layers.dense(flattened, NUM_CLASSES)
 
-    cell = tf.nn.rnn_cell.BasicLSTMCell(EMBEDDING_DIM)
-    outputs, final_state = tf.nn.dynamic_rnn(cell, embeddings, dtype=tf.float32)
-
-    # flatten the batch and sequence dimensions
-    flattened = tf.reshape(outputs, (-1, EMBEDDING_DIM))
-    flattened_logits = tf.layers.dense(flattened, NUM_CLASSES)
-
-    logits = tf.reshape(flattened_logits, (-1, sequence_length, NUM_CLASSES))
-
-    predictions = tf.multinomial(flattened_logits, num_samples=1)
+    predictions = tf.multinomial(logits, num_samples=1)
     loss = None
     train_op = None
 
@@ -77,30 +69,14 @@ def model_fn(features, labels, mode, params):
 
 
 def train_input_fn(params={}):
-    # make some fake data of labels
-    data_length = 100
-    x = np.random.randint(0, NUM_CLASSES, data_length)
-    y = np.random.randint(0, NUM_CLASSES, data_length)
+    # make some fake image classification data
+    data_size = 100
+    x = np.random.rand(data_size, 28, 28, 1)
+    y = np.random.randint(0, NUM_CLASSES, data_size)
 
-    x_tensor = tf.constant(x, dtype=tf.int32)
+    x_tensor = tf.constant(x, dtype=tf.float32)
     y_tensor = tf.constant(y, dtype=tf.int32)
-
-    dataset = tf.data.Dataset.from_tensors((x_tensor, y_tensor))
-    dataset = dataset.repeat()
-
-    # TPUs need to know the full shape of tensors
-    # so we use a fixed sequence length
-    sequence_length = params.get('sequence_length', 5)
-
-    def get_sequences(x_tensor, y_tensor):
-        index = tf.random_uniform([1], minval=0, maxval=data_length-sequence_length, dtype=tf.int32)[0]
-
-        x_sequence = x_tensor[index:index+sequence_length]
-        y_sequence = y_tensor[index:index+sequence_length]
-
-        return (x_sequence, y_sequence)
-
-    dataset = dataset.map(get_sequences)
+    dataset = tf.data.Dataset.from_tensor_slices((x_tensor, y_tensor))
 
     # TPUEstimator passes params when calling input_fn
     batch_size = params.get('train_batch_size', 16)
@@ -109,8 +85,8 @@ def train_input_fn(params={}):
     # TPUs need to know all dimensions when the graph is built
     # Datasets know the batch size only when the graph is run
     def set_shapes(features, labels):
-        features_shape = features.get_shape().merge_with([batch_size, sequence_length])
-        labels_shape = labels.get_shape().merge_with([batch_size, sequence_length])
+        features_shape = features.get_shape().merge_with([batch_size, None, None, None])
+        labels_shape = labels.get_shape().merge_with([batch_size,])
 
         features.set_shape(features_shape)
         labels.set_shape(labels_shape)
@@ -177,11 +153,6 @@ if __name__ == '__main__':
         '--max-steps',
         type=int,
         default=1000
-    )
-    parser.add_argument(
-        '--sequence-length',
-        type=int,
-        default=5
     )
     parser.add_argument(
         '--train-batch-size',

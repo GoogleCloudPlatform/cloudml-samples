@@ -59,7 +59,7 @@ def model_fn(features, labels, mode, params):
 
 
 def train_input_fn(params={}):
-    # make some fake data
+    # make some fake regression data
     x = np.random.rand(100, 5)
     w = np.random.rand(5)
     y = np.sum(x * w, axis=1)
