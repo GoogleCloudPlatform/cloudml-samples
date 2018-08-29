@@ -83,7 +83,6 @@ def model_fn(features, labels, mode, params):
             predictions=predictions,
             loss=loss,
             train_op=train_op,
-            # training_hooks=[train_generator_hook]
         )
     else:
         return tf.estimator.EstimatorSpec(
@@ -91,7 +90,6 @@ def model_fn(features, labels, mode, params):
             predictions=predictions,
             loss=loss,
             train_op=train_op,
-            # training_hooks=[train_generator_hook]
         )
 
 
@@ -134,7 +132,8 @@ def main(args):
         # additional configs required for using TPUs
         tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(args.tpu)
         tpu_config = tf.contrib.tpu.TPUConfig(
-            num_shards=8 # using Cloud TPU v2-8
+            num_shards=8, # using Cloud TPU v2-8
+            iterations_per_loop=args.save_checkpoints_steps
         )
 
         # use the TPU version of RunConfig
@@ -142,7 +141,7 @@ def main(args):
             cluster=tpu_cluster_resolver,
             model_dir=args.model_dir,
             tpu_config=tpu_config,
-            save_checkpoints_steps=10,
+            save_checkpoints_steps=args.save_checkpoints_steps,
             save_summary_steps=10
         )
 
@@ -184,6 +183,11 @@ if __name__ == '__main__':
         '--train-batch-size',
         type=int,
         default=16
+    )
+    parser.add_argument(
+        '--save-checkpoints-steps',
+        type=int,
+        default=10
     )
     parser.add_argument(
         '--use-tpu',
