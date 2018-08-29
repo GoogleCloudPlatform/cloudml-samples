@@ -70,7 +70,7 @@ def model_fn(input_dim,
     input_dim = units
 
   # Add a dense final layer with sigmoid function
-  model.add(layers.Dense(labels_dim, activation=softmax))
+  model.add(layers.Dense(labels_dim, activation="sigmoid"))
   compile_model(model, learning_rate)
   return model
 
