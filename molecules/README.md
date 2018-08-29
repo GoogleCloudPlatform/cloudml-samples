@@ -1,5 +1,5 @@
 # Molecules
-This sample shows how to train a simple ML model to predict the molecular energy.
+This sample shows how to create, train, evaluate, and make predictions on a machine learning model, using [Apache Beam](https://beam.apache.org/), [Google Cloud Dataflow](https://cloud.google.com/dataflow/), [TensorFlow](https://www.tensorflow.org/), and [Google Cloud ML Engine](https://cloud.google.com/ml-engine/).
 
 The dataset for this sample is extracted from the [National Center for Biotechnology Information](https://www.ncbi.nlm.nih.gov/) ([FTP source](ftp://ftp.ncbi.nlm.nih.gov/pubchem/Compound_3D/01_conf_per_cmpd/SDF)). The file format is [`SDF`](https://en.wikipedia.org/wiki/Chemical_table_file#SDF). Here's a more detailed description of the [MDL/SDF file format](http://c4.cabrillo.edu/404/ctfile.pdf).
 
@@ -47,7 +47,7 @@ pip install -U -r requirements.txt
 ```
 
 ## Quickstart
-We'll start by running the end-to-end script locally. To run simply run the following comand:
+We'll start by running the end-to-end script locally. To run simply run the `[run-local](run-local)` comand:
 ```bash
 ./run-local
 ```
@@ -59,8 +59,7 @@ The script requires a working directory, which is where all the temporary files 
 ./run-local --work-dir ~/cloudml-samples/molecules
 
 # To use a Google Cloud Storage path
-BUCKET=gs://<your bucket name here>
-./run-local --work-dir $BUCKET/cloudml-samples/molecules
+./run-local --work-dir gs://<your bucket name here>/cloudml-samples/molecules
 ```
 
 Each SDF file contains data for 25,000 molecules. The script will download only 5 SDF files to the working directory by default. To use a different number of data files, you can use the `--max-data-files`
@@ -71,7 +70,7 @@ option.
 ./run-local --max-data-files 10
 ```
 
-To run on Google Cloud Platform, all the files must reside in Google Cloud Storage.
+To run on Google Cloud Platform, all the files must reside in Google Cloud Storage. To run use the `[run-cloud](run-cloud)` command.
 > NOTE: this will incur charges on your Google Cloud Platform project.
 ```bash
 # This will use only 5 data files by default
@@ -79,6 +78,8 @@ To run on Google Cloud Platform, all the files must reside in Google Cloud Stora
 ```
 
 ## Data Extraction
+Source code: `[data-extractor.py](data-extractor.py)`
+
 This is a data extraction tool to download SDF files from the specified FTP source. The data files will be stored within a `data` subdirectory inside the working directory.
 
 To store data files locally:
@@ -95,11 +96,13 @@ python data-extractor.py --work-dir $WORK_DIR --max-data-files 5
 ```
 
 ## Preprocessing
-This is an Apache Beam pipeline that will do all the preprocessing necessary to train a Machine Learning model. It uses tf.Transform to do any processing that requires a full pass over the dataset.
+Source code: `[preprocess.py](preprocess.py)`
+
+This is an [Apache Beam](https://beam.apache.org/) pipeline that will do all the preprocessing necessary to train a Machine Learning model. It uses [tf.Transform](https://github.com/tensorflow/transform), which is part of [TensorFlow Extended](https://www.tensorflow.org/tfx/), to do any processing that requires a full pass over the dataset.
 
 For this sample, we're doing a very simple feature extraction. It uses Apache Beam to parse the SDF files and count how many Carbon, Hydrogen, Oxygen, and Nitrogen atoms a molecule has. To create more complex models we would need to extract more sophisticated features, such as [Coulomb Matrices](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.108.058301).
 
-We will eventually train a Deep Neural Network to do the predictions. Neural Networks are more stable when dealing with small values, so it's always a good idea to normalize the inputs to a small range (typically from 0 to 1). Since there's no maximum number of atoms a molecule can have, we have to go through the entire dataset to find the minimum and maximum counts. Fortunately, tf.Transform integrates with our Apache Beam pipeline and does that for us.
+We will eventually train a [Neural Network](https://skymind.ai/wiki/neural-network) to do the predictions. Neural Networks are more stable when dealing with small values, so it's always a good idea to [normalize](https://en.wikipedia.org/wiki/Feature_scaling) the inputs to a small range (typically from 0 to 1). Since there's no maximum number of atoms a molecule can have, we have to go through the entire dataset to find the minimum and maximum counts. Fortunately, tf.Transform integrates with our Apache Beam pipeline and does that for us.
 
 After preprocessing our dataset, we also want to split it into a training and evaluation dataset. The training dataset will be used to train the model. The evaluation dataset contains elements that the training has never seen, and since we also know the "answers" (the molecular energy), we'll use these to validate that the training accuracy roughly matches the accuracy on unseen elements.
 
@@ -119,7 +122,7 @@ If your training data is small enough, it will be faster to run locally.
 python preprocess.py
 ```
 
-As you want to preprocess a larger amount of data files, it will scale better using Cloud Dataflow.
+As you want to preprocess a larger amount of data files, it will scale better using [Cloud Dataflow](https://cloud.google.com/dataflow/).
 > NOTE: this will incur charges on your Google Cloud Platform project. See [Dataflow pricing](https://cloud.google.com/dataflow/pricing).
 ```bash
 PROJECT=$(gcloud config get-value project)
@@ -133,7 +136,9 @@ python preprocess.py \
 ```
 
 ## Training the Model
-We'll train a TensorFlow Deep Neural Network Regressor. This will use the preprocessed data stored within the working directory. During the preprocessing stage, the Apache Beam pipeline transformed extracted all the features (counts of elements) and tf.Transform generated a graph of operations to normalize those features.
+Source code: `[trainer/task.py](trainer/task.py)`
+
+We'll train a [Deep Neural Network Regressor](https://www.tensorflow.org/api_docs/python/tf/estimator/DNNRegressor) in [TensorFlow](https://www.tensorflow.org/). This will use the preprocessed data stored within the working directory. During the preprocessing stage, the Apache Beam pipeline transformed extracted all the features (counts of elements) and tf.Transform generated a graph of operations to normalize those features.
 
 The TensorFlow model actually takes the unnormalized inputs (counts of elements), applies the tf.Transform's graph of operations to normalize the data, and then feeds that into our DNN regressor.
 
@@ -147,7 +152,7 @@ EXPORT_DIR=/tmp/cloudml-samples/molecules/model/export
 MODEL_DIR=$(ls -d -1 $EXPORT_DIR/* | sort -r | head -n 1)
 ```
 
-If the training dataset is too large, it will scale better to train on Cloud Machine Learning Engine.
+If the training dataset is too large, it will scale better to train on [Cloud Machine Learning Engine](https://cloud.google.com/ml-engine/).
 > NOTE: this will incur charges on your Google Cloud Platform project. See [ML Engine pricing](https://cloud.google.com/ml-engine/docs/pricing).
 ```bash
 JOB="cloudml_samples_molecules_$(date +%Y%m%d_%H%M%S)"
@@ -167,9 +172,9 @@ EXPORT_DIR=$WORK_DIR/model/export
 MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
 ```
 
-To see the training
-
 ## Batch Predictions
+Source code: `[predict.py](predict.py)`
+
 Batch predictions are optimized for throughput rather than latency. These work best if there's a large amount of predictions to make and you can wait for all of them to finish before having the results.
 
 For batches with a small number of data files, it will be faster to run locally.
@@ -182,7 +187,7 @@ python predict.py \
   --outputs-dir /tmp/cloudml-samples/molecules/predictions
 ```
 
-For batches with a large number of data files, it will scale better using Cloud Dataflow.
+For batches with a large number of data files, it will scale better using [Cloud Dataflow](https://cloud.google.com/dataflow/).
 ```bash
 # For simplicity, we'll use the same files we used for training
 PROJECT=$(gcloud config get-value project)
@@ -200,6 +205,8 @@ python predict.py \
 ```
 
 ## Streaming Predictions
+Source code: `[predict.py](predict.py)`
+
 Streaming predictions are optimized for latency rather than throughput. These work best if you are sending sporadic predictions, but want to get the results as soon as possible.
 
 This streaming service will receive molecules from a PubSub topic and publish the prediction results to another PubSub topic. We'll have to create the topics first.
@@ -222,7 +229,7 @@ python predict.py \
   --outputs-topic molecules-predictions
 ```
 
-For a highly available and scalable service, it will scale better using Cloud Dataflow.
+For a highly available and scalable service, it will scale better using [Cloud Dataflow](https://cloud.google.com/dataflow/).
 ```bash
 PROJECT=$(gcloud config get-value project)
 WORK_DIR=gs://<your bucket name>/cloudml-samples/molecules
@@ -238,4 +245,26 @@ python predict.py \
   --outputs-topic molecules-predictions
 ```
 
-Now that we have the prediction service running
+Now that we have the prediction service running, we want to run a publisher to send molecules to the streaming prediction service, and we also want a subscriber to be listening for the prediction results.
+
+For convenience, we provided a sample `[publisher.py](publisher.py)` and `[subscriber.py](subscriber.py)` to show how to implement one.
+
+These will have to be run as different processes concurrently, so you'll need to have a different terminal running each command.
+> NOTE: remember to activate the virtualenv on each terminal.
+
+We'll first run the subscriber, which will listen for prediction results and log them.
+```bash
+python subscriber.py \
+  --project $PROJECT \
+  --topic molecules-predictions
+```
+
+We'll then run the publisher, which will parse SDF files from a directory and publish them to the inputs topic. For convenience, we'll use the same SDF files we used for training.
+```bash
+python publisher.py \
+  --project $PROJECT \
+  --topic molecules-inputs \
+  --inputs-dir $WORK_DIR/data
+```
+
+Once the publisher starts parsing and publishing molecules, we'll start seeing predictions from the subscriber.
