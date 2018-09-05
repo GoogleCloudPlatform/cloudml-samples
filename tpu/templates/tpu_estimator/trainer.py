@@ -74,7 +74,7 @@ def train_input_fn(params={}):
     # TPUEstimator passes params when calling input_fn
     batch_size = params.get('batch_size', 16)
 
-    dataset = dataset.repeat().shuffle(32).batch(batch_size)
+    dataset = dataset.repeat().shuffle(32).batch(batch_size, drop_remainder=True)
 
     # TPUs need to know all dimensions when the graph is built
     # Datasets know the batch size only when the graph is run

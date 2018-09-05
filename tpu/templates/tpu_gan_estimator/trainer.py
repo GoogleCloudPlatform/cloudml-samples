@@ -134,7 +134,7 @@ def dis_model_fn(features, labels, mode, params):
 
 def train_input_fn(params={}):
     # make some fake noise
-    data_size = 128
+    data_size = 100
     noise_tensor = tf.random_normal((data_size, INPUT_DIM))
     real_data_tensor = tf.random_uniform((data_size, OUTPUT_DIM))
 
@@ -143,7 +143,7 @@ def train_input_fn(params={}):
 
     # TPUEstimator passes params when calling input_fn
     batch_size = params.get('train_batch_size', 16)
-    dataset = dataset.batch(batch_size)
+    dataset = dataset.batch(batch_size, drop_remainder=True)
 
     # TPUs need to know all dimensions when the graph is built
     # Datasets know the batch size only when the graph is run
