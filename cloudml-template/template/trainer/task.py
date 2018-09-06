@@ -41,27 +41,26 @@ def initialise_hyper_params(args_parser):
         args_parser
     """
 
-    # data files arguments
+    # Data files arguments
     args_parser.add_argument(
         '--train-files',
         help='GCS or local paths to training data',
         nargs='+',
         required=True
     )
-
     args_parser.add_argument(
         '--eval-files',
         help='GCS or local paths to evaluation data',
         nargs='+',
         required=True
     )
-
     args_parser.add_argument(
         '--feature-stats-file',
         help='GCS or local paths to feature statistics json file',
         nargs='+',
         default=None
     )
+    ###########################################
 
     # Experiment arguments - training
     args_parser.add_argument(
@@ -81,14 +80,12 @@ def initialise_hyper_params(args_parser):
         type=int,
         default=200
     )
-
     args_parser.add_argument(
         '--train-size',
         help='Size of training set (instance count)',
         type=int,
         default=None
     )
-
     args_parser.add_argument(
         '--num-epochs',
         help="""\
@@ -96,9 +93,10 @@ def initialise_hyper_params(args_parser):
         If both --train-size and --num-epochs are specified,
         --train-steps will be: (train-size/train-batch-size) * num-epochs.\
         """,
-        default=10,
+        default=None,
         type=int,
     )
+    ###########################################
 
     # Experiment arguments - evaluation
     args_parser.add_argument(
@@ -107,7 +105,6 @@ def initialise_hyper_params(args_parser):
         default=120,
         type=int
     )
-
     args_parser.add_argument(
         '--eval-steps',
         help="""\
@@ -117,15 +114,15 @@ def initialise_hyper_params(args_parser):
         default=None,
         type=int
     )
-
     args_parser.add_argument(
         '--eval-batch-size',
         help='Batch size for evaluation steps',
         type=int,
         default=200
     )
+    ###########################################
 
-    # features processing arguments
+    # Features processing arguments
     args_parser.add_argument(
         '--num-buckets',
         help='Number of buckets into which to discretize numeric columns',
@@ -138,12 +135,26 @@ def initialise_hyper_params(args_parser):
         default=4,
         type=int
     )
+    ###########################################
 
     # Estimator arguments
     args_parser.add_argument(
         '--learning-rate',
         help="Learning rate value for the optimizers",
         default=0.1,
+        type=float
+    )
+    args_parser.add_argument(
+        '--learning-rate-decay-factor',
+        help="""\
+             **VALID FOR CUSTOM MODELS**
+             The factor by which the learning rate should decay by the end of the training.
+             decayed_learning_rate = learning_rate * decay_rate ^ (global_step / decay_steps)
+             If set to 1.0 (default), then no decay will occur
+             If set to 0.5, then the learning rate should reach 0.5 of its original value at the end of the training. 
+             Note that, decay_steps is set to train_steps\
+             """,
+        default=1.0,
         type=float
     )
     args_parser.add_argument(
@@ -192,6 +203,7 @@ def initialise_hyper_params(args_parser):
         action='store_true',
         default=True,
     )
+    ###########################################
 
     # Saved model arguments
     args_parser.add_argument(
@@ -199,7 +211,6 @@ def initialise_hyper_params(args_parser):
         help='GCS location to write checkpoints and export models',
         required=True
     )
-
     args_parser.add_argument(
         '--reuse-job-dir',
         action='store_true',
@@ -209,13 +220,13 @@ def initialise_hyper_params(args_parser):
             be re-used from the job-dir. If False then the
             job-dir will be deleted"""
     )
-
     args_parser.add_argument(
         '--export-format',
         help='The input format of the exported SavedModel binary',
         choices=['JSON', 'CSV', 'EXAMPLE'],
         default='JSON'
     )
+    ###########################################
 
     # Argument to turn on all logging
     args_parser.add_argument(
@@ -276,7 +287,6 @@ def run_experiment(run_config):
         eval_input_fn,
         steps=HYPER_PARAMS.eval_steps,
         exporters=[exporter],
-        name='estimator-eval',
         throttle_secs=HYPER_PARAMS.eval_every_secs,
     )
 
@@ -335,13 +345,13 @@ def main():
     # If job_dir_reuse is False then remove the job_dir if it exists
     print("Resume training:", HYPER_PARAMS.reuse_job_dir)
     if not HYPER_PARAMS.reuse_job_dir:
-        if tf.gfile.Exists(HYPER_PARAMS.job_dir):
-            tf.gfile.DeleteRecursively(HYPER_PARAMS.job_dir)
-            print("Deleted job_dir {} to avoid re-use".format(HYPER_PARAMS.job_dir))
+        if tf.gfile.Exists(model_dir):
+            tf.gfile.DeleteRecursively(model_dir)
+            print("Deleted job_dir {} to avoid re-use".format(model_dir))
         else:
             print("No job_dir available to delete")
     else:
-        print("Reusing job_dir {} if it exists".format(HYPER_PARAMS.job_dir))
+        print("Reusing job_dir {} if it exists".format(model_dir))
 
     run_config = tf.estimator.RunConfig(
         tf_random_seed=19830610,

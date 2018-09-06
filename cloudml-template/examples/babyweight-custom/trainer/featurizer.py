@@ -198,6 +198,6 @@ def get_deep_and_wide_columns(feature_columns):
         )
 
     deep_columns = dense_columns + indicator_columns
-    wide_columns = sparse_columns + (categorical_columns if as_wide_columns else None)
+    wide_columns = sparse_columns + (categorical_columns if as_wide_columns else [])
 
     return deep_columns, wide_columns

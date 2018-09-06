@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -e
+
+# Parse command line arguments
+TOTAL_DATA_FILES=5
+WORK_DIR=/tmp/cloudml-samples/molecules
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --work-dir)
+      WORK_DIR=$2
+      shift
+      ;;
+    --total-data-files)
+      TOTAL_DATA_FILES=$2
+      shift
+      ;;
+  esac
+  shift
+done
+
+# Extract the data files
+DATA_DIR=$WORK_DIR/data
+python data-extractor.py \
+  --total-data-files $TOTAL_DATA_FILES \
+  --data-dir $DATA_DIR
+
+# Preprocess the datasets
+TEMP_DIR=$WORK_DIR/temp
+PREPROCESS_DATA=$WORK_DIR/PreprocessData
+python preprocess.py \
+  --data-dir $DATA_DIR \
+  --temp-dir $TEMP_DIR \
+  --preprocess-data $PREPROCESS_DATA
+
+# Train and evaluate the model
+EXPORT_DIR=$WORK_DIR/model
+python trainer/task.py \
+  --preprocess-data $PREPROCESS_DATA \
+  --export-dir $EXPORT_DIR
+
+# Get the model path
+if [[ $EXPORT_DIR == gs://* ]]; then
+  MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/export/molecules/* | sort -r | head -n 1)
+else
+  MODEL_DIR=$(ls -d -1 $EXPORT_DIR/export/molecules/* | sort -r | head -n 1)
+fi
+echo "Model: $MODEL_DIR"
+
+# Make local predictions
+gcloud ml-engine local predict \
+  --model-dir $MODEL_DIR \
+  --json-instances sample-requests.json

@@ -226,10 +226,13 @@ def main(argv=None):
                 os.path.dirname(__file__),
                 'setup.py')),
     }
-    pipeline_options = beam.pipeline.PipelineOptions(flags=[], **options)
   else:
     pipeline_name = 'DirectRunner'
-    pipeline_options = None
+    options = {
+      'project': args.project_id
+    }
+  
+  pipeline_options = beam.pipeline.PipelineOptions(flags=[], **options)
 
   temp_dir = os.path.join(args.output_dir, 'tmp')
   with beam.Pipeline(pipeline_name, options=pipeline_options) as p:

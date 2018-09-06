@@ -164,7 +164,7 @@ def create_feature_columns():
 
 
 # **************************************************************************
-# YOU MAY NOT CHANGE THIS FUNCTION TO DEFINE WIDE AND DEEP COLUMNS
+# YOU NEED NOT TO CHANGE THIS FUNCTION TO DEFINE WIDE AND DEEP COLUMNS
 # **************************************************************************
 
 
@@ -219,6 +219,6 @@ def get_deep_and_wide_columns(feature_columns, use_indicators=True, use_wide_col
         )
 
     deep_columns = dense_columns + indicator_columns
-    wide_columns = sparse_columns + (categorical_columns if use_wide_columns else None)
+    wide_columns = sparse_columns + (categorical_columns if use_wide_columns else [])
 
     return deep_columns, wide_columns

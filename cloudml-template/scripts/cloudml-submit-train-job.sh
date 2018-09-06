@@ -10,7 +10,7 @@ MODEL_NAME="your_model_name" # change to your model name
 
 PACKAGE_PATH=trainer # this can be a gcs location to a zipped and uploaded package
 TRAIN_FILES=gs://${BUCKET}/path/to/data/train-data-*.csv
-VALID_FILES=gs://${BUCKET}/path/to/data/valid-data-*.csv
+EVAL_FILES=gs://${BUCKET}/path/to/data/eval-data-*.csv
 MODEL_DIR=gs://${BUCKET}/path/to/models/${MODEL_NAME}
 
 CURRENT_DATE=`date +%Y%m%d_%H%M%S`
@@ -23,22 +23,14 @@ gcloud ml-engine jobs submit training ${JOB_NAME} \
         --region=${REGION} \
         --scale-tier=${TIER} \
         --module-name=trainer.task \
-        --package-path=${PACKAGE_PATH} # use --packages if gcs location \
+        --package-path=${PACKAGE_PATH}  \
         --config=config.yaml \
         -- \
         --train-files=${TRAIN_FILES} \
-		--train-steps=10000 \
-        --num-epochs=10 \
-        --train-batch-size=200 \
-        --eval-files=${VALID_FILES} \
-        --eval-batch-size=200 \
-        --learning-rate=0.01 \
-        --hidden-units="64,32,10" \
-        --layer-sizes-scale-factor=0.5 \
-        --num-layers=3 \
-        #--reuse-job-dir # use to resume training
+        --eval-files=${EVAL_FILES} \
+	--train-steps=10000
 
 
-
-
-
+# notes:
+# use --packages instead of --package-path if gcs location
+# add --reuse-job-dir to resume training
