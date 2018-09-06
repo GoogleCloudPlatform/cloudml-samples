@@ -2,7 +2,7 @@
 
 Welcome to the [Google Cloud Machine Learning Engine (Cloud ML Engine)](https://cloud.google.com/ml-engine/docs/) sample code repository. This repository contains samples for how to use Cloud ML Engine for model training and serving.
 
-Note: If you’re looking for our guides on how to do Machine Learning on Google Cloud Platform (GCP) without using Cloud ML Engine, please checkout our other repository: [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp), which has guides on how to bring your code from various ML frameworks to [Google Cloud Platform](https://cloud.google.com/) using things like Google Compute Engine or Kubernetes.
+Note: If you’re looking for our guides on how to do Machine Learning on Google Cloud Platform (GCP) using other services, please checkout our other repository: [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp), which has guides on how to bring your code from various ML frameworks to [Google Cloud Platform](https://cloud.google.com/) using things like Google Compute Engine or Kubernetes.
 
 # Setup
 
@@ -15,7 +15,7 @@ If this is your first time using [Cloud ML Engine](https://cloud.google.com/ml-e
 # Overview
 The repository is organized by tasks (Training, Serving, Training and Serving) and each task can be broken down to general usage (CPU/GPU) to specific features: Hyperparameter Tuning and TPUs. Scroll down to see what we have available, each task may provide a code or notebook solution. Where the code solution will have a README guide and the notebook solution is a full walkthrough. Our code guides are designed to provide you with the code and instructions on how to run the code, but leave you to do the digging, where our notebook tutorials try to walk you through the whole process by having the code available in the notebook throughout the guide.
 
-If you don’t see something for the task you’re trying to complete, please head down to our section “What do you want to see?”
+If you don’t see something for the task you’re trying to complete, please head down to our section [What do you want to see?](#what-do-you-want-to-see)
 
 # Model Training with Cloud ML Engine
 
@@ -24,7 +24,7 @@ Notebook Tutorial:
  * [XGBoost](xgboost/notebooks/XGBoost%20training%20with%20ML%20Engine.ipynb) - How to train an XGBoost model using a text based dataset, Census, to predict a person’s income level.
 
 Code Guide:
-* [Tensorflow: Linear Classifier with Stochastic Dual Coordinate Ascent (SDCA) optimizer / Deep Neural Network Classifier](criteo_tft) - How to train a Linear Classifier with SDCA and a DNN using a text based dataset, Criteo, to predict how likely a person is to click on an advertisement.
+* [Tensorflow: Linear Classifier with Stochastic Dual Coordinate Ascent (SDCA) optimizer / Deep Neural Network Classifier](criteo_tft) - How to train a Linear Classifier with SDCA and a DNN using a text (discrete feature) based dataset, Criteo, to predict how likely a person is to click on an advertisement.
 * [Tensorflow: Linear Regression with Stochastic Dual Coordinate Ascent (SDCA) / Deep Neural Network Regressor](reddit_tft) - How to train a Linear Regressor with SDCA and a DNN using the a text based dataset of Reddit Comments to predict the score of a Reddit thread using a wide and deep model.
 * [Tensorflow: ResNet](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10_estimator) - How to train a model for image recognition using the Cifar10 dataset to classify image content (training on one CPU, a single host with multiple GPUs, and multiple hosts with CPU or multiple GPUs).
 
@@ -41,8 +41,6 @@ Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to acc
 Notebook Tutorial:
 * [scikit-learn: Model Serving](sklearn/notebooks/Online%20Prediction%20with%20scikit-learn.ipynb) - How to train a Random Forest Classifier in scikit-learn on your local machine using a text based dataset, Census, to predict a person’s income level and deploy it on Cloud ML Engine to create predictions.
 * [XGBoost: Model Serving](xgboost/notebooks/Online%20Prediction%20with%20XGBoost.ipynb) -  How to train an XGBoost model on your local machine using a text based dataset, Census, to predict a person’s income level and deploy it on Cloud ML Engine to create predictions.
-
-Code Guide:
 
 # Complete Guide: Model Training and Serving on ML Engine
 
@@ -64,12 +62,12 @@ Code Guide:
 Please see the [Cloud TPU guide](CLOUD_TPU_README.md) for how to use Cloud TPU. 
 
 
-# Resources
+# Templates
 
 * [TensorFlow Estimator Trainer Package Template](cloudml-template) - When training a Tensorflow model, you have to create a trainer package, here we have a template that simplifies creating a trainer package for Cloud ML Engine.
 * Tensorflow to TF-Lite
 
-## Google Samples
+# Google Samples
 
 * [Genomics Ancestry Inference](https://github.com/googlegenomics/cloudml-examples) - Genomics ancestry inference using 1000 Genomes dataset
 
