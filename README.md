@@ -57,19 +57,17 @@ Code Guide:
 * [Tensorflow: Deep Neural Network](census/tensorflowcore) - How to train a DNN using TensorFlow’s low level APIs to create your DNN model on a single node using a text based dataset, Census, to predict a person’s income level.
 * [Tensorflow: Matrix Factorization / Deep Neural Network with Softmax](movielens) - How to train a Matrix Factorization and DNN with Softmax using a text based dataset, MovieLens 20M, to make movie recommendations.
 
-# Cloud TPU
-
-Please see the [Cloud TPU guide](CLOUD_TPU_README.md) for how to use Cloud TPU. 
-
-
 # Templates
 
 * [TensorFlow Estimator Trainer Package Template](cloudml-template) - When training a Tensorflow model, you have to create a trainer package, here we have a template that simplifies creating a trainer package for Cloud ML Engine.
-* Tensorflow to TF-Lite
 
 # Google Samples
 
 * [Genomics Ancestry Inference](https://github.com/googlegenomics/cloudml-examples) - Genomics ancestry inference using 1000 Genomes dataset
+
+# Additional Resources
+
+**Cloud TPU:** Please see the [Cloud TPU guide](CLOUD_TPU_README.md) for how to use Cloud TPU.
 
 # What do you want to see?
 
