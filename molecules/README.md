@@ -47,7 +47,7 @@ pip install -U -r requirements.txt
 ```
 
 ## Quickstart
-We'll start by running the end-to-end script locally. To run simply run the `[run-local](run-local)` comand:
+We'll start by running the end-to-end script locally. To run simply run the [`run-local`](run-local) comand:
 ```bash
 ./run-local
 ```
@@ -70,7 +70,7 @@ option.
 ./run-local --max-data-files 10
 ```
 
-To run on Google Cloud Platform, all the files must reside in Google Cloud Storage. To run use the `[run-cloud](run-cloud)` command.
+To run on Google Cloud Platform, all the files must reside in Google Cloud Storage. To run use the [`run-cloud`](run-cloud) command.
 > NOTE: this will incur charges on your Google Cloud Platform project.
 ```bash
 # This will use only 5 data files by default
@@ -78,7 +78,7 @@ To run on Google Cloud Platform, all the files must reside in Google Cloud Stora
 ```
 
 ## Data Extraction
-Source code: `[data-extractor.py](data-extractor.py)`
+Source code: [`data-extractor.py`](data-extractor.py)
 
 This is a data extraction tool to download SDF files from the specified FTP source. The data files will be stored within a `data` subdirectory inside the working directory.
 
@@ -96,7 +96,7 @@ python data-extractor.py --work-dir $WORK_DIR --max-data-files 5
 ```
 
 ## Preprocessing
-Source code: `[preprocess.py](preprocess.py)`
+Source code: [`preprocess.py`](preprocess.py)
 
 This is an [Apache Beam](https://beam.apache.org/) pipeline that will do all the preprocessing necessary to train a Machine Learning model. It uses [tf.Transform](https://github.com/tensorflow/transform), which is part of [TensorFlow Extended](https://www.tensorflow.org/tfx/), to do any processing that requires a full pass over the dataset.
 
@@ -136,7 +136,7 @@ python preprocess.py \
 ```
 
 ## Training the Model
-Source code: `[trainer/task.py](trainer/task.py)`
+Source code: [`trainer/task.py`](trainer/task.py)
 
 We'll train a [Deep Neural Network Regressor](https://www.tensorflow.org/api_docs/python/tf/estimator/DNNRegressor) in [TensorFlow](https://www.tensorflow.org/). This will use the preprocessed data stored within the working directory. During the preprocessing stage, the Apache Beam pipeline transformed extracted all the features (counts of elements) and tf.Transform generated a graph of operations to normalize those features.
 
@@ -173,7 +173,7 @@ MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
 ```
 
 ## Batch Predictions
-Source code: `[predict.py](predict.py)`
+Source code: [`predict.py`](predict.py)
 
 Batch predictions are optimized for throughput rather than latency. These work best if there's a large amount of predictions to make and you can wait for all of them to finish before having the results.
 
@@ -205,7 +205,7 @@ python predict.py \
 ```
 
 ## Streaming Predictions
-Source code: `[predict.py](predict.py)`
+Source code: [`predict.py`](predict.py)
 
 Streaming predictions are optimized for latency rather than throughput. These work best if you are sending sporadic predictions, but want to get the results as soon as possible.
 
@@ -249,7 +249,7 @@ python predict.py \
 
 Now that we have the prediction service running, we want to run a publisher to send molecules to the streaming prediction service, and we also want a subscriber to be listening for the prediction results.
 
-For convenience, we provided a sample `[publisher.py](publisher.py)` and `[subscriber.py](subscriber.py)` to show how to implement one.
+For convenience, we provided a sample [`publisher.py`](publisher.py) and [`subscriber.py`](subscriber.py) to show how to implement one.
 
 These will have to be run as different processes concurrently, so you'll need to have a different terminal running each command.
 > NOTE: remember to activate the virtualenv on each terminal.
