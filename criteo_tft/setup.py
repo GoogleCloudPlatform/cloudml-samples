@@ -16,9 +16,12 @@ import setuptools
 
 NAME = 'trainer'
 VERSION = '1.0'
-TENSORFLOW_TRANSFORM = 'tensorflow-transform==0.1.10'
 
+TENSORFLOW_TRANSFORM = 'tensorflow-transform==0.1.10'
+SIX = 'six==1.10.0'
+TF = 'tensorflow==1.4.0rc'
+TFT = 'tensorflow-transform==0.1.10'
 
 if __name__ == '__main__':
   setuptools.setup(name=NAME, version=VERSION, packages=['trainer'],
-                   install_requires=[TENSORFLOW_TRANSFORM])
+                   install_requires=[SIX, TF, TFT])

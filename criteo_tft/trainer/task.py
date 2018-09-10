@@ -351,4 +351,5 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
+  tf.logging.info('TensorFlow version {}'.format(tf.__version__))
   main()
