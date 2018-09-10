@@ -11,6 +11,8 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+# This tool preprocesses and extracts features from SDF files.
+
 import argparse
 import dill as pickle
 import os

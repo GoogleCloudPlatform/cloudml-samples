@@ -11,6 +11,8 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+# This is a sample publisher for the streaming predictions service.
+
 import argparse
 import os
 import sys

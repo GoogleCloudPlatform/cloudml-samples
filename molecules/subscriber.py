@@ -11,6 +11,8 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+# This is a sample subscriber for the streaming predictions service.
+
 import argparse
 import json
 import logging

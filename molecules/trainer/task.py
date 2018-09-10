@@ -11,6 +11,8 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+# This tool trains an ML model on preprocessed data.
+
 import argparse
 import dill as pickle
 import multiprocessing as mp
@@ -42,7 +44,7 @@ def _make_train_or_eval_input_fn(
     if mode == tf.estimator.ModeKeys.TRAIN:
       if shuffle:
         dataset = dataset.apply(tf.contrib.data.shuffle_and_repeat(
-          batch_size * 8))
+            batch_size * 8))
       else:
         dataset = dataset.cache()
         dataset = dataset.repeat()
@@ -152,21 +154,22 @@ def train_and_evaluate(
   tft_output = tft.TFTransformOutput(work_dir)
   feature_spec = tft_output.transformed_feature_spec()
 
-  # Train the model
-  train_input_fn = make_train_input_fn(
-      feature_spec, labels, train_files_pattern, batch_size)
-  estimator.train(input_fn=train_input_fn, max_steps=train_max_steps)
+  # Create the training and evaluation specifications
+  train_spec = tf.estimator.TrainSpec(
+      input_fn=make_train_input_fn(
+          feature_spec, labels, train_files_pattern, batch_size),
+      max_steps=train_max_steps)
 
-  # Evaluate the model
-  eval_input_fn = make_eval_input_fn(
-      feature_spec, labels, eval_files_pattern, batch_size)
-  estimator.evaluate(input_fn=eval_input_fn, steps=None)
+  exporter = tf.estimator.FinalExporter(
+      'final', make_serving_input_fn(tft_output, input_feature_spec, labels))
 
-  # Export the model
-  export_dir = os.path.join(model_dir, 'export')
-  serving_input_fn = make_serving_input_fn(
-      tft_output, input_feature_spec, labels)
-  estimator.export_savedmodel(export_dir, serving_input_fn)
+  eval_spec = tf.estimator.EvalSpec(
+      input_fn=make_eval_input_fn(
+          feature_spec, labels, eval_files_pattern, batch_size),
+      exporters=[exporter])
+
+  # Train and evaluate the model
+  tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
 
 if __name__ == '__main__':

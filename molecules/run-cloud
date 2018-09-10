@@ -83,29 +83,9 @@ run gcloud ml-engine jobs submit training $JOB \
 echo ''
 
 # Get the model path
-EXPORT_DIR=$WORK_DIR/model/export
+EXPORT_DIR=$WORK_DIR/model/export/final
 MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
 echo "Model: $MODEL_DIR"
-echo ''
-
-# Create a model in Google Cloud ML Engine if it doesn't exist
-MODEL=molecules
-if [[ -z $(gcloud ml-engine models list | awk '{print $1}' | grep "^$MODEL$") ]]; then
-  echo '>> Creating model'
-  run gcloud ml-engine models create $MODEL
-  echo ''
-fi
-
-# Create a model version
-VERSION=$JOB
-echo '>> Creating version'
-run gcloud ml-engine versions create $VERSION \
-  --model $MODEL \
-  --origin $MODEL_DIR \
-  --runtime-version $RUNTIME
-
-run gcloud ml-engine versions set-default $VERSION \
-  --model $MODEL
 echo ''
 
 # Make batch predictions on SDF files

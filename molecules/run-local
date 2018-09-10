@@ -49,7 +49,7 @@ run python trainer/task.py \
 echo ''
 
 # Get the model path
-EXPORT_DIR=$WORK_DIR/model/export
+EXPORT_DIR=$WORK_DIR/model/export/final
 if [[ $EXPORT_DIR == gs://* ]]; then
   MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
 else

@@ -157,7 +157,7 @@ class SimpleFeatureExtraction(beam.PTransform):
     # Return the preprocessing pipeline. In this case we're reading the PubChem
     # files, but the source could be any Apache Beam source.
     return (p
-        | 'Read from source' >> self.source
+        | 'Read raw molecules' >> self.source
         | 'Format molecule' >> beam.ParDo(FormatMolecule())
         | 'Count atoms' >> beam.ParDo(CountAtoms())
     )

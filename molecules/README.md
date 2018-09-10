@@ -148,7 +148,7 @@ For small datasets it will be faster to run locally.
 python trainer/task.py
 
 # To get the path of the trained model
-EXPORT_DIR=/tmp/cloudml-samples/molecules/model/export
+EXPORT_DIR=/tmp/cloudml-samples/molecules/model/export/final
 MODEL_DIR=$(ls -d -1 $EXPORT_DIR/* | sort -r | head -n 1)
 ```
 
@@ -168,11 +168,19 @@ gcloud ml-engine jobs submit training $JOB \
   --work-dir $WORK_DIR
 
 # To get the path of the trained model
-EXPORT_DIR=$WORK_DIR/model/export
+EXPORT_DIR=$WORK_DIR/model/export/final
 MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
 ```
 
-## Batch Predictions
+To visualize the training job, we can use [TensorBoard](https://www.tensorflow.org/guide/summaries_and_tensorboard).
+```bash
+tensorboard --logdir $WORK_DIR/model
+```
+
+You can access the results at `localhost:6006`.
+
+## Predictions
+### Option 1: Batch Predictions
 Source code: [`predict.py`](predict.py)
 
 Batch predictions are optimized for throughput rather than latency. These work best if there's a large amount of predictions to make and you can wait for all of them to finish before having the results.
@@ -204,7 +212,7 @@ python predict.py \
   --outputs-dir $WORK_DIR/predictions
 ```
 
-## Streaming Predictions
+### Option 2: Streaming Predictions
 Source code: [`predict.py`](predict.py)
 
 Streaming predictions are optimized for latency rather than throughput. These work best if you are sending sporadic predictions, but want to get the results as soon as possible.
@@ -252,7 +260,7 @@ Now that we have the prediction service running, we want to run a publisher to s
 For convenience, we provided a sample [`publisher.py`](publisher.py) and [`subscriber.py`](subscriber.py) to show how to implement one.
 
 These will have to be run as different processes concurrently, so you'll need to have a different terminal running each command.
-> NOTE: remember to activate the virtualenv on each terminal.
+> NOTE: remember to activate the `virtualenv` on each terminal.
 
 We'll first run the subscriber, which will listen for prediction results and log them.
 ```bash
@@ -272,3 +280,77 @@ python publisher.py \
 ```
 
 Once the publisher starts parsing and publishing molecules, we'll start seeing predictions from the subscriber.
+
+### Option 3: Cloud ML Engine Predictions
+If you have a different way to extract the features (in this case the atom counts) that is not through our existing preprocessing pipeline for SDF files, it might be easier to build a JSON file with one request per line and make the predictions on Cloud ML Engine.
+
+We've included the [`sample-requests.json`](sample-requests.json) file with an example of how these requests look like. Here are the contents of the file:
+```json
+{"TotalC": 9, "TotalH": 17, "TotalO": 4, "TotalN": 1}
+{"TotalC": 9, "TotalH": 18, "TotalO": 4, "TotalN": 1}
+{"TotalC": 7, "TotalH": 8, "TotalO": 4, "TotalN": 0}
+{"TotalC": 3, "TotalH": 9, "TotalO": 1, "TotalN": 1}
+```
+
+Before creating the model in Cloud ML Engine, it is a good idea to test our model's predictions locally:
+```bash
+# First we have to get the exported model's directory
+EXPORT_DIR=$WORK_DIR/model/export/final
+if [[ $EXPORT_DIR == gs://* ]]; then
+  # If it's a GCS path, use gsutil
+  MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
+else
+  # If it's a local path, use ls
+  MODEL_DIR=$(ls -d -1 $EXPORT_DIR/* | sort -r | head -n 1)
+fi
+
+# To do the local predictions
+gcloud ml-engine local predict \
+  --model-dir $MODEL_DIR \
+  --json-instances sample-requests.json
+```
+
+For reference, these are the *real* energy values for the `sample-requests.json` file:
+```
+PREDICTIONS
+[37.801]
+[44.1107]
+[19.4085]
+[-0.1086]
+```
+
+Once we are happy with our results, we can now upload our model into Cloud ML Engine for online predictions.
+```bash
+# We want the model to reside on GCS and get its path
+EXPORT_DIR=$WORK_DIR/model/export/final
+if [[ $EXPORT_DIR == gs://* ]]; then
+  # If it's a GCS path, use gsutil
+  MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
+else
+  # If it's a local path, first upload it to GCS
+  LOCAL_MODEL_DIR=$(ls -d -1 $EXPORT_DIR/* | sort -r | head -n 1)
+  MODEL_DIR=$BUCKET/cloudml-samples/molecules/model
+  gsutil -m cp -r $LOCAL_MODEL_DIR $MODEL_DIR
+fi
+
+# Now create the model and a version in Cloud ML Engine and set it as default
+MODEL=molecules
+REGION=$(gcloud config get-value compute/region)
+gcloud ml-engine models create $MODEL \
+  --regions $REGION
+
+VERSION="${MODEL}_$(date +%Y%m%d_%H%M%S)"
+gcloud ml-engine versions create $VERSION \
+  --model $MODEL \
+  --origin $MODEL_DIR \
+  --runtime-version 1.8
+
+gcloud ml-engine versions set-default $VERSION \
+  --model $MODEL
+
+# Finally, we can request predictions via gcloud ml-engine
+gcloud ml-engine predict \
+  --model $MODEL \
+  --version $VERSION \
+  --json-instances sample-requests.json
+```

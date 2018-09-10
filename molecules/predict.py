@@ -11,6 +11,8 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+# This tool does either batch or streaming predictions on a trained model.
+
 from __future__ import print_function
 
 import argparse
@@ -93,7 +95,7 @@ def run(model_dir, feature_extraction, sink, beam_options=None):
         | 'Feature extraction' >> feature_extraction
         | 'Predict' >> beam.ParDo(Predict(model_dir, 'ID'))
         | 'Format as JSON' >> beam.Map(lambda result: json.dumps(result))
-        | 'Write to sink' >> sink)
+        | 'Write predictions' >> sink)
 
 
 if __name__ == '__main__':
