@@ -4,6 +4,17 @@ You want to contribute to Cloud ML Engine samples? That's awesome! Please refer 
 
 # Contributing Guide
 
+## Notebook Guide
+| Criteria        | Samples        |
+| ------------- |:-------------:|
+| Introduction | Yes |
+| Prerequisites | Yes |
+| Setup | Yes |
+| Steps for completion with code and instructions | Yes |
+| Next Steps | Optional |
+
+## Code Guide
+
 We are happy to see your enthusiasm. This table lists the criteria and how important is it to follow when you make your contributions. 
 
 <br/>
