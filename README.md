@@ -36,6 +36,10 @@ Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to acc
 * [Tensorflow: HP Tuning - ResNet](tpu/hptuning/resent-hptuning) - How to run hyperparameter tuning jobs on Cloud Machine Learning Engine with Cloud TPUs using TensorFlow's tf.metrics.
 * [Tensorflow: Hypertune - ResNet](tpu/hptuning/resent-hypertune) - How to run hyperparameter tuning jobs on Cloud Machine Learning Engine with Cloud TPUs using the cloudml-hypertune package.
 
+### Hyperparameter Tuning (HP Tuning)
+Notebook Tutorial:
+* [scikit-learn: Lasso Regressor](sklearn/notebooks/hp_tuning_auto_mpg/ml_engine_hp_tuning_training.ipynb) - How to train a Lasso Regressor in scikit-learn using a text based dataset, auto mpg, to predict a car's miles per gallon.
+
 # Model Serving (Online Predictions)
 
 Notebook Tutorial:
