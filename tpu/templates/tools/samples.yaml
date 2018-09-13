@@ -1,14 +1,14 @@
 dense:
   estimator: 
     tpu_estimator
-  keras: 
-    tpu_keras
   rewrite: 
     tpu_rewrite
 
 lstm:
   estimator: 
     tpu_lstm_estimator
+  keras:
+    tpu_lstm_keras
 
 cnn:
   estimator: 
