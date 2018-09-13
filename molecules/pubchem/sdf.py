@@ -9,6 +9,8 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+# This contains a simple parser for SDF files.
+
 import json
 
 MOLECULE_START = '-OEChem-'

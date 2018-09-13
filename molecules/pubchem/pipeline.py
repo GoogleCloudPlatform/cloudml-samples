@@ -9,6 +9,8 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+# This file contains the shared functionality for preprocess.py and predict.py
+
 import sdf
 
 import json
@@ -43,6 +45,20 @@ LABELS = ['Energy']
 
 
 class ParseSDF(filebasedsource.FileBasedSource):
+  def __init__(self, file_pattern):
+    super(ParseSDF, self).__init__(file_pattern, splittable=False)
+
+  def in_range(self, range_tracker, position):
+    """This helper method tries to set the position to where the file left off.
+    Since this is a non-splittable source, we have to call
+    `set_current_position`, but if it tries to set the position to a split
+    point, we still have to call `try_claim`, otherwise an error will be raised.
+    """
+    try:
+      return range_tracker.set_current_position(position)
+    except ValueError:
+      return range_tracker.try_claim(position)
+
   def read_records(self, filename, range_tracker):
     """This yields a dictionary with the sections of the file that we're
     interested in. The `range_tracker` allows us to mark the position where
@@ -50,9 +66,9 @@ class ParseSDF(filebasedsource.FileBasedSource):
     """
     with self.open_file(filename) as f:
       f.seek(range_tracker.start_position() or 0)
-      while range_tracker.try_claim(f.tell()):
-        for molecule in sdf.parse_molecules(f):
-          yield molecule
+      while self.in_range(range_tracker, f.tell()):
+        for json_molecule in sdf.parse_molecules(f):
+          yield json_molecule
 
 
 class FormatMolecule(beam.DoFn):
@@ -62,6 +78,13 @@ class FormatMolecule(beam.DoFn):
     For more information, please check: http://c4.cabrillo.edu/404/ctfile.pdf
     """
     try:
+      # The molecules are currently encoded in JSON so they can be read from
+      # files directly as well as through PubSub messages for streaming
+      # predictions. PubSub source expects everything as a single string.
+      # To lower the network traffic, the JSON strings could be compressed with
+      # the zlib library and encoded to base64 on the ParseSDF source, and
+      # decoded/decompressed here. However, they would no longer be human
+      # readable.
       molecule = json.loads(json_molecule)
       counts_line = molecule[sdf.MDF_SECTION][0]
       total_atoms = int(counts_line[0:3])
