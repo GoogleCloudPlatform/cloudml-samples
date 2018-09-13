@@ -74,3 +74,35 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --tpu TPU-NAME \
     --model-dir gs://YOUR-GCS-BUCKET/
     ```
+
+### Training on Colab
+
+1. Create TPU Node
+
+    Do either of the following:
+
+    * Go to console.cloud.google.com/compute/tpus to create a TPU node.
+
+    * Use gcloud commandline tool:
+
+    ```
+    gcloud compute tpus create TPU-NAME \
+    --zone=ZONE \
+    --network=default \
+    --range=10.0.5.0/29 \
+    --accelerator-type=v2-8 \
+    --version=1.9
+    ```
+
+1. Create GCE VM in the same `ZONE`
+
+    ...
+
+1. Connect to the GCE VM
+
+    ```
+    gcloud compute ssh $INSTANCE_NAME -- -L 8080:localhost:8080
+    ```
+
+1. Go to Colab, connect to local runtime with port `8080`.
+
