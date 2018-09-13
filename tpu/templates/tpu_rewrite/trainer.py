@@ -16,8 +16,10 @@
 import argparse
 import numpy as np
 import tensorflow as tf
+from tensorflow.contrib.cluster_resolver import TPUClusterResolver
 
 
+# Similar to the role of model_fn, the TPU function builds the part of the graph to be run on TPUs
 def tpu_computation(features, labels):
     # build model
     hidden = tf.layers.dense(features, 10, activation=tf.nn.relu)
@@ -32,8 +34,8 @@ def tpu_computation(features, labels):
     global_step = tf.train.get_or_create_global_step()
     train_op = optimizer.minimize(loss, global_step=global_step) 
 
-    # return the ops that the TPU needs to carry out
-    return loss, train_op
+    # TPU functions must return zero-or more Tensor values followed by zero or more Operations.
+    return global_step, loss, train_op
 
 
 def train_input_fn():
@@ -49,10 +51,10 @@ def train_input_fn():
     # create tf.data.Dataset
     dataset = tf.data.Dataset.from_tensor_slices((x_tensor, y_tensor))
 
-    # COMMENT HERE!
+    # TPUs need to know all dimensions including batch size
     batch_size = 16
 
-    dataset = dataset.repeat().shuffle(32).batch(batch_size, drop_remainder=True)
+    dataset = dataset.repeat().shuffle(32).batch(batch_size)#, drop_remainder=True)
 
     # TPUs need to know all dimensions when the graph is built
     # Datasets know the batch size only when the graph is run
@@ -72,24 +74,31 @@ def train_input_fn():
 
 
 def main(args):
-    features, labels = train_input_fn()
+    # unpack the tensor batch to be used as the list of inputs of the TPU function
+    dataset = train_input_fn()
+    iterator = dataset.make_one_shot_iterator()
+    features, labels = iterator.get_next()
 
+    # mark part of the graph to be run on the TPUs
     train_on_tpu = tf.contrib.tpu.rewrite(tpu_computation, [features, labels])
 
-    # FIXME: 'grpc://worker-address'
-    sess = tf.Session('grpc://10.0.5.2')
+    # get the TPU resource's grpc url
+    # Note: when running on CMLE, args.tpu should be left as None
+    tpu_grpc_url = TPUClusterResolver(tpu=args.tpu).get_master()
+    sess = tf.Session(tpu_grpc_url)
 
-    # FIXME: is this needed if running on CMLE?
     sess.run(tf.contrib.tpu.initialize_system())
-
     sess.run(tf.global_variables_initializer())
 
     for i in range(args.max_steps):
-        loss, _ = sess.run(train_on_tpu)
+        # the tensor values in the TPU function are returned in a list, and the operations in the TPU function are called with no return value
+        global_step, loss = sess.run(train_on_tpu)
 
-        if i % 10 == 0:
+        if i % args.save_checkpoints_steps == 0:
             # TODO: add export model
-            print(loss)
+            print(global_step, loss)
+
+    sess.run(tf.contrib.tpu.shutdown_system())
 
 
 
@@ -107,18 +116,9 @@ if __name__ == '__main__':
         default=1000
     )
     parser.add_argument(
-        '--train-batch-size',
-        type=int,
-        default=16
-    )
-    parser.add_argument(
         '--save-checkpoints-steps',
         type=int,
         default=100
-    )
-    parser.add_argument(
-        '--use-tpu',
-        action='store_true'
     )
     parser.add_argument(
         '--tpu',
