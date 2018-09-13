@@ -3,56 +3,56 @@ import nbformat
 from nbformat.v4 import new_code_cell,new_notebook
 from redbaron import RedBaron
 
+def should_concat(prev_type, cur_type):
+    concat_types = ['comment', 'import', 'from_import', 'assignment']
+    import_types = ['import', 'from_import']
+
+    result = False
+
+    if prev_type == cur_type and cur_type in concat_types:
+        result = True
+
+    if prev_type in import_types and cur_type in import_types:
+        result = True
+
+    return result
+
 def py_to_ipynb(path, py_filename):
+    print('Converting {}'.format(os.path.join(path, filename)))
+
     ipynb_filename = py_filename.split('.')[0] + '.ipynb'
 
     with open(os.path.join(path, py_filename), 'r') as f:
         red = RedBaron(f.read())
 
-    # types of nodes to be put into the same cell
-    in_comment = False
-    in_import = False
-
+    # detect whether the state has changed and thus need to flush the code up to that point before processing a node
     sources = []
     cell_source = []
-    for node in red:
-        if node.type == 'endl':
+
+    prev_type = red[0].type
+    # concat_state = [False]
+    for node in red[1:]:
+        cur_type = node.type
+
+        # ignore blank lines
+        if cur_type == 'endl':
             continue
 
-        elif node.type == 'comment':
-            if not in_comment:
-                # flush
-                sources.append('\n'.join(cell_source))
-                cell_source = []
-
+        if should_concat(prev_type, cur_type):
             cell_source.append(node.dumps())
-            in_comment = True
-            in_import = False
-
-        elif node.type in ['import', 'from_import']:
-            if not in_import:
-                # flush
-                sources.append('\n'.join(cell_source))
-                cell_source = []
-
-            cell_source.append(node.dumps())
-            in_comment = False
-            in_import = True
-
         else:
-            # flush
             sources.append('\n'.join(cell_source))
-            cell_source = []
+            cell_source = [node.dumps()]
 
-            cell_source.append(node.dumps())
-            in_comment = False
-            in_import = False
+        prev_type = cur_type
 
     # last cell, special handling
     cell_source = []
 
     # the value of the IfNode 
     node_value = node.value[0].value
+
+    # just include all the argparse lines
     for line in node_value:
         cell_source.append(line.dumps())
 
@@ -76,7 +76,6 @@ for path, dirs, filenames in os.walk(root):
         if filename.startswith('__') or not filename.endswith('.py'):
             continue
 
-        print('Converting {}'.format(os.path.join(path, filename)))
         py_to_ipynb(path, filename)
 
 
