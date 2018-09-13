@@ -18,9 +18,9 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.cluster_resolver import TPUClusterResolver
 
-
-# Similar to the role of model_fn, the TPU function builds the part of the graph to be run on TPUs
 def tpu_computation(features, labels):
+    # Similar to the role of model_fn, the TPU function builds the part of the graph to be run on TPUs
+
     # build model
     hidden = tf.layers.dense(features, 10, activation=tf.nn.relu)
     outputs = tf.layers.dense(hidden, 1)
