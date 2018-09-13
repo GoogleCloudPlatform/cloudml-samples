@@ -18,6 +18,7 @@ def format(path):
     py_filenames = [fn[3:] for fn in py_filenames if '__' not in fn]
 
     ipynb_filenames = glob.glob(os.path.join(root, path, '*.ipynb'))
+    ipynb_filenames = [fn[3:] for fn in ipynb_filenames]
 
     for py_filename in py_filenames:
         formatted += '[{}]({})<br>'.format(py_filename.split('/')[-1], py_filename)
