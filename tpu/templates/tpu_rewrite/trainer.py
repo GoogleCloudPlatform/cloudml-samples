@@ -15,6 +15,7 @@
 
 import argparse
 import numpy as np
+import os
 import tensorflow as tf
 from tensorflow.contrib.cluster_resolver import TPUClusterResolver
 
@@ -39,6 +40,8 @@ def tpu_computation(features, labels):
 
 
 def train_input_fn():
+    # data input function runs on the CPU, not TPU
+
     # make some fake regression data
     x = np.random.rand(100, 5)
     w = np.random.rand(5)
@@ -82,6 +85,8 @@ def main(args):
     # mark part of the graph to be run on the TPUs
     train_on_tpu = tf.contrib.tpu.rewrite(tpu_computation, [features, labels])
 
+    saver = tf.train.Saver()
+
     # get the TPU resource's grpc url
     # Note: when running on CMLE, args.tpu should be left as None
     tpu_grpc_url = TPUClusterResolver(tpu=args.tpu).get_master()
@@ -95,8 +100,9 @@ def main(args):
         global_step, loss = sess.run(train_on_tpu)
 
         if i % args.save_checkpoints_steps == 0:
-            # TODO: add export model
-            print(global_step, loss)
+            saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=global_step)
+
+            tf.logging.info('global_step: {}, loss: {}'.format(global_step, loss))
 
     sess.run(tf.contrib.tpu.shutdown_system())
 
