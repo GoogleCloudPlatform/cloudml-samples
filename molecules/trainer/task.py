@@ -35,7 +35,7 @@ def _make_train_or_eval_input_fn(
       return model_features, model_labels
 
     # For more information, check:
-    # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/docs_src/performance/datasets_performance.md
+    # https://www.tensorflow.org/performance/datasets_performance
     files = tf.data.Dataset.list_files(file_pattern)
     dataset = files.apply(tf.contrib.data.parallel_interleave(
         tf.data.TFRecordDataset, cycle_length=mp.cpu_count()))
