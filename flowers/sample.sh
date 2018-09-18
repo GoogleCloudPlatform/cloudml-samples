@@ -22,7 +22,7 @@ declare -r PROJECT=$(gcloud config list project --format "value(core.project)")
 declare -r JOB_ID="flowers_${USER}_$(date +%Y%m%d_%H%M%S)"
 declare -r BUCKET="gs://${PROJECT}-ml"
 declare -r GCS_PATH="${BUCKET}/${USER}/${JOB_ID}"
-declare -r DICT_FILE=gs://cloud-ml-data/img/flower_photos/dict.txt
+declare -r DICT_FILE=gs://cloud-samples-data/ml-engine/flowers/dict.txt
 
 declare -r MODEL_NAME=flowers
 declare -r VERSION_NAME=v1
@@ -39,13 +39,13 @@ set -v -e
 # CPU's.  Check progress here: https://console.cloud.google.com/dataflow
 python trainer/preprocess.py \
   --input_dict "$DICT_FILE" \
-  --input_path "gs://cloud-ml-data/img/flower_photos/eval_set.csv" \
+  --input_path "gs://cloud-samples-data/ml-engine/flowers/eval_set.csv" \
   --output_path "${GCS_PATH}/preproc/eval" \
   --cloud
 
 python trainer/preprocess.py \
   --input_dict "$DICT_FILE" \
-  --input_path "gs://cloud-ml-data/img/flower_photos/train_set.csv" \
+  --input_path "gs://cloud-samples-data/ml-engine/flowers/train_set.csv" \
   --output_path "${GCS_PATH}/preproc/train" \
   --cloud
 
@@ -63,8 +63,8 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --eval_data_paths "${GCS_PATH}/preproc/eval*" \
   --train_data_paths "${GCS_PATH}/preproc/train*"
 
-# Remove the model and its version
-# Make sure no error is reported if model does not exist
+# Remove the model and its version.
+# Make sure no error is reported if model does not exist.
 gcloud ml-engine versions delete $VERSION_NAME --model=$MODEL_NAME -q --verbosity none
 gcloud ml-engine models delete $MODEL_NAME -q --verbosity none
 
@@ -87,7 +87,7 @@ gcloud ml-engine versions set-default "$VERSION_NAME" --model "$MODEL_NAME"
 
 # Finally, download a daisy and so we can test online prediction.
 gsutil cp \
-  gs://cloud-ml-data/img/flower_photos/daisy/100080576_f52e8ee070_n.jpg \
+  gs://cloud-samples-data/ml-engine/flowers/daisy/100080576_f52e8ee070_n.jpg \
   daisy.jpg
 
 # Since the image is passed via JSON, we have to encode the JPEG string first.
