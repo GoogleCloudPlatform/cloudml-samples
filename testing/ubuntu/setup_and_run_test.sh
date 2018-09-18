@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 ### Common setup
 sudo apt-get install python-dev python-pip
 
@@ -20,5 +21,6 @@ pip install --upgrade -r $CMLE_REQUIREMENTS_FILE
 gcloud auth activate-service-account --key-file "${KOKORO_GFILE_DIR}/${CMLE_KEYFILE}"
 gcloud config set project $CMLE_PROJECT_ID
 gcloud config set compute/region $CMLE_REGION
+gcloud config list
 
 bash $CMLE_TEST_SCRIPT
