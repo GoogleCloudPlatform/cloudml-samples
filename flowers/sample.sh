@@ -63,8 +63,8 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --eval_data_paths "${GCS_PATH}/preproc/eval*" \
   --train_data_paths "${GCS_PATH}/preproc/train*"
 
-# Remove the model and its version
-# Make sure no error is reported if model does not exist
+# Remove the model and its version.
+# Make sure no error is reported if model does not exist.
 gcloud ml-engine versions delete $VERSION_NAME --model=$MODEL_NAME -q --verbosity none
 gcloud ml-engine models delete $MODEL_NAME -q --verbosity none
 
