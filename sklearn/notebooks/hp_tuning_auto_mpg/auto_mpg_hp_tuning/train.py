@@ -26,16 +26,7 @@ import hypertune
 from sklearn.externals import joblib
 from sklearn.linear_model import Lasso
 from sklearn.model_selection import train_test_split
-# [END mle_sklearn_hp_tuning_setup]
-
-# ---------------------------------------
-# 1. Here we load the hyperparameter values that are passed to the model during training.
-# ---------------------------------------
-# In this tutorial, the Lasso regressor is used, because it has several parameters
-# that can be used to help demonstrate how to choose HP tuning values.
-# (The range of values are set below in the configuration file for the HP tuning values.)
-# [START mle_sklearn_hp_tuning_argparse]
-parser = argparse.ArgumentParser()
+# [END mle_sklearn_hp_tuning_setup]parser = argparse.ArgumentParser()
 parser.add_argument(
     '--job-dir',  # handled automatically by ML Engine
     help='GCS location to write checkpoints and export models',
@@ -68,15 +59,7 @@ parser.add_argument(
     default='cyclic'
 )
 
-args = parser.parse_args()
-# [END mle_sklearn_hp_tuning_argparse]
-
-
-# ---------------------------------------
-# 2. Add code to download the data from GCS (in this case, using the publicly hosted data).
-#    ML Engine will then be able to use the data when training your model.
-# ---------------------------------------
-# [START mle_sklearn_hp_tuning_download_data]
+args = parser.parse_args()# [START mle_sklearn_hp_tuning_download_data]
 # Public bucket holding the auto mpg data
 bucket = storage.Client().bucket('cloud-samples-data')
 # Path to the data inside the public bucket
@@ -116,13 +99,7 @@ features = raw_training_data.drop('mpg', axis=1).drop('car-name', axis=1).values
 labels = raw_training_data['mpg'].values.tolist()
 
 train_features, test_features, train_labels, test_labels = train_test_split(features, labels, test_size=0.15)
-# [END mle_sklearn_hp_tuning_define_and_load_data]
-
-# ---------------------------------------
-# 3. Use the value passed in those arguments to set the corresponding hyperparameters
-#    in your application's scikit-learn code.
-# ---------------------------------------
-# [START mle_sklearn_hp_tuning_create_model]
+# [END mle_sklearn_hp_tuning_define_and_load_data]# [START mle_sklearn_hp_tuning_create_model]
 # Create the regressor, here we will use a Lasso Regressor to demonstrate the use of HP Tuning.
 # Here is where we set the variables used during HP Tuning from
 # the parameters passed into the python script
@@ -134,13 +111,7 @@ regressor = Lasso(
 
 # Transform the features and fit them to the regressor
 regressor.fit(train_features, train_labels)
-# [END mle_sklearn_hp_tuning_create_model]
-
-# ---------------------------------------
-# 4. Report the mean accuracy as hyperparameter tuning objective metric.
-# ---------------------------------------
-# [START mle_sklearn_hp_tuning_metrics]
-# Calculate the mean accuracy on the given test data and labels.
+# [END mle_sklearn_hp_tuning_create_model]# Calculate the mean accuracy on the given test data and labels.
 score = regressor.score(test_features, test_labels)
 
 # The default name of the metric is training/hptuning/metric. 
@@ -153,12 +124,7 @@ hpt.report_hyperparameter_tuning_metric(
     hyperparameter_metric_tag='my_metric_tag',
     metric_value=score,
     global_step=1000)
-# [END mle_sklearn_hp_tuning_metrics]
-
-# ---------------------------------------
-# 5. Export and save the model to GCS
-# ---------------------------------------
-# [START mle_sklearn_hp_export_to_gcs]
+# [END mle_sklearn_hp_tuning_metrics]# [START export-to-gcs]
 # Export the model to a file
 model_filename = 'model.joblib'
 joblib.dump(regressor, model_filename)
@@ -176,4 +142,4 @@ blob = bucket.blob('{}/{}'.format(
     bucket_path,
     model_filename))
 blob.upload_from_filename(model_filename)
-# [END mle_sklearn_hp_export_to_gcs]
+# [END export-to-gcs]
