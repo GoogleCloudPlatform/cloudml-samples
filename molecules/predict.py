@@ -94,7 +94,7 @@ def run(model_dir, feature_extraction, sink, beam_options=None):
     _ = (p
         | 'Feature extraction' >> feature_extraction
         | 'Predict' >> beam.ParDo(Predict(model_dir, 'ID'))
-        | 'Format as JSON' >> beam.Map(lambda result: json.dumps(result))
+        | 'Format as JSON' >> beam.Map(json.dumps)
         | 'Write predictions' >> sink)
 
 
