@@ -161,6 +161,7 @@ class CountAtoms(beam.DoFn):
     yield result
 
 
+# [START SimpleFeatureExtraction]
 class SimpleFeatureExtraction(beam.PTransform):
   """The feature extraction (element-wise transformations).
 
@@ -184,8 +185,10 @@ class SimpleFeatureExtraction(beam.PTransform):
         | 'Format molecule' >> beam.ParDo(FormatMolecule())
         | 'Count atoms' >> beam.ParDo(CountAtoms())
     )
+# [END SimpleFeatureExtraction]
 
 
+# [START normalize_inputs]
 def normalize_inputs(inputs):
   """Preprocessing function for tf.Transform (full-pass transformations).
 
@@ -214,3 +217,4 @@ def normalize_inputs(inputs):
       # Do not scale the label since we want the absolute number for prediction
       'Energy': inputs['Energy'],
   }
+# [END normalize_inputs]
