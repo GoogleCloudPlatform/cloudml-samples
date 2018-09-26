@@ -83,29 +83,58 @@ def main(args):
     features, labels = iterator.get_next()
 
     # mark part of the graph to be run on the TPUs
-    train_on_tpu = tf.contrib.tpu.rewrite(tpu_computation, [features, labels])
+    global_step_tensor, loss_tensor = tf.contrib.tpu.rewrite(tpu_computation, [features, labels])
+
+    # utility ops
+    tpu_init = tf.contrib.tpu.initialize_system()
+    tpu_shutdown = tf.contrib.tpu.shutdown_system()
+    variables_init = tf.global_variables_initializer()
 
     saver = tf.train.Saver()
+
+    checkpoint_saver_hook = tf.train.CheckpointSaverHook(
+        checkpoint_dir=args.model_dir,
+        save_steps=args.save_checkpoints_steps,
+    )
+
+    summary = tf.summary.scalar('loss', loss_tensor)
+
+    summary_saver_hook = tf.train.SummarySaverHook(
+        save_steps=args.save_checkpoints_steps,
+        output_dir=args.model_dir,
+        summary_op=summary
+    )
+
+    # loss_summary = tf.summary.scalar('loss', loss_tensor)
+    # summary = tf.summary.merge_all()
 
     # get the TPU resource's grpc url
     # Note: when running on CMLE, args.tpu should be left as None
     tpu_grpc_url = TPUClusterResolver(tpu=args.tpu).get_master()
-    sess = tf.Session(tpu_grpc_url)
+    # sess = tf.Session(tpu_grpc_url)
+    sess = tf.train.MonitoredSession(
+        session_creator=tf.train.ChiefSessionCreator(master=tpu_grpc_url),
+        hooks=[checkpoint_saver_hook, summary_saver_hook]
+    )
 
-    sess.run(tf.contrib.tpu.initialize_system())
-    sess.run(tf.global_variables_initializer())
+    # summary_writer = tf.summary.FileWriter(args.model_dir, sess.graph)
+
+    sess.run(tpu_init)
+    sess.run(variables_init)
 
     for i in range(args.max_steps):
         # the tensor values in the TPU function are returned in a list, and the operations in the TPU function are called with no return value
-        global_step, loss = sess.run(train_on_tpu)
+        global_step, loss = sess.run([global_step_tensor, loss_tensor])
 
         if i % args.save_checkpoints_steps == 0:
-            saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=global_step)
+            # saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=global_step)
 
             tf.logging.info('global_step: {}, loss: {}'.format(global_step, loss))
 
-    sess.run(tf.contrib.tpu.shutdown_system())
+            # summary_value = sess.run(summary)
+            # summary_writer.add_summary(summary_value, global_step=global_step)
 
+    sess.run(tpu_shutdown)
 
 
 if __name__ == '__main__':

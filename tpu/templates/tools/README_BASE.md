@@ -6,7 +6,12 @@ Templates for training TensorFlow models with Cloud TPUs.
 
 ## TPUEstimator
 
-### Training on Cloud ML Engine
+Below we show how to run the basic [`tpu_estimator`](tpu_estimator) sample in three different ways to access TPUs: Cloud ML Engine, GCE, and Colab.
+
+To run other samples replace `tpu_estimator` with their corresponding directory names.
+
+
+### Train on Cloud ML Engine
 
 Run from the `templates` directory.
 
@@ -33,32 +38,14 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --use-tpu
 ```
 
-### Training on Compute Engine
 
-1. Create TPU Node
+### Train on Compute Engine
 
-    Do either of the following:
+1. Create TPU from the console [TPU page](https://console.cloud.google.com/compute/tpus).  Record `TPU-NAME` of your choice.
 
-    * Go to console.cloud.google.com/compute/tpus to create a TPU node.
+1. Create a GCE VM in the same `ZONE` from the console [GCE VM page](https://console.cloud.google.com/compute/instances)
 
-    * Use gcloud commandline tool:
-
-    ```
-    gcloud compute tpus create TPU-NAME \
-    --zone=ZONE \
-    --network=default \
-    --range=10.0.5.0/29 \
-    --accelerator-type=v2-8 \
-    --version=1.9
-    ```
-
-1. Create GCE VM in the same `ZONE`
-
-    ...
-
-1. Connect to the GCE VM
-
-    ...
+1. Connect to the GCE VM by clicking on the `SSH` button.
 
 1. Run from the GCE VM:
 
@@ -75,34 +62,12 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --model-dir gs://YOUR-GCS-BUCKET/
     ```
 
-### Training on Colab
 
-1. Create TPU Node
+### Train on Colab
 
-    Do either of the following:
+1. Go to [Colab for the notebook](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/tpu/templates/tpu_estimator/trainer.ipynb).
 
-    * Go to console.cloud.google.com/compute/tpus to create a TPU node.
+1. Select TPU as the runtime type.
 
-    * Use gcloud commandline tool:
-
-    ```
-    gcloud compute tpus create TPU-NAME \
-    --zone=ZONE \
-    --network=default \
-    --range=10.0.5.0/29 \
-    --accelerator-type=v2-8 \
-    --version=1.9
-    ```
-
-1. Create GCE VM in the same `ZONE`
-
-    ...
-
-1. Connect to the GCE VM
-
-    ```
-    gcloud compute ssh $INSTANCE_NAME -- -L 8080:localhost:8080
-    ```
-
-1. Go to Colab, connect to local runtime with port `8080`.
+1. Uncomment and modify the cell containing code needed to access TPU from Colab, and run all cells.
 
