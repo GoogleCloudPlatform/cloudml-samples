@@ -105,9 +105,6 @@ def main(args):
         summary_op=summary
     )
 
-    # loss_summary = tf.summary.scalar('loss', loss_tensor)
-    # summary = tf.summary.merge_all()
-
     # get the TPU resource's grpc url
     # Note: when running on CMLE, args.tpu should be left as None
     tpu_grpc_url = TPUClusterResolver(tpu=args.tpu).get_master()
@@ -117,8 +114,6 @@ def main(args):
         hooks=[checkpoint_saver_hook, summary_saver_hook]
     )
 
-    # summary_writer = tf.summary.FileWriter(args.model_dir, sess.graph)
-
     sess.run(tpu_init)
     sess.run(variables_init)
 
@@ -127,12 +122,9 @@ def main(args):
         global_step, loss = sess.run([global_step_tensor, loss_tensor])
 
         if i % args.save_checkpoints_steps == 0:
-            # saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=global_step)
+            saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=global_step)
 
             tf.logging.info('global_step: {}, loss: {}'.format(global_step, loss))
-
-            # summary_value = sess.run(summary)
-            # summary_writer.add_summary(summary_value, global_step=global_step)
 
     sess.run(tpu_shutdown)
 
@@ -161,5 +153,16 @@ if __name__ == '__main__':
     )
 
     args, _ = parser.parse_known_args()
+
+    # # Uncomment to use TPU on colab.research.google.com
+
+    # import os
+    # args.tpu = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])
+    # args.use_tpu = True
+    # args.model_dir = 'gs://your-gcs-bucket'
+
+    # # Authenticate to access GCS bucket
+    # from google.colab import auth
+    # auth.authenticate_user()
 
     main(args)
