@@ -92,27 +92,10 @@ def main(args):
 
     saver = tf.train.Saver()
 
-    checkpoint_saver_hook = tf.train.CheckpointSaverHook(
-        checkpoint_dir=args.model_dir,
-        save_steps=args.save_checkpoints_steps,
-    )
-
-    summary = tf.summary.scalar('loss', loss_tensor)
-
-    summary_saver_hook = tf.train.SummarySaverHook(
-        save_steps=args.save_checkpoints_steps,
-        output_dir=args.model_dir,
-        summary_op=summary
-    )
-
     # get the TPU resource's grpc url
     # Note: when running on CMLE, args.tpu should be left as None
     tpu_grpc_url = TPUClusterResolver(tpu=args.tpu).get_master()
-    # sess = tf.Session(tpu_grpc_url)
-    sess = tf.train.MonitoredSession(
-        session_creator=tf.train.ChiefSessionCreator(master=tpu_grpc_url),
-        hooks=[checkpoint_saver_hook, summary_saver_hook]
-    )
+    sess = tf.Session(tpu_grpc_url)
 
     sess.run(tpu_init)
     sess.run(variables_init)
