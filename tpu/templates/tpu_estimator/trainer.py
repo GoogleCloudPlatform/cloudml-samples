@@ -170,15 +170,21 @@ if __name__ == '__main__':
 
     args, _ = parser.parse_known_args()
 
-    # # Uncomment to use TPU on colab.research.google.com
+    # colab.research.google.com specific
+    import os
+    import sys
 
-    # import os
-    # args.tpu = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])
-    # args.use_tpu = True
-    # args.model_dir = 'gs://your-gcs-bucket'
+    if 'google.colab' in sys.modules:
+        # Authenticate to access GCS bucket
+        from google.colab import auth
+        auth.authenticate_user()
 
-    # # Authenticate to access GCS bucket
-    # from google.colab import auth
-    # auth.authenticate_user()
+        # Update this
+        args.model_dir = 'gs://your-gcs-bucket'
+
+        # Check if connected to the TPU runtime
+        if 'COLAB_TPU_ADDR' in os.environ:
+            args.tpu = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])
+            args.use_tpu = True
 
     main(args)
