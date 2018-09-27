@@ -1,6 +1,6 @@
 # TPU Templates
 
-Templates for training TensorFlow models with Cloud TPUs.
+Templates for training TensorFlow models with Cloud TPUs.  They are minimal models with fake data that can be successfully trained on TPUs, and can be used as the starting point when you develop models from scratch.
 
 
  ... | estimator | keras | rewrite
@@ -9,6 +9,8 @@ Templates for training TensorFlow models with Cloud TPUs.
  dense | [trainer.py](tpu_estimator/trainer.py)<br>[trainer.ipynb](tpu_estimator/trainer.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/tpu/templates/tpu_estimator/trainer.ipynb)<br> |  | [trainer.py](tpu_rewrite/trainer.py)<br>[trainer.ipynb](tpu_rewrite/trainer.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/tpu/templates/tpu_rewrite/trainer.ipynb)<br>
  gan | [trainer_single.py](tpu_gan_estimator/trainer_single.py)<br>[trainer.py](tpu_gan_estimator/trainer.py)<br>[trainer_single.ipynb](tpu_gan_estimator/trainer_single.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/tpu/templates/tpu_gan_estimator/trainer_single.ipynb)<br>[trainer.ipynb](tpu_gan_estimator/trainer.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/tpu/templates/tpu_gan_estimator/trainer.ipynb)<br> |  | 
  lstm | [trainer.py](tpu_lstm_estimator/trainer.py)<br>[trainer.ipynb](tpu_lstm_estimator/trainer.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/tpu/templates/tpu_lstm_estimator/trainer.ipynb)<br> | [trainer.py](tpu_lstm_keras/trainer.py)<br>[trainer.ipynb](tpu_lstm_keras/trainer.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/tpu/templates/tpu_lstm_keras/trainer.ipynb)<br> | 
+
+Note: The notebooks and the table above are generated with scripts in [tools](tools).
 
 ## TPUEstimator
 

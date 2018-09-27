@@ -1,8 +1,10 @@
 # TPU Templates
 
-Templates for training TensorFlow models with Cloud TPUs.
+Templates for training TensorFlow models with Cloud TPUs.  They are minimal models with fake data that can be successfully trained on TPUs, and can be used as the starting point when you develop models from scratch.
 
 <TABLE>
+
+Note: The notebooks and the table above are generated with scripts in [tools](tools).
 
 ## TPUEstimator
 
