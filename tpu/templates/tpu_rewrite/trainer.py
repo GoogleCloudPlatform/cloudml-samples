@@ -138,20 +138,28 @@ if __name__ == '__main__':
     args, _ = parser.parse_known_args()
 
     # colab.research.google.com specific
-    import os
-    import sys
-
     if 'google.colab' in sys.modules:
-        # Authenticate to access GCS bucket
+        import json
+        import os
+        import sys
         from google.colab import auth
+
+        # Authenticate to access GCS bucket
         auth.authenticate_user()
 
-        # Update this
+        # TODO(user): change this
         args.model_dir = 'gs://your-gcs-bucket'
 
-        # Check if connected to the TPU runtime
+        # When connected to the TPU runtime
         if 'COLAB_TPU_ADDR' in os.environ:
-            args.tpu = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])
+            tpu_grpc = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])
+
+            args.tpu = tpu_grpc
             args.use_tpu = True
+
+            # Upload credentials to the TPU
+            with tf.Session(tpu_grpc) as sess:
+                data = json.load(open('/content/adc.json'))
+                tf.contrib.cloud.configure_gcs(sess, credentials=data)
 
     main(args)
