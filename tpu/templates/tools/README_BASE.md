@@ -71,5 +71,5 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 
 1. Select TPU as the runtime type.
 
-1. Uncomment and modify the cell containing code needed to access TPU from Colab, and run all cells.
+1. Update the GCS bucket for `model_dir` and run all cells.  You might be asked to authenticate in order to access the bucket.
 
