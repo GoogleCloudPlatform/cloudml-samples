@@ -31,7 +31,8 @@ def build_model():
 
 
 def make_data():
-    data_size = 100
+    # This needs to be divisible by the number of towers/cores on the TPU.
+    data_size = 128
     sequences = np.random.random((data_size, 5, 3))
     labels = np.random.randint(0, 2, size=(data_size,))
 
@@ -43,10 +44,11 @@ def main(args):
 
     if args.use_tpu:
         # distribute over TPU cores
-        # Note: only in TensorFlow 1.10+
-        strategy = tf.contrib.tpu.TPUDistributionStrategy(num_cores_per_host=8)
+        # Note: This requires TensorFlow 1.11
+        tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(args.tpu)
+        strategy = tf.contrib.tpu.TPUDistributionStrategy(tpu_cluster_resolver)
         model = tf.contrib.tpu.keras_to_tpu_model(
-            model, strategy=strategy, tpu_name_or_address=args.tpu)
+            model, strategy=strategy)
 
     optimizer = tf.train.RMSPropOptimizer(learning_rate=0.05)
     loss_fn = tf.losses.log_loss
@@ -81,10 +83,10 @@ if __name__ == '__main__':
     args, _ = parser.parse_known_args()
 
     # colab.research.google.com specific
+    import sys
     if 'google.colab' in sys.modules:
         import json
         import os
-        import sys
         from google.colab import auth
 
         # Authenticate to access GCS bucket

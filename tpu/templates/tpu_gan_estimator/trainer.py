@@ -262,10 +262,10 @@ if __name__ == '__main__':
     args, _ = parser.parse_known_args()
 
     # colab.research.google.com specific
+    import sys
     if 'google.colab' in sys.modules:
         import json
         import os
-        import sys
         from google.colab import auth
 
         # Authenticate to access GCS bucket
