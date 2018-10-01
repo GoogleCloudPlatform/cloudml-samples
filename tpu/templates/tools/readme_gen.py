@@ -6,7 +6,7 @@ import yaml
 root = '..'
 
 def colab_url(filename):
-    return 'https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/tpu/templates/{}'.format(filename)
+    return 'https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/tpu/templates/{}'.format(filename)
 
 def format(path):
     if not path:
