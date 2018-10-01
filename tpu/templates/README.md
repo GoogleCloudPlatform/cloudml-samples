@@ -73,7 +73,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 
 ### Train on Colab
 
-1. Go to [Colab for the notebook](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/tpu/templates/tpu_estimator/trainer.ipynb).
+1. Go to [Colab for the notebook](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/tpu/templates/tpu_estimator/trainer.ipynb).
 
 1. Select TPU as the runtime type.
 
