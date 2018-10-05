@@ -20,7 +20,7 @@ import pandas as pd
 from keras import backend as K
 from keras import layers, models
 from keras.utils import np_utils
-from keras.backend import relu, softmax
+from keras.backend import relu
 
 #Python2/3 compatibility imports
 from six.moves.urllib import parse as urlparse
@@ -70,7 +70,7 @@ def model_fn(input_dim,
     input_dim = units
 
   # Add a dense final layer with sigmoid function
-  model.add(layers.Dense(labels_dim, activation="sigmoid"))
+  model.add(layers.Dense(labels_dim, activation='sigmoid'))
   compile_model(model, learning_rate)
   return model
 
