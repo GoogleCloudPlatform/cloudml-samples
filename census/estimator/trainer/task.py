@@ -62,7 +62,7 @@ def run_experiment(hparams):
   print('model dir {}'.format(run_config.model_dir))
   estimator = model.build_estimator(
       embedding_size=hparams.embedding_size,
-      # Construct layers sizes with exponetial decay
+      # Construct layers sizes with exponential decay
       hidden_units=[
           max(2, int(hparams.first_layer_size *
                      hparams.scale_factor**i))
