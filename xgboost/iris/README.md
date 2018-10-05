@@ -8,7 +8,7 @@ Please fllow this [instruction](https://cloud.google.com/ml-engine/docs/scikit/g
 
 ### Install required packages for training in local environment.
 In order to run the sample in your local enviroment, you need to
-run the following commands to install required python packages.
+run the following command to install required python packages.
 ```
 pip install -r requirements.txt
 ```
