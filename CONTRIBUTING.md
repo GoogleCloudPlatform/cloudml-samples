@@ -27,3 +27,45 @@ We are happy to see your enthusiasm. This table lists the criteria and how impor
 | Include core TF API aka no contrib   | Yes | Optional |
 | Include README     | Yes | Yes |
 | Maintain version dependency updates     | Yes | Optional |
+
+
+## Expectations
+
+### Contributors
+
+- Please read the Python Dev Guide and in particular the [Google Python Style Guide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md).
+
+- Your Pull Request for existing samples should be small and include a single logical change.
+
+- Smaller changes are easier to review and evaluate, and in general smaller self-contained PRs make it easier to debug or, if needed, rollback.
+
+- If your code appears to include generic functionality, make sure you have not reinvented the wheel.
+
+- Check other repos and, for instance, prefer adapting code that already exists over a new implementation.
+
+- Your change should pass existing unit tests.
+
+- You should provide a sufficiently detailed description of your Pull Request.
+
+- Good descriptions make it easy to understand what the goal of the change is. Writing a good description may also make it apparent if multiple changes are being bundled in the same Pull Request that could be split.
+
+- The LGTM from the code owner ("code review") should ensure both the change intention and implementation are suitable for the codebase being changed. The review from Google team can then focus on the specificities of the Python language.
+
+- Your Pull Request should not have any pending commits (modified in Local Branch but not uploaded).
+
+- You should be able to make (possibly significant) changes to your Pull Request.
+
+- Because of how Pull Request reviews work, it is possible that your reviewer will ask you to refactor the code you're modifying. If you have a long series of changes that would have to be updated, this can involve a lot of work. Consider this before building a long chain of dependent Pull Requests, preferring instead to make changes independent and self-contained.
+
+
+### Reviewers
+
+- Your reviewer will respond to your Pull Request within one business day (according to their location schedule, be mindful of timezone and local holidays).
+
+- Please note that in some cases you may be assigned an "overflow reviewer", in which case you may experience further delay.
+
+- The review can be streamlined by pointing out upfront known limitations or team-specific limitations of the code, for instance by providing links to supporting documentation after the code reviewer is assigned.
+
+- Approvers may recuse themselves if a higher urgency interrupt make the review likely to slip through time, or if they don't feel comfortable to review the changelist (e.g. for lack of expertise on a framework).
+
+- If this is to happen, the reviewer is expected to either find an alternative new reviewer.
