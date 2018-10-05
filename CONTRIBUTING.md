@@ -33,9 +33,7 @@ We are happy to see your enthusiasm. This table lists the criteria and how impor
 
 ### Contributors
 
-- You should have read the Python Dev Guide and in particular the [Google Python Style Guide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md).
-
-- Having already read the documentation makes the review smoother, as fewer obvious mistakes would have to be pointed out, and gives you a head start to the progress.
+- Please read the Python Dev Guide and in particular the [Google Python Style Guide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md).
 
 - Your Pull Request should be small and include a single logical change.
 
@@ -46,8 +44,6 @@ We are happy to see your enthusiasm. This table lists the criteria and how impor
 - Check other repos and, for instance, prefer adapting code that already exists over a new implementation.
 
 - Your change should pass existing unit tests.
-
-- Also pay attention to what is covered by those tests.
 
 - You should provide a sufficiently detailed description of your Pull Request.
 
@@ -69,10 +65,6 @@ We are happy to see your enthusiasm. This table lists the criteria and how impor
 - Your reviewer will respond to your Pull Request within one business day (according to their location schedule, be mindful of timezone and local holidays).
 
 - Please note that in some cases you may be assigned an "overflow reviewer", in which case you may experience further delay.
-
-- Reviewers may not have full knowledge of the frameworks or local conventions of your codebase.
-
-- This is the primary reason why due dilligence and testing is needed before sending the code for review. It also means that while the reviewer may be able to point out logical problems with your code, this is not certain.
 
 - The review can be streamlined by pointing out upfront known limitations or team-specific limitations of the code, for instance by providing links to supporting documentation after the code reviewer is assigned.
 
