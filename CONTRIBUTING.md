@@ -35,7 +35,7 @@ We are happy to see your enthusiasm. This table lists the criteria and how impor
 
 - Please read the Python Dev Guide and in particular the [Google Python Style Guide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md).
 
-- Your Pull Request should be small and include a single logical change.
+- Your Pull Request for existing samples should be small and include a single logical change.
 
 - Smaller changes are easier to review and evaluate, and in general smaller self-contained PRs make it easier to debug or, if needed, rollback.
 
@@ -52,8 +52,6 @@ We are happy to see your enthusiasm. This table lists the criteria and how impor
 - The LGTM from the code owner ("code review") should ensure both the change intention and implementation are suitable for the codebase being changed. The review from Google team can then focus on the specificities of the Python language.
 
 - Your Pull Request should not have any pending commits (modified in Local Branch but not uploaded).
-
-- If you made changes to your Pull Request before sending it to for approval, make sure you uploaded it, too.
 
 - You should be able to make (possibly significant) changes to your Pull Request.
 
