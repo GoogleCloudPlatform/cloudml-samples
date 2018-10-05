@@ -3,7 +3,7 @@
 - - -
 
 ### Setup GCP environment
-Please fllow this [instruction](https://cloud.google.com/ml-engine/docs/scikit/getting-started-training#before_you_begin) to set up your environment with scikit-learn and your Google Cloud Project to train your model on Google Cloud ML Engine.
+Please follow these [instructions](https://cloud.google.com/ml-engine/docs/scikit/getting-started-training#before_you_begin) to set up your environment with scikit-learn and your Google Cloud Project to train your model on Google Cloud ML Engine.
 
 
 ### Install required packages for training in local environment.
