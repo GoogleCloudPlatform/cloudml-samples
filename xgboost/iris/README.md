@@ -56,8 +56,6 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 ### Tuning Hyperparameters on Cloud ML Engine
 You're also able to do hyperparameter tuning with xgboost on Cloud ML Engine. The python package [cloudml-hypertune](https://pypi.org/project/cloudml-hypertune/) is used to help you report hyperparameter tuning objective metrics when running on Cloud ML Engine. cloudml-hypertune can work with any ML framework.
 
-You're also able to do hyperparameter tuning with Scikit-Learn on Cloud ML Engine. We introduce a new python package [cloudml-hypertune](https://pypi.org/project/cloudml-hypertune/) to help you report hyperparameter tuning objective metrics when running on Cloud ML Engine. It can work with any ML framework.
-
 In this sample, `kernel`(kernel type) and `c`(penalty parameter) are the two hyperparameters we hope to tune for the model. Here is the .yaml file for the hyperparameter tuning configuration.
 ```
 # hyperparam.yaml
