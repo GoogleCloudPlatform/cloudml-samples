@@ -41,7 +41,7 @@ Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to acc
 Notebook Tutorial:
 * [scikit-learn: Model Serving](sklearn/notebooks/Online%20Prediction%20with%20scikit-learn.ipynb) - How to train a Random Forest Classifier in scikit-learn on your local machine using a text based dataset, Census, to predict a person’s income level and deploy it on Cloud ML Engine to create predictions.
 * [XGBoost: Model Serving](xgboost/notebooks/Online%20Prediction%20with%20XGBoost.ipynb) -  How to train an XGBoost model on your local machine using a text based dataset, Census, to predict a person’s income level and deploy it on Cloud ML Engine to create predictions.
-* [PyTroch: Model Serving](pytorch/notebooks/Serving%20PyTorch%20Models%20with%20CMLE%20%20Custom%20Prediction%20Code.ipynb) - How to train a PyTorch classification model using iris dataset, on your local machine, and deploy it on Cloud ML Engine using Custom Prediction Code.
+* [PyTorch: Model Serving](pytorch/notebooks/Serving%20PyTorch%20Models%20with%20CMLE%20%20Custom%20Prediction%20Code.ipynb) - How to train a PyTorch classification model using iris dataset, on your local machine, and deploy it on Cloud ML Engine using Custom Prediction Code.
 
 # Complete Guide: Model Training and Serving on ML Engine
 
