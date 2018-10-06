@@ -1,0 +1,105 @@
+#!/bin/bash
+
+set -e
+
+# Parse command line arguments
+unset WORK_DIR
+MAX_DATA_FILES=5
+PROJECT=$(gcloud config get-value project || echo $PROJECT)
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --work-dir)
+      WORK_DIR=$2
+      shift
+      ;;
+    --max-data-files)
+      MAX_DATA_FILES=$2
+      shift
+      ;;
+    --project)
+      PROJECT=$2
+      shift
+      ;;
+    *)
+      echo "error: unrecognized argument $1"
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+if [[ -z $WORK_DIR ]]; then
+  echo "error: argument --work-dir is required"
+  exit 1
+fi
+
+if [[ $WORK_DIR != gs://* ]]; then
+  echo "error: --work-dir must be a Google Cloud Storage path"
+  echo "       example: gs://your-bucket/cloudml-samples/molecules"
+  exit 1
+fi
+
+if [[ -z $PROJECT ]]; then
+  echo 'error: --project is required to run in Google Cloud Platform.'
+  exit 1
+fi
+
+# Wrapper function to print the command being run
+function run {
+  echo "$ $@"
+  "$@"
+}
+
+# Extract the data files
+echo '>> Extracting data'
+run python data-extractor.py \
+  --work-dir $WORK_DIR \
+  --max-data-files $MAX_DATA_FILES
+echo ''
+
+# Preprocess the datasets using Apache Beam's DataflowRunner
+echo '>> Preprocessing'
+run python preprocess.py \
+  --project $PROJECT \
+  --runner DataflowRunner \
+  --temp_location $WORK_DIR/beam-temp \
+  --setup_file ./setup.py \
+  --work-dir $WORK_DIR
+echo ''
+
+# Train and evaluate the model in Google Cloud ML Engine
+echo '>> Training'
+JOB="cloudml_samples_molecules_$(date +%Y%m%d_%H%M%S)"
+BUCKET=$(echo $WORK_DIR | egrep -o gs://[-_.a-zA-Z0-9]+)
+RUNTIME=1.8
+run gcloud ml-engine jobs submit training $JOB \
+  --module-name trainer.task \
+  --package-path trainer \
+  --staging-bucket $BUCKET \
+  --runtime-version $RUNTIME \
+  --stream-logs \
+  -- \
+  --work-dir $WORK_DIR
+echo ''
+
+# Get the model path
+EXPORT_DIR=$WORK_DIR/model/export/final
+MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
+echo "Model: $MODEL_DIR"
+echo ''
+
+# Make batch predictions on SDF files
+echo '>> Batch prediction'
+run python predict.py \
+  --work-dir $WORK_DIR \
+  --model-dir $MODEL_DIR \
+  batch \
+  --project $PROJECT \
+  --runner DataflowRunner \
+  --temp_location $WORK_DIR/beam-temp \
+  --setup_file ./setup.py \
+  --inputs-dir $WORK_DIR/data \
+  --outputs-dir $WORK_DIR/predictions
+
+# Display some predictions
+gsutil cat $WORK_DIR/predictions/* | head -n 10

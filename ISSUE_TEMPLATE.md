@@ -1,17 +1,17 @@
 For problems running the sample code please provide the following information.
 
 ### System information
-- **OS Platform and Distribution (e.g., Linux Ubuntu 16.04)**:
-- **TensorFlow version (use command below)**:
-- **Python version**:
-- **Exact command to reproduce**:
-- **Tensorflow Transform environment (if applicable, see below)**:
+- OS Platform and Distribution (e.g., Linux Ubuntu 16.04):
+- TensorFlow version (use command below):
+- Python version:
+- Exact command to reproduce:
+- Tensorflow Transform environment (if applicable, see below):
 
 To obtain the Tensorflow and Tensorflow Transform environment do
 
 ```
-pip freeze |grep tensorflow
-pip freeze |grep apache-beam
+pip freeze | grep tensorflow
+pip freeze | grep apache-beam
 ```
 
 ### Describe the problem

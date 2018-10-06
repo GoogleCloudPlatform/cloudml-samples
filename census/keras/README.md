@@ -17,8 +17,8 @@ on Google Cloud Storage in a slightly cleaned form:
 TRAIN_FILE=adult.data.csv
 EVAL_FILE=adult.test.csv
 
-GCS_TRAIN_FILE=gs://cloudml-public/census/data/adult.data.csv
-GCS_EVAL_FILE=gs://cloudml-public/census/data/adult.test.csv
+GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+GCS_EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 
 gsutil cp $GCS_TRAIN_FILE $TRAIN_FILE
 gsutil cp $GCS_EVAL_FILE $EVAL_FILE

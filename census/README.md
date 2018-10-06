@@ -39,8 +39,8 @@ warranty, or other guarantees about the validity or any other aspects of this da
 Please run the export and copy statements first:
 
 ```
-TRAIN_FILE=gs://cloudml-public/census/data/adult.data.csv
-EVAL_FILE=gs://cloudml-public/census/data/adult.test.csv
+TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 ```
 
 ### \*Optional\* Use local training files.
@@ -338,7 +338,7 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --data-format TEXT \
     --region us-central1 \
     --runtime-version 1.4 \
-    --input-paths gs://cloudml-public/testdata/prediction/census.json \
+    --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/census.json \
     --output-path $GCS_JOB_DIR/predictions
 ```
 
