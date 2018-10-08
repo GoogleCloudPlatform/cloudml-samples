@@ -6,6 +6,7 @@ For TPU training, we recommend users to use the sample from [Cloud TPU Demos](ht
 * [Tensorflow: ResNet](training/resnet) - Using the ResNet-50 dataset with Cloud TPUs on ML Engine.
 * [Tensorflow: HP Tuning - ResNet](hptuning/resent-hptuning) - How to run hyperparameter tuning jobs on Cloud Machine Learning Engine with Cloud TPUs using TensorFlow's tf.metrics.
 * [Tensorflow: Hypertune - ResNet](hptuning/resent-hypertune) - How to run hyperparameter tuning jobs on Cloud Machine Learning Engine with Cloud TPUs using the cloudml-hypertune package.
+* [Tensorflow: Templates](templates) - A collection of minimal templates that can be run on Compute Engine, Cloud Machine Learning, and Colab.
 
 If you’re looking for samples for how to use Cloud TPU, check out the guides here. 
 
