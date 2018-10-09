@@ -82,7 +82,7 @@ if __name__ == '__main__':
       '--train-files',
       help='GCS or local paths to training data',
       nargs='+',
-      required=True
+      default='gs://cloud-samples-data/ml-engine/census/data/adult.data.csv'
   )
   parser.add_argument(
       '--num-epochs',
@@ -110,7 +110,7 @@ if __name__ == '__main__':
       '--eval-files',
       help='GCS or local paths to evaluation data',
       nargs='+',
-      required=True
+      default='gs://cloud-samples-data/ml-engine/census/data/adult.test.csv'
   )
   # Training arguments
   parser.add_argument(
@@ -140,7 +140,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--job-dir',
       help='GCS location to write checkpoints and export models',
-      required=True
+      default='/tmp/census-estimator'
   )
 
   # Argument to turn on all logging
@@ -162,6 +162,7 @@ if __name__ == '__main__':
       Steps to run the training job for. If --num-epochs is not specified,
       this must be. Otherwise the training job will run indefinitely.\
       """,
+      default=100,
       type=int
   )
   parser.add_argument(
@@ -177,7 +178,7 @@ if __name__ == '__main__':
       default='JSON'
   )
 
-  args = parser.parse_args()
+  args, _ = parser.parse_known_args()
 
   # Set python level verbosity
   tf.logging.set_verbosity(args.verbosity)

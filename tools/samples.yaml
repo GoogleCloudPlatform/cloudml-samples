@@ -1,0 +1,12 @@
+census-estimator:
+  path:
+    census/estimator/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    import:
+      - trainer.
+    from_import:
+      - trainer.
