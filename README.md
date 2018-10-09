@@ -35,6 +35,7 @@ Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to acc
 * [Tensorflow: ResNet](tpu/training/resnet) - Using the ResNet-50 dataset with Cloud TPUs on ML Engine.
 * [Tensorflow: HP Tuning - ResNet](tpu/hptuning/resnet-hptuning) - How to run hyperparameter tuning jobs on Cloud Machine Learning Engine with Cloud TPUs using TensorFlow's tf.metrics.
 * [Tensorflow: Hypertune - ResNet](tpu/hptuning/resnet-hypertune) - How to run hyperparameter tuning jobs on Cloud Machine Learning Engine with Cloud TPUs using the cloudml-hypertune package.
+* [Tensorflow: Cloud TPU Templates](tpu/templates) - A collection of minimal templates that can be run on Cloud TPUs on Compute Engine, Cloud Machine Learning, and Colab.
 
 ### Hyperparameter Tuning (HP Tuning)
 Notebook Tutorial:
@@ -64,6 +65,7 @@ Code Guide:
 # Templates
 
 * [TensorFlow Estimator Trainer Package Template](cloudml-template) - When training a Tensorflow model, you have to create a trainer package, here we have a template that simplifies creating a trainer package for Cloud ML Engine.
+* [Tensorflow: Cloud TPU Templates](tpu/templates) - A collection of minimal templates that can be run on Cloud TPUs on Compute Engine, Cloud Machine Learning, and Colab.
 
 # Google Samples
 
