@@ -21,7 +21,7 @@ If you don’t see something for the task you’re trying to complete, please he
 
 Notebook Tutorial:
 * [scikit-learn: Random Forest Classifier](sklearn/notebooks/ml_engine_training.ipynb) - How to train a Random Forest Classifier in scikit-learn using a text based dataset, Census, to predict a person’s income level.
-* [XGBoost](xgboost/notebooks/XGBoost%20training%20with%20ML%20Engine.ipynb) - How to train an XGBoost model using a text based dataset, Census, to predict a person’s income level.
+* [XGBoost](xgboost/notebooks/xgboost-training-with-ml-engine.ipynb) - How to train an XGBoost model using a text based dataset, Census, to predict a person’s income level.
 
 Code Guide:
 * [Tensorflow: Linear Classifier with Stochastic Dual Coordinate Ascent (SDCA) optimizer / Deep Neural Network Classifier](criteo_tft) - How to train a Linear Classifier with SDCA and a DNN using a text (discrete feature) based dataset, Criteo, to predict how likely a person is to click on an advertisement.
