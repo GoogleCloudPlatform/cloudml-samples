@@ -40,6 +40,7 @@ Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to acc
 ### Hyperparameter Tuning (HP Tuning)
 Notebook Tutorial:
 * [scikit-learn: Lasso Regressor](sklearn/notebooks/hp_tuning_auto_mpg/ml_engine_hp_tuning_training.ipynb) - How to train a Lasso Regressor in scikit-learn using a text based dataset, auto mpg, to predict a car's miles per gallon.
+* [XGBoost: XGBRegressor](xgboost/notebooks/XGBoost&#32;Hyperparameter&#32;Tuning.ipynb) - How to train a Regressor in XGBoost using a text based dataset, auto mpg, to predict a car's miles per gallon.
 
 # Model Serving (Online Predictions)
 
