@@ -82,7 +82,7 @@ if __name__ == '__main__':
       '--train-files',
       help='GCS or local paths to training data',
       nargs='+',
-      default='gs://cloud-samples-data/ml-engine/census/data/adult.data.csv'
+      default=['gs://cloud-samples-data/ml-engine/census/data/adult.data.csv']
   )
   parser.add_argument(
       '--num-epochs',
@@ -110,7 +110,7 @@ if __name__ == '__main__':
       '--eval-files',
       help='GCS or local paths to evaluation data',
       nargs='+',
-      default='gs://cloud-samples-data/ml-engine/census/data/adult.test.csv'
+      default=['gs://cloud-samples-data/ml-engine/census/data/adult.test.csv']
   )
   # Training arguments
   parser.add_argument(
