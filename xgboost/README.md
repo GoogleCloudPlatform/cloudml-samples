@@ -1,7 +1,7 @@
 # XGBoost Samples
 
 ## Model Training with Cloud ML Engine
-* [XGBoost](notebooks/XGBoost%20training%20with%20ML%20Engine.ipynb) - How to train an XGBoost model using a text based dataset, Census, to predict a person’s income level.
+* [XGBoost](notebooks/xgboost-training-with-ml-engine.ipynb) - How to train an XGBoost model using a text based dataset, Census, to predict a person’s income level.
 
 ### Hyperparameter Tuning (HP Tuning)
 Notebook Tutorial:
