@@ -1,6 +1,6 @@
 import os
 import nbformat
-from nbformat.v4 import new_code_cell,new_notebook
+from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
 import re
 from redbaron import RedBaron
 import yaml
@@ -35,7 +35,7 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove={}):
         red = RedBaron(f.read())
 
     # detect whether the state has changed and thus need to flush the code up to that point before processing a node
-    sources = []
+    cells = []
     cell_source = [red[0].dumps()]
     prev_type = red[0].type
 
@@ -60,8 +60,16 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove={}):
 
         if should_concat(prev_type, cur_type):
             cell_source.append(cur_code)
+
         else:
-            sources.append('\n'.join(cell_source))
+            content = '\n'.join(cell_source)
+            if prev_type == 'comment':
+                cell = new_markdown_cell(content)
+
+            else:
+                cell = new_code_cell(content)
+
+            cells.append(cell)
             cell_source = [cur_code]
 
         prev_type = cur_type
@@ -76,18 +84,17 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove={}):
     for line in node_value:
         cell_source.append(line.dumps())
 
-    sources.append('\n'.join(cell_source))
-
-    # build cells and notebook
-    cells = [new_code_cell(source=source) for source in sources if source]
+    content = '\n'.join(cell_source)
+    cell = new_code_cell(content)
+    cells.append(cell)
 
     # git clone
     if git_clone:
         with open('git_clone.p', 'r') as f:
             template = f.read()
 
-        code = template.format(path=path)
-        cell = new_code_cell(source=code)
+        content = template.format(path=path)
+        cell = new_code_cell(content)
         cells.insert(0, cell)
 
     notebook = new_notebook(cells=cells)

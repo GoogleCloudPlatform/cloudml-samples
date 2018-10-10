@@ -10,3 +10,5 @@ census-estimator:
       - trainer.
     from_import:
       - trainer.
+    comment:
+      - "#"
