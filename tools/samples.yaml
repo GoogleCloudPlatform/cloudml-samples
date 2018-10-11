@@ -7,8 +7,20 @@ census-estimator:
     git-clone: True
   remove:
     import:
-      - trainer.
-    from_import:
-      - trainer.
+      - "trainer."
     comment:
       - "#"
+
+census-keras:
+  path:
+    census/keras/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    import:
+      - "trainer."
+    comment:
+      - "#"
+      - "==="

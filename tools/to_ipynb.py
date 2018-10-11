@@ -24,7 +24,8 @@ def should_concat(prev_type, cur_type):
 
     return result
 
-def py_to_ipynb(root, path, py_filename, git_clone=False, remove={}):
+
+def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
     py_filepath = os.path.join(root, path, py_filename)
     print('Converting {}'.format(py_filepath))
 
@@ -36,10 +37,10 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove={}):
 
     # detect whether the state has changed and thus need to flush the code up to that point before processing a node
     cells = []
-    cell_source = [red[0].dumps()]
-    prev_type = red[0].type
+    cell_source = []
+    prev_type = None
 
-    for node in red[1:]:
+    for node in red:
         cur_type = node.type
         cur_code = node.dumps()
 
@@ -57,6 +58,12 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove={}):
 
             for remove_str in remove_strs:
                 cur_code = re.sub(remove_str, '', cur_code)
+
+        # handle the first cell
+        if prev_type is None:
+            prev_type = cur_type
+            cell_source.append(cur_code)
+            continue
 
         if should_concat(prev_type, cur_type):
             cell_source.append(cur_code)
