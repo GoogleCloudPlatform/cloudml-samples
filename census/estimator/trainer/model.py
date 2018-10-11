@@ -254,7 +254,7 @@ def parse_csv(rows_string_tensor):
   return features
 
 
-def input_fn(filename,
+def input_fn(filenames,
              num_epochs=None,
              shuffle=True,
              skip_header_lines=0,
@@ -265,7 +265,7 @@ def input_fn(filename,
   to read data so that entire data is not loaded in memory.
 
   Args:
-      filename: (str) CSV file to read data from.
+      filenames: (str) A CSV file or files to read data from.
       num_epochs: (int) how many times through to read the data. If None will
         loop through data indefinitely
       shuffle: (bool) whether or not to randomize the order of data. Controls
@@ -278,7 +278,7 @@ def input_fn(filename,
       A (features, indices) tuple where features is a dictionary of
         Tensors, and indices is a single Tensor of label indices.
   """
-  dataset = tf.data.TextLineDataset(filename).skip(skip_header_lines)
+  dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines)
   dataset = dataset.map(parse_csv)
   if shuffle:
     dataset = dataset.shuffle(buffer_size=batch_size * 10)
