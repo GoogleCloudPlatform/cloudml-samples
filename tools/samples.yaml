@@ -11,6 +11,19 @@ census-estimator:
     comment:
       - "#"
 
+census-customestimator:
+  path:
+    census/customestimator/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    import:
+      - "trainer."
+    comment:
+      - "#"
+
 census-keras:
   path:
     census/keras/trainer
