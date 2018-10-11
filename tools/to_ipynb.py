@@ -1,7 +1,9 @@
 import os
-import nbformat
-from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
 import re
+import nbformat
+from nbformat.v4 import new_code_cell
+from nbformat.v4 import new_markdown_cell
+from nbformat.v4 import new_notebook
 from redbaron import RedBaron
 import yaml
 
@@ -11,29 +13,45 @@ with open('samples.yaml', 'r') as f:
 
 
 def should_concat(prev_type, cur_type):
+    """This function contains the logic deciding if the current node should be grouped with the previous node in the same notebook cell.
+
+    Args:
+    prev_type: (str) type of the previous node.
+    cur_type: (str) type of the current node.
+
+    Returns
+    A Boolean
+    """
     concat_types = ['comment', 'import', 'from_import', 'assignment']
     import_types = ['import', 'from_import']
 
-    result = False
-
     if prev_type == cur_type and cur_type in concat_types:
-        result = True
+        return True
 
     if prev_type in import_types and cur_type in import_types:
-        result = True
+        return True
 
-    return result
+    return False
 
 
 def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
+    """This function contains the logic deciding if the current node should be grouped with the previous node in the same notebook cell.
+
+    Args:
+    prev_type: (str) type of the previous node.
+    cur_type: (str) type of the current node.
+
+    Returns
+    A Boolean
+    """
     py_filepath = os.path.join(root, path, py_filename)
     print('Converting {}'.format(py_filepath))
 
     ipynb_filename = py_filename.split('.')[0] + '.ipynb'
     ipynb_filepath = os.path.join(root, path, ipynb_filename)
 
-    with open(py_filepath, 'r') as f:
-        red = RedBaron(f.read())
+    with open(py_filepath, 'r') as py_file:
+        red = RedBaron(py_file.read())
 
     # detect whether the state has changed and thus need to flush the code up to that point before processing a node
     cells = []
@@ -53,7 +71,7 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
             continue
 
         # remove
-        if cur_type in remove:
+        if remove is not None and cur_type in remove:
             remove_strs = remove[cur_type]
 
             for remove_str in remove_strs:
@@ -97,8 +115,8 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
 
     # git clone
     if git_clone:
-        with open('git_clone.p', 'r') as f:
-            template = f.read()
+        with open('git_clone.p', 'r') as template_file:
+            template = template_file.read()
 
         content = template.format(path=path)
         cell = new_code_cell(content)
@@ -107,9 +125,9 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
     notebook = new_notebook(cells=cells)
 
     # output
-    with open(ipynb_filepath, 'w') as f:
+    with open(ipynb_filepath, 'w') as ipynb_file:
         print("Writing: {}".format(ipynb_filepath))
-        nbformat.write(notebook, f)
+        nbformat.write(notebook, ipynb_file)
 
 
 for sample, info in samples.iteritems():
