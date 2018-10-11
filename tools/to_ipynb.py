@@ -35,14 +35,18 @@ def should_concat(prev_type, cur_type):
 
 
 def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
-    """This function contains the logic deciding if the current node should be grouped with the previous node in the same notebook cell.
+    """This function converts the .py file at <root>/<path>/<py_filename> into a .ipynb of the same name in <root>/<path>.
+
+    - Consecutive comments are grouped into the same cell.
+    - Comments are turned into markdown cells.
+    - The last part of the .py file is expected to be the `if __name__ == '__main__':` block.
 
     Args:
-    prev_type: (str) type of the previous node.
-    cur_type: (str) type of the current node.
+    git_clone: (bool) Include the Colab-specific git_clone cell.
+    remove: (None or dict) A Dict describing what code to be removed according to specified node type.
 
     Returns
-    A Boolean
+    None
     """
     py_filepath = os.path.join(root, path, py_filename)
     print('Converting {}'.format(py_filepath))
