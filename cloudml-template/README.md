@@ -16,20 +16,20 @@ Although the template provides standard implementation to different functionalit
 
 1. **[template](template)**: The directory includes: 
     1) trainer template with all the python modules to adapt to your data.
-    2) setup.py.
-    3) config.yaml file for hyper-parameter tuning and specifying the Cloud ML Engine scale-tier.
-    4) inference.py python (sample) script to perform prediction using a deployed model's API on Cloud ML Engine.
+    2) ```setup.py```.
+    3) ```config.yaml``` file for hyper-parameter tuning and specifying the Cloud ML Engine scale-tier.
+    4) ```inference.py``` python (sample) script to perform prediction using a deployed model's API on Cloud ML Engine.
 
 2. **[scripts](scripts)**: The directory includes command-line scripts to:
-    1) train the model locally.
-    2) train the model on Cloud ML Engine. 
-    3) deploy the model on GCP as well as to make prediction (inference) using the deployed model.
+    1) Train the model locally.
+    2) Train the model on Cloud ML Engine. 
+    3) Deploy the model on GCP as well as to make prediction (inference) using the deployed model.
 
 3. **[examples](examples)**: Currently four different examples are included: 
-    1. classification, using the [Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) (UCI Machine Learning Repository) dataset. 
-    2. regression, using the [House Pricing](https://www.kaggle.com/apratim87/housingdata/data) (Kaggle) dataset.
-    3. regression, with a custom estimator, using [Natality Baby Weight](https://catalog.data.gov/dataset?tags=birth-weight) (data.gov) dataset.
-    4. classification, with a custom estimator, using [Statlog (German Credit Data)](https://archive.ics.uci.edu/ml/datasets/Statlog+%28German+Credit+Data%29) (UCI Machine Learning Repository) dataset.
+    1. Classification, using the [Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) (UCI Machine Learning Repository) dataset. 
+    2. Regression, using the [House Pricing](https://www.kaggle.com/apratim87/housingdata/data) (Kaggle) dataset.
+    3. Regression, with a custom estimator, using [Natality Baby Weight](https://catalog.data.gov/dataset?tags=birth-weight) (data.gov) dataset.
+    4. Classification, with a custom estimator, using [Statlog (German Credit Data)](https://archive.ics.uci.edu/ml/datasets/Statlog+%28German+Credit+Data%29) (UCI Machine Learning Repository) dataset.
 
 
 The examples show how the template is adapted given a dataset. The datasets are found in the examples' folders (under "data" sub-directory).
