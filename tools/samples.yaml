@@ -1,3 +1,11 @@
+sample:
+  path:
+    tools
+  filename:
+    sample.py
+  colab:
+    git-clone: False
+
 census-estimator:
   path:
     census/estimator/trainer
@@ -6,10 +14,8 @@ census-estimator:
   colab:
     git-clone: True
   remove:
-    import:
+    Import:
       - "trainer."
-    comment:
-      - "#"
 
 census-customestimator:
   path:
@@ -21,8 +27,6 @@ census-customestimator:
   remove:
     import:
       - "trainer."
-    comment:
-      - "#"
 
 census-keras:
   path:
@@ -34,6 +38,3 @@ census-keras:
   remove:
     import:
       - "trainer."
-    comment:
-      - "#"
-      - "==="
