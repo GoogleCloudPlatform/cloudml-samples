@@ -173,8 +173,16 @@ python -m trainer.task \
 
 Running time varies depending on your machine. Typically the linear model takes
 at least 2 hours to train, and the deep model more than 8 hours. You can use
-[Tensorboard](https://www.tensorflow.org/how_tos/summaries_and_tensorboard/) to
+[Tensorboard](https://www.tensorflow.org/how_tos/summaries_and_tensorboard/), which comes installed with TensorFlow, to
 follow the job's progress.
+
+#### How to run Tensorboard
+
+You can run Tensorboard using the command
+
+```
+tensorboard --logdir=$TRAINING_OUTPUT_PATH
+```
 
 ### Cloud Run for the Small Dataset
 
