@@ -5,6 +5,9 @@ sample:
     sample.py
   colab:
     git-clone: False
+  remove:
+    ImportFrom:
+      - "module."
 
 census-estimator:
   path:
@@ -25,7 +28,7 @@ census-customestimator:
   colab:
     git-clone: True
   remove:
-    import:
+    Import:
       - "trainer."
 
 census-keras:
@@ -36,5 +39,5 @@ census-keras:
   colab:
     git-clone: True
   remove:
-    import:
+    Import:
       - "trainer."

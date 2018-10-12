@@ -23,7 +23,9 @@ import os
 
 # Consecutive imports are grouped into a cell.
 # Comments cause a new cell to be created, but blank lines between imports are ignored.
-from sample_helpers import (
+
+# This next import should say `from helpers import ...` even if its source says `from module.helpers import ...`
+from module.helpers import (
     some_function)
 
 import yyy
