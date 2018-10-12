@@ -109,7 +109,7 @@ def dispatch(train_files,
       monitor='val_loss',
       verbose=1,
       period=checkpoint_epochs,
-      mode='max')
+      mode='min')
 
   # Continuous eval callback
   evaluation = ContinuousEval(eval_frequency,
