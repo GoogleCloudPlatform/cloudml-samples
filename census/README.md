@@ -310,7 +310,8 @@ gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --ru
 TensorFlow ships with a CLI that allows you to inspect the signature of exported binary files. To do this run:
 
 ```
-saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def predict
+SIGNATURE_DEF_KEY=`saved_model_cli show --dir $MODEL_BINARIES --tag serve | grep "SignatureDef key:" | awk 'BEGIN{FS="\""}{print $2}' | head -1`
+saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def $SIGNATURE_DEF_KEY
 ```
 
 ### Run Online Predictions
