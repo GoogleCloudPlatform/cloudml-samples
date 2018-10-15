@@ -59,8 +59,14 @@ UNUSED_COLUMNS = set(CSV_COLUMNS) - set(
 def model_fn(input_dim,
              labels_dim,
              hidden_units=[100, 70, 50, 20],
-             learning_rate=0.001):
-  """Create a Keras Sequential model with layers."""
+             learning_rate=0.1):
+  """Create a Keras Sequential model with layers.
+
+  "set_learning_phase" to False. 
+  Otherwise tensorflow serving raise the following error:
+    AbortionError(code=StatusCode.INVALID_ARGUMENT during online prediction.
+  """
+  K.set_learning_phase(False)
   model = models.Sequential()
 
   for units in hidden_units:
