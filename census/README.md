@@ -21,6 +21,18 @@ distiction:
 
 All the models provided in this directory can be run on the Cloud Machine Learning Engine. To follow along, check out the setup instruction [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
 
+## Notebooks
+
+You can also try the samples in notebooks:
+
+* [Estimator](estimator/trainer/task.ipynb) (open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/estimator/trainer/task.ipynb))
+
+* [Custom Estimator](customestimator/trainer/task.ipynb) (open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/customestimator/trainer/task.ipynb))
+
+* [Keras](keras/trainer/task.ipynb) (open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/keras/trainer/task.ipynb))
+
+* [TensorFlow Core](tensorflowcore/trainer/task.ipynb) (open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/tensorflowcore/trainer/task.ipynb))
+
 ## Download the data
 The [Census Income Data
 Set](https://archive.ics.uci.edu/ml/datasets/Census+Income) that this sample
