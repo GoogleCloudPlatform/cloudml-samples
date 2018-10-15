@@ -1,0 +1,15 @@
+.idea/
+examples/census-classification/trained_models/
+examples/housing-regression/trained_models/
+examples/babyweight-custom/trained_models/
+examples/german-custom/trained_models/
+
+template/__pycache__
+examples/babyweight-custom/trainer/__pycache__/
+examples/german-custom/trainer/__pycache__/
+examples/census-classification/trainer/__pycache__/
+examples/housing-regression/trainer/__pycache__/
+.DS_Store
+
+venv/
+*pyc

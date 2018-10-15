@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 
 import trainer.model as model
@@ -7,6 +8,25 @@ import tensorflow as tf
 from tensorflow.contrib.learn.python.learn.utils import (
     saved_model_export_utils)
 from tensorflow.contrib.training.python.training import hparam
+
+def _get_session_config_from_env_var():
+  """Returns a tf.ConfigProto instance that has appropriate device_filters set.
+  """
+
+  tf_config = json.loads(os.environ.get('TF_CONFIG', '{}'))
+
+  if (tf_config and 'task' in tf_config and 'type' in tf_config['task'] and
+      'index' in tf_config['task']):
+    # Master should only communicate with itself and ps
+    if tf_config['task']['type'] == 'master':
+      return tf.ConfigProto(device_filters=['/job:ps', '/job:master'])
+    # Worker should only communicate with itself and ps
+    elif tf_config['task']['type'] == 'worker':
+      return tf.ConfigProto(device_filters=[
+          '/job:ps',
+          '/job:worker/task:%d' % tf_config['task']['index']
+      ])
+  return None
 
 
 def run_experiment(hparams):
@@ -37,12 +57,12 @@ def run_experiment(hparams):
                                     name='census-eval'
                                     )
 
-  run_config = tf.estimator.RunConfig()
+  run_config = tf.estimator.RunConfig(session_config=_get_session_config_from_env_var())
   run_config = run_config.replace(model_dir=hparams.job_dir)
   print('model dir {}'.format(run_config.model_dir))
   estimator = model.build_estimator(
       embedding_size=hparams.embedding_size,
-      # Construct layers sizes with exponetial decay
+      # Construct layers sizes with exponential decay
       hidden_units=[
           max(2, int(hparams.first_layer_size *
                      hparams.scale_factor**i))

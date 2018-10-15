@@ -17,8 +17,12 @@ pip install --upgrade pip
 # Install test requirements
 pip install --upgrade -r $CMLE_REQUIREMENTS_FILE
 
+export GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_GFILE_DIR}/${CMLE_KEYFILE}"
+
 gcloud auth activate-service-account --key-file "${KOKORO_GFILE_DIR}/${CMLE_KEYFILE}"
 gcloud config set project $CMLE_PROJECT_ID
 gcloud config set compute/region $CMLE_REGION
+gcloud config list
+
 
 bash $CMLE_TEST_SCRIPT

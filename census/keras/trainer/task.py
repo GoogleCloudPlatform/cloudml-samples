@@ -22,8 +22,8 @@ import os
 
 import trainer.model as model
 
+from keras.callbacks import TensorBoard, Callback, ModelCheckpoint
 from keras.models import load_model
-import model
 from tensorflow.python.lib.io import file_io
 
 INPUT_SIZE = 55
@@ -35,7 +35,7 @@ CHUNK_SIZE = 5000
 FILE_PATH = 'checkpoint.{epoch:02d}.hdf5'
 CENSUS_MODEL = 'census.hdf5'
 
-class ContinuousEval(keras.callbacks.Callback):
+class ContinuousEval(Callback):
   """Continuous eval callback to evaluate the checkpoint once
      every so many epochs.
   """
@@ -68,12 +68,12 @@ class ContinuousEval(keras.callbacks.Callback):
         loss, acc = census_model.evaluate_generator(
             model.generator_input(self.eval_files, chunk_size=CHUNK_SIZE),
             steps=self.steps)
-        print '\nEvaluation epoch[{}] metrics[{:.2f}, {:.2f}] {}'.format(
-            epoch, loss, acc, census_model.metrics_names)
+        print('\nEvaluation epoch[{}] metrics[{:.2f}, {:.2f}] {}'.format(
+            epoch, loss, acc, census_model.metrics_names))
         if self.job_dir.startswith("gs://"):
           copy_file_to_gcs(self.job_dir, checkpoints[-1])
       else:
-        print '\nEvaluation epoch[{}] (no checkpoints found)'.format(epoch)
+        print('\nEvaluation epoch[{}] (no checkpoints found)'.format(epoch))
 
 def dispatch(train_files,
              eval_files,
@@ -104,12 +104,12 @@ def dispatch(train_files,
     checkpoint_path = os.path.join(job_dir, checkpoint_path)
 
   # Model checkpoint callback
-  checkpoint = keras.callbacks.ModelCheckpoint(
+  checkpoint = ModelCheckpoint(
       checkpoint_path,
       monitor='val_loss',
       verbose=1,
       period=checkpoint_epochs,
-      mode='max')
+      mode='min')
 
   # Continuous eval callback
   evaluation = ContinuousEval(eval_frequency,
@@ -118,7 +118,7 @@ def dispatch(train_files,
                               job_dir)
 
   # Tensorboard logs callback
-  tblog = keras.callbacks.TensorBoard(
+  tblog = TensorBoard(
       log_dir=os.path.join(job_dir, 'logs'),
       histogram_freq=0,
       write_graph=True,
@@ -145,7 +145,7 @@ def dispatch(train_files,
 
 # h5py workaround: copy local models over to GCS if the job_dir is GCS.
 def copy_file_to_gcs(job_dir, file_path):
-  with file_io.FileIO(file_path, mode='r') as input_f:
+  with file_io.FileIO(file_path, mode='rb') as input_f:
     with file_io.FileIO(os.path.join(job_dir, file_path), mode='w+') as output_f:
         output_f.write(input_f.read())
 

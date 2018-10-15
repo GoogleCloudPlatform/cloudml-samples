@@ -15,23 +15,21 @@
 
 """Implements the Keras Sequential model."""
 
-import itertools
-
 import keras
 import pandas as pd
 from keras import backend as K
 from keras import layers, models
 from keras.utils import np_utils
-from keras.backend import relu, sigmoid
+from keras.backend import relu
 
-from urlparse import urlparse
+#Python2/3 compatibility imports
+from six.moves.urllib import parse as urlparse
+from builtins import range
 
 import tensorflow as tf
 from tensorflow.python.saved_model import builder as saved_model_builder
-from tensorflow.python.saved_model import utils
 from tensorflow.python.saved_model import tag_constants, signature_constants
-from tensorflow.python.saved_model.signature_def_utils_impl import build_signature_def, predict_signature_def
-from tensorflow.contrib.session_bundle import exporter
+from tensorflow.python.saved_model.signature_def_utils_impl import predict_signature_def
 
 # csv columns in the input file
 CSV_COLUMNS = ('age', 'workclass', 'fnlwgt', 'education', 'education_num',
@@ -55,7 +53,7 @@ LABELS = [' <=50K', ' >50K']
 LABEL_COLUMN = 'income_bracket'
 
 UNUSED_COLUMNS = set(CSV_COLUMNS) - set(
-    zip(*CATEGORICAL_COLS)[0] + CONTINUOUS_COLS + (LABEL_COLUMN,))
+    list(zip(*CATEGORICAL_COLS))[0] + CONTINUOUS_COLS + (LABEL_COLUMN,))
 
 
 def model_fn(input_dim,
@@ -63,10 +61,11 @@ def model_fn(input_dim,
              hidden_units=[100, 70, 50, 20],
              learning_rate=0.1):
   """Create a Keras Sequential model with layers.
-     set_learning_phase set to false - taken from the keras blog, otherwise 
-     tensorflow serving raise the following error:
-     AbortionError(code=StatusCode.INVALID_ARGUMENT during online prediction
-     all new operations will be in test mode from now on."""
+
+  "set_learning_phase" to False. 
+  Otherwise tensorflow serving raise the following error:
+    AbortionError(code=StatusCode.INVALID_ARGUMENT during online prediction.
+  """
   K.set_learning_phase(False)
   model = models.Sequential()
 
@@ -77,13 +76,13 @@ def model_fn(input_dim,
     input_dim = units
 
   # Add a dense final layer with sigmoid function
-  model.add(layers.Dense(labels_dim, activation=sigmoid))
+  model.add(layers.Dense(labels_dim, activation='sigmoid'))
   compile_model(model, learning_rate)
   return model
 
 def compile_model(model, learning_rate):
   model.compile(loss='categorical_crossentropy',
-                optimizer=keras.optimizers.SGD(lr=learning_rate),
+                optimizer=keras.optimizers.RMSprop(lr=learning_rate),
                 metrics=['accuracy'])
   return model
 
@@ -104,8 +103,7 @@ def to_savedmodel(model, export_path):
     )
     builder.save()
 
-
-def to_numeric_features(features):
+def to_numeric_features(features,feature_cols=None):
   """Convert the pandas input features to numeric values.
      Args:
         features: Input features in the data
@@ -123,6 +121,11 @@ def to_numeric_features(features):
           capital_loss (continuous)
           hours_per_week (continuous)
           native_country (categorical)
+
+        feature_cols: Column list of converted features to be returned.
+            Optional, may be used to ensure schema consistency over multiple executions.
+
+
   """
 
   for col in CATEGORICAL_COLS:
@@ -133,21 +136,34 @@ def to_numeric_features(features):
   for col in UNUSED_COLUMNS:
     features.pop(col)
 
+  #Re-index dataframe (in case categories list changed from the previous dataset)
+  if feature_cols is not None:
+      features = features.T.reindex(feature_cols).T.fillna(0)
+
   return features
 
-def generator_input(input_file, chunk_size):
+def generator_input(input_file, chunk_size, batch_size=64):
   """Generator function to produce features and labels
      needed by keras fit_generator.
   """
-  input_reader = pd.read_csv(tf.gfile.Open(input_file[0]),
-                           names=CSV_COLUMNS,
-                           chunksize=chunk_size,
-                           na_values=" ?")
 
-  for input_data in input_reader:
-    input_data = input_data.dropna()
-    label = pd.get_dummies(input_data.pop(LABEL_COLUMN))
+  feature_cols=None
+  while True:
+      input_reader = pd.read_csv(tf.gfile.Open(input_file[0]),
+                               names=CSV_COLUMNS,
+                               chunksize=chunk_size,
+                               na_values=" ?")
 
-    input_data = to_numeric_features(input_data)
-    n_rows = input_data.shape[0]
-    return ( (input_data.iloc[[index % n_rows]], label.iloc[[index % n_rows]]) for index in itertools.count() )
+      for input_data in input_reader:
+        input_data = input_data.dropna()
+        label = pd.get_dummies(input_data.pop(LABEL_COLUMN))
+
+        input_data = to_numeric_features(input_data,feature_cols)
+
+        #Retains schema for next chunk processing
+        if feature_cols is None:
+            feature_cols=input_data.columns
+
+        idx_len=input_data.shape[0]
+        for index in range(0,idx_len,batch_size):
+            yield (input_data.iloc[index:min(idx_len,index+batch_size)], label.iloc[index:min(idx_len,index+batch_size)])

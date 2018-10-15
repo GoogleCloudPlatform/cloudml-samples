@@ -1,0 +1,4 @@
+pip==9.0.1
+apache-beam[gcp]==2.2.0
+tensorflow>=1.4, <1.5
+tensorflow-transform>=0.4, <0.5

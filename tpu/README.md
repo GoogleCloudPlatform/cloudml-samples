@@ -1,48 +1,19 @@
-If you want to try TPU on Cloud ML Engine, please contact
-`cloudml-feedback@google.com`
+Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to accelerate machine-learning workloads. You can run your training jobs on Cloud Machine Learning Engine, using Cloud TPU. Cloud ML Engine provides a job management interface so that you don't need to manage the TPU yourself. Instead, you can use the Cloud ML Engine jobs API in the same way as you use it for training on a CPU or a GPU.
 
-For TPU training, we recommend users to use the sample from [Cloud TPU Demos](
-https://github.com/tensorflow/tpu-demos).
+For TPU training, we recommend users to use the sample from [Cloud TPU Demos](https://github.com/tensorflow/tpu). And you can follow the [doc](https://cloud.google.com/ml-engine/docs/tensorflow/using-tpus) to get started with TPU training on CloudML Engine.
 
+## Samples:
+* [Tensorflow: ResNet](training/resnet) - Using the ResNet-50 dataset with Cloud TPUs on ML Engine.
+* [Tensorflow: HP Tuning - ResNet](hptuning/resent-hptuning) - How to run hyperparameter tuning jobs on Cloud Machine Learning Engine with Cloud TPUs using TensorFlow's tf.metrics.
+* [Tensorflow: Hypertune - ResNet](hptuning/resent-hypertune) - How to run hyperparameter tuning jobs on Cloud Machine Learning Engine with Cloud TPUs using the cloudml-hypertune package.
+* [Tensorflow: Templates](templates) - A collection of minimal templates that can be run on Cloud TPUs on Compute Engine, Cloud Machine Learning, and Colab.
 
-Take the resnet garden model as example, to train this model,
-follow the training quickstart [here](https://cloud.google.com/ml/docs/quickstarts/training).
-The only difference is that you should download the sample zip file from
-[Cloud TPU github repository](
-https://github.com/tensorflow/tpu-demos).
+If you’re looking for samples for how to use Cloud TPU, check out the guides here. 
 
-After downloading and extracting the Cloud TPU samples, navigate to
-the tpu sample directory:
-
-```
-cd tpu-demos-master/cloud_tpu/models/
-```
-
-Then, create the config file:
-
-```
-cat > config.yaml << EOF
-trainingInput:
-  scaleTier: CUSTOM
-  masterType: standard
-  workerType: standard_tpu
-  workerCount: 1
-EOF
-```
-
-And you can simply run the gcloud command to submit a TPU training job:
-
-```
-gcloud ml-engine jobs submit training $JOB_NAME \
-  --config config.yaml \
-  --job-dir $OUTPUT_PATH \
-  --runtime-version HEAD \
-  --module-name resnet_garden.resnet_main \
-  --package-path resnet_garden/ \
-  --region $REGION \
-  -- \
-  --data_dir=gs://cloudtpu-imagenet-data/train \
-  --model_dir=$OUTPUT_PATH \
-  --train_steps=5000
-
-```
+Note: These guides do not use ML Engine
+* [MNIST on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/mnist)
+* [ResNet-50 on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/resnet)
+* [Inception on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/inception)
+* [Advanced Inception v3 on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/inception-v3-advanced)
+* [RetinaNet on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/retinanet)
+* [Transformer with Tensor2Tensor on Cloud TPU](https://cloud.google.com/tpu/docs/tutorials/transformer)

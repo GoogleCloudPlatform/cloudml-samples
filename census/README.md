@@ -32,15 +32,15 @@ on Google Cloud Storage in a slightly cleaned form:
  * Evaluation file is `adult.test.csv`
 
 ### Disclaimer
-The source of this dataset is from a third party. Google provides no representation,
+This dataset is provided by a third party. Google provides no representation,
 warranty, or other guarantees about the validity or any other aspects of this dataset.
 
 ### Set Environment Variables
 Please run the export and copy statements first:
 
 ```
-TRAIN_FILE=gs://cloudml-public/census/data/adult.data.csv
-EVAL_FILE=gs://cloudml-public/census/data/adult.test.csv
+TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 ```
 
 ### \*Optional\* Use local training files.
@@ -310,7 +310,8 @@ gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --ru
 TensorFlow ships with a CLI that allows you to inspect the signature of exported binary files. To do this run:
 
 ```
-saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def predict
+SIGNATURE_DEF_KEY=`saved_model_cli show --dir $MODEL_BINARIES --tag serve | grep "SignatureDef key:" | awk 'BEGIN{FS="\""}{print $2}' | head -1`
+saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def $SIGNATURE_DEF_KEY
 ```
 
 ### Run Online Predictions
@@ -338,7 +339,7 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --data-format TEXT \
     --region us-central1 \
     --runtime-version 1.4 \
-    --input-paths gs://cloudml-public/testdata/prediction/census.json \
+    --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/census.json \
     --output-path $GCS_JOB_DIR/predictions
 ```
 
