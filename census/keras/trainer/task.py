@@ -152,17 +152,17 @@ def copy_file_to_gcs(job_dir, file_path):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument('--train-files',
-                      required=True,
                       type=str,
-                      help='Training files local or GCS', nargs='+')
+                      help='Training files local or GCS', nargs='+',
+                      default=['gs://cloud-samples-data/ml-engine/census/data/adult.data.csv'])
   parser.add_argument('--eval-files',
-                      required=True,
                       type=str,
-                      help='Evaluation files local or GCS', nargs='+')
+                      help='Evaluation files local or GCS', nargs='+',
+                      default=['gs://cloud-samples-data/ml-engine/census/data/adult.test.csv'])
   parser.add_argument('--job-dir',
-                      required=True,
                       type=str,
-                      help='GCS or local dir to write checkpoints and export model')
+                      help='GCS or local dir to write checkpoints and export model',
+                      default='/tmp/census-keras')
   parser.add_argument('--train-steps',
                       type=int,
                       default=100,
