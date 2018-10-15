@@ -1,4 +1,8 @@
-# Text classification with Movie Reviews
+# IMDB Text Classification
+
+Binary classification
+
+- - -
 
 This is an example of binary or two-class classification, an important and
 widely applicable kind of machine learning problem. This sample code is
@@ -34,8 +38,8 @@ The basic project structure will look something like this:
 └── trainer
     ├── __init__.py
     ├── model.py
-    ├── task.py
-    └── utils.py
+    └── task.py
+     
 ```
 
 ### (Prerequisite) Set up and test your GCP environment
@@ -142,35 +146,37 @@ cryptic error message: ``shell ERROR: (gcloud.ml-engine.jobs.submit.training)
 
 ## Run the model locally
 
-You can run the Keras code locally.
+Run the code on your local machine:
 
 Define variables
 
 ```
-export BUCKET_NAME=your-bucket-name
-export JOB_NAME="imbd_keras_$(date +%Y%m%d_%H%M%S)"
-export OUTPUT_DIR=gs://$BUCKET_NAME/$JOB_NAME
-export REGION=us-central1
+IMDB_DATA=data
+mkdir $IMDB_DATA
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_DIR=imdb_$DATE
+rm -rf $JOB_DIR
 ```
 
 Run the model with python (local)
-
+                       
 ```
-python -m trainer.task --train-file=data/imdb.npz \
-                       --word-index-file=data/imdb_word_index.json \
-                       --output_dir=/tmp/
+python -m trainer.task --train-file=$IMDB_DATA/imdb.npz \
+                       --word-index-file=$IMDB_DATA/imdb_word_index.json \
+                       --job-dir=$JOB_DIR
 ```
 
 ## Training using gcloud local
 
-You can run Keras training using gcloud locally.
+Run the code on your local machine using `gcloud`. This allows you to "mock"
+running it on the Google Cloud:
 
 Define variables*
 
 ```
-export BUCKET_NAME=your-bucket-name
-export JOB_NAME="imbd_keras_$(date +%Y%m%d_%H%M%S)"
-export OUTPUT_DIR=gs://$BUCKET_NAME/$JOB_NAME
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_DIR=imdb_$DATE
+rm -rf $JOB_DIR
 export REGION=us-central1
 export GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
 export GCS_WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
@@ -179,27 +185,26 @@ export GCS_WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_inde
 You can run Keras training using gcloud locally.
 
 ```
-gcloud ml-engine local train
-                --module-name=trainer.task
-                --package-path=trainer/
-                --
-                --train-file=$GCS_TRAIN_FILE
-                --word-index-file=$GCS_WORD_INDEX_FILE
-                --output_dir=$OUTPUT_DIR
+gcloud ml-engine local train --module-name=trainer.task \
+                --package-path=trainer/ \
+                -- \
+                --train-file=$GCS_TRAIN_FILE \
+                --word-index-file=$GCS_WORD_INDEX_FILE \
+                --job-dir=$JOB_DIR
 ```
 
 *Feel free to modify the destination file for in utils.py
 
 ## Training using Cloud ML Engine
 
-You can train the model on Cloud ML Engine
-
-Define variables
+Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
+before `--` while training on the cloud and this is so that we can have
+different trial runs during Hyperparameter tuning.
 
 ```
-export BUCKET_NAME=your-bucket-name
+export BUCKET_NAME=your-bucket-name-without-gcs-prefix
 export JOB_NAME="imbd_keras_$(date +%Y%m%d_%H%M%S)"
-export OUTPUT_DIR=gs://$BUCKET_NAME/$JOB_NAME
+export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
 export GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
 export GCS_WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
@@ -208,17 +213,16 @@ export GCS_WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_inde
 You can train the model on Cloud ML Engine
 
 ```
-gcloud ml-engine jobs submit training $JOB_NAME
-                --stream-logs
-                --runtime-version 1.10
-                --job-dir=$OUTPUT_DIR
-                --package-path=trainer
-                --module-name trainer.task
-                --region $REGION
-                --
-                --train-file $GCS_TRAIN_FILE
-                --word-index-file $GCS_WORD_INDEX_FILE
-                --output_dir=$OUTPUT_DIR
+gcloud ml-engine jobs submit training $JOB_NAME \
+                --stream-logs \
+                --runtime-version 1.10 \
+                --job-dir=$JOB_DIR \
+                --package-path=trainer \
+                --module-name trainer.task \
+                --region $REGION \
+                -- \
+                --train-file $GCS_TRAIN_FILE \
+                --word-index-file $GCS_WORD_INDEX_FILE             
 ```
 
 ## Monitor training with TensorBoard
@@ -226,5 +230,5 @@ gcloud ml-engine jobs submit training $JOB_NAME
 If Tensorboard appears blank, try refreshing after 10 minutes.
 
 ```
-tensorboard --logdir=$OUTPUT_DIR
+tensorboard --logdir=$JOB_DIR
 ```
