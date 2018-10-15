@@ -77,13 +77,8 @@ def get_boundary(node):
 def process_between(group):
     """Process lines between nodes, that is, comments."""
 
-    # Hack to remove dangling lines from imports.
-    try:
-        ast.parse('\n'.join(group))
-    except:
-        return []
-
-    group = [line for line in group if line.strip()]
+    # Keep only comments
+    group = [line for line in group if line.strip().startswith('#')]
     group = [re.sub(r'^#', '', line) for line in group]
     group = [re.sub(r'===', '', line) for line in group]
 
@@ -100,8 +95,9 @@ def process_node(group, cur_type, remove=None):
 
     for line in group:
         for remove_str in remove_strs:
-            line = re.sub(remove_str, '', line)
-            result.append(line)
+            line = re.sub(remove_str, '', line).strip()
+            if line:
+                result.append(line)
 
     return result
 
@@ -154,8 +150,10 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
         top, bottom = get_boundary(node)
 
         # special handling for dangling lines
-        if cur_type in ['Import', 'ImportFrom']:
-            cur_group = process_node([astor.to_source(node).strip()], cur_type, remove)
+        if cur_type in ['Import', 'ImportFrom', 'Expr']:
+            # print(astor.to_source(node))
+            code_lines = astor.to_source(node).strip().split('\n')
+            cur_group = process_node(code_lines, cur_type, remove)
         else:
             cur_group = process_node(lines[top:bottom], cur_type, remove)
 
@@ -188,8 +186,9 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
         start = bottom
 
     # handle last cell
-    # Skipping the line `if __name__ == '__main__':`
-    cell_source = [line.strip() for line in cell_source][1:]
+    # Skipping the line `if __name__ == '__main__':` and removing indentation
+    indent = node.body[0].col_offset
+    cell_source = [line[indent:] for line in cell_source][1:]
     cells.append(code_cell(cell_source))
 
     # git clone
@@ -199,7 +198,9 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
 
         content = template.format(path=path)
         cell = new_code_cell(content)
-        cells.insert(0, cell)
+
+        # The 0-th cell should be the license.
+        cells.insert(1, cell)
 
     notebook = new_notebook(cells=cells)
 
@@ -207,22 +208,22 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
     with open(ipynb_filepath, 'w') as ipynb_file:
         nbformat.write(notebook, ipynb_file)
 
+if __name__ == '__main__':
+    for sample, info in samples.iteritems():
+        root = '..'
+        path = info['path']
+        filename = info['filename']
+        git_clone = info['colab']['git-clone']
+        remove = info.get('remove', None)
 
-for sample, info in samples.iteritems():
-    root = '..'
-    path = info['path']
-    filename = info['filename']
-    git_clone = info['colab']['git-clone']
-    remove = info.get('remove', None)
-
-    py_to_ipynb(root, path, filename, git_clone=git_clone, remove=remove)
+        py_to_ipynb(root, path, filename, git_clone=git_clone, remove=remove)
 
 
-# Testing, make sure sample.py has the same output.
-with open('sample.ipynb', 'r') as f:
-    sample_ipynb = f.read()
+    # Testing, make sure sample.py has the same output.
+    with open('sample.ipynb', 'r') as f:
+        sample_ipynb = f.read()
 
-with open('frozen_sample.ipynb', 'r') as f:
-    frozen_sample_ipynb = f.read()
+    with open('frozen_sample.ipynb', 'r') as f:
+        frozen_sample_ipynb = f.read()
 
-assert sample_ipynb == frozen_sample_ipynb, "The sample.ipynb is different."
+    assert sample_ipynb == frozen_sample_ipynb, "The sample.ipynb is different."

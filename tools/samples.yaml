@@ -41,3 +41,15 @@ census-keras:
   remove:
     Import:
       - "trainer."
+
+census-tensorflowcore:
+  path:
+    census/tensorflowcore/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    Import:
+      - "trainer."
+

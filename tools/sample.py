@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Multiline docstrings should
+work but could be problematic.
+"""
+
+# This is safer.
+
 """Sample of what to_ipynb.py does"""
 
 # Consecutive Comments are grouped into the same markdown cell.
@@ -19,12 +25,14 @@
 
 # *It is okay to use [markdown](https://www.google.com/search?q=markdown).*
 
+import argparse
 import os
 
 # Consecutive imports are grouped into a cell.
 # Comments cause a new cell to be created, but blank lines between imports are ignored.
 
 # This next import should say `from helpers import ...` even if its source says `from module.helpers import ...`
+# Code manipulation is registered in `samples.yaml`.
 from module.helpers import (
     some_function)
 
@@ -50,10 +58,23 @@ a = A()
 print(a)
 
 # This is a markdown cell.
-def main():
+def main(args):
     help(func)
 
 # The last thing of the .py file must be the `if __name__ == '__main__':` block.
 if __name__ == '__main__':
     # Its content is grouped into the last code cell.
-    main()
+
+    # All args should have a default value if the notebook is expected to be runnable without code change.
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--job-dir',
+        type=str,
+        help='Job dir',
+        default='/tmp/sample'
+    )
+
+    # Use parse_known_args to ignore args passed in when running as a notebook.
+    args, _ = parser.parse_known_args()
+
+    main(args)
