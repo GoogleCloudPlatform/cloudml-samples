@@ -10,6 +10,10 @@ more than 50,000 dollars a year (the target label). We will train a logistic reg
 model that, given an individual's information, outputs a number between 0 and 1—this can 
 be interpreted as the probability that the individual has an annual income of over 50,000 dollars.
 
+As a modeler and developer, think about how this data is used and the potential benefits and harm a model's predictions can cause. A model like this could reinforce societal biases and disparities. Is each feature relevant to the problem you want to solve or will it introduce bias? For more information, read about [ML fairness](https://developers.google.com/machine-learning/fairness-overview/).
+
+## Examples
+
 There are five samples provided in this directory. They allow you to move from
 single-worker training to distributed training without any code changes, and
 make it easy to export model binaries for prediction, but with the following
