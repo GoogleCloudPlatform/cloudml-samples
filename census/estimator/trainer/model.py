@@ -255,39 +255,30 @@ def parse_csv(rows_string_tensor):
 
 
 def input_fn(filenames,
-                      num_epochs=None,
-                      shuffle=True,
-                      skip_header_lines=0,
-                      batch_size=200):
+             num_epochs=None,
+             shuffle=True,
+             skip_header_lines=0,
+             batch_size=200):
   """Generates features and labels for training or evaluation.
+
   This uses the input pipeline based approach using file name queue
   to read data so that entire data is not loaded in memory.
 
   Args:
-      filenames: [str] list of CSV files to read data from.
-      num_epochs: int how many times through to read the data.
-        If None will loop through data indefinitely
-      shuffle: bool, whether or not to randomize the order of data.
-        Controls randomization of both file order and line order within
-        files.
-      skip_header_lines: int set to non-zero in order to skip header lines
-        in CSV files.
-      batch_size: int First dimension size of the Tensors returned by
-        input_fn
+      filenames: (str) A CSV file or files to read data from.
+      num_epochs: (int) how many times through to read the data. If None will
+        loop through data indefinitely
+      shuffle: (bool) whether or not to randomize the order of data. Controls
+        randomization of both file order and line order within files.
+      skip_header_lines: (int) set to non-zero in order to skip header lines in
+        CSV files.
+      batch_size: (int) First dimension size of the Tensors returned by input_fn
+
   Returns:
       A (features, indices) tuple where features is a dictionary of
         Tensors, and indices is a single Tensor of label indices.
   """
-  filename_dataset = tf.data.Dataset.from_tensor_slices(filenames)
-  if shuffle:
-    # Process the files in a random order.
-    filename_dataset = filename_dataset.shuffle(len(filenames))
-    
-  # For each filename, parse it into one element per line, and skip the header
-  # if necessary.
-  dataset = filename_dataset.flat_map(
-      lambda filename: tf.data.TextLineDataset(filename).skip(skip_header_lines))
-  
+  dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines)
   dataset = dataset.map(parse_csv)
   if shuffle:
     dataset = dataset.shuffle(buffer_size=batch_size * 10)

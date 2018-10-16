@@ -410,20 +410,20 @@ def dispatch(*args, **kwargs):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument('--train-files',
-                      required=True,
                       type=str,
-                      help='Training files local or GCS', nargs='+')
+                      help='Training files local or GCS', nargs='+',
+                      default=['gs://cloud-samples-data/ml-engine/census/data/adult.data.csv'])
   parser.add_argument('--eval-files',
-                      required=True,
                       type=str,
-                      help='Evaluation files local or GCS', nargs='+')
+                      help='Evaluation files local or GCS', nargs='+',
+                      default=['gs://cloud-samples-data/ml-engine/census/data/adult.test.csv'])
   parser.add_argument('--job-dir',
-                      required=True,
                       type=str,
                       help="""\
                       GCS or local dir for checkpoints, exports, and
                       summaries. Use an existing directory to load a
-                      trained model, or a new directory to retrain""")
+                      trained model, or a new directory to retrain""",
+                      default='/tmp/census-tensorflowcore')
   parser.add_argument('--train-steps',
                       type=int,
                       help='Maximum number of training steps to perform.')

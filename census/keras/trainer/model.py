@@ -20,7 +20,7 @@ import pandas as pd
 from keras import backend as K
 from keras import layers, models
 from keras.utils import np_utils
-from keras.backend import relu, softmax
+from keras.backend import relu
 
 #Python2/3 compatibility imports
 from six.moves.urllib import parse as urlparse
@@ -59,8 +59,14 @@ UNUSED_COLUMNS = set(CSV_COLUMNS) - set(
 def model_fn(input_dim,
              labels_dim,
              hidden_units=[100, 70, 50, 20],
-             learning_rate=0.001):
-  """Create a Keras Sequential model with layers."""
+             learning_rate=0.1):
+  """Create a Keras Sequential model with layers.
+
+  "set_learning_phase" to False. 
+  Otherwise tensorflow serving raise the following error:
+    AbortionError(code=StatusCode.INVALID_ARGUMENT during online prediction.
+  """
+  K.set_learning_phase(False)
   model = models.Sequential()
 
   for units in hidden_units:
@@ -70,7 +76,7 @@ def model_fn(input_dim,
     input_dim = units
 
   # Add a dense final layer with sigmoid function
-  model.add(layers.Dense(labels_dim, activation=softmax))
+  model.add(layers.Dense(labels_dim, activation='sigmoid'))
   compile_model(model, learning_rate)
   return model
 

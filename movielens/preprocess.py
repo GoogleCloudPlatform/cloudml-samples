@@ -322,6 +322,7 @@ class BuildExampleFn(beam.DoFn):
 @beam.ptransform_fn
 def _Shuffle(pcoll):  # pylint: disable=invalid-name
   """Shuffles a PCollection."""
+  import random
   return (pcoll
           | 'PairWithRand' >> beam.Map(lambda x: (random.random(), x))
           | 'GroupByRand' >> beam.GroupByKey()
