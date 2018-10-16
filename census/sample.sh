@@ -15,7 +15,7 @@
 
 run_script_local() {
 	cd $1
-	echo "Running $1 sample"
+	echo "Running '$1' code sample."
 	GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 	GCS_EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 	CENSUS_DATA=census_data
@@ -31,8 +31,8 @@ run_script_local() {
 	export OUTPUT_DIR=census_$DATE
 
 	#Local training
-	python -m trainer.task --train-files $TRAIN_FILE \
-	                       --eval-files $EVAL_FILE \
+	python -m trainer.task --train-file $TRAIN_FILE \
+	                       --eval-file $EVAL_FILE \
 	                       --job-dir $OUTPUT_DIR \
 	                       --train-steps $TRAIN_STEPS \
 	                       --eval-steps 100
