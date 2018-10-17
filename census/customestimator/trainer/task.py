@@ -68,12 +68,12 @@ if __name__ == '__main__':
       '--train-files',
       help='GCS file or local paths to training data',
       nargs='+',
-      default=['gs://cloud-samples-data/ml-engine/census/data/adult.data.csv'])
+      default='gs://cloud-samples-data/ml-engine/census/data/adult.data.csv')
   parser.add_argument(
       '--eval-files',
       help='GCS file or local paths to evaluation data',
       nargs='+',
-      default=['gs://cloud-samples-data/ml-engine/census/data/adult.test.csv'])
+      default='gs://cloud-samples-data/ml-engine/census/data/adult.test.csv')
   parser.add_argument(
       '--job-dir',
       help='GCS location to write checkpoints and export models',
