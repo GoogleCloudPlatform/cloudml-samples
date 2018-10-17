@@ -316,7 +316,6 @@ def input_fn(filenames,
       A (features, indices) tuple where features is a dictionary of
         Tensors, and indices is a single Tensor of label indices.
   """
-  print(type(filenames))
   dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(
       _decode_csv)
 
