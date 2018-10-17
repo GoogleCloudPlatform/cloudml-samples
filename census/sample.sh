@@ -31,20 +31,21 @@ run_script_local() {
 	export OUTPUT_DIR=census_$DATE
 
 	#Local training
-	python -m trainer.task --train-file $TRAIN_FILE \
-	                       --eval-file $EVAL_FILE \
+	python -m trainer.task --train-files $TRAIN_FILE \
+	                       --eval-files $EVAL_FILE \
 	                       --job-dir $OUTPUT_DIR \
 	                       --train-steps $TRAIN_STEPS \
 	                       --eval-steps 100
 
 	if [ $? = 0 ]; then
-		echo "Python script succeeded"
+		echo "Python script succeeded!"
+		echo "Cleaning up..."
 		rm -rf $CENSUS_DATA
 		rm -rf $OUTPUT_DIR
 		cd ..
 		return 0
 	fi
-	echo "Python script failed"
+	echo "Python script failed!"
 	return 1
 }
 

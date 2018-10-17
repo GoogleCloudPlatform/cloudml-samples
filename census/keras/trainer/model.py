@@ -145,13 +145,13 @@ def to_numeric_features(features, feature_cols=None):
   return features
 
 
-def generator_input(filename, chunk_size, batch_size=64):
+def generator_input(filenames, chunk_size, batch_size=64):
   """Produce features and labels needed by keras fit_generator."""
 
   feature_cols = None
   while True:
     input_reader = pd.read_csv(
-        tf.gfile.Open(filename),
+        tf.gfile.Open(filenames[0]),
         names=CSV_COLUMNS,
         chunksize=chunk_size,
         na_values=' ?')

@@ -189,7 +189,7 @@ def run(target, cluster_spec, is_chief, hparams):
 
       # Features and label tensors
       features, labels = model.input_fn(
-          hparams.eval_file,
+          hparams.eval_files,
           num_epochs=None if hparams.eval_steps else 1,
           batch_size=hparams.eval_batch_size,
           shuffle=False
@@ -226,7 +226,7 @@ def run(target, cluster_spec, is_chief, hparams):
 
       # Features and label tensors as read using filename queue.
       features, labels = model.input_fn(
-          hparams.train_file,
+          hparams.train_files,
           num_epochs=hparams.num_epochs,
           batch_size=hparams.train_batch_size
       )
@@ -379,13 +379,13 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   # Input Arguments
   parser.add_argument(
-      '--train-file',
-      type=str,
+      '--train-files',
+      nargs='+',
       help='Training files local or GCS',
       default='gs://cloud-samples-data/ml-engine/census/data/adult.data.csv')
   parser.add_argument(
-      '--eval-file',
-      type=str,
+      '--eval-files',
+      nargs='+',
       help='Evaluation files local or GCS',
       default='gs://cloud-samples-data/ml-engine/census/data/adult.test.csv')
   parser.add_argument(

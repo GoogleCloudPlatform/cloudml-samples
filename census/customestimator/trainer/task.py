@@ -23,16 +23,15 @@ import trainer.model as model
 
 def train_and_evaluate(hparams):
   """Run the training and evaluate using the high level API."""
-
   train_input = lambda: model.input_fn(
-      hparams.train_file,
+      hparams.train_files,
       num_epochs=hparams.num_epochs,
       batch_size=hparams.train_batch_size
   )
 
   # Don't shuffle evaluation data.
   eval_input = lambda: model.input_fn(
-      hparams.eval_file,
+      hparams.eval_files,
       batch_size=hparams.eval_batch_size,
       shuffle=False
   )
@@ -64,15 +63,17 @@ def train_and_evaluate(hparams):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  # Input Arguments
+  # Input Arguments.
   parser.add_argument(
-      '--train-file',
-      help='GCS or local paths to training data',
-      default='gs://cloud-samples-data/ml-engine/census/data/adult.data.csv')
+      '--train-files',
+      help='GCS file or local paths to training data',
+      nargs='+',
+      default=['gs://cloud-samples-data/ml-engine/census/data/adult.data.csv'])
   parser.add_argument(
-      '--eval-file',
-      help='GCS or local paths to evaluation data',
-      default='gs://cloud-samples-data/ml-engine/census/data/adult.test.csv')
+      '--eval-files',
+      help='GCS file or local paths to evaluation data',
+      nargs='+',
+      default=['gs://cloud-samples-data/ml-engine/census/data/adult.test.csv'])
   parser.add_argument(
       '--job-dir',
       help='GCS location to write checkpoints and export models',

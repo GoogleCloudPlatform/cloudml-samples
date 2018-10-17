@@ -46,11 +46,11 @@ class ContinuousEval(Callback):
 
   def __init__(self,
                eval_frequency,
-               eval_file,
+               eval_files,
                learning_rate,
                job_dir,
                steps=1000):
-    self.eval_file = eval_file
+    self.eval_files = eval_files
     self.eval_frequency = eval_frequency
     self.learning_rate = learning_rate
     self.job_dir = job_dir
@@ -70,7 +70,7 @@ class ContinuousEval(Callback):
         census_model = load_model(checkpoints[-1])
         census_model = model.compile_model(census_model, self.learning_rate)
         loss, acc = census_model.evaluate_generator(
-            model.generator_input(self.eval_file, chunk_size=CHUNK_SIZE),
+            model.generator_input(self.eval_files, chunk_size=CHUNK_SIZE),
             steps=self.steps)
         print('\nEvaluation epoch[{}] metrics[{:.2f}, {:.2f}] {}'.format(
             epoch, loss, acc, census_model.metrics_names))
@@ -102,7 +102,7 @@ def train_and_evaluate(hparams):
       mode='min')
 
   # Continuous eval callback.
-  evaluation = ContinuousEval(hparams.eval_frequency, hparams.eval_file,
+  evaluation = ContinuousEval(hparams.eval_frequency, hparams.eval_files,
                               hparams.learning_rate, hparams.job_dir)
 
   # Tensorboard logs callback.
@@ -115,7 +115,7 @@ def train_and_evaluate(hparams):
   callbacks = [checkpoint, evaluation, tb_log]
 
   census_model.fit_generator(
-      model.generator_input(hparams.train_file, chunk_size=CHUNK_SIZE),
+      model.generator_input(hparams.train_files, chunk_size=CHUNK_SIZE),
       steps_per_epoch=hparams.train_steps,
       epochs=hparams.num_epochs,
       callbacks=callbacks)
@@ -143,13 +143,13 @@ def copy_file_to_gcs(job_dir, file_path):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument(
-      '--train-file',
-      type=str,
+      '--train-files',
+      nargs='+',
       help='Training file local or GCS',
       default='gs://cloud-samples-data/ml-engine/census/data/adult.data.csv')
   parser.add_argument(
-      '--eval-file',
-      type=str,
+      '--eval-files',
+      nargs='+',
       help='Evaluation file local or GCS',
       default='gs://cloud-samples-data/ml-engine/census/data/adult.test.csv')
   parser.add_argument(
