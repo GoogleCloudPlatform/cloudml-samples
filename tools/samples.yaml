@@ -53,3 +53,11 @@ census-tensorflowcore:
     Import:
       - "trainer."
 
+tpu-templates-tpu-estimator:
+  path:
+    tpu/templates/tpu_estimator
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
+
