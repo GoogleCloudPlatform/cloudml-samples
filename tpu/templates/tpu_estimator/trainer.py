@@ -18,6 +18,15 @@ import numpy as np
 import tensorflow as tf
 
 
+# ## The model function
+# There are two differences in the model function when using TPUs:
+# 
+# * The optimizer needs to be wrapped in a `tf.contrib.tpu.CrossShardOptimizer`.
+#
+# * The model function should return a `tf.contrib.tpu.TPUEstimatorSpec`.
+#
+
+
 def model_fn(features, labels, mode, params):
     # build model
     global_step = tf.train.get_global_step()
@@ -56,6 +65,18 @@ def model_fn(features, labels, mode, params):
             train_op=train_op)
 
 
+# ## The input function
+# tf.data.Dataset is the best choice for building the input function.
+# Even though datasets can determine the shape of the data at *runtime*,
+# TPUs need to know the shape of the tensors *when the graph is built*.
+# This typically means two things:
+#
+# * Set `drop_remainder=True` in the `dataset.batch` call.
+#
+# * Set tensor shapes to make sure the features and labels do not have any unknown dimensions.
+#
+
+
 def train_input_fn(params={}):
     # make some fake regression data
     x = np.random.rand(100, 5)
@@ -89,6 +110,17 @@ def train_input_fn(params={}):
     dataset = dataset.prefetch(tf.contrib.data.AUTOTUNE)
 
     return dataset
+
+
+# ## The TPUEstimator
+# The TPUEstimator is similar to the usual Estimator, but requires a
+# slightly different run_config, since it needs to know where to connect
+# to the TPU workers.
+#
+# This is done through `tf.contrib.cluster_resolver.TPUClusterResolver`,
+# which is passed into a `tf.contrib.tpu.TPUConfig`, which in turn is
+# passed into `tf.contrib.tpu.RunConfig`.
+#
 
 
 def main(args):
@@ -128,6 +160,22 @@ def main(args):
             params=params)
 
     estimator.train(train_input_fn, max_steps=args.max_steps)
+
+
+# ## Training
+# Depending on where the training job is run, the `TPUClusterResolver`
+# needs different input to access the TPU workers:
+#
+# * On Cloud Machine Learning Engine: the input should be `None` 
+#   and the service will handle it.
+#
+# * On Compute Engine: the input should be the name of TPU you create
+#   before starting the training job.
+#
+# * On Colab: the input should be the grpc URI from the environment
+# variable `COLAB_TPU_ADDR`; the Colab runtime type should be set to
+# TPU for this environment variable to be automatically set.
+#  
 
 
 if __name__ == '__main__':
