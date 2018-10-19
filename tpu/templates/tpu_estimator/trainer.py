@@ -47,15 +47,13 @@ def model_fn(features, labels, mode, params):
             mode=mode,
             predictions=predictions,
             loss=loss,
-            train_op=train_op
-        )
+            train_op=train_op)
     else:
         return tf.estimator.EstimatorSpec(
             mode=mode,
             predictions=predictions,
             loss=loss,
-            train_op=train_op
-        )
+            train_op=train_op)
 
 
 def train_input_fn(params={}):
@@ -103,8 +101,7 @@ def main(args):
         tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(args.tpu)
         tpu_config = tf.contrib.tpu.TPUConfig(
             num_shards=8, # using Cloud TPU v2-8
-            iterations_per_loop=args.save_checkpoints_steps
-        )
+            iterations_per_loop=args.save_checkpoints_steps)
 
         # use the TPU version of RunConfig
         config = tf.contrib.tpu.RunConfig(
@@ -112,8 +109,7 @@ def main(args):
             model_dir=args.model_dir,
             tpu_config=tpu_config,
             save_checkpoints_steps=args.save_checkpoints_steps,
-            save_summary_steps=100
-        )
+            save_summary_steps=100)
 
         # TPUEstimator
         estimator = tf.contrib.tpu.TPUEstimator(
@@ -122,16 +118,14 @@ def main(args):
             params=params,
             train_batch_size=args.train_batch_size,
             eval_batch_size=32, # FIXME
-            export_to_tpu=False
-        )
+            export_to_tpu=False)
     else:
         config = tf.estimator.RunConfig(model_dir=args.model_dir)
 
         estimator = tf.estimator.Estimator(
             model_fn,
             config=config,
-            params=params
-        )
+            params=params)
 
     estimator.train(train_input_fn, max_steps=args.max_steps)
 
@@ -142,31 +136,25 @@ if __name__ == '__main__':
     parser.add_argument(
         '--model-dir',
         type=str,
-        default='/tmp/tpu-template'
-    )
+        default='/tmp/tpu-template')
     parser.add_argument(
         '--max-steps',
         type=int,
-        default=1000
-    )
+        default=1000)
     parser.add_argument(
         '--train-batch-size',
         type=int,
-        default=16
-    )
+        default=16)
     parser.add_argument(
         '--save-checkpoints-steps',
         type=int,
-        default=100
-    )
+        default=100)
     parser.add_argument(
         '--use-tpu',
-        action='store_true'
-    )
+        action='store_true')
     parser.add_argument(
         '--tpu',
-        default=None
-    )
+        default=None)
 
     args, _ = parser.parse_known_args()
 
@@ -175,10 +163,6 @@ if __name__ == '__main__':
     if 'google.colab' in sys.modules:
         import json
         import os
-        from google.colab import auth
-
-        # Authenticate to access GCS bucket
-        auth.authenticate_user()
 
         # TODO(user): change this
         args.model_dir = 'gs://your-gcs-bucket'
