@@ -35,7 +35,7 @@ with open('samples.yaml', 'r') as f:
 rows = []
 columns = []
 
-for k, d in samples.iteritems():
+for k, d in samples.items():
     rows.append(k)
     columns.extend(d.keys())
 
