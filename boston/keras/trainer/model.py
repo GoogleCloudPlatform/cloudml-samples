@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from . import utils
 
 import numpy as np
 import tensorflow as tf
@@ -51,17 +50,16 @@ def keras_estimator(model_dir, config, learning_rate, num_features):
   optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate)
   model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
 
-  estimator = tf.keras.estimator.model_to_estimator(
+  return tf.keras.estimator.model_to_estimator(
       keras_model=model, model_dir=model_dir, config=config)
-  return estimator
 
 
-def input_fn(x, y, batch_size, mode):
+def input_fn(features, labels, batch_size, mode):
   """Input function for training and serving.
 
   Args:
-    x: (numpy.array) Training or eval data.
-    y: (numpy.array) Labels for training or eval data.
+    features: (numpy.array) Training or eval data.
+    labels: (numpy.array) Labels for training or eval data.
     batch_size: (int)
     mode: tf.estimator.ModeKeys mode
 
@@ -69,22 +67,19 @@ def input_fn(x, y, batch_size, mode):
     A tf.estimator.
   """
   # Default settings for training.
-  num_epochs = None
-  shuffle = True
+  if labels is None:
+    inputs = features
+  else:
+    labels = np.asarray(labels).astype('float32').reshape((-1, 1))
+    inputs = (features, labels)
 
-  # Override if this is eval.
+  # Convert the inputs to a Dataset.
+  dataset = tf.data.Dataset.from_tensor_slices(inputs)
+  if mode == tf.estimator.ModeKeys.TRAIN:
+    dataset = dataset.shuffle(1000).repeat().batch(batch_size)
   if mode == tf.estimator.ModeKeys.EVAL:
-    num_epochs = 1
-    shuffle = False
-
-  y = np.asarray(y).astype('float32').reshape((-1, 1))
-  return tf.estimator.inputs.numpy_input_fn(
-      x,
-      y=y,
-      batch_size=batch_size,
-      num_epochs=num_epochs,
-      shuffle=shuffle,
-      queue_capacity=50000)
+    dataset = dataset.batch(batch_size)
+  return dataset.make_one_shot_iterator().get_next()
 
 
 def serving_input_fn():
@@ -97,55 +92,3 @@ def serving_input_fn():
   features = feature_placeholder
   return tf.estimator.export.TensorServingInputReceiver(features,
                                                         feature_placeholder)
-
-
-def train_and_evaluate(output_dir, hparams):
-  """Helper function: Trains and evaluate model.
-
-  Args:
-    output_dir: (str) File path where training files will be written.
-    hparams: (dict) Command line parameters passed from task.py
-  """
-  # Load data.
-  (train_data,
-   train_labels), (test_data,
-                   test_labels) = utils.load_data(path=hparams['dataset_file'])
-
-  # Shuffle data.
-  order = np.argsort(np.random.random(train_labels.shape))
-  train_data = train_data[order]
-  train_labels = train_labels[order]
-
-  # Normalize data.
-  train_data, test_data = utils.normalize_data(train_data, test_data)
-
-  # Create estimator.
-  run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
-  estimator = keras_estimator(
-      model_dir=output_dir,
-      config=run_config,
-      learning_rate=hparams['learning_rate'],
-      num_features=train_data.shape[1])
-  train_steps = hparams['num_epochs'] * len(train_data) / hparams['batch_size']
-  train_spec = tf.estimator.TrainSpec(
-      input_fn=input_fn(
-          train_data,
-          train_labels,
-          hparams['batch_size'],
-          mode=tf.estimator.ModeKeys.TRAIN),
-      max_steps=train_steps)
-  # Create EvalSpec.
-  exporter = tf.estimator.LatestExporter('exporter', serving_input_fn)
-  eval_spec = tf.estimator.EvalSpec(
-      input_fn=input_fn(
-          test_data,
-          test_labels,
-          hparams['batch_size'],
-          mode=tf.estimator.ModeKeys.EVAL),
-      steps=None,
-      exporters=exporter,
-      start_delay_secs=10,
-      throttle_secs=10)
-
-  # Start training.
-  tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)

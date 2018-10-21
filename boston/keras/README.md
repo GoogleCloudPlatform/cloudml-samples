@@ -1,6 +1,6 @@
 # Predict House Prices
 
-_**Regression**_
+_**Logistic Regression**_
 
 ### Overview
 
@@ -52,8 +52,7 @@ The basic project structure will look something like this:
 └── trainer
     ├── __init__.py
     ├── model.py
-    ├── task.py
-    └── utils.py
+    └── task.py
 ```
 
 ### (Prerequisite) Set up and test your GCP environment
@@ -93,11 +92,12 @@ packaged with TensorFlow. Downloading the data is impractical/expensive for
 large datasets, so we will get the original files to illustrate a [more general
 data preparation process] you might follow in your own projects.
 
-If you want to download the files directly, you can use the following commands:
+If you want to use local files directly, you can use the following commands:
 
 ```shell
-mkdir data
+mkdir data && cd data
 curl -O https://storage.googleapis.com/tensorflow/tf-keras-datasets/boston_housing.npz
+cd ..
 ```
 
 ### Upload the data to a Google Cloud Storage bucket
@@ -161,19 +161,29 @@ ERROR: (gcloud.ml-engine.jobs.submit.training)
 
 You can run the Keras code locally to validate your project.
 
-Define variables
+Use local training file.
+
+```
+export DATASET_FILE=data/boston_housing.npz
+export JOB_NAME="boston_keras_$(date +%Y%m%d_%H%M%S)"
+export JOB_DIR=/tmp/$JOB_NAME
+export REGION=us-central1
+```
+
+Use remote file located in GCS.
 
 ```
 export BUCKET_NAME=your-bucket-name
 export JOB_NAME="boston_keras_$(date +%Y%m%d_%H%M%S)"
-export OUTPUT_DIR=gs://$BUCKET_NAME/$JOB_NAME
+export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
+export DATASET_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
 export REGION=us-central1
 ```
 
 Run the model with python (local)
 
 ```
-python -m trainer.task --dataset-file=data/boston_housing.npz --output_dir=/tmp/
+python -m trainer.task --dataset-file=$DATASET_FILE --job-dir=$JOB_DIR
 ```
 
 ## Training using gcloud local
@@ -185,15 +195,15 @@ Define variables*
 ```
 export BUCKET_NAME=your-bucket-name
 export JOB_NAME="boston_keras_$(date +%Y%m%d_%H%M%S)"
-export OUTPUT_DIR=gs://$BUCKET_NAME/$JOB_NAME
+export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
-export GCS_DATASET_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
+export DATASET_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
 ```
 
 You can run Keras training using gcloud locally.
 
 ```
-gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -- --dataset-file=$GCS_DATASET_FILE --output_dir=$OUTPUT_DIR
+gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -- --dataset-file=$DATASET_FILE --job-dir=$JOB_DIR
 ```
 
 *Feel free to modify the destination file for in utils.py
@@ -207,15 +217,15 @@ Define variables
 ```
 export BUCKET_NAME=your-bucket-name
 export JOB_NAME="boston_keras_$(date +%Y%m%d_%H%M%S)"
-export OUTPUT_DIR=gs://$BUCKET_NAME/$JOB_NAME
+export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
-export GCS_DATASET_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
+export DATASET_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
 ```
 
 You can train the model on Cloud ML Engine
 
 ```
-gcloud ml-engine jobs submit training $JOB_NAME --stream-logs --runtime-version 1.10 --job-dir=$OUTPUT_DIR --package-path=trainer --module-name trainer.task --region $REGION -- --dataset-file=$GCS_DATASET_FILE --output_dir=$OUTPUT_DIR
+gcloud ml-engine jobs submit training $JOB_NAME --stream-logs --runtime-version 1.10 --job-dir=$JOB_DIR --package-path=trainer --module-name trainer.task --region $REGION -- --dataset-file=$DATASET_FILE
 ```
 
 ## Monitor training with TensorBoard
@@ -223,7 +233,7 @@ gcloud ml-engine jobs submit training $JOB_NAME --stream-logs --runtime-version 
 If Tensorboard appears blank, try refreshing after 10 minutes.
 
 ```
-tensorboard --logdir=$OUTPUT_DIR
+tensorboard --logdir=$JOB_DIR
 ```
 
 ## References
