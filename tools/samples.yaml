@@ -1,0 +1,55 @@
+sample:
+  path:
+    tools
+  filename:
+    sample.py
+  colab:
+    git-clone: False
+  remove:
+    ImportFrom:
+      - "module."
+
+census-estimator:
+  path:
+    census/estimator/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    Import:
+      - "trainer."
+
+census-customestimator:
+  path:
+    census/customestimator/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    Import:
+      - "trainer."
+
+census-keras:
+  path:
+    census/keras/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    Import:
+      - "trainer."
+
+census-tensorflowcore:
+  path:
+    census/tensorflowcore/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    Import:
+      - "trainer."
+

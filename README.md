@@ -21,20 +21,26 @@ If you don’t see something for the task you’re trying to complete, please he
 
 Notebook Tutorial:
 * [scikit-learn: Random Forest Classifier](sklearn/notebooks/ml_engine_training.ipynb) - How to train a Random Forest Classifier in scikit-learn using a text based dataset, Census, to predict a person’s income level.
-* [XGBoost](xgboost/notebooks/XGBoost%20training%20with%20ML%20Engine.ipynb) - How to train an XGBoost model using a text based dataset, Census, to predict a person’s income level.
+* [XGBoost](xgboost/notebooks/xgboost-training-with-ml-engine.ipynb) - How to train an XGBoost model using a text based dataset, Census, to predict a person’s income level.
 
 Code Guide:
 * [Tensorflow: Linear Classifier with Stochastic Dual Coordinate Ascent (SDCA) optimizer / Deep Neural Network Classifier](criteo_tft) - How to train a Linear Classifier with SDCA and a DNN using a text (discrete feature) based dataset, Criteo, to predict how likely a person is to click on an advertisement.
 * [Tensorflow: Linear Regression with Stochastic Dual Coordinate Ascent (SDCA) / Deep Neural Network Regressor](reddit_tft) - How to train a Linear Regressor with SDCA and a DNN using the a text based dataset of Reddit Comments to predict the score of a Reddit thread using a wide and deep model.
-* [Tensorflow: ResNet](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10_estimator) - How to train a model for image recognition using the Cifar10 dataset to classify image content (training on one CPU, a single host with multiple GPUs, and multiple hosts with CPU or multiple GPUs).
+* [Tensorflow: ResNet](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10_estimator) - How to train a model for image recognition using the CIFAR10 dataset to classify image content (training on one CPU, a single host with multiple GPUs, and multiple hosts with CPU or multiple GPUs).
 
 ### Cloud TPUs on ML Engine
 
 Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to accelerate machine-learning workloads. You can run your training jobs on Cloud Machine Learning Engine, using Cloud TPU.
 
-* [Tensorflow: ResNet](tpu/training/resnet) - Using the ResNet-50 dataset with Cloud TPUs on ML Engine.
+* [Tensorflow: ResNet](tpu/training/resnet) - Using the ImageNet dataset with Cloud TPUs on ML Engine.
 * [Tensorflow: HP Tuning - ResNet](tpu/hptuning/resnet-hptuning) - How to run hyperparameter tuning jobs on Cloud Machine Learning Engine with Cloud TPUs using TensorFlow's tf.metrics.
 * [Tensorflow: Hypertune - ResNet](tpu/hptuning/resnet-hypertune) - How to run hyperparameter tuning jobs on Cloud Machine Learning Engine with Cloud TPUs using the cloudml-hypertune package.
+* [Tensorflow: Cloud TPU Templates](tpu/templates) - A collection of minimal templates that can be run on Cloud TPUs on Compute Engine, Cloud Machine Learning, and Colab.
+
+### Hyperparameter Tuning (HP Tuning)
+Notebook Tutorial:
+* [scikit-learn: Lasso Regressor](sklearn/notebooks/hp_tuning_auto_mpg/ml_engine_hp_tuning_training.ipynb) - How to train a Lasso Regressor in scikit-learn using a text based dataset, auto mpg, to predict a car's miles per gallon.
+* [XGBoost: XGBRegressor](xgboost/notebooks/XGBoost&#32;Hyperparameter&#32;Tuning.ipynb) - How to train a Regressor in XGBoost using a text based dataset, auto mpg, to predict a car's miles per gallon.
 
 # Model Serving (Online Predictions)
 
@@ -59,7 +65,9 @@ Code Guide:
 
 # Templates
 
-* [TensorFlow Estimator Trainer Package Template](cloudml-template) - When training a Tensorflow model, you have to create a trainer package, here we have a template that simplifies creating a trainer package for Cloud ML Engine.
+* [TensorFlow Estimator Trainer Package Template](cloudml-template) - When training a Tensorflow model, you have to create a trainer package, here we have a template that simplifies creating a trainer package for Cloud ML Engine. Take a look at this list with some introductory [examples](cloudml-template/examples/). 
+
+* [Tensorflow: Cloud TPU Templates](tpu/templates) - A collection of minimal templates that can be run on Cloud TPUs on Compute Engine, Cloud Machine Learning, and Colab.
 
 # Google Samples
 

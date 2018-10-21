@@ -4,24 +4,55 @@ Predict a person's income level.
 
 - - -
 
-There are two samples provided in this directory. Both allow you to move from
+Using census data which contains data a person's age, education, marital status, 
+and occupation (the features), we will try to predict whether or not the person earns 
+more than 50,000 dollars a year (the target label). We will train a logistic regression 
+model that, given an individual's information, outputs a number between 0 and 1—this can 
+be interpreted as the probability that the individual has an annual income of over 50,000 dollars.
+
+As a modeler and developer, think about how this data is used and the potential benefits and harm a model's predictions can cause. A model like this could reinforce societal biases and disparities. Is each feature relevant to the problem you want to solve or will it introduce bias? For more information, read about [ML fairness](https://developers.google.com/machine-learning/fairness-overview/).
+
+## Examples
+
+There are five samples provided in this directory. They allow you to move from
 single-worker training to distributed training without any code changes, and
 make it easy to export model binaries for prediction, but with the following
 distiction:
-
-
+  
 * The sample provided in [TensorFlow Core](./tensorflowcore) uses the low level
   bindings to build a model. This example is great for understanding the
   underlying workings of TensorFlow, best practices when using the low-level
   APIs.
 
+* The sample provided in [Custom Estimator](./customestimator) uses the custom
+  Tensorflow `tf.estimator.EstimatorSpec` to create a High level custom Estimator.
+  This example is a great combination of both low level configuration and fast iteration.
+  
 * The sample provided in [Estimator](./estimator) uses the high level
   `tf.contrib.learn.Estimator` API. This API is great for fast iteration, and
   quickly adapting models to your own datasets without major code overhauls.
 
-All the models provided in this directory can be run on the Cloud Machine Learning Engine. To follow along, check out the setup instruction [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
+* The sample provided in [Keras](./keras) uses the native Keras library.
+  This API is great for fast iteration, and quickly adapting models to your own datasets 
+  without major code overhauls.
+  
+* The sample provided in [TFT Transform Estimator](./tfttransformestimator) shows how to use [tf transform](https://github.com/tensorflow/transform) together with [Cloud Dataflow](https://cloud.google.com/dataflow) and [Cloud ML Engine](https://cloud.google.com/ml-engine/).
 
-## Download the data
+All the models provided in this directory can be run on the Cloud Machine Learning Engine. To follow along, check out the setup instructions [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
+
+## Notebooks
+
+You can also try the samples in notebooks:
+
+* [Estimator](estimator/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/estimator/trainer/task.ipynb))
+
+* [Custom Estimator](customestimator/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/customestimator/trainer/task.ipynb))
+
+* [Keras](keras/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/keras/trainer/task.ipynb))
+
+* [TensorFlow Core](tensorflowcore/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/tensorflowcore/trainer/task.ipynb))
+
+## Dataset
 The [Census Income Data
 Set](https://archive.ics.uci.edu/ml/datasets/Census+Income) that this sample
 uses for training is hosted by the [UC Irvine Machine Learning
@@ -310,7 +341,8 @@ gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --ru
 TensorFlow ships with a CLI that allows you to inspect the signature of exported binary files. To do this run:
 
 ```
-saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def predict
+SIGNATURE_DEF_KEY=`saved_model_cli show --dir $MODEL_BINARIES --tag serve | grep "SignatureDef key:" | awk 'BEGIN{FS="\""}{print $2}' | head -1`
+saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def $SIGNATURE_DEF_KEY
 ```
 
 ### Run Online Predictions
