@@ -30,7 +30,9 @@ def build_model():
     return model
 
 
-def train_input_fn(params={}):
+def train_input_fn():
+    batch_size = 16
+
     # make some fake data
     x = np.random.rand(100, 5, 3)
     y = np.random.rand(100, 1)
@@ -41,9 +43,6 @@ def train_input_fn(params={}):
 
     # create tf.data.Dataset
     dataset = tf.data.Dataset.from_tensor_slices((x_tensor, y_tensor))
-
-    # TPUEstimator passes params when calling input_fn
-    batch_size = params.get('batch_size', 16)
 
     dataset = dataset.repeat().shuffle(32).batch(batch_size, drop_remainder=True)
 
