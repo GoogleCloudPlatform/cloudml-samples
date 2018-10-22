@@ -118,22 +118,18 @@ if __name__ == '__main__':
     parser.add_argument(
         '--model-dir',
         type=str,
-        default='/tmp/tpu-template'
-    )
+        default='/tmp/tpu-template')
     parser.add_argument(
         '--max-steps',
         type=int,
-        default=1000
-    )
+        default=1000)
     parser.add_argument(
         '--save-checkpoints-steps',
         type=int,
-        default=100
-    )
+        default=100)
     parser.add_argument(
         '--tpu',
-        default=None
-    )
+        default=None)
 
     args, _ = parser.parse_known_args()
 
@@ -142,10 +138,6 @@ if __name__ == '__main__':
     if 'google.colab' in sys.modules:
         import json
         import os
-        from google.colab import auth
-
-        # Authenticate to access GCS bucket
-        auth.authenticate_user()
 
         # TODO(user): change this
         args.model_dir = 'gs://your-gcs-bucket'

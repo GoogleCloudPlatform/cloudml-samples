@@ -155,7 +155,8 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
             code_lines = astor.to_source(node).strip().split('\n')
             cur_group = process_node(code_lines, cur_type, remove)
         else:
-            cur_group = process_node(lines[top:bottom], cur_type, remove)
+            code_lines = lines[top:bottom]
+            cur_group = process_node(code_lines, cur_type, remove)
 
         # group of lines between ast nodes
         between = process_between(lines[start:top])
