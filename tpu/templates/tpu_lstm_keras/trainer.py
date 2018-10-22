@@ -30,13 +30,38 @@ def build_model():
     return model
 
 
-def make_data():
-    # This needs to be divisible by the number of towers/cores on the TPU.
-    data_size = 128
-    sequences = np.random.random((data_size, 5, 3))
-    labels = np.random.randint(0, 2, size=(data_size,))
+def train_input_fn(params={}):
+    # make some fake data
+    x = np.random.rand(100, 5, 3)
+    y = np.random.rand(100, 1)
 
-    return sequences, labels
+    # TPUs currently do not support float64
+    x_tensor = tf.constant(x, dtype=tf.float32)
+    y_tensor = tf.constant(y, dtype=tf.float32)
+
+    # create tf.data.Dataset
+    dataset = tf.data.Dataset.from_tensor_slices((x_tensor, y_tensor))
+
+    # TPUEstimator passes params when calling input_fn
+    batch_size = params.get('batch_size', 16)
+
+    dataset = dataset.repeat().shuffle(32).batch(batch_size, drop_remainder=True)
+
+    # TPUs need to know all dimensions when the graph is built
+    # Datasets know the batch size only when the graph is run
+    def set_shapes(features, labels):
+        features_shape = features.get_shape().merge_with([batch_size, None, None])
+        labels_shape = labels.get_shape().merge_with([batch_size, None])
+
+        features.set_shape(features_shape)
+        labels.set_shape(labels_shape)
+
+        return features, labels
+
+    dataset = dataset.map(set_shapes)
+    dataset = dataset.prefetch(tf.contrib.data.AUTOTUNE)
+
+    return dataset
 
 
 def main(args):
@@ -54,9 +79,7 @@ def main(args):
     loss_fn = tf.losses.log_loss
     model.compile(optimizer, loss_fn)
 
-    sequences, labels = make_data()
-
-    model.fit(sequences, labels, epochs=3)
+    model.fit(train_input_fn, epochs=3, steps_per_epoch=10)
 
     if not os.path.exists(args.model_dir):
         os.makedirs(args.model_dir)
