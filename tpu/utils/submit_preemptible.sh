@@ -14,9 +14,10 @@
 
 
 export TPU_NAME=$1
+export SCRIPT_NAME=your_train_task.py
 export MODEL_DIR=gs://your-gcs-bucket
 
-python resnet_main.py \
+python $SCRIPT_NAME \
         --tpu=$TPU_NAME \
         --model_dir=$MODEL_DIR \
         --mode=train \
