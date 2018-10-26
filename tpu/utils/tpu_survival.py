@@ -13,8 +13,10 @@
 # limitations under the License.
 
 from multiprocessing import Process
+import os
+import signal
 import shlex
-from subprocess import Popen
+from subprocess import Popen, PIPE
 from tpu_utils import create_tpu, delete_tpu, get_tpu, list_tpus
 
 RUN_TASK_COMMAND = 'bash submit_preemptible.sh {tpu_name}'
@@ -63,7 +65,11 @@ class TPUSurvival(object):
 
     def kill_current_task(self):
         print('killing current process: {}'.format(self.current_index))
-        self.current_process.kill()
+
+        # The subprocess runs a shell command, which in turn calls python.
+        # This kills the whole process group with the shell command as the
+        # process group leader.
+        os.killpg(os.getpgid(self.current_process.pid), signal.SIGTERM)
 
 
     def increment_index(self):
@@ -82,7 +88,7 @@ class TPUSurvival(object):
         command = shlex.split(cmd)
 
         # use popen so we can kill it when needed
-        p = Popen(command)
+        p = Popen(command, stdout=PIPE, preexec_fn=os.setsid)
 
         self.current_process = p
 
