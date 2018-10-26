@@ -48,7 +48,6 @@ while ts.current_index <= max_attempt:
 			
 			# clean up
 			ts.delete()
-			ts.kill_current_task()
 
 			sys.exit(returncode)
 
