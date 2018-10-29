@@ -14,10 +14,14 @@
 
 from multiprocessing import Process
 import os
-import signal
 import shlex
-from subprocess import Popen, PIPE
-from tpu_utils import create_tpu, delete_tpu, get_tpu, list_tpus
+import signal
+from subprocess import PIPE
+from subprocess import Popen
+
+from tpu_utils import create_tpu
+from tpu_utils import delete_tpu
+from tpu_utils import list_tpus
 
 RUN_TASK_COMMAND = 'bash submit_preemptible.sh {tpu_name}'
 TENSORFLOW_VERSION = '1.11'
@@ -35,19 +39,16 @@ class TPUSurvival(object):
         self.current_process = None
         self.state = None
 
-
     def tpu_name(self, index=None):
-        """Format tpu_name to be used in creation and detetion calls."""
+        """Format tpu_name to be used in creation and deletion calls."""
         index = index or self.current_index
         return '{}-{}'.format(self.prefix, index)
-
 
     def tpu_cidr_block(self, index=None):
         """Format CIDR block to be used in creation calls."""
         index = index or self.current_index
-        # NOTE: this could still overflow
+        # This could overflow
         return '10.0.1{:0>2}.0/27'.format(str(index))
-
 
     def update_state(self):
         """Poll the TPU nodes and update self.state."""
@@ -59,12 +60,12 @@ class TPUSurvival(object):
             health = node.get('health', None)
             state = node['state']
 
-            print('TPU health/state: {}: {}/{}'.format(tpu_name, health, state))
+            print('TPU health/state: {}: {}/{}'.format(
+                tpu_name, health, state))
 
             # The node that is running the current task.
             if tpu_name == self.tpu_name():
                 self.state = state
-
 
     def kill_current_task(self):
         """Kill the current running task."""
@@ -75,14 +76,13 @@ class TPUSurvival(object):
         # process group leader.
         os.killpg(os.getpgid(self.current_process.pid), signal.SIGTERM)
 
-
     def increment_index(self):
         self.current_index += 1
 
         print('current_index incremented to: {}'.format(self.current_index))
 
-
-    # run_task should be called at the beginning and then only after the call to kill current_process
+    # run_task should be called at the beginning and
+    # then only after the call to kill current_process
     def run_task(self):
         """Call a subprocess to run the training task on the current TPU node.
         """
@@ -98,7 +98,6 @@ class TPUSurvival(object):
 
         self.current_process = p
 
-
     def delete(self, index=None):
         """Delete the TPU node of the given index.
         If the index is not provided the current node is deleted.
@@ -107,11 +106,11 @@ class TPUSurvival(object):
 
         print('deleting: {}'.format(tpu_name))
 
-        p = Process(target=delete_tpu, args=(self.project, self.location, tpu_name))
+        args = (self.project, self.location, tpu_name)
+        p = Process(target=delete_tpu, args=args)
         p.start()
 
         return p
-
 
     def create(self, index=None):
         """Create a TPU node of the given index.
@@ -122,7 +121,11 @@ class TPUSurvival(object):
 
         print('creating: {}, {}'.format(tpu_name, tpu_cidr_block))
 
-        p = Process(target=create_tpu, args=(self.project, self.location, tpu_name, ACCELERATOR_TYPE, TENSORFLOW_VERSION, tpu_cidr_block, True))
+        args = (
+            self.project, self.location, tpu_name, ACCELERATOR_TYPE,
+            TENSORFLOW_VERSION, tpu_cidr_block, True
+        )
+        p = Process(target=create_tpu, args=args)
         p.start()
 
         return p

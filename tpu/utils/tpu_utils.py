@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oauth2client.client import GoogleCredentials
 from googleapiclient import discovery
+from oauth2client.client import GoogleCredentials
 
 credentials = GoogleCredentials.get_application_default()
 
 
 def list_tpus(project, location):
-    """List existing TPU nodes in the project/location.  Wrapper for https://cloud.google.com/tpu/docs/reference/rest/v1alpha1/projects.locations.nodes/list.
+    """List existing TPU nodes in the project/location.
 
     Args:
     project: (str) GCP project id.
@@ -37,9 +37,10 @@ def list_tpus(project, location):
     return request.execute()
 
 
-def create_tpu(
-    project, location, tpu_name, accelerator_type='v2-8', tensorflow_version='1.11', cidr_block='10.0.101.0', preemptible=False):
-    """Create a TPU node.  Wrapper for https://cloud.google.com/tpu/docs/reference/rest/v1alpha1/projects.locations.nodes/create.
+def create_tpu(project, location, tpu_name, accelerator_type='v2-8',
+               tensorflow_version='1.11', cidr_block='10.0.101.0',
+               preemptible=False):
+    """Create a TPU node.
 
     Args:
     project: (str) GCP project id.
@@ -47,7 +48,8 @@ def create_tpu(
     tpu_name: (str) The ID of the TPU node.
     accelerator_type: (str) The type of the TPU node, such as "v2-8".
     tensorflow_version: (str) The TensorFlow version, such as "1.11".
-    cidr_block: (str) The CIDR block used by the TPU node, such as "10.0.101.0".
+    cidr_block: (str) The CIDR block used by the TPU node,
+    such as "10.0.101.0".
     preemptible: (bool) Whether the node should be created as preemptible.
 
     Returns
@@ -68,13 +70,14 @@ def create_tpu(
     }
 
     # NOTE: in docs and samples nodeId is often referred to as tpu_name
-    request = service.projects().locations().nodes().create(parent=parent, body=node, nodeId=tpu_name)
+    request = service.projects().locations().nodes().create(
+        parent=parent, body=node, nodeId=tpu_name)
 
     return request.execute()
 
 
 def get_tpu(project, location, tpu_name):
-    """List existing TPU nodes in the project/location.  Wrapper for https://cloud.google.com/tpu/docs/reference/rest/v1alpha1/projects.locations.nodes/get.
+    """List existing TPU nodes in the project/location.
 
     Args:
     project: (str) GCP project id.
@@ -86,7 +89,8 @@ def get_tpu(project, location, tpu_name):
     """
     service = discovery.build('tpu', 'v1', credentials=credentials)
 
-    name = 'projects/{}/locations/{}/nodes/{}'.format(project, location, tpu_name)
+    name = 'projects/{}/locations/{}/nodes/{}'.format(
+        project, location, tpu_name)
 
     request = service.projects().locations().nodes().get(name=name)
 
@@ -94,7 +98,7 @@ def get_tpu(project, location, tpu_name):
 
 
 def delete_tpu(project, location, tpu_name):
-    """List existing TPU nodes in the project/location.  Wrapper for https://cloud.google.com/tpu/docs/reference/rest/v1alpha1/projects.locations.nodes/delete.
+    """List existing TPU nodes in the project/location.
 
     Args:
     project: (str) GCP project id.
@@ -106,9 +110,10 @@ def delete_tpu(project, location, tpu_name):
     """
     service = discovery.build('tpu', 'v1', credentials=credentials)
 
-    name = 'projects/{}/locations/{}/nodes/{}'.format(project, location, tpu_name)
+    name = 'projects/{}/locations/{}/nodes/{}'.format(
+        project, location, tpu_name)
 
-    request = service.projects().locations().nodes().delete(name=name)
+    request = service.projects().locations().nodes().delete(
+        name=name)
 
     return request.execute()
-

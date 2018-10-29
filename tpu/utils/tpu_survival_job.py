@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tpu_survival import TPUSurvival
-from time import sleep
 import sys
+from time import sleep
+
+from tpu_survival import TPUSurvival
 
 project = 'PROJECT_ID'
 location = 'LOCATION'
@@ -24,37 +25,37 @@ ts = TPUSurvival(project=project, location=location)
 
 
 while ts.current_index <= max_attempt:
-	# creatre TPU pod
-	ts.create()
+    # creatre TPU pod
+    ts.create()
 
-	# wait until it is ready
-	while ts.state != 'READY':
-		sleep(10)
-		ts.update_state()
+    # wait until it is ready
+    while ts.state != 'READY':
+        sleep(10)
+        ts.update_state()
 
-	ts.run_task()
+    ts.run_task()
 
-	while ts.state == 'READY':
-		sleep(10)
-		ts.update_state()
+    while ts.state == 'READY':
+        sleep(10)
+        ts.update_state()
 
-		# check the status of the training process.
-		ts.current_process.poll()
-		returncode = ts.current_process.returncode
+        # check the status of the training process.
+        ts.current_process.poll()
+        returncode = ts.current_process.returncode
 
-		# training finished
-		if returncode is not None:
-			print('Training process terminated with code: {}.'.format(returncode))
-			
-			# clean up
-			ts.delete()
+        # training finished
+        if returncode is not None:
+            print('Training process terminated with code: {}.'.format(
+                returncode))
 
-			sys.exit(returncode)
+            # clean up
+            ts.delete()
 
-	# when preempted
-	ts.delete()
-	ts.kill_current_task()
+            sys.exit(returncode)
 
-	# get ready for the next attempt
-	ts.increment_index()
+    # when preempted
+    ts.delete()
+    ts.kill_current_task()
 
+    # get ready for the next attempt
+    ts.increment_index()
