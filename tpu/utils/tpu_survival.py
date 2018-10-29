@@ -37,17 +37,20 @@ class TPUSurvival(object):
 
 
     def tpu_name(self, index=None):
+        """Format tpu_name to be used in creation and detetion calls."""
         index = index or self.current_index
         return '{}-{}'.format(self.prefix, index)
 
 
     def tpu_cidr_block(self, index=None):
+        """Format CIDR block to be used in creation calls."""
         index = index or self.current_index
         # NOTE: this could still overflow
         return '10.0.1{:0>2}.0/27'.format(str(index))
 
 
     def update_state(self):
+        """Poll the TPU nodes and update self.state."""
         nodes = list_tpus(self.project, self.location).get('nodes', [])
 
         for node in nodes:
@@ -64,6 +67,7 @@ class TPUSurvival(object):
 
 
     def kill_current_task(self):
+        """Kill the current running task."""
         print('killing current process: {}'.format(self.current_index))
 
         # The subprocess runs a shell command, which in turn calls python.
@@ -80,6 +84,8 @@ class TPUSurvival(object):
 
     # run_task should be called at the beginning and then only after the call to kill current_process
     def run_task(self):
+        """Call a subprocess to run the training task on the current TPU node.
+        """
         tpu_name = self.tpu_name()
 
         print('running task: {}'.format(tpu_name))
@@ -94,6 +100,9 @@ class TPUSurvival(object):
 
 
     def delete(self, index=None):
+        """Delete the TPU node of the given index.
+        If the index is not provided the current node is deleted.
+        """
         tpu_name = self.tpu_name(index)
 
         print('deleting: {}'.format(tpu_name))
@@ -105,6 +114,9 @@ class TPUSurvival(object):
 
 
     def create(self, index=None):
+        """Create a TPU node of the given index.
+        If the index is not provided self.current_index is used.
+        """
         tpu_name = self.tpu_name()
         tpu_cidr_block = self.tpu_cidr_block()
 
