@@ -28,13 +28,13 @@ def list_tpus(project, location):
     return request.execute()
 
 
-def create_tpu(project, location, tpu_name, accelerator_type='v2-8', tensorflow_version='1.11', cidr_block='10.0.101.0', preemptible=False):
+def create_tpu(
+    project, location, tpu_name, accelerator_type='v2-8', tensorflow_version='1.11', cidr_block='10.0.101.0', preemptible=False):
     service = discovery.build('tpu', 'v1', credentials=credentials)
 
     parent = 'projects/{}/locations/{}'.format(project, location)
 
     node = {
-        'name': tpu_name,
         'acceleratorType': accelerator_type,
         'tensorflowVersion': tensorflow_version,
         'network': 'default',
@@ -44,6 +44,7 @@ def create_tpu(project, location, tpu_name, accelerator_type='v2-8', tensorflow_
         }
     }
 
+    # NOTE: in docs and samples nodeId is often referred to as tpu_name
     request = service.projects().locations().nodes().create(parent=parent, body=node, nodeId=tpu_name)
 
     return request.execute()
