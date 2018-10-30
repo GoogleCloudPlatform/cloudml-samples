@@ -19,6 +19,7 @@ Example usage:
       --model=MY_MODEL_NAME \
       --instances=request.json > response.yaml
 """
+from __future__ import print_function
 
 import argparse
 import base64
@@ -89,7 +90,7 @@ def make_request_json(input_images, output_json, do_resize):
       ff.write(row)
       ff.write('\n')
 
-  print 'Wrote {} images to {}'.format(len(input_images), output_json)
+  print('Wrote {} images to {}'.format(len(input_images), output_json))
 
 
 def main():

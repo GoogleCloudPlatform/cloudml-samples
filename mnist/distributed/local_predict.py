@@ -22,6 +22,7 @@ r"""A script for predicting using an MNIST model locally.
     --model_dir=gs://${PROJECT_ID}-ml/mnist/${JOB_NAME}/model \
     data/eval_sample.tfrecord
 """
+from __future__ import print_function
 
 import argparse
 import collections
@@ -61,14 +62,14 @@ def local_predict(args):
       feed_dict[input_alias_map['examples_bytes']].append(line)
 
     if args.dry_run:
-      print 'Feed data dict %s to graph and fetch %s' % (
-          feed_dict, tensor_names)
+      print('Feed data dict %s to graph and fetch %s' % (
+          feed_dict, tensor_names))
     else:
       result = sess.run(fetches=tensor_names, feed_dict=feed_dict)
       for row in zip(*result):
-        print json.dumps(
+        print(json.dumps(
             {name: (value.tolist() if getattr(value, 'tolist', None) else value)
-             for name, value in zip(aliases, row)})
+             for name, value in zip(aliases, row)}))
 
 
 def parse_args():
