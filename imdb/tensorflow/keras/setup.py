@@ -1,14 +1,16 @@
 """Cloud ML Engine package configuration."""
-
 from setuptools import find_packages
 from setuptools import setup
 
-REQUIRED_PACKAGES = ['requests==2.19.1']
+with open('requirements.txt') as f:
+  requirements = [l.strip('\n') for l in f if
+                  l.strip('\n') and not l.startswith('#')]
 
-setup(name='imdb',
-      version='1.0',
-      install_requires=REQUIRED_PACKAGES,
-      include_package_data=True,
-      packages=find_packages(),
-      description='IMDB Keras model on Cloud ML Engine'
+setup(
+  name='imdb',
+  version='0.1',
+  install_requires=requirements,
+  packages=find_packages(),
+  include_package_data=True,
+  description='CMLE samples'
 )
