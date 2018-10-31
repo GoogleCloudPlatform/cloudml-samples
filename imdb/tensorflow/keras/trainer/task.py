@@ -90,7 +90,7 @@ def _load_data(path='imdb.npz',
     raise ValueError('No training file defined')
 
   if path.startswith('gs://'):
-    _download_from_gcs(path, destination=IMDB_FILE)
+    download_files_from_gcs(path, destination=IMDB_FILE)
     path = IMDB_FILE
   with np.load(path) as f:
     x_train, labels_train = f['x_train'], f['y_train']
@@ -203,7 +203,7 @@ def _get_word_index(path):
   if not path:
     raise ValueError('No index file defined')
   if path.startswith('gs://'):
-    _download_from_gcs(path, destination=INDEX_FILE)
+    download_files_from_gcs(path, destination=INDEX_FILE)
     path = INDEX_FILE
 
   with open(path) as f:
@@ -217,7 +217,7 @@ def _get_word_index(path):
   return word_index
 
 
-def _download_from_gcs(source, destination):
+def download_files_from_gcs(source, destination):
   """Downloads data from Google Cloud Storage into current local folder.
 
     Destination MUST be filename ONLY, doesn't support folders.
@@ -238,7 +238,7 @@ def _download_from_gcs(source, destination):
   bucket.blob(blob_name).download_to_filename(destination)
 
 
-def prepare_data(train_data_file, word_index_file, num_words):
+def preprocess(train_data_file, word_index_file, num_words):
   """Loads Numpy file .npz format and process its the data.
 
   Pad the arrays so they all have the same length, then create an integer
@@ -273,15 +273,16 @@ def train_and_evaluate(hparams):
   """
   # Load data.
   (train_data, train_labels), (test_data, test_labels) = \
-      prepare_data(train_data_file=hparams.train_file,
-                   word_index_file=hparams.word_index_file,
-                   num_words=model.TOP_K)
-  # Create estimator.
+      preprocess(train_data_file=hparams.train_file,
+                 word_index_file=hparams.word_index_file,
+                 num_words=model.TOP_K)
+  # Create estimator
   run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
   estimator = model.keras_estimator(model_dir=hparams.job_dir,
                                     config=run_config,
                                     learning_rate=hparams.learning_rate,
                                     vocab_size=model.VOCAB_SIZE)
+  # Training steps
   train_steps = hparams.num_epochs * len(train_data) / hparams.batch_size
   # Create TrainSpec.
   train_spec = tf.estimator.TrainSpec(
@@ -311,17 +312,17 @@ def train_and_evaluate(hparams):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument(
-      '--job-dir',
+      '--job_dir',
       type=str,
       required=True,
       help='GCS location to write checkpoints and export models')
   parser.add_argument(
-      '--train-file',
+      '--train_file',
       type=str,
       required=True,
       help='Training file local or GCS')
   parser.add_argument(
-      '--word-index-file',
+      '--word_index_file',
       type=str,
       required=True,
       help='Word index json file local or GCS')
@@ -339,7 +340,7 @@ if __name__ == '__main__':
       '--learning_rate',
       default=.001,
       type=float,
-      help='learning rate for gradient descent, default=.001')
+      help='Learning rate for gradient descent, default=.001')
   # Argument to turn on all logging.
   parser.add_argument(
       '--verbosity',

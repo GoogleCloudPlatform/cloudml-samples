@@ -96,8 +96,8 @@ bucket (names must be globally unique) and place the data in there:
 
 ```shell
 gsutil mb gs://your-bucket-name
-gsutil cp -r data/imdb.npz gs://your-bucket-name/imdb.npz
-gsutil cp -r data/imdb_word_index.json gs://your-bucket-name/imdb_word_index.json
+gsutil cp -r data/imdb.npz gs://cloud-samples-data/ml-engine/imdb/imdb.npz
+gsutil cp -r data/imdb_word_index.json gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
 ```
 
 ### Project configuration file: `setup.py`
@@ -111,12 +111,13 @@ from setuptools import setup
 
 REQUIRED_PACKAGES = ['requests==2.19.1']
 
-setup(name='imdb',
-      version='1.0',
-      install_requires=REQUIRED_PACKAGES,
-      include_package_data=True,
-      packages=find_packages(),
-      description='IMDB Keras model on Cloud ML Engine'
+setup(
+  name='imdb',
+  version='0.1',
+  install_requires=REQUIRED_PACKAGES,
+  packages=find_packages(),
+  include_package_data=True,
+  description='CMLE samples'
 )
 ```
 
@@ -136,15 +137,17 @@ IMDB_DATA=data
 mkdir $IMDB_DATA
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=imdb_$DATE
+export TRAIN_FILE=$IMDB_DATA/imdb.npz
+export WORD_INDEX_FILE=$IMDB_DATA/imdb_word_index.json
 rm -rf $JOB_DIR
 ```
 
 Run the model with python (local)
                        
 ```
-python -m trainer.task --train-file=$IMDB_DATA/imdb.npz \
-                       --word-index-file=$IMDB_DATA/imdb_word_index.json \
-                       --job-dir=$JOB_DIR
+python -m trainer.task --train_file=$TRAIN_FILE \
+                       --word_index_file=$WORD_INDEX_FILE \
+                       --job_dir=$JOB_DIR
 ```
 
 ## Training using gcloud local
@@ -157,10 +160,10 @@ Define variables*
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=imdb_$DATE
-rm -rf $JOB_DIR
 export REGION=us-central1
-export GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
-export GCS_WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
+export WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
+rm -rf $JOB_DIR
 ```
 
 You can run Keras training using gcloud locally.
@@ -169,9 +172,9 @@ You can run Keras training using gcloud locally.
 gcloud ml-engine local train --module-name=trainer.task \
                 --package-path=trainer/ \
                 -- \
-                --train-file=$GCS_TRAIN_FILE \
-                --word-index-file=$GCS_WORD_INDEX_FILE \
-                --job-dir=$JOB_DIR
+                --train_file=$GCS_TRAIN_FILE \
+                --word_index_file=$GCS_WORD_INDEX_FILE \
+                --job_dir=$JOB_DIR
 ```
 
 *Feel free to modify the destination file for in utils.py
@@ -197,13 +200,13 @@ You can train the model on Cloud ML Engine
 gcloud ml-engine jobs submit training $JOB_NAME \
                 --stream-logs \
                 --runtime-version 1.10 \
-                --job-dir=$JOB_DIR \
+                --job_dir=$JOB_DIR \
                 --package-path=trainer \
                 --module-name trainer.task \
                 --region $REGION \
                 -- \
-                --train-file $GCS_TRAIN_FILE \
-                --word-index-file $GCS_WORD_INDEX_FILE             
+                --train_file $GCS_TRAIN_FILE \
+                --word_index_file $GCS_WORD_INDEX_FILE             
 ```
 
 ## Monitor training with TensorBoard
