@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import argparse
 import os
@@ -28,7 +31,7 @@ from google.cloud import storage
 BOSTON_FILE = 'boston_housing.npz'
 
 
-def _download_from_gcs(source, destination):
+def download_files_from_gcs(source, destination):
   """Downloads data from Google Cloud Storage into current local folder.
 
   Destination MUST be filename ONLY, doesn't support folders.
@@ -69,7 +72,7 @@ def load_data(path='boston_housing.npz', test_split=0.2, seed=113):
     raise ValueError('No dataset file defined')
 
   if path.startswith('gs://'):
-    _download_from_gcs(path, destination=BOSTON_FILE)
+    download_files_from_gcs(path, destination=BOSTON_FILE)
     path = BOSTON_FILE
 
   with np.load(path) as f:
@@ -118,7 +121,7 @@ def train_and_evaluate(hparams):
   # Load data.
   (train_data,
    train_labels), (test_data,
-                   test_labels) = load_data(path=hparams.dataset_file)
+                   test_labels) = load_data(path=hparams.train_file)
 
   # Shuffle data.
   order = np.argsort(np.random.random(train_labels.shape))
@@ -168,32 +171,32 @@ def train_and_evaluate(hparams):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument(
-      '--job-dir',
+      '--job_dir',
       type=str,
       required=True,
       help='GCS location to write checkpoints and export models')
   parser.add_argument(
-      '--dataset-file',
+      '--train_file',
       type=str,
       required=True,
       help='Dataset file local or GCS')
   parser.add_argument(
-      '--test-split',
+      '--test_split',
       type=float,
       default=0.2,
       help='Split between training and test, default=0.2')
   parser.add_argument(
-      '--num-epochs',
+      '--num_epochs',
       type=float,
       default=500,
       help='number of times to go through the data, default=500')
   parser.add_argument(
-      '--batch-size',
+      '--batch_size',
       type=int,
       default=128,
       help='number of records to read during each training step, default=128')
   parser.add_argument(
-      '--learning-rate',
+      '--learning_rate',
       type=float,
       default=.001,
       help='learning rate for gradient descent, default=.001')

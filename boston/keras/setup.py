@@ -1,13 +1,16 @@
+"""Cloud ML Engine package configuration."""
 from setuptools import find_packages
 from setuptools import setup
 
-REQUIRED_PACKAGES = ['numpy==1.14.5']
+with open('requirements.txt') as f:
+  requirements = [l.strip('\n') for l in f if
+                  l.strip('\n') and not l.startswith('#')]
 
 setup(
-    name='trainer',
-    version='0.1',
-    install_requires=REQUIRED_PACKAGES,
-    packages=find_packages(),
-    include_package_data=True,
-    description='Boston Housing trainer application'
+  name='boston',
+  version='0.1',
+  install_requires=requirements,
+  packages=find_packages(),
+  include_package_data=True,
+  description='CMLE samples'
 )

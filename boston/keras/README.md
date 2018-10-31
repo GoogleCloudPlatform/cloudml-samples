@@ -121,15 +121,17 @@ packages/dependencies and set a few options.
 from setuptools import find_packages
 from setuptools import setup
 
-REQUIRED_PACKAGES = ['numpy==1.15.2']
+with open('requirements.txt') as f:
+  requirements = [l.strip('\n') for l in f if
+                  l.strip('\n') and not l.startswith('#')]
 
 setup(
-    name='trainer',
-    version='0.1',
-    install_requires=REQUIRED_PACKAGES,
-    packages=find_packages(),
-    include_package_data=True,
-    description='Boston Housing trainer application'
+  name='imdb',
+  version='0.1',
+  install_requires=requirements,
+  packages=find_packages(),
+  include_package_data=True,
+  description='CMLE samples'
 )
 ```
 
@@ -164,26 +166,33 @@ You can run the Keras code locally to validate your project.
 Use local training file.
 
 ```
-export DATASET_FILE=data/boston_housing.npz
-export JOB_NAME="boston_keras_$(date +%Y%m%d_%H%M%S)"
+export DATA_FOLDER=data
+mkdir $DATA_FOLDER
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME="boston_keras_$DATE"
+export JOB_DIR=boston_$DATE
+export TRAIN_FILE=$DATA_FOLDER/boston_housing.npz
 export JOB_DIR=/tmp/$JOB_NAME
 export REGION=us-central1
+rm -rf $JOB_DIR
 ```
 
 Use remote file located in GCS.
 
 ```
 export BUCKET_NAME=your-bucket-name
-export JOB_NAME="boston_keras_$(date +%Y%m%d_%H%M%S)"
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME="boston_keras_$DATE"
 export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
-export DATASET_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
 export REGION=us-central1
+rm -rf $JOB_DIR
 ```
 
 Run the model with python (local)
 
 ```
-python -m trainer.task --dataset-file=$DATASET_FILE --job-dir=$JOB_DIR
+python -m trainer.task --train_file=$TRAIN_FILE --job_dir=$JOB_DIR
 ```
 
 ## Training using gcloud local
@@ -194,16 +203,17 @@ Define variables*
 
 ```
 export BUCKET_NAME=your-bucket-name
-export JOB_NAME="boston_keras_$(date +%Y%m%d_%H%M%S)"
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME="boston_keras_$DATE"
 export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
-export DATASET_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
 ```
 
 You can run Keras training using gcloud locally.
 
 ```
-gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -- --dataset-file=$DATASET_FILE --job-dir=$JOB_DIR
+gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -- --train_file=$DATASET_FILE --job_dir=$JOB_DIR
 ```
 
 *Feel free to modify the destination file for in utils.py
@@ -216,16 +226,17 @@ Define variables
 
 ```
 export BUCKET_NAME=your-bucket-name
-export JOB_NAME="boston_keras_$(date +%Y%m%d_%H%M%S)"
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME="boston_keras_$DATE"
 export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
-export DATASET_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
 ```
 
 You can train the model on Cloud ML Engine
 
 ```
-gcloud ml-engine jobs submit training $JOB_NAME --stream-logs --runtime-version 1.10 --job-dir=$JOB_DIR --package-path=trainer --module-name trainer.task --region $REGION -- --dataset-file=$DATASET_FILE
+gcloud ml-engine jobs submit training $JOB_NAME --stream-logs --runtime-version 1.10 --job_dir=$JOB_DIR --package-path=trainer --module-name trainer.task --region $REGION -- --train_file=$DATASET_FILE
 ```
 
 ## Monitor training with TensorBoard
