@@ -10,7 +10,7 @@ import pandas as pd
 import xgboost as xgb
 
 # Fill in your Cloud Storage bucket name
-BUCKET_ID = <YOUR_BUCKET_NAME>
+BUCKET_ID = '<YOUR_BUCKET_NAME>'
 # [END setup]
 
 # [START download-data]

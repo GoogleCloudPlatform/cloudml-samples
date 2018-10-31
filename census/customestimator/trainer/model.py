@@ -12,24 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Implements a DNN, using a custom tf.estimator.Estimator"""
+"""Implements a DNN, using a custom tf.estimator.Estimator.
 
-# See https://goo.gl/JZ6hlH to contrast this with DNN combined
-# which the "canned" estimator based sample implements.
-import multiprocessing
+See https://goo.gl/JZ6hlH to contrast this with DNN combined which the "canned"
+estimator based sample implements.
+
+Tutorial on wide and deep: https://www.tensorflow.org/tutorials/wide_and_deep/
+"""
 import six
 
 import tensorflow as tf
 from tensorflow.python.estimator.model_fn import ModeKeys as Modes
 
-# See tutorial on wide and deep
-# https://www.tensorflow.org/tutorials/wide_and_deep/
-
-# Define the format of your input data including unused columns
-CSV_COLUMNS = ['age', 'workclass', 'fnlwgt', 'education', 'education_num',
-               'marital_status', 'occupation', 'relationship', 'race', 'gender',
-               'capital_gain', 'capital_loss', 'hours_per_week',
-               'native_country', 'income_bracket']
+# Define the format of your input data including unused columns.
+CSV_COLUMNS = [
+    'age', 'workclass', 'fnlwgt', 'education', 'education_num',
+    'marital_status', 'occupation', 'relationship', 'race', 'gender',
+    'capital_gain', 'capital_loss', 'hours_per_week', 'native_country',
+    'income_bracket'
+]
 CSV_COLUMN_DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''], [''],
                        [0], [0], [0], [''], ['']]
 LABEL_COLUMN = 'income_bracket'
@@ -44,32 +45,33 @@ INPUT_COLUMNS = [
     # of values ahead of time.
     tf.feature_column.categorical_column_with_vocabulary_list(
         'gender', [' Female', ' Male']),
-
     tf.feature_column.categorical_column_with_vocabulary_list(
-        'race',
-        [' Amer-Indian-Eskimo', ' Asian-Pac-Islander',
-         ' Black', ' Other', ' White']
-    ),
+        'race', [
+            ' Amer-Indian-Eskimo', ' Asian-Pac-Islander', ' Black', ' Other',
+            ' White'
+        ]),
     tf.feature_column.categorical_column_with_vocabulary_list(
-        'education',
-        [' Bachelors', ' HS-grad', ' 11th', ' Masters', ' 9th',
-         ' Some-college', ' Assoc-acdm', ' Assoc-voc', ' 7th-8th',
-         ' Doctorate', ' Prof-school', ' 5th-6th', ' 10th',
-         ' 1st-4th', ' Preschool', ' 12th']),
+        'education', [
+            ' Bachelors', ' HS-grad', ' 11th', ' Masters', ' 9th',
+            ' Some-college', ' Assoc-acdm', ' Assoc-voc', ' 7th-8th',
+            ' Doctorate', ' Prof-school', ' 5th-6th', ' 10th', ' 1st-4th',
+            ' Preschool', ' 12th'
+        ]),
     tf.feature_column.categorical_column_with_vocabulary_list(
-        'marital_status',
-        [' Married-civ-spouse', ' Divorced', ' Married-spouse-absent',
-         ' Never-married', ' Separated', ' Married-AF-spouse', ' Widowed']),
+        'marital_status', [
+            ' Married-civ-spouse', ' Divorced', ' Married-spouse-absent',
+            ' Never-married', ' Separated', ' Married-AF-spouse', ' Widowed'
+        ]),
     tf.feature_column.categorical_column_with_vocabulary_list(
-        'relationship',
-        [' Husband', ' Not-in-family', ' Wife', ' Own-child', ' Unmarried',
-         ' Other-relative']),
+        'relationship', [
+            ' Husband', ' Not-in-family', ' Wife', ' Own-child', ' Unmarried',
+            ' Other-relative'
+        ]),
     tf.feature_column.categorical_column_with_vocabulary_list(
-        'workclass',
-        [' Self-emp-not-inc', ' Private', ' State-gov',
-         ' Federal-gov', ' Local-gov', ' ?', ' Self-emp-inc',
-         ' Without-pay', ' Never-worked']
-    ),
+        'workclass', [
+            ' Self-emp-not-inc', ' Private', ' State-gov', ' Federal-gov',
+            ' Local-gov', ' ?', ' Self-emp-inc', ' Without-pay', ' Never-worked'
+        ]),
 
     # For columns with a large number of values, or unknown values
     # We can use a hash function to convert to categories.
@@ -99,22 +101,23 @@ def generate_model_fn(embedding_size=8,
   generates a spec from input Tensors.
 
   Args:
+    embedding_size (int): Dimenstionality of embeddings for high dimension
+      categorical columns.
     hidden_units (list): Hidden units of the DNN.
     learning_rate (float): Learning rate for the SGD.
-    embedding_size (int): Dimenstionality of embeddings for high dimension
-       categorical columns.
 
   Returns:
     A model_fn.
     See https://www.tensorflow.org/api_docs/python/tf/estimator/Estimator
     for details on the signature of the model_fn.
   """
+
   def _model_fn(mode, features, labels):
-    """A model_fn that builds the DNN classification spec
+    """A model_fn that builds the DNN classification spec.
 
     Args:
       mode (tf.estimator.ModeKeys): One of ModeKeys.(TRAIN|PREDICT|INFER) which
-         is used to selectively add operations to the graph.
+        is used to selectively add operations to the graph.
       features (Mapping[str:Tensor]): Input features for the model.
       labels (Tensor): Label Tensor.
 
@@ -124,9 +127,9 @@ def generate_model_fn(embedding_size=8,
         https://www.tensorflow.org/api_docs/python/tf/estimator/EstimatorSpec
       for details.
     """
-    (gender, race, education, marital_status, relationship,
-     workclass, occupation, native_country, age,
-     education_num, capital_gain, capital_loss, hours_per_week) = INPUT_COLUMNS
+    (gender, race, education, marital_status, relationship, workclass,
+     occupation, native_country, age, education_num, capital_gain, capital_loss,
+     hours_per_week) = INPUT_COLUMNS
 
     transformed_columns = [
         # Use indicator columns for low dimensional vocabularies
@@ -152,7 +155,7 @@ def generate_model_fn(embedding_size=8,
     inputs = tf.feature_column.input_layer(features, transformed_columns)
     label_values = tf.constant(LABELS)
 
-    # Build the DNN
+    # Build the DNN.
     curr_layer = inputs
 
     for layer_size in hidden_units:
@@ -165,31 +168,30 @@ def generate_model_fn(embedding_size=8,
           kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
       )
 
-    # Add the output layer
+    # Add the output layer.
     logits = tf.layers.dense(
         curr_layer,
         len(LABELS),
         # Do not use ReLU on last layer
         activation=None,
-        kernel_initializer=tf.contrib.layers.variance_scaling_initializer()
-    )
+        kernel_initializer=tf.contrib.layers.variance_scaling_initializer())
 
     if mode in (Modes.PREDICT, Modes.EVAL):
       probabilities = tf.nn.softmax(logits)
       predicted_indices = tf.argmax(probabilities, 1)
 
     if mode in (Modes.TRAIN, Modes.EVAL):
-      # Convert the string label column to indices
-      # Build a lookup table inside the graph
+      # Convert the string label column to indices.
+      # Build a lookup table inside the graph.
       table = tf.contrib.lookup.index_table_from_tensor(label_values)
 
-      # Use the lookup table to convert string labels to ints
+      # Use the lookup table to convert string labels to ints.
       label_indices = table.lookup(labels)
       # Make labels a vector
       label_indices_vector = tf.squeeze(label_indices, axis=[1])
 
       # global_step is necessary in eval to correctly load the step
-      # of the checkpoint we are evaluating
+      # of the checkpoint we are evaluating.
       global_step = tf.contrib.framework.get_or_create_global_step()
       loss = tf.reduce_mean(
           tf.nn.sparse_softmax_cross_entropy_with_logits(
@@ -197,7 +199,7 @@ def generate_model_fn(embedding_size=8,
       tf.summary.scalar('loss', loss)
 
     if mode == Modes.PREDICT:
-      # Convert predicted_indices back into strings
+      # Convert predicted_indices back into strings.
       predictions = {
           'classes': tf.gather(label_values, predicted_indices),
           'scores': tf.reduce_max(probabilities, axis=1)
@@ -213,8 +215,8 @@ def generate_model_fn(embedding_size=8,
       train_op = tf.train.FtrlOptimizer(
           learning_rate=learning_rate,
           l1_regularization_strength=3.0,
-          l2_regularization_strength=10.0
-      ).minimize(loss, global_step=global_step)
+          l2_regularization_strength=10.0).minimize(
+              loss, global_step=global_step)
       return tf.estimator.EstimatorSpec(mode, loss=loss, train_op=train_op)
 
     if mode == Modes.EVAL:
@@ -226,46 +228,42 @@ def generate_model_fn(embedding_size=8,
           depth=label_values.shape[0],
           on_value=True,
           off_value=False,
-          dtype=tf.bool
-      )
+          dtype=tf.bool)
       eval_metric_ops = {
           'accuracy': tf.metrics.accuracy(label_indices, predicted_indices),
           'auroc': tf.metrics.auc(labels_one_hot, probabilities)
       }
       return tf.estimator.EstimatorSpec(
           mode, loss=loss, eval_metric_ops=eval_metric_ops)
+
   return _model_fn
 
 
 def csv_serving_input_fn():
-  """Build the serving inputs."""
-  csv_row = tf.placeholder(
-      shape=[None],
-      dtype=tf.string
-  )
-  features = parse_csv(csv_row)
-  # Ignore label column
+  """Builds the serving inputs."""
+  csv_row = tf.placeholder(shape=[None], dtype=tf.string)
+  features = _decode_csv(csv_row)
+  # Ignore label column.
   features.pop(LABEL_COLUMN)
-  return tf.estimator.export.ServingInputReceiver(
-      features, {'csv_row': csv_row})
+  return tf.estimator.export.ServingInputReceiver(features,
+                                                  {'csv_row': csv_row})
 
 
 def example_serving_input_fn():
-  """Build the serving inputs."""
+  """Builds the serving inputs."""
   example_bytestring = tf.placeholder(
       shape=[None],
       dtype=tf.string,
   )
   features = tf.parse_example(
       example_bytestring,
-      tf.feature_column.make_parse_example_spec(INPUT_COLUMNS)
-  )
+      tf.feature_column.make_parse_example_spec(INPUT_COLUMNS))
   return tf.estimator.export.ServingInputReceiver(
       features, {'example_proto': example_bytestring})
 
 
 def json_serving_input_fn():
-  """Build the serving inputs."""
+  """Builds the serving inputs."""
   inputs = {}
   for feat in INPUT_COLUMNS:
     inputs[feat.name] = tf.placeholder(shape=[None], dtype=feat.dtype)
@@ -279,51 +277,51 @@ SERVING_FUNCTIONS = {
 }
 
 
-def parse_csv(rows_string_tensor):
+def _decode_csv(line):
   """Takes the string input tensor and returns a dict of rank-2 tensors."""
   columns = tf.decode_csv(
-      rows_string_tensor, record_defaults=CSV_COLUMN_DEFAULTS)
+      line, record_defaults=CSV_COLUMN_DEFAULTS)
   features = dict(zip(CSV_COLUMNS, columns))
 
-  # Remove unused columns
+  # Remove unused columns.
   for col in UNUSED_COLUMNS:
     features.pop(col)
 
-  for key, value in six.iteritems(features):
+  for key, _ in six.iteritems(features):
     features[key] = tf.expand_dims(features[key], -1)
   return features
 
+
 def input_fn(filenames,
-                      num_epochs=None,
-                      shuffle=True,
-                      skip_header_lines=0,
-                      batch_size=200):
+             num_epochs=None,
+             shuffle=True,
+             skip_header_lines=0,
+             batch_size=200):
   """Generates features and labels for training or evaluation.
+
   This uses the input pipeline based approach using file name queue
   to read data so that entire data is not loaded in memory.
 
   Args:
-      filenames: [str] list of CSV files to read data from.
-      num_epochs: int how many times through to read the data.
-        If None will loop through data indefinitely
-      shuffle: bool, whether or not to randomize the order of data.
-        Controls randomization of both file order and line order within
-        files.
-      skip_header_lines: int set to non-zero in order to skip header lines
-        in CSV files.
-      batch_size: int First dimension size of the Tensors returned by
-        input_fn
+      filenames: [str] A List of CSV file(s) to read data from.
+      num_epochs: (int) How many times through to read the data. If None will
+        loop through data indefinitely
+      shuffle: (bool), whether or not to randomize the order of data. Controls
+        randomization of both file order and line order within files.
+      skip_header_lines: (int) set to non-zero in order to skip header lines in
+        CSV files.
+      batch_size: (int) First dimension size of the Tensors returned by input_fn
+
   Returns:
       A (features, indices) tuple where features is a dictionary of
         Tensors, and indices is a single Tensor of label indices.
   """
-
-  dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(parse_csv)
+  dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(
+      _decode_csv)
 
   if shuffle:
     dataset = dataset.shuffle(buffer_size=batch_size * 10)
-  dataset = dataset.repeat(num_epochs)
-  dataset = dataset.batch(batch_size)
-  iterator = dataset.make_one_shot_iterator()
+  iterator = dataset.repeat(num_epochs).batch(
+      batch_size).make_one_shot_iterator()
   features = iterator.get_next()
   return features, features.pop(LABEL_COLUMN)

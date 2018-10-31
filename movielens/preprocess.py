@@ -165,7 +165,7 @@ class BuildExampleFn(beam.DoFn):
 
     return feature
 
-  def process(self, (user_id, user_ratings),
+  def process(self, user_id__user_ratings,
               movies_data,
               rating_threshold=3,
               is_ranking_problem=False,
@@ -204,6 +204,7 @@ class BuildExampleFn(beam.DoFn):
     """
     import collections  # pylint: disable=g-import-not-at-top
     from preproc import movielens  # pylint: disable=g-import-not-at-top
+    (user_id, user_ratings) = user_id__user_ratings
 
     # Convert to list because of_UnwindowedValues does not support len
     # remove once https://issues.apache.org/jira/browse/BEAM-1502 is fixed.
@@ -322,6 +323,7 @@ class BuildExampleFn(beam.DoFn):
 @beam.ptransform_fn
 def _Shuffle(pcoll):  # pylint: disable=invalid-name
   """Shuffles a PCollection."""
+  import random
   return (pcoll
           | 'PairWithRand' >> beam.Map(lambda x: (random.random(), x))
           | 'GroupByRand' >> beam.GroupByKey()

@@ -1,0 +1,110 @@
+sample:
+  path:
+    tools
+  filename:
+    sample.py
+  colab:
+    git-clone: False
+  remove:
+    ImportFrom:
+      - "module."
+
+census-estimator:
+  path:
+    census/estimator/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    Import:
+      - "trainer."
+
+census-customestimator:
+  path:
+    census/customestimator/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    Import:
+      - "trainer."
+
+census-keras:
+  path:
+    census/keras/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    Import:
+      - "trainer."
+
+census-tensorflowcore:
+  path:
+    census/tensorflowcore/trainer
+  filename:
+    task.py
+  colab:
+    git-clone: True
+  remove:
+    Import:
+      - "trainer."
+
+tpu-templates-tpu-estimator:
+  path:
+    tpu/templates/tpu_estimator
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-cnn-estimator:
+  path:
+    tpu/templates/tpu_cnn_estimator
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-gan-estimator:
+  path:
+    tpu/templates/tpu_gan_estimator
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-gan-estimator-single:
+  path:
+    tpu/templates/tpu_gan_estimator
+  filename:
+    trainer_single.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-lstm-estimator:
+  path:
+    tpu/templates/tpu_lstm_estimator
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-lstm-keras:
+  path:
+    tpu/templates/tpu_lstm_keras
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-rewrite:
+  path:
+    tpu/templates/tpu_rewrite
+  filename:
+    trainer.py
+  colab:
+    git-clone: True

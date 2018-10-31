@@ -20,6 +20,7 @@
 
 """Iris Classification Sample Cloud Runner.
 """
+from __future__ import print_function
 import argparse
 import datetime
 import os
@@ -277,7 +278,7 @@ class LazyVocabLoader(object):
     return self.reverse_vocab
 
 
-def make_evaluation_dict((input_dict, output_dict), vocab_loader):
+def make_evaluation_dict(input_dict__output_dict, vocab_loader):
   """Make summary dict for evaluation.
 
   Must contain the schema "target, predicted, score[optional]" for use with
@@ -291,6 +292,7 @@ def make_evaluation_dict((input_dict, output_dict), vocab_loader):
   Returns:
     A dict suitable for ml.AnalyzeModel that contains other summary data.
   """
+  (input_dict, output_dict) = input_dict__output_dict
   vocab = vocab_loader.get_vocab()
   reverse_vocab = vocab_loader.get_reverse_vocab()
 
@@ -366,7 +368,7 @@ def main(argv=None):
   """Run Preprocessing, Training, Eval, and Prediction as a single Dataflow."""
   args = parse_arguments(sys.argv if argv is None else argv)
 
-  print 'Building', TRAINER_NAME, 'package.'
+  print('Building', TRAINER_NAME, 'package.')
   subprocess.check_call(['python', 'setup.py', 'sdist', '--format=gztar'])
   subprocess.check_call(['gsutil', '-q', 'cp',
                          os.path.join('dist', TRAINER_NAME), args.trainer_uri])
@@ -427,14 +429,14 @@ def main(argv=None):
         data_format='TEXT',
         cloud_ml_endpoint=args.endpoint)
 
-    print 'Deploying %s version: %s' % (args.deploy_model_name,
-                                        args.deploy_model_version)
+    print('Deploying %s version: %s' % (args.deploy_model_name,
+                                        args.deploy_model_version))
 
   p.run().wait_until_finish()
 
   if args.cloud:
-    print 'Deployed %s version: %s' % (args.deploy_model_name,
-                                       args.deploy_model_version)
+    print('Deployed %s version: %s' % (args.deploy_model_name,
+                                       args.deploy_model_version))
 
 
 if __name__ == '__main__':

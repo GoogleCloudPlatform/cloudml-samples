@@ -20,6 +20,7 @@
 
 """Iris Classification Sample Preprocessing Runner.
 """
+from __future__ import print_function
 import argparse
 import datetime
 import os
@@ -140,7 +141,7 @@ def main(argv=None):
   args = parse_arguments(sys.argv if argv is None else argv)
 
   if args.cloud:
-    print 'Building',TRAINER_NAME,'package.'
+    print('Building',TRAINER_NAME,'package.')
     subprocess.check_call(['python', 'setup.py', 'sdist', '--format=gztar'])
     subprocess.check_call(['gsutil', '-q', 'cp',
                            os.path.join('dist', TRAINER_NAME),

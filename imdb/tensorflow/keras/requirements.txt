@@ -1,0 +1,4 @@
+tensorflow==1.10.*
+google-cloud-storage
+numpy
+setuptools==39.1.0
