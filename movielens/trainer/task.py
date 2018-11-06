@@ -29,6 +29,11 @@ from tensorflow.contrib.learn.python.learn import learn_runner
 from tensorflow_transform.saved import input_fn_maker
 from tensorflow_transform.tf_metadata import metadata_io
 
+try:
+    xrange          # Python 2
+except NameError:
+    xrange = range  # Python 3
+
 tf.logging.set_verbosity(tf.logging.INFO)
 
 MODEL_TYPES = ['matrix_factorization', 'dnn_softmax']

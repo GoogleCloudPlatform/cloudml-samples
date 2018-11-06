@@ -53,3 +53,58 @@ census-tensorflowcore:
     Import:
       - "trainer."
 
+tpu-templates-tpu-estimator:
+  path:
+    tpu/templates/tpu_estimator
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-cnn-estimator:
+  path:
+    tpu/templates/tpu_cnn_estimator
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-gan-estimator:
+  path:
+    tpu/templates/tpu_gan_estimator
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-gan-estimator-single:
+  path:
+    tpu/templates/tpu_gan_estimator
+  filename:
+    trainer_single.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-lstm-estimator:
+  path:
+    tpu/templates/tpu_lstm_estimator
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-lstm-keras:
+  path:
+    tpu/templates/tpu_lstm_keras
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
+
+tpu-templates-tpu-rewrite:
+  path:
+    tpu/templates/tpu_rewrite
+  filename:
+    trainer.py
+  colab:
+    git-clone: True

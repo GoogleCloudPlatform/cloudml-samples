@@ -12,7 +12,7 @@ from sklearn import svm
 from sklearn.externals import joblib
 
 # Fill in your Cloud Storage bucket name
-BUCKET_ID = <YOUR_BUCKET_NAME>
+BUCKET_ID = '<YOUR_BUCKET_NAME>'
 # [END setup]
 
 
