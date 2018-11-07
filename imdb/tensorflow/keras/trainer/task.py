@@ -17,8 +17,11 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+import logging
 import json
-import re
+import os
+import sys
+import subprocess
 
 import numpy as np
 import tensorflow as tf
@@ -26,13 +29,80 @@ import tensorflow as tf
 from tensorflow.contrib.training.python.training import hparam
 from tensorflow.python.keras.preprocessing.sequence import _remove_long_seq
 from tensorflow.python.keras.preprocessing.sequence import pad_sequences
-from google.cloud import storage
 
 from . import model
 
 IMDB_FILE = 'imdb.npz'
 INDEX_FILE = 'imdb_word_index.json'
 SENTENCE_SIZE = 256
+WORKING_DIR = os.getcwd()
+
+
+def get_args():
+  """Argument parser.
+
+	Returns:
+		Dictionary of arguments.
+	"""
+  parser = argparse.ArgumentParser()
+  parser.add_argument(
+      '--job_dir',
+      type=str,
+      required=True,
+      help='GCS location to write checkpoints and export models')
+  parser.add_argument(
+      '--train_file',
+      type=str,
+      required=True,
+      help='Training file local or GCS')
+  parser.add_argument(
+      '--word_index_file',
+      type=str,
+      required=True,
+      help='Word index json file local or GCS')
+  parser.add_argument(
+      '--num_epochs',
+      type=float,
+      default=40,
+      help='number of times to go through the data, default=40')
+  parser.add_argument(
+      '--batch_size',
+      default=512,
+      type=int,
+      help='number of records to read during each training step, default=512',)
+  parser.add_argument(
+      '--learning_rate',
+      default=.001,
+      type=float,
+      help='Learning rate for gradient descent, default=.001')
+  # Argument to turn on all logging.
+  parser.add_argument(
+      '--verbosity',
+      choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARN'],
+      default='INFO',
+  )
+  return parser.parse_args()
+
+
+def _setup_logging():
+  """Sets up logging."""
+  logger = logging.getLogger()
+  logger.setLevel(logging.INFO)
+  # Set tf logging to avoid duplicate logging. If the handlers are not removed,
+  # then we will have duplicate logging :
+  # From tf loggging written to stderr stream, and
+  # From python logger written to stdout stream.
+  tf_logger = logging.getLogger('tensorflow')
+  while tf_logger.handlers:
+    tf_logger.removeHandler(tf_logger.handlers[0])
+
+  # Redirect INFO logs to stdout
+  stdout_handler = logging.StreamHandler(sys.stdout)
+  stdout_handler.setLevel(logging.INFO)
+  logger.addHandler(stdout_handler)
+
+  # Suppress C++ level warnings.
+  os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def _load_data(path='imdb.npz',
@@ -218,24 +288,26 @@ def _get_word_index(path):
 
 
 def download_files_from_gcs(source, destination):
-  """Downloads data from Google Cloud Storage into current local folder.
-
-    Destination MUST be filename ONLY, doesn't support folders.
-    (e.g. 'file.csv', NOT 'folder/file.csv')
-
+  """Download files from GCS to a WORKING_DIR/.
   Args:
-    source: (str) The GCS URL to download from (e.g. 'gs://bucket/file.csv')
-    destination: (str) The filename to save as on local disk.
-
+    source: GCS path to the training data
+    destination: GCS path to the validation data.
   Returns:
-    Nothing, downloads file to local disk.
+    A list to the local data paths where the data is downloaded.
   """
-  search = re.search('gs://(.*?)/(.*)', source)
-  bucket_name = search.group(1)
-  blob_name = search.group(2)
-  storage_client = storage.Client()
-  bucket = storage_client.bucket(bucket_name)
-  bucket.blob(blob_name).download_to_filename(destination)
+  local_file_names = [destination]
+  gcs_input_paths = [source]
+
+  # Copy raw files from GCS into local path.
+  raw_local_files_data_paths = [os.path.join(WORKING_DIR, local_file_name)
+    for local_file_name in local_file_names
+    ]
+  for i, gcs_input_path in enumerate(gcs_input_paths):
+    if gcs_input_path:
+      subprocess.check_call(
+        ['gsutil', 'cp', gcs_input_path, raw_local_files_data_paths[i]])
+
+  return raw_local_files_data_paths
 
 
 def preprocess(train_data_file, word_index_file, num_words):
@@ -310,46 +382,9 @@ def train_and_evaluate(hparams):
 
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--job_dir',
-      type=str,
-      required=True,
-      help='GCS location to write checkpoints and export models')
-  parser.add_argument(
-      '--train_file',
-      type=str,
-      required=True,
-      help='Training file local or GCS')
-  parser.add_argument(
-      '--word_index_file',
-      type=str,
-      required=True,
-      help='Word index json file local or GCS')
-  parser.add_argument(
-      '--num_epochs',
-      type=float,
-      default=40,
-      help='number of times to go through the data, default=40')
-  parser.add_argument(
-      '--batch_size',
-      default=512,
-      type=int,
-      help='number of records to read during each training step, default=512',)
-  parser.add_argument(
-      '--learning_rate',
-      default=.001,
-      type=float,
-      help='Learning rate for gradient descent, default=.001')
-  # Argument to turn on all logging.
-  parser.add_argument(
-      '--verbosity',
-      choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARN'],
-      default='INFO',
-  )
-
-  args = parser.parse_args()
+  args = get_args()
   # Set Python level verbosity.
   tf.logging.set_verbosity(args.verbosity)
   hparams = hparam.HParams(**args.__dict__)
+
   train_and_evaluate(hparams)
