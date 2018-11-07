@@ -1,23 +1,25 @@
 # Iris Dataset
 
-Multiclass classification
+Multi-class Classification
 
 - - -
 
-The task is to classify a set of irises in three different classes, depending on four numerical features describing their geometrical shape:
+The is an example of a Multi-class problem used to classify a set of irises in three different classes. 
+The following four numerical features describe their geometrical shape:
 
  - Sepal Length
  - Sepal Width
  - Petal Length
  - Petal Width
 
-These samples uses Tensorflow:
+This sample uses TensorFlow:
 
 * The sample provided in the [estimator](/estimator) folder uses the high level
   `tf.contrib.learn.Estimator` API. This API is great for fast iteration, and
   quickly adapting models to your own datasets without major code overhauls.
-  **Version:** ```Tensorflow Version: 1.10```
 
+All the models provided in this directory can be run on the Cloud Machine Learning Engine. To follow along, check out 
+the setup instructions [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
 
 ## Dataset
 The [Iris Dataset](https://archive.ics.uci.edu/ml/datasets/iris) that this sample
@@ -28,33 +30,31 @@ on Google Cloud Storage:
  * Training file is [`iris_training.csv`](https://storage.googleapis.com/cloud-samples-data/ml-engine/iris/iris_training.csv)
  * Evaluation file is [`iris_test.csv`](https://storage.googleapis.com/cloud-samples-data/ml-engine/iris/iris_test.csv)
 
+### Disclaimer
+This dataset is provided by a third party. Google provides no representation,
+warranty, or other guarantees about the validity or any other aspects of this dataset.
+
 ### Setup instructions 
 
-All the models provided in this directory can be run on the Cloud Machine Learning Engine. To follow along, check out the setup instructions [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
+In order to satisfy Cloud ML Engine project structure requirements. The basic project structure will look something like this:
 
-#### Set Environment Variables
-Please run the export and copy statements first:
-
+```shell
+.
+├── README.md
+├── setup.py
+└── trainer
+    ├── __init__.py
+    ├── model.py
+    └── task.py
 ```
-GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
-GCS_EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
-```
 
-#### \*Optional Use local training files.
+#### Project configuration file: `setup.py`
 
-Since TensorFlow handles reading from GCS, you can run all commands below using these environment variables. However, if your network is slow or unreliable, you may want to download the files for local training.
+The `setup.py` file is run on the Cloud ML Engine server to install packages/dependencies and set a few options.
 
-```
-IRIS_DATA=data
-
-mkdir $IRIS_DATA
-
-TRAIN_FILE=$IRIS_DATA/iris_training.csv
-EVAL_FILE=$IRIS_DATA/iris_test.csv
-
-gsutil cp $GCS_TRAIN_FILE $TRAIN_FILE
-gsutil cp $GCS_EVAL_FILE $EVAL_FILE
-```
+Technically, Cloud ML Engine [requires a TensorFlow application to be pre-packaged] so that it can install it on the 
+servers it spins up. However, if you supply a `setup.py` in the project root directory, then Cloud ML Engine will
+create the package for you.
 
 
 ## Virtual environment
@@ -74,29 +74,36 @@ There are two options for the virtual environments:
 
 ## Install dependencies
 
- * Install [gcloud](https://cloud.google.com/sdk/gcloud/)
  * Install the Python dependencies. `pip install --upgrade -r requirements.txt`
 
-# Single Node Training
-Single node training runs TensorFlow code on a single instance. You can run the exact
-same code locally and on Cloud ML Engine.
+### Get your training data
 
-## How to run the code
-You can run the code either as a stand-alone python program or using `gcloud`.
-See options below:
+We host the Iris files required for you to run this sample. Files are hosted in a Public Bucket.
 
-### Local Python
+## Run the model locally
 
 Run the code on your local machine:
+
+Please run the export and copy statements first:
+
+```
+IRIS_DATA=data
+mkdir $IRIS_DATA
+gsutil cp gs://cloud-samples-data/ml-engine/iris/iris_training.csv $IRIS_DATA
+gsutil cp gs://cloud-samples-data/ml-engine/iris/iris_test.csv $IRIS_DATA
+```
+
+Define variables:
 
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export OUTPUT_DIR=iris_$DATE
-rm -rf $OUTPUT_DIR
+export TRAIN_FILE=$IRIS_DATA/iris_training.csv
+export EVAL_FILE=$IRIS_DATA/iris_test.csv
 export TRAIN_STEPS=1000
 ```
 
-This step is suggested in order to verify your model works locally. 
+Run the model with python (local)
 
 ```
 python -m trainer.task --train-file $TRAIN_FILE \
@@ -106,7 +113,8 @@ python -m trainer.task --train-file $TRAIN_FILE \
                        --eval-steps 100
 ```
 
-### Using gcloud local
+## Training using gcloud local
+
 Run the code on your local machine using `gcloud`. This allows you to "mock"
 running it on the Google Cloud:
 
@@ -114,7 +122,10 @@ running it on the Google Cloud:
 DATE=`date '+%Y%m%d_%H%M%S'`
 export OUTPUT_DIR=iris_$DATE
 rm -rf $OUTPUT_DIR
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
+export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
 export TRAIN_STEPS=1000
+export EVAL_STEPS=100
 ```
 
 ```
@@ -125,7 +136,7 @@ gcloud ml-engine local train --package-path trainer \
                            --eval-file $EVAL_FILE \
                            --job-dir $OUTPUT_DIR \
                            --train-steps $TRAIN_STEPS \
-                           --eval-steps 100
+                           --eval-steps $EVAL_STEPS
 ```
 
 ### Using Cloud ML Engine
@@ -139,35 +150,35 @@ different trial runs during Hyperparameter tuning.
 
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
-export BUCKET_NAME=<MY-BUCKET-NAME>
+export BUCKET_NAME=your-bucket-name
 export JOB_NAME=iris_$DATE
-export GCS_JOB_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
-echo $GCS_JOB_DIR
-export GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
-export GCS_EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
+export OUTPUT_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
+export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
 export TRAIN_STEPS=1000
+export EVAL_STEPS=100
 ```
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
                                     --runtime-version 1.10 \
-                                    --job-dir $GCS_JOB_DIR \
+                                    --job-dir $OUTPUT_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
                                     --region us-central1 \
                                     -- \
-                                    --train-file $GCS_TRAIN_FILE \
-                                    --eval-file $GCS_EVAL_FILE \
+                                    --train-file $TRAIN_FILE \
+                                    --eval-file $EVAL_FILE \
                                     --train-steps $TRAIN_STEPS \
-                                    --eval-steps 100
+                                    --eval-steps $EVAL_STEPS
 ```
 
-## Tensorboard
-Run the Tensorboard to inspect the details about the graph.
+## TensorBoard
+Run the TensorBoard to inspect the details about the graph.
 
 ```
-tensorboard --logdir=$GCS_JOB_DIR
+tensorboard --logdir=$OUTPUT_DIR
 ```
 
 ## Accuracy and Output
@@ -186,10 +197,11 @@ You can run the code either locally or on cloud using `gcloud`.
 Run the distributed training code locally using `gcloud`.
 
 ```
-export TRAIN_STEPS=1000
 DATE=`date '+%Y%m%d_%H%M%S'`
 export OUTPUT_DIR=iris_$DATE
 rm -rf $OUTPUT_DIR
+export TRAIN_STEPS=1000
+export EVAL_STEPS=100
 ```
 
 ```
@@ -200,8 +212,8 @@ gcloud ml-engine local train --package-path trainer \
                            --train-file $TRAIN_FILE \
                            --eval-file $EVAL_FILE \
                            --train-steps $TRAIN_STEPS \
-                           --job-dir $OUTPUT_DIR \
-                           --eval-steps 100
+                           --eval-steps $EVAL_STEPS \
+                           --job-dir $OUTPUT_DIR
 
 ```
 
@@ -209,13 +221,13 @@ gcloud ml-engine local train --package-path trainer \
 Run the distributed training code on cloud using `gcloud`.
 
 ```
-export BUCKET_NAME=<MY-BUCKET-NAME>
+export BUCKET_NAME=your-bucket-name
 export SCALE_TIER=STANDARD_1
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=iris_$DATE
-export GCS_JOB_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
-echo $GCS_JOB_DIR
+export OUTPUT_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
 export TRAIN_STEPS=1000
+export EVAL_STEPS=100
 ```
 
 ```
@@ -223,15 +235,15 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
                                     --scale-tier $SCALE_TIER \
                                     --runtime-version 1.10 \
-                                    --job-dir $GCS_JOB_DIR \
+                                    --job-dir $OUTPUT_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
                                     --region us-central1 \
                                     -- \
-                                    --train-file $GCS_TRAIN_FILE \
-                                    --eval-file $GCS_EVAL_FILE \
+                                    --train-file $TRAIN_FILE \
+                                    --eval-file $EVAL_FILE \
                                     --train-steps $TRAIN_STEPS \
-                                    --eval-steps 100
+                                    --eval-steps $EVAL_STEPS
 ```
 
 # Hyperparameter Tuning
@@ -245,14 +257,14 @@ Running Hyperparameter job is almost exactly same as Training job except that
 you need to add the `--config` argument.
 
 ```
-export BUCKET_NAME=<MY-BUCKET-NAME>
+export BUCKET_NAME=your-bucket-name
 export SCALE_TIER=STANDARD_1
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=iris_$DATE
 export HPTUNING_CONFIG=hptuning_config.yaml
-export GCS_JOB_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
-echo $GCS_JOB_DIR
+export OUTPUT_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
 export TRAIN_STEPS=1000
+export EVAL_STEPS=100
 ```
 
 ```
@@ -261,7 +273,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --scale-tier $SCALE_TIER \
                                     --runtime-version 1.10 \
                                     --config $HPTUNING_CONFIG \
-                                    --job-dir $GCS_JOB_DIR \
+                                    --job-dir $OUTPUT_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
                                     --region us-central1 \
@@ -269,15 +281,15 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --train-file $TRAIN_FILE \
                                     --eval-file $EVAL_FILE \
                                     --train-steps $TRAIN_STEPS \
-                                    --eval-steps 100
+                                    --eval-steps $EVAL_STEPS
 
 ```
 
-You can run the Tensorboard command to see the results of different runs and
+You can run the TensorBoard command to see the results of different runs and
 compare accuracy / auroc numbers:
 
 ```
-tensorboard --logdir=$GCS_JOB_DIR
+tensorboard --logdir=$OUTPUT_DIR
 ```
 
 ## Run Predictions
@@ -293,20 +305,20 @@ gcloud ml-engine models create iris --regions us-central1
 Then we'll look up the exact path that your exported trained model binaries live in:
 
 ```
-gsutil ls -r $GCS_JOB_DIR/export
+gsutil ls -r $OUTPUT_DIR/export
 ```
 
 
- * Estimator Based: You should see a directory named `$GCS_JOB_DIR/export/exporter/<timestamp>`.
+ * Estimator Based: You should see a directory named `$OUTPUT_DIR/export/exporter/<timestamp>`.
 ```
-export MODEL_BINARIES=$GCS_JOB_DIR/export/exporter/<timestamp>
+export MODEL_BINARIES=$OUTPUT_DIR/export/exporter/<timestamp>
 ```
 
- * Low Level Based: You should see a directory named `$GCS_JOB_DIR/export/JSON/`
+ * Low Level Based: You should see a directory named `$OUTPUT_DIR/export/JSON/`
    for `JSON`. See other formats `CSV` and `TFRECORD`.
  
 ```
-export MODEL_BINARIES=$GCS_JOB_DIR/export/CSV/
+export MODEL_BINARIES=$OUTPUT_DIR/export/CSV/
 ```
 
 ```
@@ -359,7 +371,7 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --region us-central1 \
     --runtime-version 1.10 \
     --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/iris.json \
-    --output-path $GCS_JOB_DIR/predictions
+    --output-path $OUTPUT_DIR/predictions
 ```
 
 Check the status of your prediction job:
