@@ -75,12 +75,6 @@ def get_args():
       default=.001,
       type=float,
       help='Learning rate for gradient descent, default=.001')
-  # Argument to turn on all logging.
-  parser.add_argument(
-      '--verbosity',
-      choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARN'],
-      default='INFO',
-  )
   return parser.parse_args()
 
 
@@ -384,7 +378,7 @@ def train_and_evaluate(hparams):
 if __name__ == '__main__':
   args = get_args()
   # Set Python level verbosity.
-  tf.logging.set_verbosity(args.verbosity)
+  _setup_logging()
   hparams = hparam.HParams(**args.__dict__)
 
   train_and_evaluate(hparams)
