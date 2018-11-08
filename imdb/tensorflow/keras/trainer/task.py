@@ -133,10 +133,10 @@ def train_and_evaluate(hparams):
 	# Generate Configuration.
 	run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
 	# Create estimator
-	estimator = model.keras_estimator(model_dir=hparams.job_dir,
-																		config=run_config,
-																		learning_rate=hparams.learning_rate,
-																		vocab_size=model.VOCAB_SIZE)
+	estimator = model.keras_estimator(model_dir=hparams.job_dir, 
+										config=run_config,
+										learning_rate=hparams.learning_rate,
+										vocab_size=model.VOCAB_SIZE)
 	# Start training
 	tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
