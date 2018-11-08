@@ -16,7 +16,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import numpy as np
 import tensorflow as tf
 
 from tensorflow.keras.layers import Dense
@@ -75,8 +74,6 @@ def input_fn(features, labels, batch_size, mode):
   if labels is None:
     inputs = features
   else:
-    # Change numpy array shape.
-    labels = np.asarray(labels).astype('int').reshape((-1, 1))
     inputs = (features, labels)
   # Convert the inputs to a Dataset.
   dataset = tf.data.Dataset.from_tensor_slices(inputs)
