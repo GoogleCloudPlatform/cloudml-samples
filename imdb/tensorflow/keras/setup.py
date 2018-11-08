@@ -1,5 +1,4 @@
 """Cloud ML Engine package configuration."""
-
 from setuptools import find_packages
 from setuptools import setup
 
@@ -10,5 +9,5 @@ setup(name='imdb',
       install_requires=REQUIRED_PACKAGES,
       include_package_data=True,
       packages=find_packages(),
-      description='IMDB Keras model on Cloud ML Engine'
+      description='IMDB CMLE samples'
 )

@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import numpy as np
-
 import tensorflow as tf
+
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras.layers import GlobalAveragePooling1D
@@ -76,13 +74,12 @@ def input_fn(features, labels, batch_size, mode):
   if labels is None:
     inputs = features
   else:
-    labels = np.asarray(labels).astype('int').reshape((-1, 1))
     inputs = (features, labels)
   # Convert the inputs to a Dataset.
   dataset = tf.data.Dataset.from_tensor_slices(inputs)
   if mode == tf.estimator.ModeKeys.TRAIN:
     dataset = dataset.shuffle(1000).repeat().batch(batch_size)
-  if mode == tf.estimator.ModeKeys.EVAL:
+  if mode in (tf.estimator.ModeKeys.EVAL, tf.estimator.ModeKeys.PREDICT):
     dataset = dataset.batch(batch_size)
   return dataset.make_one_shot_iterator().get_next()
 
@@ -99,5 +96,3 @@ def serving_input_fn():
   features = feature_placeholder
   return tf.estimator.export.TensorServingInputReceiver(features,
                                                         feature_placeholder)
-
-

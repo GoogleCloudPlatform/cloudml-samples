@@ -8,12 +8,12 @@ This is an example of binary or two-class classification, an important and
 widely applicable kind of machine learning problem.
 This example classifies movie reviews as positive or negative using the text of
 the review.
-This sample code is based on Tensorflow
+This sample code is based on TensorFlow
 [tutorial](https://www.tensorflow.org/tutorials/keras/basic_text_classification).
 
 ### Examples
 
-* The sample provided in [Keras](./tensorflow/keras) uses the Keras library inside Tensorflow.
+* The sample provided in [Keras](./tensorflow/keras) uses the Keras library inside TensorFlow.
   This API is great for fast iteration, and quickly adapting models to your own datasets 
   without major code overhauls.
  
@@ -45,8 +45,6 @@ In order to satisfy Cloud ML Engine project structure requirements. The basic pr
     ├── model.py
     └── task.py
 ```
-All the models provided in this directory can be run on the Cloud Machine Learning Engine. To follow along, check out the setup instructions [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
-
 
 ## Virtual environment
 
@@ -95,30 +93,16 @@ Cloud Storage], but it's possible to use other resources like [BigQuery]. Make a
 bucket (names must be globally unique) and place the data in there:
 
 ```shell
-gsutil mb gs://your-bucket-name
-gsutil cp -r data/imdb.npz gs://your-bucket-name/imdb.npz
-gsutil cp -r data/imdb_word_index.json gs://your-bucket-name/imdb_word_index.json
+BUCKET_NAME=your-bucket-name
+gsutil mb gs://$BUCKET_NAME
+gsutil cp -r data/imdb.npz gs://$BUCKET_NAME/imdb.npz
+gsutil cp -r data/imdb_word_index.json gs://$BUCKET_NAME/imdb_word_index.json
 ```
 
 ### Project configuration file: `setup.py`
 
 The `setup.py` file is run on the Cloud ML Engine server to install
 packages/dependencies and set a few options.
-
-```python
-from setuptools import find_packages
-from setuptools import setup
-
-REQUIRED_PACKAGES = ['requests==2.19.1']
-
-setup(name='imdb',
-      version='1.0',
-      install_requires=REQUIRED_PACKAGES,
-      include_package_data=True,
-      packages=find_packages(),
-      description='IMDB Keras model on Cloud ML Engine'
-)
-```
 
 Technically, Cloud ML Engine [requires a TensorFlow application to be
 pre-packaged] so that it can install it on the servers it spins up. However, if
@@ -136,15 +120,17 @@ IMDB_DATA=data
 mkdir $IMDB_DATA
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=imdb_$DATE
+export TRAIN_FILE=$IMDB_DATA/imdb.npz
+export WORD_INDEX_FILE=$IMDB_DATA/imdb_word_index.json
 rm -rf $JOB_DIR
 ```
 
 Run the model with python (local)
                        
 ```
-python -m trainer.task --train-file=$IMDB_DATA/imdb.npz \
-                       --word-index-file=$IMDB_DATA/imdb_word_index.json \
-                       --job-dir=$JOB_DIR
+python -m trainer.task --train_file=$TRAIN_FILE \
+                       --word_index_file=$WORD_INDEX_FILE \
+                       --job_dir=$JOB_DIR
 ```
 
 ## Training using gcloud local
@@ -157,10 +143,10 @@ Define variables*
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=imdb_$DATE
-rm -rf $JOB_DIR
 export REGION=us-central1
-export GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
-export GCS_WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
+export WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
+rm -rf $JOB_DIR
 ```
 
 You can run Keras training using gcloud locally.
@@ -169,9 +155,9 @@ You can run Keras training using gcloud locally.
 gcloud ml-engine local train --module-name=trainer.task \
                 --package-path=trainer/ \
                 -- \
-                --train-file=$GCS_TRAIN_FILE \
-                --word-index-file=$GCS_WORD_INDEX_FILE \
-                --job-dir=$JOB_DIR
+                --train_file=$TRAIN_FILE \
+                --word_index_file=$WORD_INDEX_FILE \
+                --job_dir=$JOB_DIR
 ```
 
 *Feel free to modify the destination file for in utils.py
@@ -187,8 +173,8 @@ export BUCKET_NAME=your-bucket-name-without-gcs-prefix
 export JOB_NAME="imbd_keras_$(date +%Y%m%d_%H%M%S)"
 export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
-export GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
-export GCS_WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
+export WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
 ```
 
 You can train the model on Cloud ML Engine
@@ -197,18 +183,18 @@ You can train the model on Cloud ML Engine
 gcloud ml-engine jobs submit training $JOB_NAME \
                 --stream-logs \
                 --runtime-version 1.10 \
-                --job-dir=$JOB_DIR \
+                --job_dir=$JOB_DIR \
                 --package-path=trainer \
                 --module-name trainer.task \
                 --region $REGION \
                 -- \
-                --train-file $GCS_TRAIN_FILE \
-                --word-index-file $GCS_WORD_INDEX_FILE             
+                --train_file $TRAIN_FILE \
+                --word_index_file $WORD_INDEX_FILE             
 ```
 
 ## Monitor training with TensorBoard
 
-If Tensorboard appears blank, try refreshing after 10 minutes.
+If TensorBoard appears blank, try refreshing after 10 minutes.
 
 ```
 tensorboard --logdir=$JOB_DIR
