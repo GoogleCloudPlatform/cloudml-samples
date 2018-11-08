@@ -183,7 +183,7 @@ You can train the model on Cloud ML Engine
 gcloud ml-engine jobs submit training $JOB_NAME \
                 --stream-logs \
                 --runtime-version 1.10 \
-                --job_dir=$JOB_DIR \
+                --job-dir=$JOB_DIR \
                 --package-path=trainer \
                 --module-name trainer.task \
                 --region $REGION \
