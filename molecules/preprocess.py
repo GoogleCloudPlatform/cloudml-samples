@@ -137,41 +137,41 @@ def run(
   input_metadata = dataset_metadata.DatasetMetadata(
       dataset_schema.Schema(input_schema))
 
-  # [START create_pipeline]
+  # [START dataflow_create_pipeline]
   # Build and run a Beam Pipeline
   with beam.Pipeline(options=beam_options) as p, \
        beam_impl.Context(temp_dir=tft_temp_dir):
-    # [END create_pipeline]
+    # [END dataflow_create_pipeline]
 
-    # [START feature_extraction]
+    # [START dataflow_feature_extraction]
     # Transform and validate the input data matches the input schema
     dataset = (
         p
         | 'Feature extraction' >> feature_extraction
-        # [END feature_extraction]
-        # [START validate_inputs]
+        # [END dataflow_feature_extraction]
+        # [START dataflow_validate_inputs]
         | 'Validate inputs' >> beam.ParDo(ValidateInputData(input_metadata)))
-    # [END validate_inputs]
+    # [END dataflow_validate_inputs]
 
-    # [START analyze_and_transform_dataset]
+    # [START dataflow_analyze_and_transform_dataset]
     # Apply the tf.Transform preprocessing_fn
     dataset_and_metadata, transform_fn = (
         (dataset, input_metadata)
         | 'Feature scaling' >> beam_impl.AnalyzeAndTransformDataset(
             feature_scaling))
     dataset, metadata = dataset_and_metadata
-    # [END analyze_and_transform_dataset]
+    # [END dataflow_analyze_and_transform_dataset]
 
-    # [START split_to_train_and_eval_datasets]
+    # [START dataflow_split_to_train_and_eval_datasets]
     # Split the dataset into a training set and an evaluation set
     assert 0 < eval_percent < 100, 'eval_percent must in the range (0-100)'
     train_dataset, eval_dataset = (
         dataset
         | 'Split dataset' >> beam.Partition(
             lambda elem, _: int(random.uniform(0, 100) < eval_percent), 2))
-    # [END split_to_train_and_eval_datasets]
+    # [END dataflow_split_to_train_and_eval_datasets]
 
-    # [START write_tfrecords]
+    # [START dataflow_write_tfrecords]
     # Write the datasets as TFRecords
     coder = example_proto_coder.ExampleProtoCoder(metadata.schema)
 
@@ -191,7 +191,7 @@ def run(
     _ = (
         transform_fn
         | 'Write transformFn' >> transform_fn_io.WriteTransformFn(work_dir))
-    # [END write_tfrecords]
+    # [END dataflow_write_tfrecords]
 
   return PreprocessData(
       input_metadata.schema.as_feature_spec(),
@@ -222,10 +222,10 @@ if __name__ == '__main__':
   preprocess_data = run(
       pubchem.INPUT_SCHEMA,
       pubchem.LABELS,
-      # [START feature_extraction_transform]
+      # [START dataflow_feature_extraction_transform]
       pubchem.SimpleFeatureExtraction(
           beam.io.Read(pubchem.ParseSDF(data_files_pattern))),
-      # [END feature_extraction_transform]
+      # [END dataflow_feature_extraction_transform]
       feature_scaling=pubchem.normalize_inputs,
       beam_options=beam_options,
       work_dir=args.work_dir)
