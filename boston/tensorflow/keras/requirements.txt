@@ -1,3 +1,2 @@
-tensorflow==1.10.*
-numpy==1.14.5
+tensorflow==1.12
 setuptools==39.1.0

@@ -2,15 +2,13 @@
 from setuptools import find_packages
 from setuptools import setup
 
-with open('requirements.txt') as f:
-  requirements = [l.strip('\n') for l in f if
-                  l.strip('\n') and not l.startswith('#')]
+REQUIRED_PACKAGES = []
 
 setup(
   name='boston',
-  version='0.1',
-  install_requires=requirements,
+  version='1.0',
+  install_requires=REQUIRED_PACKAGES,
   packages=find_packages(),
   include_package_data=True,
-  description='CMLE samples'
+  description='CMLE Boston samples'
 )
