@@ -97,7 +97,7 @@ Define variables:
 
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
-export OUTPUT_DIR=iris_$DATE
+export JOB_DIR=iris_$DATE
 export TRAIN_FILE=$IRIS_DATA/iris_training.csv
 export EVAL_FILE=$IRIS_DATA/iris_test.csv
 export TRAIN_STEPS=1000
@@ -108,7 +108,7 @@ Run the model with python (local)
 ```
 python -m trainer.task --train-file $TRAIN_FILE \
                        --eval-file $EVAL_FILE \
-                       --job-dir $OUTPUT_DIR \
+                       --job-dir $JOB_DIR \
                        --train-steps $TRAIN_STEPS \
                        --eval-steps 100
 ```
@@ -120,8 +120,8 @@ running it on the Google Cloud:
 
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
-export OUTPUT_DIR=iris_$DATE
-rm -rf $OUTPUT_DIR
+export JOB_DIR=iris_$DATE
+rm -rf $JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
 export TRAIN_STEPS=1000
@@ -134,7 +134,7 @@ gcloud ml-engine local train --package-path trainer \
                            -- \
                            --train-file $TRAIN_FILE \
                            --eval-file $EVAL_FILE \
-                           --job-dir $OUTPUT_DIR \
+                           --job-dir $JOB_DIR \
                            --train-steps $TRAIN_STEPS \
                            --eval-steps $EVAL_STEPS
 ```
@@ -152,7 +152,7 @@ different trial runs during Hyperparameter tuning.
 DATE=`date '+%Y%m%d_%H%M%S'`
 export BUCKET_NAME=your-bucket-name
 export JOB_NAME=iris_$DATE
-export OUTPUT_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
+export JOB_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
 export TRAIN_STEPS=1000
@@ -163,7 +163,7 @@ export EVAL_STEPS=100
 gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
                                     --runtime-version 1.10 \
-                                    --job-dir $OUTPUT_DIR \
+                                    --job-dir $JOB_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
                                     --region us-central1 \
@@ -178,7 +178,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 Run the TensorBoard to inspect the details about the graph.
 
 ```
-tensorboard --logdir=$OUTPUT_DIR
+tensorboard --logdir=$JOB_DIR
 ```
 
 ## Accuracy and Output
@@ -198,8 +198,8 @@ Run the distributed training code locally using `gcloud`.
 
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
-export OUTPUT_DIR=iris_$DATE
-rm -rf $OUTPUT_DIR
+export JOB_DIR=iris_$DATE
+rm -rf $JOB_DIR
 export TRAIN_STEPS=1000
 export EVAL_STEPS=100
 ```
@@ -213,7 +213,7 @@ gcloud ml-engine local train --package-path trainer \
                            --eval-file $EVAL_FILE \
                            --train-steps $TRAIN_STEPS \
                            --eval-steps $EVAL_STEPS \
-                           --job-dir $OUTPUT_DIR
+                           --job-dir $JOB_DIR
 
 ```
 
@@ -225,7 +225,7 @@ export BUCKET_NAME=your-bucket-name
 export SCALE_TIER=STANDARD_1
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=iris_$DATE
-export OUTPUT_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
+export JOB_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
 export TRAIN_STEPS=1000
 export EVAL_STEPS=100
 ```
@@ -235,7 +235,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --stream-logs \
                                     --scale-tier $SCALE_TIER \
                                     --runtime-version 1.10 \
-                                    --job-dir $OUTPUT_DIR \
+                                    --job-dir $JOB_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
                                     --region us-central1 \
@@ -262,7 +262,7 @@ export SCALE_TIER=STANDARD_1
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=iris_$DATE
 export HPTUNING_CONFIG=hptuning_config.yaml
-export OUTPUT_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
+export JOB_DIR=gs://$BUCKET_NAME/models/iris/$JOB_NAME
 export TRAIN_STEPS=1000
 export EVAL_STEPS=100
 ```
@@ -273,7 +273,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --scale-tier $SCALE_TIER \
                                     --runtime-version 1.10 \
                                     --config $HPTUNING_CONFIG \
-                                    --job-dir $OUTPUT_DIR \
+                                    --job-dir $JOB_DIR \
                                     --module-name trainer.task \
                                     --package-path trainer/ \
                                     --region us-central1 \
@@ -289,7 +289,7 @@ You can run the TensorBoard command to see the results of different runs and
 compare accuracy / auroc numbers:
 
 ```
-tensorboard --logdir=$OUTPUT_DIR
+tensorboard --logdir=$JOB_DIR
 ```
 
 ## Run Predictions
@@ -305,20 +305,20 @@ gcloud ml-engine models create iris --regions us-central1
 Then we'll look up the exact path that your exported trained model binaries live in:
 
 ```
-gsutil ls -r $OUTPUT_DIR/export
+gsutil ls -r $JOB_DIR/export
 ```
 
 
- * Estimator Based: You should see a directory named `$OUTPUT_DIR/export/exporter/<timestamp>`.
+ * Estimator Based: You should see a directory named `$JOB_DIR/export/exporter/<timestamp>`.
 ```
-export MODEL_BINARIES=$OUTPUT_DIR/export/exporter/<timestamp>
+export MODEL_BINARIES=$JOB_DIR/export/exporter/<timestamp>
 ```
 
- * Low Level Based: You should see a directory named `$OUTPUT_DIR/export/JSON/`
+ * Low Level Based: You should see a directory named `$JOB_DIR/export/JSON/`
    for `JSON`. See other formats `CSV` and `TFRECORD`.
  
 ```
-export MODEL_BINARIES=$OUTPUT_DIR/export/CSV/
+export MODEL_BINARIES=$JOB_DIR/export/CSV/
 ```
 
 ```
@@ -371,7 +371,7 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --region us-central1 \
     --runtime-version 1.10 \
     --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/iris.json \
-    --output-path $OUTPUT_DIR/predictions
+    --output-path $JOB_DIR/predictions
 ```
 
 Check the status of your prediction job:

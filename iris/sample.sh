@@ -18,8 +18,7 @@ run_script_local() {
 	cd $1
 	GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
 	GCS_EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
-
-  IRIS_DATA=iris_data
+    IRIS_DATA=iris_data
 	TRAIN_FILE=$IRIS_DATA/iris_training.csv
 	EVAL_FILE=$IRIS_DATA/iris_test.csv
 
@@ -28,19 +27,19 @@ run_script_local() {
 
 	export TRAIN_STEPS=1000
 	DATE=`date '+%Y%m%d_%H%M%S'`
-	export OUTPUT_DIR=iris_$DATE
+	export JOB_DIR=iris_$DATE
 
 	# Local training.
 	python -m trainer.task --train-files $TRAIN_FILE \
 	                       --eval-files $EVAL_FILE \
-	                       --job-dir $OUTPUT_DIR \
+	                       --job-dir $JOB_DIR \
 	                       --train-steps $TRAIN_STEPS \
 	                       --eval-steps 100
 
 	if [ $? = 0 ]; then
 		echo "Python script succeeded"
 		rm -rf $IRIS_DATA
-		rm -rf $OUTPUT_DIR
+		rm -rf $JOB_DIR
 		cd ..
 		return 0
 	fi

@@ -126,13 +126,14 @@ def _get_session_config_from_env_var():
 def train_and_evaluate(hparams):
   """Runs the training and evaluate using the high level API."""
 
+  # Running configuration.
   run_config = tf.estimator.RunConfig(
       session_config=_get_session_config_from_env_var(),
       save_checkpoints_steps=100,
       save_summary_steps=100,
       model_dir=hparams.job_dir)
 
-  # Define training spec.
+  # Create TrainSpec.
   train_input_fn = lambda: model.input_fn(
       filename=hparams.train_files,
       batch_size=hparams.train_batch_size,
@@ -143,7 +144,7 @@ def train_and_evaluate(hparams):
   # Define evaluating spec. Don't shuffle evaluation data.
   exporter = tf.estimator.FinalExporter('exporter',
                                         model.serving_input_receiver_fn)
-
+  # Create EvalSpec.
   eval_input_fn = lambda: model.input_fn(
       filename=hparams.eval_files,
       batch_size=hparams.eval_batch_size,
