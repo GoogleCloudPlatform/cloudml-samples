@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -56,12 +55,12 @@ def keras_estimator(model_dir, config, learning_rate):
   return estimator
 
 
-def input_fn(x, y, batch_size, mode):
-  """Input function for training and serving.
+def input_fn(features, labels, batch_size, mode):
+  """Input function.
 
   Args:
-    x: (numpy.array) Training or eval data.
-    y: (numpy.array) Labels for training or eval data.
+    features: (numpy.array) Training or eval data.
+    labels: (numpy.array) Labels for training or eval data.
     batch_size: (int)
     mode: tf.estimator.ModeKeys mode
 
@@ -69,22 +68,19 @@ def input_fn(x, y, batch_size, mode):
     A tf.estimator.
   """
   # Default settings for training.
-  num_epochs = None
-  shuffle = True
-
-  # Override if this is eval.
-  if mode == tf.estimator.ModeKeys.EVAL:
-    num_epochs = 1
-    shuffle = False
-
-  y = np.asarray(y).astype('float32').reshape((-1, 1))
-  return tf.estimator.inputs.numpy_input_fn(
-      x,
-      y=y,
-      batch_size=batch_size,
-      num_epochs=num_epochs,
-      shuffle=shuffle,
-      queue_capacity=50000)
+  if labels is None:
+    inputs = features
+  else:
+    # Change numpy array shape.
+    labels = np.asarray(labels).astype('int').reshape((-1, 1))
+    inputs = (features, labels)
+  # Convert the inputs to a Dataset.
+  dataset = tf.data.Dataset.from_tensor_slices(inputs)
+  if mode == tf.estimator.ModeKeys.TRAIN:
+    dataset = dataset.shuffle(1000).repeat().batch(batch_size)
+  if mode in (tf.estimator.ModeKeys.EVAL, tf.estimator.ModeKeys.PREDICT):
+    dataset = dataset.batch(batch_size)
+  return dataset.make_one_shot_iterator().get_next()
 
 
 def serving_input_fn():
@@ -101,19 +97,18 @@ def serving_input_fn():
                                                         feature_placeholder)
 
 
-def train_and_evaluate(output_dir, hparams):
+def train_and_evaluate(hparams):
   """Helper function: Trains and evaluates model.
 
   Args:
-    output_dir: (str) File path where training files will be written.
     hparams: (dict) Command line parameters passed from task.py
   """
   # Loads data.
   (train_images, train_labels), (test_images, test_labels) = \
-      utils.prepare_data(train_file=hparams['train_file'],
-                         train_labels_file=hparams['train_labels_file'],
-                         test_file=hparams['test_file'],
-                         test_labels_file=hparams['test_labels_file'])
+      utils.prepare_data(train_file=hparams.train_file,
+                         train_labels_file=hparams.train_labels_file,
+                         test_file=hparams.test_file,
+                         test_labels_file=hparams.test_labels_file)
 
   # Scale values to a range of 0 to 1.
   train_images = train_images / 255.0
@@ -122,27 +117,27 @@ def train_and_evaluate(output_dir, hparams):
   # Create estimator.
   run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
   estimator = keras_estimator(
-      model_dir=output_dir,
+      model_dir=hparams.output_dir,
       config=run_config,
-      learning_rate=hparams['learning_rate'])
-  train_steps = hparams['num_epochs'] * len(
-      train_images) / hparams['batch_size']
+      learning_rate=hparams.learning_rate)
+  train_steps = hparams.num_epochs * len(
+      train_images) / hparams.batch_size
   # Create TrainSpec.
   train_spec = tf.estimator.TrainSpec(
-      input_fn=input_fn(
+      input_fn=lambda: input_fn(
           train_images,
           train_labels,
-          hparams['batch_size'],
+          hparams.batch_size,
           mode=tf.estimator.ModeKeys.TRAIN),
       max_steps=train_steps)
 
   # Create EvalSpec.
   exporter = tf.estimator.LatestExporter('exporter', serving_input_fn)
   eval_spec = tf.estimator.EvalSpec(
-      input_fn=input_fn(
+      input_fn=lambda: input_fn(
           test_images,
           test_labels,
-          hparams['batch_size'],
+          hparams.batch_size,
           mode=tf.estimator.ModeKeys.EVAL),
       steps=None,
       exporters=exporter,

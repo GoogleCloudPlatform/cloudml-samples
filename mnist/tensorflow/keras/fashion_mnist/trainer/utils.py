@@ -12,38 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import gzip
-import re
 import numpy as np
+import os
+import subprocess
 
-from google.cloud import storage
 
+WORKING_DIR = os.getcwd()
 FASHION_MNIST_TRAIN = 'train-images-idx3-ubyte.gz'
 FASHION_MNIST_TRAIN_LABELS = 'train-labels-idx1-ubyte.gz'
 FASHION_MNIST_TEST = 't10k-images-idx3-ubyte.gz'
 FASHION_MNIST_TEST_LABELS = 't10k-labels-idx1-ubyte.gz'
 
 
-def _download_from_gcs(source, destination):
-  """Downloads data from Google Cloud Storage into current local folder.
-
-  Destination MUST be filename ONLY, doesn't support folders.
-  (e.g. 'file.csv', NOT 'folder/file.csv')
+def download_files_from_gcs(source, destination):
+  """Download files from GCS to a WORKING_DIR/.
 
   Args:
-    source: (str) The GCS URL to download from (e.g. 'gs://bucket/file.csv')
-    destination: (str) The filename to save as on local disk.
+    source: GCS path to the training data
+    destination: GCS path to the validation data.
 
   Returns:
-    Nothing, downloads file to local disk.
+    A list to the local data paths where the data is downloaded.
   """
-  search = re.search('gs://(.*?)/(.*)', source)
-  bucket_name = search.group(1)
-  blob_name = search.group(2)
-  storage_client = storage.Client()
-  bucket = storage_client.bucket(bucket_name)
-  bucket.blob(blob_name).download_to_filename(destination)
+  local_file_names = [destination]
+  gcs_input_paths = [source]
+
+  # Copy raw files from GCS into local path.
+  raw_local_files_data_paths = [os.path.join(WORKING_DIR, local_file_name)
+    for local_file_name in local_file_names
+    ]
+  for i, gcs_input_path in enumerate(gcs_input_paths):
+    if gcs_input_path:
+      subprocess.check_call(
+        ['gsutil', 'cp', gcs_input_path, raw_local_files_data_paths[i]])
+
+  return raw_local_files_data_paths
 
 
 def _load_data(path, destination):
@@ -57,7 +65,7 @@ def _load_data(path, destination):
     A filename
   """
   if path.startswith('gs://'):
-    _download_from_gcs(path, destination=destination)
+    download_files_from_gcs(path, destination=destination)
     return destination
   return path
 

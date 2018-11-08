@@ -1,4 +1,4 @@
-# Image classification for MNIST Fashion dataset.
+# Image classification for MNIST Fashion Dataset.
 _**Multi-class classification for Images**_
 
 ### Overview
@@ -87,7 +87,7 @@ data preparation process] you might follow in your own projects.
 If you want to download the files directly, you can use the following commands:
 
 ```shell
-mkdir data
+mkdir data && cd data
 curl -O https://storage.googleapis.com/tensorflow/tf-keras-datasets/train-labels-idx1-ubyte.gz
 curl -O https://storage.googleapis.com/tensorflow/tf-keras-datasets/train-images-idx3-ubyte.gz
 curl -O https://storage.googleapis.com/tensorflow/tf-keras-datasets/t10k-images-idx3-ubyte.gz
@@ -114,20 +114,6 @@ gsutil cp -r data/train-images-idx3-ubyte.gz gs://your-bucket-name/t10k-labels-i
 The `setup.py` file is run on the Cloud ML Engine server to install
 packages/dependencies and set a few options.
 
-```python
-from setuptools import find_packages
-from setuptools import setup
-
-REQUIRED_PACKAGES = ['requests==2.19.1']
-
-setup(name='mnist',
-      version='1.0',
-      install_requires=REQUIRED_PACKAGES,
-      include_package_data=True,
-      packages=find_packages(),
-      description='MNIST Fashion Keras model on Cloud ML Engine'
-)
-```
 
 Technically, Cloud ML Engine [requires a TensorFlow application to be
 pre-packaged] so that it can install it on the servers it spins up. However, if
@@ -160,16 +146,25 @@ You can run the Keras code locally to validate your project.
 Define variables
 
 ```
-export BUCKET_NAME=your-bucket-name
-export JOB_NAME="mnist_keras_$(date +%Y%m%d_%H%M%S)"
-export OUTPUT_DIR=gs://$BUCKET_NAME/$JOB_NAME
-export REGION=us-central1
+MNIST_DATA=data
+DATE=`date '+%Y%m%d_%H%M%S'`
+export OUTPUT_DIR=mnist_$DATE
+export TRAIN_FILE=$MNIST_DATA/train-images-idx3-ubyte.gz
+export TRAIN_LABELS_FILE=$MNIST_DATA/train-labels-idx1-ubyte.gz
+export TEST_FILE=$MNIST_DATA/train-images-idx3-ubyte.gz
+export TEST_LABELS_FILE=$MNIST_DATA/train-labels-idx1-ubyte.gz
+rm -rf $JOB_DIR
 ```
 
 Run the model with python (local)
 
 ```
-python -m trainer.task --train-file=data/train-images-idx3-ubyte.gz --train-labels-file=data/train-labels-idx1-ubyte.gz --test-file=data/t10k-images-idx3-ubyte.gz --test-labels-file=data/t10k-labels-idx1-ubyte.gz --output_dir=/tmp/
+python -m trainer.task \
+    --train_file=$TRAIN_FILE \
+    --train_labels_file=$TRAIN_LABELS_FILE \
+    --test_file=$TEST_FILE \
+    --test_labels_file=$TEST_LABELS_FILE \
+    --output_dir=$OUTPUT_DIR
 ```
 
 ## Training using gcloud local
@@ -183,16 +178,21 @@ export BUCKET_NAME=your-bucket-name
 export JOB_NAME="mnist_keras_$(date +%Y%m%d_%H%M%S)"
 export OUTPUT_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
-export GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/mnist/train-images-idx3-ubyte.gz
-export GCS_TRAIN_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/train-labels-idx1-ubyte.gz
-export GCS_TEST_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-images-idx3-ubyte.gz
-export GCS_TEST_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-labels-idx1-ubyte.gz
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/mnist/train-images-idx3-ubyte.gz
+export TRAIN_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/train-labels-idx1-ubyte.gz
+export TEST_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-images-idx3-ubyte.gz
+export TEST_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-labels-idx1-ubyte.gz
 ```
 
 You can run Keras training using gcloud locally.
 
 ```
-gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -- --train-file=$GCS_TRAIN_FILE --train-labels=$GCS_TRAIN_LABELS_FILE --test-file=$GCS_TEST_FILE --test-labels-file=$GCS_TEST_LABELS_FILE --output_dir=$OUTPUT_DIR
+gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -- \
+    --train_file=$TRAIN_FILE \
+    --train_labels=$TRAIN_LABELS_FILE \
+    --test_file=$TEST_FILE \
+    --test_labels_file=$TEST_LABELS_FILE \
+    --output_dir=$OUTPUT_DIR
 ```
 
 *Feel free to modify the destination file for in utils.py
@@ -208,16 +208,25 @@ export BUCKET_NAME=your-bucket-name
 export JOB_NAME="mnist_keras_$(date +%Y%m%d_%H%M%S)"
 export OUTPUT_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
-export GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/mnist/train-images-idx3-ubyte.gz
-export GCS_TRAIN_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/train-labels-idx1-ubyte.gz
-export GCS_TEST_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-images-idx3-ubyte.gz
-export GCS_TEST_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-labels-idx1-ubyte.gz
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/mnist/train-images-idx3-ubyte.gz
+export TRAIN_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/train-labels-idx1-ubyte.gz
+export TEST_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-images-idx3-ubyte.gz
+export TEST_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-labels-idx1-ubyte.gz
 ```
 
 You can train the model on Cloud ML Engine
 
 ```
-gcloud ml-engine jobs submit training $JOB_NAME --stream-logs --runtime-version 1.10 --job-dir=$OUTPUT_DIR --package-path=trainer --module-name trainer.task --region $REGION -- --train-file=$GCS_TRAIN_FILE --train-labels=$GCS_TRAIN_LABELS_FILE --test-file=$GCS_TEST_FILE --test-labels-file=$GCS_TEST_LABELS_FILE --output_dir=$OUTPUT_DIR
+gcloud ml-engine jobs submit training $JOB_NAME --stream-logs --runtime-version 1.10 \
+    --job-dir=$OUTPUT_DIR \
+    --package-path=trainer \
+    --module-name trainer.task \
+    --region $REGION -- \
+    --train_file=$TRAIN_FILE \
+    --train_labels=$TRAIN_LABELS_FILE \
+    --test_file=$TEST_FILE \
+    --test_labels_file=$TEST_LABELS_FILE \
+    --output_dir=$OUTPUT_DIR
 ```
 
 ## Monitor training with TensorBoard
