@@ -37,7 +37,7 @@ def get_args():
 	"""
   parser = argparse.ArgumentParser()
   parser.add_argument(
-    '--job-dir',
+    '--model-dir',
     type=str,
     required=True,
     help='GCS location to write checkpoints and export models')
@@ -146,7 +146,7 @@ def train_and_evaluate(hparams):
   run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
   # Create estimator.
   estimator = model.keras_estimator(
-    model_dir=hparams.job_dir,
+    model_dir=hparams.model_dir,
     config=run_config,
     learning_rate=hparams.learning_rate)
   # Start training
