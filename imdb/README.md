@@ -128,9 +128,9 @@ rm -rf $JOB_DIR
 Run the model with python (local)
                        
 ```
-python -m trainer.task --train_file=$TRAIN_FILE \
-                       --word_index_file=$WORD_INDEX_FILE \
-                       --job_dir=$JOB_DIR
+python -m trainer.task --train-file=$TRAIN_FILE \
+                       --word-index-file=$WORD_INDEX_FILE \
+                       --job-dir=$JOB_DIR
 ```
 
 ## Training using gcloud local
@@ -155,9 +155,9 @@ You can run Keras training using gcloud locally.
 gcloud ml-engine local train --module-name=trainer.task \
                 --package-path=trainer/ \
                 -- \
-                --train_file=$TRAIN_FILE \
-                --word_index_file=$WORD_INDEX_FILE \
-                --job_dir=$JOB_DIR
+                --train-file=$TRAIN_FILE \
+                --word-index-file=$WORD_INDEX_FILE \
+                --job-dir=$JOB_DIR
 ```
 
 *Feel free to modify the destination file for in utils.py
@@ -169,7 +169,7 @@ before `--` while training on the cloud and this is so that we can have
 different trial runs during Hyperparameter tuning.
 
 ```
-export BUCKET_NAME=your-bucket-name-without-gcs-prefix
+export BUCKET_NAME=your-bucket-name
 export JOB_NAME="imbd_keras_$(date +%Y%m%d_%H%M%S)"
 export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
@@ -188,8 +188,8 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                 --module-name trainer.task \
                 --region $REGION \
                 -- \
-                --train_file $TRAIN_FILE \
-                --word_index_file $WORD_INDEX_FILE             
+                --train-file $TRAIN_FILE \
+                --word-index-file $WORD_INDEX_FILE             
 ```
 
 ## Monitor training with TensorBoard

@@ -37,32 +37,32 @@ def get_args():
 	"""
 	parser = argparse.ArgumentParser()
 	parser.add_argument(
-		'--job_dir',
+		'--job-dir',
 		type=str,
 		required=True,
 		help='GCS location to write checkpoints and export models')
 	parser.add_argument(
-		'--train_file',
+		'--train-file',
 		type=str,
 		required=True,
 		help='Training file local or GCS')
 	parser.add_argument(
-		'--word_index_file',
+		'--word-index-file',
 		type=str,
 		required=True,
 		help='Word index json file local or GCS')
 	parser.add_argument(
-		'--num_epochs',
+		'--num-epochs',
 		type=float,
 		default=40,
 		help='number of times to go through the data, default=40')
 	parser.add_argument(
-		'--batch_size',
+		'--batch-size',
 		default=512,
 		type=int,
 		help='number of records to read during each training step, default=512', )
 	parser.add_argument(
-		'--learning_rate',
+		'--learning-rate',
 		default=.001,
 		type=float,
 		help='Learning rate for gradient descent, default=.001')
