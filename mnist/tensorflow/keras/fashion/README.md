@@ -148,7 +148,7 @@ Define variables
 ```
 MNIST_DATA=data
 DATE=`date '+%Y%m%d_%H%M%S'`
-export OUTPUT_DIR=mnist_$DATE
+export JOB_DIR=mnist_$DATE
 export TRAIN_FILE=$MNIST_DATA/train-images-idx3-ubyte.gz
 export TRAIN_LABELS_FILE=$MNIST_DATA/train-labels-idx1-ubyte.gz
 export TEST_FILE=$MNIST_DATA/train-images-idx3-ubyte.gz
@@ -160,11 +160,11 @@ Run the model with python (local)
 
 ```
 python -m trainer.task \
-    --train_file=$TRAIN_FILE \
-    --train_labels_file=$TRAIN_LABELS_FILE \
-    --test_file=$TEST_FILE \
-    --test_labels_file=$TEST_LABELS_FILE \
-    --output_dir=$OUTPUT_DIR
+    --train-file=$TRAIN_FILE \
+    --train-labels-file=$TRAIN_LABELS_FILE \
+    --test-file=$TEST_FILE \
+    --test-labels-file=$TEST_LABELS_FILE \
+    --job-dir=$JOB_DIR
 ```
 
 ## Training using gcloud local
@@ -176,7 +176,7 @@ Define variables*
 ```
 export BUCKET_NAME=your-bucket-name
 export JOB_NAME="mnist_keras_$(date +%Y%m%d_%H%M%S)"
-export OUTPUT_DIR=gs://$BUCKET_NAME/$JOB_NAME
+export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/mnist/train-images-idx3-ubyte.gz
 export TRAIN_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/train-labels-idx1-ubyte.gz
@@ -188,11 +188,11 @@ You can run Keras training using gcloud locally.
 
 ```
 gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -- \
-    --train_file=$TRAIN_FILE \
-    --train_labels=$TRAIN_LABELS_FILE \
-    --test_file=$TEST_FILE \
-    --test_labels_file=$TEST_LABELS_FILE \
-    --output_dir=$OUTPUT_DIR
+    --train-file=$TRAIN_FILE \
+    --train-labels=$TRAIN_LABELS_FILE \
+    --test-file=$TEST_FILE \
+    --test-labels_file=$TEST_LABELS_FILE \
+    --job-dir=$JOB_DIR
 ```
 
 *Feel free to modify the destination file for in utils.py
@@ -206,7 +206,7 @@ Define variables
 ```
 export BUCKET_NAME=your-bucket-name
 export JOB_NAME="mnist_keras_$(date +%Y%m%d_%H%M%S)"
-export OUTPUT_DIR=gs://$BUCKET_NAME/$JOB_NAME
+export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/mnist/train-images-idx3-ubyte.gz
 export TRAIN_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/train-labels-idx1-ubyte.gz
@@ -218,15 +218,14 @@ You can train the model on Cloud ML Engine
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME --stream-logs --runtime-version 1.10 \
-    --job-dir=$OUTPUT_DIR \
+    --job-dir=$JOB_DIR \
     --package-path=trainer \
     --module-name trainer.task \
     --region $REGION -- \
-    --train_file=$TRAIN_FILE \
-    --train_labels=$TRAIN_LABELS_FILE \
-    --test_file=$TEST_FILE \
-    --test_labels_file=$TEST_LABELS_FILE \
-    --output_dir=$OUTPUT_DIR
+    --train-file=$TRAIN_FILE \
+    --train-labels=$TRAIN_LABELS_FILE \
+    --test-file=$TEST_FILE \
+    --test-labels-file=$TEST_LABELS_FILE
 ```
 
 ## Monitor training with TensorBoard
@@ -234,7 +233,7 @@ gcloud ml-engine jobs submit training $JOB_NAME --stream-logs --runtime-version 
 If Tensorboard appears blank, try refreshing after 10 minutes.
 
 ```
-tensorboard --logdir=$OUTPUT_DIR
+tensorboard --logdir=$JOB_DIR
 ```
 
 ## References

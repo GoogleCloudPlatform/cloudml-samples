@@ -16,7 +16,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from . import utils
 import numpy as np
 
 import tensorflow as tf
@@ -72,7 +71,6 @@ def input_fn(features, labels, batch_size, mode):
     inputs = features
   else:
     # Change numpy array shape.
-    labels = np.asarray(labels).astype('int').reshape((-1, 1))
     inputs = (features, labels)
   # Convert the inputs to a Dataset.
   dataset = tf.data.Dataset.from_tensor_slices(inputs)
@@ -97,52 +95,3 @@ def serving_input_fn():
                                                         feature_placeholder)
 
 
-def train_and_evaluate(hparams):
-  """Helper function: Trains and evaluates model.
-
-  Args:
-    hparams: (dict) Command line parameters passed from task.py
-  """
-  # Loads data.
-  (train_images, train_labels), (test_images, test_labels) = \
-      utils.prepare_data(train_file=hparams.train_file,
-                         train_labels_file=hparams.train_labels_file,
-                         test_file=hparams.test_file,
-                         test_labels_file=hparams.test_labels_file)
-
-  # Scale values to a range of 0 to 1.
-  train_images = train_images / 255.0
-  test_images = test_images / 255.0
-
-  # Create estimator.
-  run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
-  estimator = keras_estimator(
-      model_dir=hparams.output_dir,
-      config=run_config,
-      learning_rate=hparams.learning_rate)
-  train_steps = hparams.num_epochs * len(
-      train_images) / hparams.batch_size
-  # Create TrainSpec.
-  train_spec = tf.estimator.TrainSpec(
-      input_fn=lambda: input_fn(
-          train_images,
-          train_labels,
-          hparams.batch_size,
-          mode=tf.estimator.ModeKeys.TRAIN),
-      max_steps=train_steps)
-
-  # Create EvalSpec.
-  exporter = tf.estimator.LatestExporter('exporter', serving_input_fn)
-  eval_spec = tf.estimator.EvalSpec(
-      input_fn=lambda: input_fn(
-          test_images,
-          test_labels,
-          hparams.batch_size,
-          mode=tf.estimator.ModeKeys.EVAL),
-      steps=None,
-      exporters=exporter,
-      start_delay_secs=10,
-      throttle_secs=10)
-
-  # Start training
-  tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
