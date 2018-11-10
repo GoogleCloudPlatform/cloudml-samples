@@ -164,7 +164,7 @@ python -m trainer.task \
     --train-labels-file=$TRAIN_LABELS_FILE \
     --test-file=$TEST_FILE \
     --test-labels-file=$TEST_LABELS_FILE \
-    --model-dir=$JOB_DIR
+    --job-dir=$JOB_DIR
 ```
 
 ## Training using gcloud local
@@ -192,7 +192,7 @@ gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -
     --train-labels=$TRAIN_LABELS_FILE \
     --test-file=$TEST_FILE \
     --test-labels_file=$TEST_LABELS_FILE \
-    --model-dir=$JOB_DIR
+    --job-dir=$JOB_DIR
 ```
 
 *Feel free to modify the destination file for in utils.py
@@ -225,8 +225,7 @@ gcloud ml-engine jobs submit training $JOB_NAME --stream-logs --runtime-version 
     --train-file=$TRAIN_FILE \
     --train-labels=$TRAIN_LABELS_FILE \
     --test-file=$TEST_FILE \
-    --test-labels-file=$TEST_LABELS_FILE \
-    --model-dir=$JOB_DIR
+    --test-labels-file=$TEST_LABELS_FILE
 ```
 
 ## Monitor training with TensorBoard
