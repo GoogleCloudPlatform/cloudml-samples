@@ -76,26 +76,12 @@ def get_args():
     default=.01,
     type=float,
     help='learning rate for gradient descent, default=.001')
+  parser.add_argument(
+    '--verbosity',
+    choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARN'],
+    default='INFO')
   return parser.parse_args()
 
-
-def _setup_logging():
-  """Sets up logging."""
-  logger = logging.getLogger()
-  logger.setLevel(logging.INFO)
-  # Set tf logging to avoid duplicate logging. If the handlers are not removed,
-  # then we will have duplicate logging:
-  # From tf loggging written to stderr stream, and
-  # From python logger written to stdout stream.
-  tf_logger = logging.getLogger('tensorflow')
-  while tf_logger.handlers:
-    tf_logger.removeHandler(tf_logger.handlers[0])
-   # Redirect INFO logs to stdout
-  stdout_handler = logging.StreamHandler(sys.stdout)
-  stdout_handler.setLevel(logging.INFO)
-  logger.addHandler(stdout_handler)
-   # Suppress C++ level warnings.
-  os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def train_and_evaluate(hparams):
   """Helper function: Trains and evaluates model.
@@ -154,7 +140,7 @@ def train_and_evaluate(hparams):
 
 if __name__ == '__main__':
   args = get_args()
-  _setup_logging()
-
+  
+  tf.logging.set_verbosity(args.verbosity)
   hparams = hparam.HParams(**args.__dict__)
   train_and_evaluate(hparams)
