@@ -109,7 +109,12 @@ def model_fn(features, labels, mode, params):
 
             return summary.all_summary_ops()
 
-        host_call = (host_call_fn, [global_step, label_prediction_loss, domain_classification_loss])
+        # host_call's arguments must be at least 1D
+        gs_t = tf.reshape(global_step, [1])
+        lpl_t = tf.reshape(label_prediction_loss, [1])
+        dcl_t = tf.reshape(domain_classification_loss, [1])
+
+        host_call = (host_call_fn, [gs_t, lpl_t, dcl_t])
 
         # TPU version of EstimatorSpec
         return tf.contrib.tpu.TPUEstimatorSpec(
