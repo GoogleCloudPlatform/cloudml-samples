@@ -25,6 +25,10 @@ n_classes = 10
 # When applied to a tensor this layer is the identity map, but it reverses
 # the sign of the gradient, and optionally multiplies the reversed gradient
 # by a weight.
+#
+# For details, see [Domain-Adversarial Training of Neural Networks](https://arxiv.org/abs/1505.07818).
+#
+
 
 class GradientReversalLayer(tf.layers.Layer):
     def __init__(self, weight=1.0):
@@ -41,6 +45,24 @@ class GradientReversalLayer(tf.layers.Layer):
         
         return _call(input_)
 
+
+# ## The model function
+# The network consists of 3 sub-networks:
+#
+# * Feature extractor: extracts internal representation for both the source and target distributions.
+#
+# * Label predictor: predicts label from the extracted features.
+#
+# * Domain classifier: classifies the origin (`source` or `target`) of the extracted features.
+#
+#
+# Both the label predictor and the domain classifier will try to minimize 
+# classification loss, but the gradients backpropagated from the domain
+# classifier to the feature extractor have their signs reversed.
+#
+#
+# This model function also shows how to use `host_call` to output summaries.
+#
 
 def model_fn(features, labels, mode, params):
     source = features['source']
@@ -65,6 +87,7 @@ def model_fn(features, labels, mode, params):
     gradient_reversal = GradientReversalLayer(gr_weight)
     target_features = gradient_reversal(target_features)
 
+    # The predictions are the predicted labels from the `target` distribution.
     predictions = tf.nn.softmax(label_predictor_logits(target_features))
     loss = None
     train_op = None
@@ -135,7 +158,8 @@ def model_fn(features, labels, mode, params):
             train_op=train_op)
 
 
-# There are two input data sets, `source` is labeled and `target` is unlabelled.
+# ## The input function
+# There are two input data sets, `source` is labeled and `target` is unlabeled.
 
 def train_input_fn(params={}):
     # source distribution: labeled data
@@ -183,10 +207,6 @@ def train_input_fn(params={}):
     dataset = dataset.prefetch(tf.contrib.data.AUTOTUNE)
 
     return dataset
-
-
-def predict_input_fn():
-    pass
 
 
 def main(args):
