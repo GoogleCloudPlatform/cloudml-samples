@@ -26,7 +26,7 @@ n_classes = 10
 # the sign of the gradient, and optionally multiplies the reversed gradient
 # by a weight.
 
-class GradientReversalLayer(tf.keras.layers.Layer):
+class GradientReversalLayer(tf.layers.Layer):
     def __init__(self, weight=1.0):
         super(GradientReversalLayer, self).__init__()
         self.weight = weight
@@ -50,12 +50,12 @@ def model_fn(features, labels, mode, params):
     global_step = tf.train.get_global_step()
 
     # In this sample we use dense layers for each of the sub-networks.
-    feature_extractor = tf.keras.layers.Dense(7, activation='sigmoid')
+    feature_extractor = tf.layers.Dense(7, activation=tf.nn.sigmoid)
 
-    label_predictor_logits = tf.keras.layers.Dense(n_classes)
+    label_predictor_logits = tf.layers.Dense(n_classes)
 
     # There are two domains, 0: source and 1: target
-    domain_classifier_logits = tf.keras.layers.Dense(2)
+    domain_classifier_logits = tf.layers.Dense(2)
 
     source_features = feature_extractor(source)
     target_features = feature_extractor(target)
