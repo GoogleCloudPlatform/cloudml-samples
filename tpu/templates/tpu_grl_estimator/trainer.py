@@ -61,7 +61,8 @@ def model_fn(features, labels, mode, params):
     target_features = feature_extractor(target)
 
     # Apply the gradient reversal layer to target features
-    gradient_reversal = GradientReversalLayer()
+    gr_weight = params['gr_weight']
+    gradient_reversal = GradientReversalLayer(gr_weight)
     target_features = gradient_reversal(target_features)
 
     predictions = tf.nn.softmax(label_predictor_logits(target_features))
@@ -86,7 +87,7 @@ def model_fn(features, labels, mode, params):
             logits=domain_classifier_logits(source_target_features)
         )
 
-        lambda_ = params.get('lambda', 1.0)
+        lambda_ = params['lambda']
 
         loss = label_prediction_loss + lambda_ * domain_classification_loss
 
@@ -101,11 +102,13 @@ def model_fn(features, labels, mode, params):
 
     if params['use_tpu']:
         # Use host_call to log the losses on the CPU
-        def host_call_fn(gs, lpl, dcl):
+        def host_call_fn(gs, lpl, dcl, ls):
             gs = gs[0]
             with summary.create_file_writer(params['model_dir'], max_queue=params['save_checkpoints_steps']).as_default():
-                summary.scalar('label_prediction_loss', lpl[0], step=gs)
-                summary.scalar('domain_classification_loss', dcl[0], step=gs)
+                with summary.always_record_summaries():
+                    summary.scalar('label_prediction_loss', lpl[0], step=gs)
+                    summary.scalar('domain_classification_loss', dcl[0], step=gs)
+                    summary.scalar('loss', ls[0], step=gs)
 
             return summary.all_summary_ops()
 
@@ -113,8 +116,9 @@ def model_fn(features, labels, mode, params):
         gs_t = tf.reshape(global_step, [1])
         lpl_t = tf.reshape(label_prediction_loss, [1])
         dcl_t = tf.reshape(domain_classification_loss, [1])
+        ls_t = tf.reshape(loss, [1])
 
-        host_call = (host_call_fn, [gs_t, lpl_t, dcl_t])
+        host_call = (host_call_fn, [gs_t, lpl_t, dcl_t, ls_t])
 
         # TPU version of EstimatorSpec
         return tf.contrib.tpu.TPUEstimatorSpec(
@@ -249,6 +253,15 @@ if __name__ == '__main__':
     parser.add_argument(
         '--tpu',
         default=None)
+
+    parser.add_argument(
+        '--gr-weight',
+        default=1.0,
+        help='The weight for gradient reversal.')
+    parser.add_argument(
+        '--lambda',
+        default=1.0,
+        help='The regularization factor.')
 
     args, _ = parser.parse_known_args()
 
