@@ -13,33 +13,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 run_script_local() {
 
 	cd $1
 	echo "Running '$1' code sample."
-	GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
-	GCS_EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
-    IRIS_DATA=iris_data
-	TRAIN_FILE=$IRIS_DATA/iris_training.csv
-	EVAL_FILE=$IRIS_DATA/iris_test.csv
+	GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
+	GCS_WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
+    DATA=imdb_data
+	TRAIN_FILE=$DATA/imdb.npz
+	WORD_INDEX_FILE=$DATA/imdb_word_index.json
 
 	gsutil cp $GCS_TRAIN_FILE $TRAIN_FILE
-	gsutil cp $GCS_EVAL_FILE $EVAL_FILE
+	gsutil cp $GCS_WORD_INDEX_FILE $WORD_INDEX_FILE
 
-	export TRAIN_STEPS=1000
 	DATE=`date '+%Y%m%d_%H%M%S'`
 	JOB_DIR=iris_$DATE
 
 	# Local training.
-	python -m trainer.task --train-files $TRAIN_FILE \
-	                       --eval-files $EVAL_FILE \
-	                       --job-dir $JOB_DIR \
-	                       --train-steps $TRAIN_STEPS \
-	                       --eval-steps 100
+	python -m trainer.task --train-file=$TRAIN_FILE \
+                       --word-index-file=$WORD_INDEX_FILE \
+                       --job-dir=$JOB_DIR
 
 	if [ $? = 0 ]; then
 		echo "Python script succeeded"
-		rm -rf $IRIS_DATA
+		rm -rf $DATA
 		rm -rf $JOB_DIR
 		cd ..
 		return 0
@@ -48,7 +46,7 @@ run_script_local() {
 	return 1
 }
 
-run_script_local tensorflow/estimator
+run_script_local tensorflow/keras
 if [ $? = 1 ]; then
 	exit 1
 fi

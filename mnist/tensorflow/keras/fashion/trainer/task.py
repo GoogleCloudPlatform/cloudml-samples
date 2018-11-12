@@ -139,8 +139,9 @@ def train_and_evaluate(hparams):
   tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
 if __name__ == '__main__':
+
   args = get_args()
-  
   tf.logging.set_verbosity(args.verbosity)
+
   hparams = hparam.HParams(**args.__dict__)
   train_and_evaluate(hparams)

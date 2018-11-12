@@ -17,29 +17,21 @@ run_script_local() {
 
 	cd $1
 	echo "Running '$1' code sample."
-	GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
-	GCS_EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
-    IRIS_DATA=iris_data
-	TRAIN_FILE=$IRIS_DATA/iris_training.csv
-	EVAL_FILE=$IRIS_DATA/iris_test.csv
+	GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
+    DATA=boston_data
+	TRAIN_FILE=$DATA/boston_housing.npz
 
 	gsutil cp $GCS_TRAIN_FILE $TRAIN_FILE
-	gsutil cp $GCS_EVAL_FILE $EVAL_FILE
 
-	export TRAIN_STEPS=1000
 	DATE=`date '+%Y%m%d_%H%M%S'`
-	JOB_DIR=iris_$DATE
+	JOB_DIR=boston_$DATE
 
 	# Local training.
-	python -m trainer.task --train-files $TRAIN_FILE \
-	                       --eval-files $EVAL_FILE \
-	                       --job-dir $JOB_DIR \
-	                       --train-steps $TRAIN_STEPS \
-	                       --eval-steps 100
+	python -m trainer.task --train-file=$TRAIN_FILE --job-dir=$JOB_DIR
 
 	if [ $? = 0 ]; then
 		echo "Python script succeeded"
-		rm -rf $IRIS_DATA
+		rm -rf $DATA
 		rm -rf $JOB_DIR
 		cd ..
 		return 0
@@ -48,7 +40,7 @@ run_script_local() {
 	return 1
 }
 
-run_script_local tensorflow/estimator
+run_script_local tensorflow/keras
 if [ $? = 1 ]; then
 	exit 1
 fi
