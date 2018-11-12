@@ -25,14 +25,13 @@ n_classes = 10
 # sub-network.
 filter_sizes = [32, 64]
 
-# For each filter/feature map, we will apply a linear modulation.
+# A linear modulation will be applied to every filter/feature map.
 n_film = sum(filter_sizes)
 
 # ## Feature-wise Linear Modulation Layer
 #
 # For details, see [FiLM: Visual Reasoning with a General Conditioning Layer](https://arxiv.org/abs/1709.07871).
 #
-
 
 class FeaturewiseLinearModulationLayer(tf.layers.Layer):
     def call(self, input_, gamma, beta):
@@ -42,6 +41,12 @@ class FeaturewiseLinearModulationLayer(tf.layers.Layer):
 
 # ## The model function
 # 
+# The network consists of two sub-networks:
+#
+# * Label classifier: A feedforward network (here convolutional).  
+#   It is linearly modulated at intermediate outputs.
+#
+# * Modulation: A separate sub-network that learns the modulation parameters.
 #
 
 def model_fn(features, labels, mode, params):
@@ -86,7 +91,7 @@ def model_fn(features, labels, mode, params):
     conv_out_1 = tf.nn.relu(filmed_conv_1)
 
     # Fully connected logits output
-    flattened = tf.reshape(conv_out_1, (params['train_batch_size'], -1))
+    flattened = tf.reshape(conv_out_1, (params['batch_size'], -1))
     label_classification_logits = tf.layers.dense(flattened, n_classes)
 
     predictions = tf.nn.softmax(label_classification_logits)
@@ -234,15 +239,6 @@ if __name__ == '__main__':
     parser.add_argument(
         '--tpu',
         default=None)
-
-    parser.add_argument(
-        '--gr-weight',
-        default=1.0,
-        help='The weight for gradient reversal.')
-    parser.add_argument(
-        '--lambda',
-        default=1.0,
-        help='The regularization factor.')
 
     args, _ = parser.parse_known_args()
 
