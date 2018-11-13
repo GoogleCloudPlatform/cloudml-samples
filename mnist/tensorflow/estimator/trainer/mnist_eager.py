@@ -44,8 +44,9 @@ sys.path.append(os.path.dirname(__file__))
 
 from . import dataset as mnist_dataset
 from . import mnist
-from utils.flags import core as flags_core
-from utils.misc import model_helpers
+from . import model_helpers
+from flags import core as flags_core
+
 
 tfe = tf.contrib.eager
 

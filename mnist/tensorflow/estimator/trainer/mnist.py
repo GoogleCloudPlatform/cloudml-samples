@@ -17,21 +17,23 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from absl import app as absl_app
-from absl import flags
-import tensorflow as tf  # pylint: disable=g-bad-import-order
-
 # Setup PYTHONPATH
 import sys
 import os
+
 # Append current directory to the python path.
 sys.path.append(os.path.dirname(__file__))
 
+from absl import app as absl_app
+from absl import flags
+
+import tensorflow as tf
+
 from . import dataset
-from utils.flags import core as flags_core
-from utils.logs import hooks_helper
-from utils.misc import distribution_utils
-from utils.misc import model_helpers
+from . import distribution_utils
+from . import model_helpers
+from . import hooks_helper
+from flags import core as flags_core
 
 LEARNING_RATE = 1e-4
 
@@ -201,7 +203,7 @@ def run_mnist(flags_obj):
 		ds = ds.cache().shuffle(buffer_size=50000).batch(flags_obj.batch_size)
 
 		# Iterate through the dataset a set number (`epochs_between_evals`) of
-    # times during each training session.
+		# times during each training session.
 		ds = ds.repeat(flags_obj.epochs_between_evals)
 		return ds
 

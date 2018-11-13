@@ -116,6 +116,12 @@ from official.utils.flags import _performance
 
 
 Use your favorite text editor to replace ```from official.``` to ```from ```.
+A useful command:
+
+```
+find . -type f -exec sed -i.py -e "s/from official./from /g" {} +
+```
+
 Then you need to convert to in all files. Example:
 ```
 from utils.flags import _base
@@ -137,6 +143,7 @@ import os
 sys.path.append(os.path.dirname(__file__))
 ```
 
+In this example we only selected the required files from utils folder to avoid copying all files.
 
 ## Install dependencies
 
