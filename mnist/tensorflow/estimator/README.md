@@ -94,7 +94,7 @@ cp -rv . ../../../mnist/trainer/utils/
 ```
 
 Copy mnist.py, mnist_eager.py and dataset.py from MNIST [example](https://github.com/tensorflow/models/tree/master/official/mnist).
-
+Note: The utils folder is not imported into this folder. You need to import it manually to your local folder.
 
 ```
 cd ../mnist
