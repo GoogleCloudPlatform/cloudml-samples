@@ -1,0 +1,8 @@
+tensorflow==1.12
+google-api-python-client>=1.6.7
+mlperf_compliance==0.0.10
+oauth2client>=4.1.2
+pandas
+psutil>=5.4.3
+py-cpuinfo>=3.3.0
+typing
