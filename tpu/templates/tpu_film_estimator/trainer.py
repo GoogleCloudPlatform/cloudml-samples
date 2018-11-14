@@ -18,7 +18,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib import summary
 
-n_classes = 10
+N_CLASSES = 10
 
 # Making the filter sizes a global variable so it's eaiser to coordinate
 # between the modulation sub-network and the convolutional classifier
@@ -33,7 +33,7 @@ n_film = sum(filter_sizes)
 # For details, see [FiLM: Visual Reasoning with a General Conditioning Layer](https://arxiv.org/abs/1709.07871).
 #
 
-class FeaturewiseLinearModulationLayer(tf.layers.Layer):
+class FeaturewiseLinearModulationLayer(tf.keras.layers.Layer):
     def call(self, input_, gamma, beta):
         # The user is responsible for having the correct shapes
         return gamma * input_ + beta
@@ -52,25 +52,27 @@ class FeaturewiseLinearModulationLayer(tf.layers.Layer):
 def model_fn(features, labels, mode, params):
     x = features['x']
     modulation_data = features['modulation_data']
-    onehot_labels = tf.one_hot(labels, n_classes)
+    onehot_labels = tf.one_hot(labels, N_CLASSES)
+
+    batch_size = params.get('batch_size', None) or params['train_batch_size']
 
     global_step = tf.train.get_global_step()
 
     # In this sample we use dense layers for the modulation sub-network.
     # Its output has shape (batch_size, 2 * n_film) since each FiLM layer has
     # two parameters.
-    modulation_hidden = tf.layers.dense(modulation_data, 128, activation=tf.nn.relu)
+    modulation_hidden = tf.keras.layers.Dense(128, activation=tf.nn.relu)(modulation_data)
 
     # We want to allow negative modulation parameters. 
     # Here we just use the linear activation.
-    modulation_parameters = tf.layers.dense(modulation_hidden, 2 * n_film)
+    modulation_parameters = tf.keras.layers.Dense(2 * n_film)(modulation_hidden)
 
     all_gamma = modulation_parameters[:, :n_film]
     all_beta = modulation_parameters[:, n_film:]
 
     # Convolutional layers for the label classifier.
     filter_0 = filter_sizes[0]
-    conv_0 = tf.layers.conv2d(x, filters=filter_0, kernel_size=(3, 3))
+    conv_0 = tf.keras.layers.Conv2D(filters=filter_0, kernel_size=(3, 3))(x)
 
     # Apply FiLM before the ReLU activation.
     # Reshape the modulation parameters manually.
@@ -82,7 +84,7 @@ def model_fn(features, labels, mode, params):
 
     # Do the same for the next convolutional block
     filter_1 = filter_sizes[1]
-    conv_1 = tf.layers.conv2d(conv_out_0, filters=filter_1, kernel_size=(3, 3))
+    conv_1 = tf.keras.layers.Conv2D(filters=filter_1, kernel_size=(3, 3))(conv_out_0)
 
     gamma_1 = all_gamma[:, None, None, -filter_1:]
     beta_1 = all_beta[:, None, None, -filter_1:]
@@ -91,8 +93,8 @@ def model_fn(features, labels, mode, params):
     conv_out_1 = tf.nn.relu(filmed_conv_1)
 
     # Fully connected logits output
-    flattened = tf.reshape(conv_out_1, (params['batch_size'], -1))
-    label_classification_logits = tf.layers.dense(flattened, n_classes)
+    flattened = tf.reshape(conv_out_1, (batch_size, -1))
+    label_classification_logits = tf.keras.layers.Dense(N_CLASSES)(flattened)
 
     predictions = tf.nn.softmax(label_classification_logits)
     loss = None
@@ -135,7 +137,7 @@ def model_fn(features, labels, mode, params):
 def train_input_fn(params={}):
     # labaled image data
     x = np.random.rand(100, 28, 28, 3)
-    y = np.random.randint(0, n_classes, 100)
+    y = np.random.randint(0, N_CLASSES, 100)
 
     # additional input data for modulation
     modulation_data = np.random.rand(100, 5)
@@ -155,6 +157,9 @@ def train_input_fn(params={}):
     # TPUs need to know all dimensions when the graph is built
     # Datasets know the batch size only when the graph is run
     def set_shapes_and_format(x, y, modulation_data):
+        """Set the batch_size of the input tensors and returns a
+        pair (features, labels).
+        """
         x_shape = x.get_shape().merge_with([batch_size, None, None, None])
         y_shape = y.get_shape().merge_with([batch_size])
         modulation_data_shape = modulation_data.get_shape().merge_with([batch_size, None])
