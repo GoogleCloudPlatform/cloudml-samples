@@ -10,9 +10,9 @@ This directory contains helpful utilities to use [Cloud TPU](https://cloud.googl
 
 ## TPU Survival Training
 
-[`tpu_survival_job.py`](survival/tpu_survival_job.py) is a script for resuming training when a [preemptible TPU](https://cloud.google.com/tpu/docs/preemptible) is preempted during a training session.
+[TPU survival training](survival/) is a tool for resuming training when a [preemptible TPU](https://cloud.google.com/tpu/docs/preemptible) is preempted during a training session.
 
 
 ## Input Function Tuning
 
-[`input_fn_tuning_job.py`](input_fn_tuning/input_fn_tuning_job.py) is a tool for tuning the various parameters of the `input_fn` using Bayesian Optimization.
+[Input function tuning](input_fn_tuning/) is a tool for automatically tuning the various parameters of the `input_fn` using [Scikit-Optimize](https://scikit-optimize.github.io/).
