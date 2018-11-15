@@ -120,7 +120,7 @@ python -m trainer.task \
  --job-dir=$JOB_DIR
 ```
 
-* **Run locally in Google Cloud ML Engine:**
+* **Run in Google Cloud ML Engine:**
 
 * **GCloud configuration:**
 
@@ -132,6 +132,7 @@ export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
 export REGION=us-central1
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
 ```
+* **Run locally:**
 
 ```
 gcloud ml-engine local train --module-name=trainer.task \
