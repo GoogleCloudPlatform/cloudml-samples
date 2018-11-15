@@ -64,9 +64,9 @@ The basic project structure will look something like this:
     └── task.py
 ```
 
-## Install dependencies
+* **Install dependencies**
 
-*   Install the python dependencies. `pip install --upgrade -r requirements.txt`
+Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
 <h1>Data processing</h1>
 
