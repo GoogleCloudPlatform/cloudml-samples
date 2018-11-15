@@ -108,3 +108,11 @@ tpu-templates-tpu-rewrite:
     trainer.py
   colab:
     git-clone: True
+
+tpu-templates-tpu-film-estimator:
+  path:
+    tpu/templates/tpu_film_estimator
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
