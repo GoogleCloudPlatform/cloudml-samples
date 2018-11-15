@@ -112,7 +112,7 @@ export REGION=us-central1
 rm -rf $JOB_DIR
 ```
 
-* **Run locally:**
+* **Test locally:**
 
 ```
 python -m trainer.task \
