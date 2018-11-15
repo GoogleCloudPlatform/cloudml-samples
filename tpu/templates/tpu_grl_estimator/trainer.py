@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import argparse
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib import summary
 
-n_classes = 10
+N_CLASSES = 10
+
 
 # ## Gradient Reversal Layer
 #
@@ -28,7 +28,6 @@ n_classes = 10
 #
 # For details, see [Domain-Adversarial Training of Neural Networks](https://arxiv.org/abs/1505.07818).
 #
-
 
 class GradientReversalLayer(tf.layers.Layer):
     def __init__(self, weight=1.0):
@@ -67,14 +66,14 @@ class GradientReversalLayer(tf.layers.Layer):
 def model_fn(features, labels, mode, params):
     source = features['source']
     target = features['target']
-    onehot_labels = tf.one_hot(labels, n_classes)
+    onehot_labels = tf.one_hot(labels, N_CLASSES)
 
     global_step = tf.train.get_global_step()
 
     # In this sample we use dense layers for each of the sub-networks.
     feature_extractor = tf.layers.Dense(7, activation=tf.nn.sigmoid)
 
-    label_predictor_logits = tf.layers.Dense(n_classes)
+    label_predictor_logits = tf.layers.Dense(N_CLASSES)
 
     # There are two domains, 0: source and 1: target
     domain_classifier_logits = tf.layers.Dense(2)
@@ -164,7 +163,7 @@ def model_fn(features, labels, mode, params):
 def train_input_fn(params={}):
     # source distribution: labeled data
     source = np.random.rand(100, 5)
-    labels = np.random.randint(0, n_classes, 100)
+    labels = np.random.randint(0, N_CLASSES, 100)
 
     # target distribution: unlabeled data
     target = np.random.rand(100, 5)
