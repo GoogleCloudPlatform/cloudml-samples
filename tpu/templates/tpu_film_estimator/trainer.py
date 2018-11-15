@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import argparse
 import numpy as np
 import tensorflow as tf
@@ -23,13 +22,17 @@ N_CLASSES = 10
 # Making the filter sizes a global variable so it's eaiser to coordinate
 # between the modulation sub-network and the convolutional classifier
 # sub-network.
-filter_sizes = [32, 64]
+FILTER_SIZES = [32, 64]
 
 # A linear modulation will be applied to every filter/feature map.
-n_film = sum(filter_sizes)
+N_FILM = sum(FILTER_SIZES)
+
 
 # ## Feature-wise Linear Modulation Layer
 #
+# The feature-wise linear modulation layer is a network architecture design
+# that allows contextual inputs to modulate classification layers.
+# 
 # For details, see [FiLM: Visual Reasoning with a General Conditioning Layer](https://arxiv.org/abs/1709.07871).
 #
 
@@ -59,19 +62,19 @@ def model_fn(features, labels, mode, params):
     global_step = tf.train.get_global_step()
 
     # In this sample we use dense layers for the modulation sub-network.
-    # Its output has shape (batch_size, 2 * n_film) since each FiLM layer has
+    # Its output has shape (batch_size, 2 * N_FILM) since each FiLM layer has
     # two parameters.
     modulation_hidden = tf.keras.layers.Dense(128, activation=tf.nn.relu)(modulation_data)
 
     # We want to allow negative modulation parameters. 
     # Here we just use the linear activation.
-    modulation_parameters = tf.keras.layers.Dense(2 * n_film)(modulation_hidden)
+    modulation_parameters = tf.keras.layers.Dense(2 * N_FILM)(modulation_hidden)
 
-    all_gamma = modulation_parameters[:, :n_film]
-    all_beta = modulation_parameters[:, n_film:]
+    all_gamma = modulation_parameters[:, :N_FILM]
+    all_beta = modulation_parameters[:, N_FILM:]
 
     # Convolutional layers for the label classifier.
-    filter_0 = filter_sizes[0]
+    filter_0 = FILTER_SIZES[0]
     conv_0 = tf.keras.layers.Conv2D(filters=filter_0, kernel_size=(3, 3))(x)
 
     # Apply FiLM before the ReLU activation.
@@ -83,7 +86,7 @@ def model_fn(features, labels, mode, params):
     conv_out_0 = tf.nn.relu(filmed_conv_0)
 
     # Do the same for the next convolutional block
-    filter_1 = filter_sizes[1]
+    filter_1 = FILTER_SIZES[1]
     conv_1 = tf.keras.layers.Conv2D(filters=filter_1, kernel_size=(3, 3))(conv_out_0)
 
     gamma_1 = all_gamma[:, None, None, -filter_1:]

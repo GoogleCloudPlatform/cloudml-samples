@@ -17,3 +17,7 @@ cnn:
 gan:
   estimator: 
     tpu_gan_estimator
+
+film:
+  estimator:
+    tpu_film_estimator
