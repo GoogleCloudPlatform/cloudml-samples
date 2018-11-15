@@ -1,25 +1,14 @@
-# Predict House Prices
+<h1>Overview</h1>
+This code implements a Regression model using the Google Cloud platform. It includes code to process data, train a TensorFlow model and assess model performance.
+This guide trains a neural network model to predict house prices based on different features.
 
-_**Logistic Regression**_
-
-### Overview
-
-This is an example of a regression problem. This guide trains a neural network
-model to predict house prices based on different features.
-
-### Keras model in CMLE
-
-This sample runs both as a standalone Keras code and on Cloud ML Engine.
-
-We aim to predict the output of a continuous value, like a price or a
-probability.
-
-## Dataset
+#
+* **Data description**
 
 We'll use the
 [Boston Housing dataset](https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html)
 This dataset contains information collected by the U.S Census Service concerning
-housing in the area of Boston Mass. It was obtained from the StatLib archive
+housing in the area of Boston MA. It was obtained from the StatLib archive
 (http://lib.stat.cmu.edu/datasets/boston), and has been used extensively
 throughout the literature to benchmark algorithms. The dataset
 is small in size with only 506 cases.
@@ -37,8 +26,28 @@ The dataset contains 13 different features:
 9.  Index of accessibility to radial highways.
 10. Full-value property-tax rate per $10,000.
 11. Pupil-teacher ratio by town.
-12. 1000 * (Bk - 0.63) ** 2 where Bk is the proportion of Black people by town.
+12. 1000 * (Bk - 0.63) ** 2 where Bk is the proportion of African-american people by town.
 13. Percentage lower status of the population.
+
+* **Set up and test your GCP environment**
+
+The best way to setup your GCP project is to use this section in this
+[tutorial](https://cloud.google.com/ml-engine/docs/tensorflow/getting-started-training-prediction#set-up-your-gcp-project).
+
+* **Environment set-up:**
+
+Virtual environments are strongly suggested, but not required. Installing this
+sample's dependencies in a new virtual environment allows you to run the sample
+without changing global python packages on your system.
+
+There are two options for the virtual environments:
+
+*   Install [Virtual](https://virtualenv.pypa.io/en/stable/) env
+    *   Create virtual environment `virtualenv mnist`
+    *   Activate env `source mnist/bin/activate`
+*   Install [Miniconda](https://conda.io/miniconda.html)
+    *   Create conda environment `conda create --name mnist python=2.7`
+    *   Activate env `source activate mnist`
 
 ## How to satisfy Cloud ML Engine project structure requirements
 
@@ -55,35 +64,11 @@ The basic project structure will look something like this:
     └── task.py
 ```
 
-### (Prerequisite) Set up and test your GCP environment
-
-The best way to setup your GCP project is to use this section in this
-[tutorial](https://cloud.google.com/ml-engine/docs/tensorflow/getting-started-training-prediction#set-up-your-gcp-project).
-
-Once that the Cloud SDK is set up, you can check your Cloud ML Engine available
-models by running: `gcloud ml-engine models list` You should see `Listed 0
-items.` because we haven't created any ML Engine models yet.
-
-## Virtual environment
-
-Virtual environments are strongly suggested, but not required. Installing this
-sample's dependencies in a new virtual environment allows you to run the sample
-without changing global python packages on your system.
-
-There are two options for the virtual environments:
-
-*   Install [Virtual](https://virtualenv.pypa.io/en/stable/) env
-    *   Create virtual environment `virtualenv mnist`
-    *   Activate env `source mnist/bin/activate`
-*   Install [Miniconda](https://conda.io/miniconda.html)
-    *   Create conda environment `conda create --name mnist python=2.7`
-    *   Activate env `source activate mnist`
-
 ## Install dependencies
 
 *   Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
-### Get your training data
+<h1>Data processing</h1>
 
 The code from the Tensorflow website
 [Predict house prices: regression](https://www.tensorflow.org/tutorials/keras/basic_regression)
@@ -99,8 +84,7 @@ mkdir data && cd data
 curl -O https://storage.googleapis.com/tensorflow/tf-keras-datasets/boston_housing.npz
 cd ..
 ```
-
-### Upload the data to a Google Cloud Storage bucket
+* **Upload the data to a Google Cloud Storage bucket**
 
 Cloud ML Engine works by using resources available in the cloud, so the training
 data needs to be placed in such a resource. For this example, we'll use [Google
@@ -112,40 +96,9 @@ gsutil mb gs://your-bucket-name
 gsutil cp -r data/boston_housing.npz gs://your-bucket-name/boston_housing.npz
 ```
 
-### Project configuration file: `setup.py`
+<h1>Training</h1>
 
-The `setup.py` file is run on the Cloud ML Engine server to install
-packages/dependencies and set a few options.
-
-Technically, Cloud ML Engine [requires a TensorFlow application to be
-pre-packaged] so that it can install it on the servers it spins up. However, if
-you supply a `setup.py` in the project root directory, then Cloud ML Engine will
-actually create the package for you.
-
-### Create the `__init__.py` file
-
-For the Cloud ML Engine to create a package for your module, it's absolutely for
-your project to contain `trainer/__init__.py`, but it can be empty.
-
-```shell
-mkdir trainer
-touch trainer/__init__.py`
-```
-
-Without `__init__.py` local training will work, but when you try to submit a job
-to Cloud ML Engine, you will get the cryptic error message:
-
-```shell
-ERROR: (gcloud.ml-engine.jobs.submit.training)
-[../trainer] is not a valid Python package because it does not contain an
-`__init__.py` file. Please create one and try again.
-```
-
-## Run the model locally
-
-You can run the Keras code locally to validate your project.
-
-Use local training file.
+* **GCloud configuration:**
 
 ```
 export DATA_FOLDER=data
@@ -159,29 +112,17 @@ export REGION=us-central1
 rm -rf $JOB_DIR
 ```
 
-Use remote file located in GCS.
+* **Run locally:**
 
 ```
-export BUCKET_NAME=your-bucket-name
-DATE=`date '+%Y%m%d_%H%M%S'`
-export JOB_NAME="boston_keras_$DATE"
-export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
-export TRAIN_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
-export REGION=us-central1
-rm -rf $JOB_DIR
+python -m trainer.task \
+ --train-file=$TRAIN_FILE \
+ --job-dir=$JOB_DIR
 ```
 
-Run the model with python (local)
+* **Run locally in Google Cloud ML Engine:**
 
-```
-python -m trainer.task --train-file=$TRAIN_FILE --job-dir=$JOB_DIR
-```
-
-## Training using gcloud local
-
-You can run Keras training using gcloud locally.
-
-Define variables*
+* **GCloud configuration:**
 
 ```
 export BUCKET_NAME=your-bucket-name
@@ -192,44 +133,31 @@ export REGION=us-central1
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
 ```
 
-You can run Keras training using gcloud locally.
-
 ```
-gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -- --train-file=$TRAIN_FILE --job-dir=$JOB_DIR
+gcloud ml-engine local train --module-name=trainer.task \
+ --package-path=trainer -- \
+ --train-file=$TRAIN_FILE \
+ --job-dir=$JOB_DIR
 ```
 
 *Feel free to modify the destination file for in utils.py
 
-## Training using Cloud ML Engine
+* **Run in Google Cloud ML Engine:**
 
-You can train the model on Cloud ML Engine
-
-Define variables
-
-```
-export BUCKET_NAME=your-bucket-name
-DATE=`date '+%Y%m%d_%H%M%S'`
-export JOB_NAME="boston_keras_$DATE"
-export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
-export REGION=us-central1
-export TRAIN_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
-```
-
-You can train the model on Cloud ML Engine
+You can train the model on Cloud ML Engine:
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
-    --stream-logs \
-    --runtime-version 1.10 \
-    --job-dir=$JOB_DIR \
-    --package-path=trainer \
-    --module-name trainer.task \
-    --region $REGION -- --train-file=$TRAIN_FILE
+ --stream-logs \
+ --runtime-version 1.10 \
+ --job-dir=$JOB_DIR \
+ --package-path=trainer \
+ --module-name trainer.task \
+ --region $REGION -- \
+ --train-file=$TRAIN_FILE
 ```
 
-## Monitor training with TensorBoard
-
-If Tensorboard appears blank, try refreshing after 10 minutes.
+* **Monitor with Tensorboard:**
 
 ```
 tensorboard --logdir=$JOB_DIR
@@ -237,4 +165,4 @@ tensorboard --logdir=$JOB_DIR
 
 ## References
 
-[Tensorflow tutorial](https://www.tensorflow.org/tutorials/keras/basic_regression).
+[Tensorflow tutorial](https://www.tensorflow.org/tutorials/keras/basic_regression)
