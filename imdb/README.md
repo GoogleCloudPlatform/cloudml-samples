@@ -1,25 +1,11 @@
-# IMDB Text Classification
+<h1>Overview</h1>
+This code implements a Binary or two-classification model using the Google Cloud platform. It includes code to process data, 
+train a TensorFlow model and assess model performance.
+This example classifies movie reviews as positive or negative using the text of the review.
 
-Binary classification
+#
+* **Data description**
 
-- - -
-
-This is an example of binary or two-class classification, an important and
-widely applicable kind of machine learning problem.
-This example classifies movie reviews as positive or negative using the text of
-the review.
-This sample code is based on TensorFlow
-[tutorial](https://www.tensorflow.org/tutorials/keras/basic_text_classification).
-
-### Examples
-
-* The sample provided in [Keras](./tensorflow/keras) uses the Keras library inside TensorFlow.
-  This API is great for fast iteration, and quickly adapting models to your own datasets 
-  without major code overhauls.
- 
-All the models provided in this directory can be run on the Cloud Machine Learning Engine. To follow along, check out the setup instructions [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
-
-## Dataset
 We'll use the
 [IMDB dataset](https://www.tensorflow.org/api_docs/python/tf/keras/datasets/imdb)
 that contains the text of 50,000 movie reviews from the
@@ -28,25 +14,17 @@ reviews for training and 25,000 reviews for testing. The training and testing
 sets are balanced, meaning they contain an equal number of positive and negative
 reviews.
 
-### Disclaimer
+* **Disclaimer**
+
 This dataset is provided by a third party. Google provides no representation,
 warranty, or other guarantees about the validity or any other aspects of this dataset.
 
-## Setup Instructions
+* **Set up and test your GCP environment**
 
-In order to satisfy Cloud ML Engine project structure requirements. The basic project structure will look something like this:
+The best way to setup your GCP project is to use this section in this
+[tutorial](https://cloud.google.com/ml-engine/docs/tensorflow/getting-started-training-prediction#set-up-your-gcp-project).
 
-```shell
-.
-├── README.md
-├── setup.py
-└── trainer
-    ├── __init__.py
-    ├── model.py
-    └── task.py
-```
-
-## Virtual environment
+* **Environment set-up:**
 
 Virtual environments are strongly suggested, but not required. Installing this
 sample's dependencies in a new virtual environment allows you to run the sample
@@ -55,17 +33,32 @@ without changing global python packages on your system.
 There are two options for the virtual environments:
 
 *   Install [Virtual](https://virtualenv.pypa.io/en/stable/) env
-    *   Create virtual environment `virtualenv imdb_keras`
-    *   Activate env `source imdb_keras/bin/activate`
+    *   Create virtual environment `virtualenv mnist`
+    *   Activate env `source mnist/bin/activate`
 *   Install [Miniconda](https://conda.io/miniconda.html)
-    *   Create conda environment `conda create --name imdb_keras python=2.7`
-    *   Activate env `source activate imdb_keras`
+    *   Create conda environment `conda create --name mnist python=2.7`
+    *   Activate env `source activate mnist`
 
-## Install dependencies
+## How to satisfy Cloud ML Engine project structure requirements
 
-*   Install the python dependencies. `pip install --upgrade -r requirements.txt`
+The basic project structure will look something like this:
 
-### Get your training data
+```shell
+.
+├── README.md
+├── requirements.txt
+├── setup.py
+└── trainer
+    ├── __init__.py
+    ├── model.py
+    └── task.py
+```
+
+* **Install dependencies**
+
+Install the python dependencies. `pip install --upgrade -r requirements.txt`
+
+<h1>Data processing</h1>
 
 The code from the Keras github
 [IMDB example](https://www.tensorflow.org/tutorials/keras/basic_text_classification)
@@ -85,7 +78,7 @@ curl -O https://s3.amazonaws.com/text-datasets/imdb.npz
 curl -O https://s3.amazonaws.com/text-datasets/imdb_word_index.json
 ```
 
-### Upload the data to a Google Cloud Storage bucket
+* **Upload the data to a Google Cloud Storage bucket**
 
 Cloud ML Engine works by using resources available in the cloud, so the training
 data needs to be placed in such a resource. For this example, we'll use [Google
@@ -93,27 +86,13 @@ Cloud Storage], but it's possible to use other resources like [BigQuery]. Make a
 bucket (names must be globally unique) and place the data in there:
 
 ```shell
-BUCKET_NAME=your-bucket-name
-gsutil mb gs://$BUCKET_NAME
-gsutil cp -r data/imdb.npz gs://$BUCKET_NAME/imdb.npz
-gsutil cp -r data/imdb_word_index.json gs://$BUCKET_NAME/imdb_word_index.json
+gsutil mb gs://your-bucket-name
+gsutil cp -r data/boston_housing.npz gs://your-bucket-name/boston_housing.npz
 ```
 
-### Project configuration file: `setup.py`
+<h1>Training</h1>
 
-The `setup.py` file is run on the Cloud ML Engine server to install
-packages/dependencies and set a few options.
-
-Technically, Cloud ML Engine [requires a TensorFlow application to be
-pre-packaged] so that it can install it on the servers it spins up. However, if
-you supply a `setup.py` in the project root directory, then Cloud ML Engine will
-actually create the package for you.
-
-## Run the model locally
-
-Run the code on your local machine:
-
-Define variables
+* **GCloud configuration:**
 
 ```
 IMDB_DATA=data
@@ -125,48 +104,17 @@ export WORD_INDEX_FILE=$IMDB_DATA/imdb_word_index.json
 rm -rf $JOB_DIR
 ```
 
-Run the model with python (local)
-                       
+* **Run locally:**
+
 ```
 python -m trainer.task --train-file=$TRAIN_FILE \
                        --word-index-file=$WORD_INDEX_FILE \
                        --job-dir=$JOB_DIR
 ```
 
-## Training using gcloud local
+* **Run locally in Google Cloud ML Engine:**
 
-Run the code on your local machine using `gcloud`. This allows you to "mock"
-running it on the Google Cloud:
-
-Define variables*
-
-```
-DATE=`date '+%Y%m%d_%H%M%S'`
-export JOB_DIR=imdb_$DATE
-export REGION=us-central1
-export TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
-export WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
-rm -rf $JOB_DIR
-```
-
-You can run Keras training using gcloud locally.
-
-```
-gcloud ml-engine local train --module-name=trainer.task \
-                --package-path=trainer/ \
-                -- \
-                --train-file=$TRAIN_FILE \
-                --word-index-file=$WORD_INDEX_FILE \
-                --job-dir=$JOB_DIR
-```
-
-*Feel free to modify the destination file for in utils.py
-
-## Training using Cloud ML Engine
-
-Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
-before `--` while training on the cloud and this is so that we can have
-different trial runs during Hyperparameter tuning.
+* **GCloud configuration:**
 
 ```
 export BUCKET_NAME=your-bucket-name
@@ -177,25 +125,43 @@ export TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
 export WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
 ```
 
-You can train the model on Cloud ML Engine
+```
+gcloud ml-engine local train --module-name=trainer.task \
+    --package-path=trainer/ \
+    -- \
+    --train-file=$TRAIN_FILE \
+    --word-index-file=$WORD_INDEX_FILE \
+    --job-dir=$JOB_DIR
+```
+
+*Feel free to modify the destination file for in utils.py
+
+* **Run in Google Cloud ML Engine:**
+
+You can train the model on Cloud ML Engine:
+
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
-                --stream-logs \
-                --runtime-version 1.10 \
-                --job-dir=$JOB_DIR \
-                --package-path=trainer \
-                --module-name trainer.task \
-                --region $REGION \
-                -- \
-                --train-file $TRAIN_FILE \
-                --word-index-file $WORD_INDEX_FILE             
+    --stream-logs \
+    --runtime-version 1.10 \
+    --job-dir=$JOB_DIR \
+    --package-path=trainer \
+    --module-name trainer.task \
+    --region $REGION \
+    -- \
+    --train-file $TRAIN_FILE \
+    --word-index-file $WORD_INDEX_FILE             
 ```
 
-## Monitor training with TensorBoard
-
-If TensorBoard appears blank, try refreshing after 10 minutes.
+* **Monitor with Tensorboard:**
 
 ```
 tensorboard --logdir=$JOB_DIR
 ```
+
+## References
+
+[Tensorflow tutorial](https://www.tensorflow.org/tutorials/keras/basic_text_classification)
+
+
