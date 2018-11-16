@@ -101,9 +101,7 @@ def set_shapes(batch_size, images, labels):
 def train_input_fn(params, input_fn_params):
     batch_size = params['batch_size']
 
-    # file_pattern = 'gs://cloud-tpu-test-datasets/fake_imagenet/train-*'
-
-    file_pattern = 'gs://tmp-recursion-tfrecords/train/**/**/*.tfrecord'
+    file_pattern = 'gs://cloud-tpu-test-datasets/fake_imagenet/train-*'
 
     filenames_dataset = tf.data.Dataset.list_files(file_pattern)
 
