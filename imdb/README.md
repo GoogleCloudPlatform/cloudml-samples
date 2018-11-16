@@ -1,5 +1,5 @@
 <h1>Overview</h1>
-This code implements a Binary or two-classification model using the Google Cloud platform. It includes code to process data, 
+This code implements a Binary or two-classification model using the Google Cloud Platform. It includes code to process data, 
 train a TensorFlow model and assess model performance.
 This example classifies movie reviews as positive or negative using the text of the review.
 
@@ -32,14 +32,19 @@ without changing global python packages on your system.
 
 There are two options for the virtual environments:
 
-*   Install [Virtual](https://virtualenv.pypa.io/en/stable/) env
-    *   Create virtual environment `virtualenv mnist`
-    *   Activate env `source mnist/bin/activate`
+*   Install [Virtualenv](https://virtualenv.pypa.io/en/stable/) 
+    *   Create virtual environment `virtualenv myvirtualenv`
+    *   Activate env `source myvirtualenv/bin/activate`
 *   Install [Miniconda](https://conda.io/miniconda.html)
-    *   Create conda environment `conda create --name mnist python=2.7`
-    *   Activate env `source activate mnist`
+    *   Create conda environment `conda create --name myvirtualenv python=2.7`
+    *   Activate env `source activate myvirtualenv`
 
-## How to satisfy Cloud ML Engine project structure requirements
+* **Install dependencies**
+
+Install the python dependencies. `pip install --upgrade -r requirements.txt`
+
+# 
+* **How to satisfy Cloud ML Engine project structure requirements**
 
 The basic project structure will look something like this:
 
@@ -53,10 +58,6 @@ The basic project structure will look something like this:
     ├── model.py
     └── task.py
 ```
-
-* **Install dependencies**
-
-Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
 <h1>Data processing</h1>
 
@@ -87,7 +88,8 @@ bucket (names must be globally unique) and place the data in there:
 
 ```shell
 gsutil mb gs://your-bucket-name
-gsutil cp -r data/boston_housing.npz gs://your-bucket-name/boston_housing.npz
+gsutil cp -r data/imdb.npz gs://your-bucket-name/imdb.npz
+gsutil cp -r data/imdb_word_index.json gs://your-bucket-name/imdb_word_index.json
 ```
 
 <h1>Training</h1>
@@ -108,8 +110,8 @@ rm -rf $JOB_DIR
 
 ```
 python -m trainer.task --train-file=$TRAIN_FILE \
-                       --word-index-file=$WORD_INDEX_FILE \
-                       --job-dir=$JOB_DIR
+    --word-index-file=$WORD_INDEX_FILE \
+    --job-dir=$JOB_DIR
 ```
 
 * **Run locally in Google Cloud ML Engine:**
@@ -154,7 +156,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --word-index-file $WORD_INDEX_FILE             
 ```
 
-* **Monitor with Tensorboard:**
+* **Monitor with TensorBoard:**
 
 ```
 tensorboard --logdir=$JOB_DIR
@@ -163,5 +165,3 @@ tensorboard --logdir=$JOB_DIR
 ## References
 
 [Tensorflow tutorial](https://www.tensorflow.org/tutorials/keras/basic_text_classification)
-
-
