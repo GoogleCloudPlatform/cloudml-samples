@@ -107,7 +107,7 @@ python -m trainer.task \
  --job-dir=$JOB_DIR
 ```
 
-* **Run locally:**
+* **Google Cloud ML Engine:**
 
 * **GCloud configuration:**
 
@@ -121,6 +121,8 @@ export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
 export TRAIN_STEPS=1000
 export EVAL_STEPS=100
 ```
+
+* **Run locally:**
 
 ```
 gcloud ml-engine local train --package-path trainer \
