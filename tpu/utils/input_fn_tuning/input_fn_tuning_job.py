@@ -278,7 +278,7 @@ def main(args):
 
     # create the objective function with runtime arguments
     profile_tpu = partial(_profile_tpu, subprocess_env=subprocess_env)
-    profile_tpu = use_named_args(space)(profile_tpu)
+    # profile_tpu = use_named_args(space)(profile_tpu)
 
     gp_minimize(profile_tpu, space, n_calls=args.n_calls, x0=x0, y0=y0)
 
