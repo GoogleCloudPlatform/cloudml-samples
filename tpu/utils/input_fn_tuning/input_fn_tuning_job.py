@@ -273,7 +273,7 @@ def main(args):
         'OUTPUT_DIR': args.output_dir,
         'OUTPUT_NAME': output_name,
         # MODEL_DIR is cleared at the start of each trial.
-        'MODEL_DIR': os.join(args.output_dir, 'model_dir')
+        'MODEL_DIR': os.path.join(args.output_dir, 'model_dir')
     }
 
     # create the objective function with runtime arguments
