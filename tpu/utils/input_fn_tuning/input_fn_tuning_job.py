@@ -98,137 +98,140 @@ def kill_process(process):
         pass
 
 
-def _profile_tpu(subprocess_env, **input_fn_params):
-    # location to save the accumulated results
-    output_name = subprocess_env['OUTPUT_NAME']
+def make_profile_tpu(subprocess_env):
+    def profile_tpu(**input_fn_params):
+        # location to save the accumulated results
+        output_name = subprocess_env['OUTPUT_NAME']
 
-    # trial-specific output in output_dir
-    timestamp = str(int(time.time()))
-    output_uri = os.path.join(subprocess_env['OUTPUT_DIR'], 'trials', timestamp)
+        # trial-specific output in output_dir
+        timestamp = str(int(time.time()))
+        output_uri = os.path.join(subprocess_env['OUTPUT_DIR'], 'trials', timestamp)
 
-    # model_dir is used only within a trial.
-    # Its content is backed up in output_uri at the end of each trial.
-    model_dir = subprocess_env['MODEL_DIR']
-    if tf.gfile.Exists(model_dir):
-        tf.gfile.DeleteRecursively(model_dir)
+        # model_dir is used only within a trial.
+        # Its content is backed up in output_uri at the end of each trial.
+        model_dir = subprocess_env['MODEL_DIR']
+        if tf.gfile.Exists(model_dir):
+            tf.gfile.DeleteRecursively(model_dir)
 
-    # create new TPU each time
-    create_tpu_and_wait()
+        # create new TPU each time
+        create_tpu_and_wait()
 
-    # create the submit script with the input_fn_params
-    build_submit_script(input_fn_params)
+        # create the submit script with the input_fn_params
+        build_submit_script(input_fn_params)
 
-    # run task
-    print('>>>>> running training task')
-    p_submit = Popen(submit_command, stdout=PIPE, preexec_fn=os.setsid, env=subprocess_env)
+        # run task
+        print('>>>>> running training task')
+        p_submit = Popen(submit_command, stdout=PIPE, preexec_fn=os.setsid, env=subprocess_env)
 
-    # wait until the job starts before starting to collect trace
-    time.sleep(150)
+        # wait until the job starts before starting to collect trace
+        time.sleep(150)
 
-    # run profiler
-    p_submit.poll()
-    returncode = p_submit.returncode
-
-    n_scores = 3
-    n_attempts = 10
-
-    scores = []
-    counter = 0
-    checked_filenames = set()
-
-    while returncode is None and len(scores) < n_scores and counter < n_attempts:
-        print('>>>>> running profiler')
-        p_trace = Popen(trace_command, stdout=PIPE, preexec_fn=os.setsid, env=subprocess_env)
-        counter += 1
-
-        time.sleep(60)
-        kill_process(p_trace)
-
-        print('>>>>> checking trace files')
-
-        trace_filenames = tf.gfile.Glob('{}/plugins/profile/**/input_pipeline.json'.format(model_dir))
-
-        if trace_filenames:
-            early_stop = False
-            for trace_filename in trace_filenames:
-                if trace_filename in checked_filenames:
-                    continue
-
-                print('>>>>> reading: {}'.format(trace_filename))
-                with tf.gfile.GFile(trace_filename, 'r') as f:
-                    json_str = f.read()
-
-                checked_filenames.add(trace_filename)
-                input_pipeline = json.loads(json_str)
-
-                # some trace files might not have a valid score
-                try:
-                    infeed_percent_average = float(input_pipeline[0]['p']['infeed_percent_average'])
-
-                    if infeed_percent_average > 0.0:
-                        scores.append(infeed_percent_average)
-                        print('>>>>> current scores: {}'.format(scores))
-                except:
-                    pass
-
-                # This happens when each training step takes too long.
-                if 'No step time measured' in json_str:
-                    early_stop = True
-
-            if early_stop:
-                print('>>>>> early stopping')
-                break
-
+        # run profiler
         p_submit.poll()
         returncode = p_submit.returncode
 
-    print('>>>>> training process finished with returncode: {}, number of attempts: {}, number of scores: {}'.format(returncode, counter, len(scores)))
+        n_scores = 3
+        n_attempts = 10
 
-    # kill processes, just in case
-    print('>>>>> killing training process')
-    kill_process(p_submit)
+        scores = []
+        counter = 0
+        checked_filenames = set()
 
-    # calculate average score
-    print('>>>>> calculating score')
-    if scores:
-        score = sum(scores) / len(scores)
-    else:
-        # Give the worst possible score when no valid scores collected.
-        score = 100.0
+        while returncode is None and len(scores) < n_scores and counter < n_attempts:
+            print('>>>>> running profiler')
+            p_trace = Popen(trace_command, stdout=PIPE, preexec_fn=os.setsid, env=subprocess_env)
+            counter += 1
 
-    print('>>>>> scores: {}, average score: {}'.format(scores, score))
+            time.sleep(60)
+            kill_process(p_trace)
 
-    # write artifacts to output_uri:
-    # the generated submit script, the whole model_dir, and the scores
-    print('>>>>> writing trial outputs')
-    tf.gfile.Copy(submit_script_name, os.path.join(output_uri, submit_script_name))
+            print('>>>>> checking trace files')
 
-    copy_command = copy_cmd.format(model_dir, output_uri)
-    copy_command = shlex.split(copy_command)
-    call(copy_command)
+            trace_filenames = tf.gfile.Glob('{}/plugins/profile/**/input_pipeline.json'.format(model_dir))
 
-    with tf.gfile.GFile(os.path.join(output_uri, 'scores.txt'), 'w') as f:
-        f.write(str(scores))
+            if trace_filenames:
+                early_stop = False
+                for trace_filename in trace_filenames:
+                    if trace_filename in checked_filenames:
+                        continue
 
-    # Add new results to the accumulated results
-    params_scores = {
-        'input_fn_params': {k:int('{}'.format(v)) for k, v in input_fn_params.items()},
-        'scores': scores,
-        'score': score
-    }
-    entry = {timestamp: params_scores}
+                    print('>>>>> reading: {}'.format(trace_filename))
+                    with tf.gfile.GFile(trace_filename, 'r') as f:
+                        json_str = f.read()
 
-    with tf.gfile.GFile(output_name, 'a') as f:
-        yaml.dump(entry, f, default_flow_style=False)
+                    checked_filenames.add(trace_filename)
+                    input_pipeline = json.loads(json_str)
 
-    # clean up artifacts
-    print('>>>>> removing artifacts')
-    os.remove(submit_script_name)
+                    # some trace files might not have a valid score
+                    try:
+                        infeed_percent_average = float(input_pipeline[0]['p']['infeed_percent_average'])
 
-    # delete TPU
-    delete_tpu_and_wait()
+                        if infeed_percent_average > 0.0:
+                            scores.append(infeed_percent_average)
+                            print('>>>>> current scores: {}'.format(scores))
+                    except:
+                        pass
 
-    return score
+                    # This happens when each training step takes too long.
+                    if 'No step time measured' in json_str:
+                        early_stop = True
+
+                if early_stop:
+                    print('>>>>> early stopping')
+                    break
+
+            p_submit.poll()
+            returncode = p_submit.returncode
+
+        print('>>>>> training process finished with returncode: {}, number of attempts: {}, number of scores: {}'.format(returncode, counter, len(scores)))
+
+        # kill processes, just in case
+        print('>>>>> killing training process')
+        kill_process(p_submit)
+
+        # calculate average score
+        print('>>>>> calculating score')
+        if scores:
+            score = sum(scores) / len(scores)
+        else:
+            # Give the worst possible score when no valid scores collected.
+            score = 100.0
+
+        print('>>>>> scores: {}, average score: {}'.format(scores, score))
+
+        # write artifacts to output_uri:
+        # the generated submit script, the whole model_dir, and the scores
+        print('>>>>> writing trial outputs')
+        tf.gfile.Copy(submit_script_name, os.path.join(output_uri, submit_script_name))
+
+        copy_command = copy_cmd.format(model_dir, output_uri)
+        copy_command = shlex.split(copy_command)
+        call(copy_command)
+
+        with tf.gfile.GFile(os.path.join(output_uri, 'scores.txt'), 'w') as f:
+            f.write(str(scores))
+
+        # Add new results to the accumulated results
+        params_scores = {
+            'input_fn_params': {k:int('{}'.format(v)) for k, v in input_fn_params.items()},
+            'scores': scores,
+            'score': score
+        }
+        entry = {timestamp: params_scores}
+
+        with tf.gfile.GFile(output_name, 'a') as f:
+            yaml.dump(entry, f, default_flow_style=False)
+
+        # clean up artifacts
+        print('>>>>> removing artifacts')
+        os.remove(submit_script_name)
+
+        # delete TPU
+        delete_tpu_and_wait()
+
+        return score
+
+    return profile_tpu
 
 
 def load_previous_trials(output_name):
@@ -280,7 +283,7 @@ def main(args):
     }
 
     # create the objective function with runtime arguments
-    profile_tpu = partial(_profile_tpu, subprocess_env)
+    profile_tpu = make_profile_tpu(subprocess_env)
     profile_tpu = use_named_args(space)(profile_tpu)
 
     gp_minimize(profile_tpu, space, n_calls=args.n_calls, x0=x0, y0=y0)
