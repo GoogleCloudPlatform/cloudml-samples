@@ -1,5 +1,5 @@
 <h1>Overview</h1>
-This code implements a Regression model using the Google Cloud platform. It includes code to process data, train a TensorFlow model and assess model performance.
+This code implements a Regression model using the Google Cloud Platform. It includes code to process data, train a TensorFlow model and assess model performance.
 This guide trains a neural network model to predict house prices based on different features.
 
 #
@@ -42,14 +42,20 @@ without changing global python packages on your system.
 
 There are two options for the virtual environments:
 
-*   Install [Virtual](https://virtualenv.pypa.io/en/stable/) env
-    *   Create virtual environment `virtualenv mnist`
-    *   Activate env `source mnist/bin/activate`
+*   Install [Virtualenv](https://virtualenv.pypa.io/en/stable/) 
+    *   Create virtual environment `virtualenv myvirtualenv`
+    *   Activate env `source myvirtualenv/bin/activate`
 *   Install [Miniconda](https://conda.io/miniconda.html)
-    *   Create conda environment `conda create --name mnist python=2.7`
-    *   Activate env `source activate mnist`
+    *   Create conda environment `conda create --name myvirtualenv python=2.7`
+    *   Activate env `source activate myvirtualenv`
 
-## How to satisfy Cloud ML Engine project structure requirements
+* **Install dependencies**
+
+Install the python dependencies. `pip install --upgrade -r requirements.txt`
+
+#
+
+* **How to satisfy Cloud ML Engine project structure requirements**
 
 The basic project structure will look something like this:
 
@@ -64,9 +70,6 @@ The basic project structure will look something like this:
     └── task.py
 ```
 
-* **Install dependencies**
-
-Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
 <h1>Data processing</h1>
 
@@ -158,7 +161,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
  --train-file=$TRAIN_FILE
 ```
 
-* **Monitor with Tensorboard:**
+* **Monitor with TensorBoard:**
 
 ```
 tensorboard --logdir=$JOB_DIR
