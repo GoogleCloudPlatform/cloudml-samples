@@ -106,7 +106,7 @@ export WORD_INDEX_FILE=$IMDB_DATA/imdb_word_index.json
 rm -rf $JOB_DIR
 ```
 
-* **Run locally:**
+* **Test locally:**
 
 ```
 python -m trainer.task --train-file=$TRAIN_FILE \
@@ -114,7 +114,7 @@ python -m trainer.task --train-file=$TRAIN_FILE \
     --job-dir=$JOB_DIR
 ```
 
-* **Run locally in Google Cloud ML Engine:**
+* **Google Cloud ML Engine:**
 
 * **GCloud configuration:**
 
@@ -126,6 +126,8 @@ export REGION=us-central1
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
 export WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
 ```
+
+* **Run locally:**
 
 ```
 gcloud ml-engine local train --module-name=trainer.task \
