@@ -105,53 +105,35 @@ def train_input_fn(params, input_fn_params):
 
     filenames_dataset = tf.data.Dataset.list_files(file_pattern)
 
-    # filenames_dataset = filenames_dataset.cache()
+    filenames_dataset = filenames_dataset.cache()
 
     filenames_dataset = filenames_dataset.apply(tf.contrib.data.shuffle_and_repeat(buffer_size=32))
 
     def fetch_tfrecords(filenames):
-        # dataset = tf.data.TFRecordDataset(filenames, buffer_size=input_fn_params['tfrecord_dataset_buffer_size'],
-        #     num_parallel_reads=input_fn_params['tfrecord_dataset_num_parallel_reads'])
-        dataset = tf.data.TFRecordDataset(filenames, buffer_size=256*1000*1000)
+        dataset = tf.data.TFRecordDataset(filenames, buffer_size=input_fn_params['tfrecord_dataset_buffer_size'],
+            num_parallel_reads=input_fn_params['tfrecord_dataset_num_parallel_reads'])
         return dataset
 
     # Get data from GCS.
-    # tfrecord_dataset = filenames_dataset.apply(
-    #     tf.contrib.data.parallel_interleave(fetch_tfrecords, 
-    #         cycle_length=input_fn_params['parallel_interleave_cycle_length'], 
-    #         block_length=input_fn_params['parallel_interleave_block_length'], 
-    #         sloppy=True, 
-    #         buffer_output_elements=input_fn_params['parallel_interleave_buffer_output_elements'], 
-    #         prefetch_input_elements=input_fn_params['parallel_interleave_prefetch_input_elements']))
-
     tfrecord_dataset = filenames_dataset.apply(
         tf.contrib.data.parallel_interleave(fetch_tfrecords, 
-            cycle_length=2, 
-            block_length=1, 
-            sloppy=True))
+            cycle_length=input_fn_params['parallel_interleave_cycle_length'], 
+            block_length=input_fn_params['parallel_interleave_block_length'], 
+            sloppy=True, 
+            buffer_output_elements=input_fn_params['parallel_interleave_buffer_output_elements'], 
+            prefetch_input_elements=input_fn_params['parallel_interleave_prefetch_input_elements']))
 
     # Convert TFRecord into (features, labels)
-    # dataset = tfrecord_dataset.apply(
-    #     tf.contrib.data.map_and_batch(
-    #         dataset_parser,
-    #         batch_size=batch_size,
-    #         num_parallel_calls=input_fn_params['map_and_batch_num_parallel_calls'], 
-    #         drop_remainder=True))
-
     dataset = tfrecord_dataset.apply(
         tf.contrib.data.map_and_batch(
             dataset_parser,
             batch_size=batch_size,
-            num_parallel_calls=4, 
+            num_parallel_calls=input_fn_params['map_and_batch_num_parallel_calls'], 
             drop_remainder=True))
-
-    # dataset = dataset.map(
-    #     lambda images, labels: (tf.transpose(images, [1, 2, 3, 0]), labels),
-    #     num_parallel_calls=input_fn_params['transpose_num_parallel_calls'])
 
     dataset = dataset.map(
         lambda images, labels: (tf.transpose(images, [1, 2, 3, 0]), labels),
-        num_parallel_calls=4)
+        num_parallel_calls=input_fn_params['transpose_num_parallel_calls'])
 
     dataset = dataset.map(partial(set_shapes, batch_size))
 
