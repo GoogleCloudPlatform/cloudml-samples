@@ -21,6 +21,19 @@ import tensorflow as tf
 N_CLASSES = 1000
 IMAGE_SIZE = 224
 
+# The input_fn parameters that will be tuned.
+input_fn_param_names = [
+    'tfrecord_dataset_buffer_size',
+    'tfrecord_dataset_num_parallel_reads',
+    'parallel_interleave_cycle_length',
+    'parallel_interleave_block_length',
+    'parallel_interleave_buffer_output_elements',
+    'parallel_interleave_prefetch_input_elements',
+    'map_and_batch_num_parallel_calls',
+    'transpose_num_parallel_calls',
+    'prefetch_buffer_size'
+]
+
 
 def model_fn(features, labels, mode, params):
     # build model
@@ -53,16 +66,6 @@ def model_fn(features, labels, mode, params):
         train_op=train_op)
 
 
-# def image_preprocess(image_bytes):
-#     image = _decode_and_random_crop(image_bytes, image_size)
-#     image = tf.image.random_flip_left_right(image)
-#     image = tf.reshape(image, [IMAGE_SIZE, IMAGE_SIZE, 3])
-#     image = tf.image.convert_image_dtype(
-#       image, dtype=tf.bfloat16)
-
-#     return image
-
-
 def dataset_parser(value):
     keys_to_features = {
         'image/encoded': tf.FixedLenFeature((), tf.string, ''),
@@ -73,6 +76,7 @@ def dataset_parser(value):
     parsed = tf.parse_single_example(value, keys_to_features)
     image_bytes = tf.reshape(parsed['image/encoded'], shape=[])
 
+    # Preprocess the images.
     image = tf.image.decode_jpeg(image_bytes)
     image = tf.image.random_flip_left_right(image)
     image = tf.image.resize_images(image, [IMAGE_SIZE, IMAGE_SIZE])
@@ -87,7 +91,7 @@ def dataset_parser(value):
 
 
 def set_shapes(batch_size, images, labels):
-    """Statically set the batch_size dimension."""
+    # The images are transposed.
     images.set_shape(images.get_shape().merge_with(
       tf.TensorShape([None, None, None, batch_size])))
     labels.set_shape(labels.get_shape().merge_with(
@@ -123,7 +127,7 @@ def train_input_fn(params, input_fn_params):
             buffer_output_elements=input_fn_params['parallel_interleave_buffer_output_elements'], 
             prefetch_input_elements=input_fn_params['parallel_interleave_prefetch_input_elements']))
 
-    # Convert TFRecord into (features, labels)
+    # Convert TFRecord into (features, labels) tuple.
     dataset = tfrecord_dataset.apply(
         tf.contrib.data.map_and_batch(
             dataset_parser,
@@ -131,6 +135,7 @@ def train_input_fn(params, input_fn_params):
             num_parallel_calls=input_fn_params['map_and_batch_num_parallel_calls'], 
             drop_remainder=True))
 
+    # Always transpose the images.
     dataset = dataset.map(
         lambda images, labels: (tf.transpose(images, [1, 2, 3, 0]), labels),
         num_parallel_calls=input_fn_params['transpose_num_parallel_calls'])
@@ -149,7 +154,6 @@ def main(args):
         num_shards=8, # using Cloud TPU v2-8
         iterations_per_loop=args.save_checkpoints_steps)
 
-    # use the TPU version of RunConfig
     config = tf.contrib.tpu.RunConfig(
         cluster=tpu_cluster_resolver,
         model_dir=args.model_dir,
@@ -157,13 +161,18 @@ def main(args):
         save_checkpoints_steps=args.save_checkpoints_steps,
         save_summary_steps=100)
 
-    # TPUEstimator
     estimator = tf.contrib.tpu.TPUEstimator(
         model_fn=model_fn,
         config=config,
         params=params,
         train_batch_size=args.train_batch_size,
         export_to_tpu=False)
+
+    # Extract input_fn_params from args.
+    input_fn_params = {input_fn_param_name: getattr(args, input_fn_param_name) for input_fn_param_name in input_fn_param_names}
+
+    # Build the input_fn.
+    train_input_fn = partial(train_input_fn, input_fn_params=input_fn_params)
 
     estimator.train(train_input_fn, max_steps=args.max_steps)
 
@@ -191,15 +200,10 @@ if __name__ == '__main__':
         '--tpu',
         default=None)
 
+    # Expose input_fn_params to the command line.
+    for input_fn_param_name in input_fn_param_names:
+        parser.add_argument('--{}'.format(input_fn_param_name), type=int)
+
     args, _ = parser.parse_known_args()
 
-    # main(args)
-
-    from collections import defaultdict
-    input_fn = partial(train_input_fn, input_fn_params=defaultdict(lambda: 4))
-    ds = input_fn({'batch_size': 2})
-
-    nb = ds.make_one_shot_iterator().get_next()
-
-    sess = tf.Session()
-    fl = sess.run(nb)
+    main(args)
