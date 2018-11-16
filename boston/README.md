@@ -123,7 +123,7 @@ python -m trainer.task \
  --job-dir=$JOB_DIR
 ```
 
-* **Run in Google Cloud ML Engine:**
+* **Google Cloud ML Engine:**
 
 * **GCloud configuration:**
 
