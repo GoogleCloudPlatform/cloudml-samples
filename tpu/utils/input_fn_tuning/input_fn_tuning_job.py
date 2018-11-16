@@ -248,6 +248,9 @@ def load_previous_trials(output_name):
 
             x0.append(params)
             y0.append(score)
+    else:
+        x0 = None
+        y0 = None
 
     return x0, y0
 
