@@ -106,11 +106,11 @@ def _profile_tpu(subprocess_env, **input_fn_params):
     timestamp = str(int(time.time()))
     output_uri = os.path.join(subprocess_env['OUTPUT_DIR'], 'trials', timestamp)
 
-    # model_dir is used only within a trial.  It is removed at the end of each trial with its content backed up in output_uri 
+    # model_dir is used only within a trial.
+    # Its content is backed up in output_uri at the end of each trial.
     model_dir = subprocess_env['MODEL_DIR']
-
-    print('=' * 30 + '\n')
-    print('>>>>> output_uri: {}'.format(output_uri))
+    if tf.gfile.Exists(model_dir):
+        tf.gfile.DeleteRecursively(model_dir)
 
     # create new TPU each time
     create_tpu_and_wait()
@@ -210,7 +210,7 @@ def _profile_tpu(subprocess_env, **input_fn_params):
     with tf.gfile.GFile(os.path.join(output_uri, 'scores.txt'), 'w') as f:
         f.write(str(scores))
 
-    # Accumulated results
+    # Add new results to the accumulated results
     params_scores = {
         'input_fn_params': {k:int('{}'.format(v)) for k, v in input_fn_params.items()},
         'scores': scores,
@@ -224,7 +224,6 @@ def _profile_tpu(subprocess_env, **input_fn_params):
     # clean up artifacts
     print('>>>>> removing artifacts')
     os.remove(submit_script_name)
-    tf.gfile.DeleteRecursively(model_dir)
 
     # delete TPU
     delete_tpu_and_wait()
@@ -273,7 +272,7 @@ def main(args):
         # OUTPUT_DIR holds results from the whole optimation job (`args.n_calls` trials).
         'OUTPUT_DIR': args.output_dir,
         'OUTPUT_NAME': output_name,
-        # MODEL_DIR is removed after each trial.
+        # MODEL_DIR is cleared at the start of each trial.
         'MODEL_DIR': os.join(args.output_dir, 'model_dir')
     }
 
