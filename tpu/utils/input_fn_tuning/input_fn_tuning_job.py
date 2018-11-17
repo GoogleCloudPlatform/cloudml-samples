@@ -18,7 +18,7 @@ from tpu_utils import *
 
 # The search space needs to map exactly to input_fn_params in trainer.py
 space = [
-    Integer(1e6, 256e6, name='tfrecord_dataset_buffer_size'),
+    Integer(1, 256, name='tfrecord_dataset_buffer_size'),
     Integer(1, 256, name='tfrecord_dataset_num_parallel_reads'),
     Integer(1, 96, name='parallel_interleave_cycle_length'),
     Integer(1, 2, name='parallel_interleave_block_length'),

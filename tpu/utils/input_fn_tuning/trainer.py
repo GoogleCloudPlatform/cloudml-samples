@@ -116,7 +116,7 @@ def _train_input_fn(params, input_fn_params):
     filenames_dataset = filenames_dataset.apply(tf.contrib.data.shuffle_and_repeat(buffer_size=32))
 
     def fetch_tfrecords(filenames):
-        dataset = tf.data.TFRecordDataset(filenames, buffer_size=input_fn_params['tfrecord_dataset_buffer_size'],
+        dataset = tf.data.TFRecordDataset(filenames, buffer_size=1e6*input_fn_params['tfrecord_dataset_buffer_size'],
             num_parallel_reads=input_fn_params['tfrecord_dataset_num_parallel_reads'])
         return dataset
 
