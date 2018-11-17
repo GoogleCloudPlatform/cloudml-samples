@@ -164,7 +164,7 @@ def main(args):
     estimator = tf.contrib.tpu.TPUEstimator(
         model_fn=model_fn,
         config=config,
-        params=params,
+        # params=params,
         train_batch_size=args.train_batch_size,
         export_to_tpu=False)
 
