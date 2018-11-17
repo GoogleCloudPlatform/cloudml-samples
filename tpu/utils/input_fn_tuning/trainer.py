@@ -41,9 +41,13 @@ def model_fn(features, labels, mode, params):
 
     onehot_labels = tf.one_hot(labels, N_CLASSES)
 
-    flattened = tf.reshape(features, shape=(params['batch_size'], -1))
-    hidden = tf.layers.dense(flattened, 100, activation=tf.nn.relu)
-    logits = tf.layers.dense(hidden, N_CLASSES)
+    # Use bfloat16
+    with tf.contrib.tpu.bfloat16_scope():
+        flattened = tf.reshape(features, shape=(params['batch_size'], -1))
+        hidden = tf.layers.dense(flattened, 100, activation=tf.nn.relu)
+        logits = tf.layers.dense(hidden, N_CLASSES)
+
+    logits = tf.cast(logits, tf.float32)
 
     predictions = tf.nn.softmax(logits)
     loss = None
