@@ -1,5 +1,5 @@
-echo "model_dir:"$MODEL_DIR
-echo "tpu_name:"$TPU_NAME
+export TPU_NAME={tpu_name}
+export MODEL_DIR={model_dir}
 
 python trainer.py \
         --tpu=$TPU_NAME \

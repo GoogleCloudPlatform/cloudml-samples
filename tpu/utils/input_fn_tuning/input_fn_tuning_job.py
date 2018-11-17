@@ -78,17 +78,36 @@ def delete_tpu_and_wait(env, sleep_time=10):
             nodes = list_tpus(*env)
 
 
-def build_submit_script(input_fn_params):
+def build_submit_script(model_dir, tpu_name, input_fn_params):
     print('>>>>> creating submit script with parameters: {}'.format(input_fn_params))
 
     with open('input_fn_tuning_submit_base.sh', 'r') as f:
         submit_sh = f.read()
 
     input_fn_params_str = ' '.join(['--{}={}'.format(k, v) for k, v in input_fn_params.items()])
-    submit_sh = submit_sh.format(input_fn_params_str=input_fn_params_str)
+    submit_sh = submit_sh.format(
+        tpu_name=tpu_name,
+        model_dir=model_dir,
+        input_fn_params_str=input_fn_params_str
+    )
     
     with open(submit_script_name, 'w') as f:
         f.write(submit_sh)
+
+
+def build_trace_script(model_dir, tpu_name):
+    print('>>>>> creating trace script with parameters')
+
+    with open('input_fn_tuning_trace_base.sh', 'r') as f:
+        trace_sh = f.read()
+
+    trace_sh = trace_sh.format(
+        tpu_name=tpu_name,
+        model_dir=model_dir
+    )
+    
+    with open(trace_script_name, 'w') as f:
+        f.write(trace_sh)
 
 
 def kill_process(process):
@@ -109,6 +128,7 @@ def make_profile_tpu(subprocess_env):
 
         # model_dir is used only within a trial.
         # Its content is backed up in output_uri at the end of each trial.
+        tpu_name = subprocess_env['TPU_NAME']
         model_dir = subprocess_env['MODEL_DIR']
         if tf.gfile.Exists(model_dir):
             tf.gfile.DeleteRecursively(model_dir)
@@ -116,8 +136,9 @@ def make_profile_tpu(subprocess_env):
         # create new TPU each time
         create_tpu_and_wait(subprocess_env)
 
-        # create the submit script with the input_fn_params
-        build_submit_script(input_fn_params)
+        # create the scripts
+        build_submit_script(model_dir, tpu_name, input_fn_params)
+        build_trace_script(model_dir, tpu_name)
 
         # run task
         print('>>>>> running training task')
@@ -225,6 +246,7 @@ def make_profile_tpu(subprocess_env):
         # clean up artifacts
         print('>>>>> removing artifacts')
         os.remove(submit_script_name)
+        os.remove(trace_script_name)
 
         # delete TPU
         delete_tpu_and_wait(subprocess_env)
