@@ -183,19 +183,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '--model-dir',
+        '--model_dir',
         type=str,
         default='/tmp/tpu-template')
     parser.add_argument(
-        '--max-steps',
+        '--max_steps',
         type=int,
         default=1000)
     parser.add_argument(
-        '--train-batch-size',
+        '--train_batch_size',
         type=int,
         default=16)
     parser.add_argument(
-        '--save-checkpoints-steps',
+        '--save_checkpoints_steps',
         type=int,
         default=100)
     parser.add_argument(
