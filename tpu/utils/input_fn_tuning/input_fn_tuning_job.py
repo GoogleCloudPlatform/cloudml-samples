@@ -67,7 +67,7 @@ def delete_tpu_and_wait(env, sleep_time=10):
     print('>>>>> deleting tpu')
     delete_tpu(*env)
 
-    tpu_name = env.pop[-1]
+    tpu_name = env.pop(-1)
 
     nodes = list_tpus(*env)
     while nodes and 'nodes' in nodes and tpu_name in [n['name'].split('/')[-1] for n in nodes['nodes']]:
@@ -78,33 +78,24 @@ def delete_tpu_and_wait(env, sleep_time=10):
             nodes = list_tpus(*env)
 
 
-def build_submit_script(model_dir, tpu_name, input_fn_params):
+def build_submit_script(input_fn_params):
     print('>>>>> creating submit script with parameters: {}'.format(input_fn_params))
 
     with open('input_fn_tuning_submit_base.sh', 'r') as f:
         submit_sh = f.read()
 
     input_fn_params_str = ' '.join(['--{}={}'.format(k, v) for k, v in input_fn_params.items()])
-    submit_sh = submit_sh.format(
-        tpu_name=tpu_name,
-        model_dir=model_dir,
-        input_fn_params_str=input_fn_params_str
-    )
+    submit_sh = submit_sh.format(input_fn_params_str=input_fn_params_str)
     
     with open(submit_script_name, 'w') as f:
         f.write(submit_sh)
 
 
-def build_trace_script(model_dir, tpu_name):
+def build_trace_script():
     print('>>>>> creating trace script with parameters')
 
     with open('input_fn_tuning_trace_base.sh', 'r') as f:
         trace_sh = f.read()
-
-    trace_sh = trace_sh.format(
-        tpu_name=tpu_name,
-        model_dir=model_dir
-    )
     
     with open(trace_script_name, 'w') as f:
         f.write(trace_sh)
@@ -137,15 +128,15 @@ def make_profile_tpu(subprocess_env):
         create_tpu_and_wait(subprocess_env)
 
         # create the scripts
-        build_submit_script(model_dir, tpu_name, input_fn_params)
-        build_trace_script(model_dir, tpu_name)
+        build_submit_script(input_fn_params)
+        build_trace_script()
 
         # run task
         print('>>>>> running training task')
         p_submit = Popen(submit_command, stdout=PIPE, preexec_fn=os.setsid, env=subprocess_env)
 
         # wait until the job starts before starting to collect trace
-        time.sleep(150)
+        time.sleep(120)
 
         # run profiler
         p_submit.poll()
@@ -163,7 +154,7 @@ def make_profile_tpu(subprocess_env):
             p_trace = Popen(trace_command, stdout=PIPE, preexec_fn=os.setsid, env=subprocess_env)
             counter += 1
 
-            time.sleep(60)
+            time.sleep(45)
             kill_process(p_trace)
 
             print('>>>>> checking trace files')
@@ -308,7 +299,7 @@ def main(args):
     profile_tpu = make_profile_tpu(subprocess_env)
     profile_tpu = use_named_args(space)(profile_tpu)
 
-    gp_minimize(profile_tpu, space, n_calls=args.n_calls, x0=x0, y0=y0)
+    gp_minimize(profile_tpu, space, n_calls=args.n_calls, n_random_starts=5, x0=x0, y0=y0)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -333,7 +324,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--n-calls',
         type=int,
-        default=100)
+        default=10)
 
     args, _ = parser.parse_known_args()
 
