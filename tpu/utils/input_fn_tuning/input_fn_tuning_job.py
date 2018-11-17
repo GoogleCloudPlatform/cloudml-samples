@@ -38,16 +38,16 @@ submit_command = shlex.split('bash {}'.format(submit_script_name))
 trace_command = shlex.split('bash {}'.format(trace_script_name))
 copy_cmd = 'gsutil -m cp -r {} {}/'
 
-def tpu_utils_env():
-    project_id = os.environ['PROJECT_ID']
-    location = os.environ['LOCATION']
-    tpu_name = os.environ['TPU_NAME']
+def tpu_utils_env(env):
+    project_id = env['PROJECT_ID']
+    location = env['LOCATION']
+    tpu_name = env['TPU_NAME']
 
     return [project_id, location, tpu_name]
 
 
-def create_tpu_and_wait(sleep_time=30):
-    env = tpu_utils_env()
+def create_tpu_and_wait(env, sleep_time=30):
+    env = tpu_utils_env(env)
 
     print('>>>>> creating tpu')
     create_tpu(*env)
@@ -61,8 +61,8 @@ def create_tpu_and_wait(sleep_time=30):
         node = get_tpu(*env)
 
 
-def delete_tpu_and_wait(sleep_time=10):
-    env = tpu_utils_env()
+def delete_tpu_and_wait(env, sleep_time=10):
+    env = tpu_utils_env(env)
 
     print('>>>>> deleting tpu')
     delete_tpu(*env)
@@ -114,7 +114,7 @@ def make_profile_tpu(subprocess_env):
             tf.gfile.DeleteRecursively(model_dir)
 
         # create new TPU each time
-        create_tpu_and_wait()
+        create_tpu_and_wait(subprocess_env)
 
         # create the submit script with the input_fn_params
         build_submit_script(input_fn_params)
@@ -227,7 +227,7 @@ def make_profile_tpu(subprocess_env):
         os.remove(submit_script_name)
 
         # delete TPU
-        delete_tpu_and_wait()
+        delete_tpu_and_wait(subprocess_env)
 
         return score
 
