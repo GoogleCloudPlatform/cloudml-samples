@@ -36,7 +36,7 @@ Note: A copy of [`tpu_utils.py`](../tpu_utils.py) is duplicated in this director
     --project-id your-project-id
     ```
 
-1. The accumulated output will be written to `gs://your-gcs-bucket/path/params_scores.yaml`.  The output from a single trials looks like:
+1. The accumulated output will be written to `gs://your-gcs-bucket/path/params_scores.yaml`.  The output from a single trial might look like:
 
     ```
     '1542425224':
