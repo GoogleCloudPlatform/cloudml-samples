@@ -1,3 +1,6 @@
+echo "model_dir:"$MODEL_DIR
+echo "tpu_name:"$TPU_NAME
+
 python trainer.py \
         --tpu=$TPU_NAME \
         --model_dir=$MODEL_DIR \
