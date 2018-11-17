@@ -66,6 +66,12 @@ def model_fn(features, labels, mode, params):
         train_op=train_op)
 
 
+def fetch_tfrecords(filenames):
+    dataset = tf.data.TFRecordDataset(filenames, buffer_size=input_fn_params['tfrecord_dataset_buffer_size'],
+        num_parallel_reads=input_fn_params['tfrecord_dataset_num_parallel_reads'])
+    return dataset
+
+
 def dataset_parser(value):
     keys_to_features = {
         'image/encoded': tf.FixedLenFeature((), tf.string, ''),
@@ -92,10 +98,8 @@ def dataset_parser(value):
 
 def set_shapes(batch_size, images, labels):
     # The images are transposed.
-    images.set_shape(images.get_shape().merge_with(
-      tf.TensorShape([None, None, None, batch_size])))
-    labels.set_shape(labels.get_shape().merge_with(
-      tf.TensorShape([batch_size])))
+    images.set_shape([IMAGE_SIZE, IMAGE_SIZE, 3, batch_size])
+    labels.set_shape([batch_size])
 
     return images, labels
 
@@ -112,11 +116,6 @@ def _train_input_fn(params, input_fn_params):
     filenames_dataset = filenames_dataset.cache()
 
     filenames_dataset = filenames_dataset.apply(tf.contrib.data.shuffle_and_repeat(buffer_size=32))
-
-    def fetch_tfrecords(filenames):
-        dataset = tf.data.TFRecordDataset(filenames, buffer_size=input_fn_params['tfrecord_dataset_buffer_size'],
-            num_parallel_reads=input_fn_params['tfrecord_dataset_num_parallel_reads'])
-        return dataset
 
     # Get data from GCS.
     tfrecord_dataset = filenames_dataset.apply(
@@ -140,7 +139,7 @@ def _train_input_fn(params, input_fn_params):
         lambda images, labels: (tf.transpose(images, [1, 2, 3, 0]), labels),
         num_parallel_calls=input_fn_params['transpose_num_parallel_calls'])
 
-    dataset = dataset.map(partial(set_shapes, batch_size))
+    dataset = dataset.map(partial(set_shapes, batch_size, ))
 
     # We could also use tf.contrib.data.AUTOTUNE.
     dataset = dataset.prefetch(buffer_size=input_fn_params['prefetch_buffer_size'])
