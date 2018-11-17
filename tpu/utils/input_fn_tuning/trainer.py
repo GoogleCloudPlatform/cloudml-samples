@@ -102,7 +102,7 @@ def set_shapes(batch_size, images, labels):
 
 # The following sample input_fn is based on the input_fn of
 # https://github.com/tensorflow/tpu/tree/master/models/official/resnet
-def train_input_fn(params, input_fn_params):
+def _train_input_fn(params, input_fn_params):
     batch_size = params['batch_size']
 
     file_pattern = 'gs://cloud-tpu-test-datasets/fake_imagenet/train-*'
@@ -172,7 +172,7 @@ def main(args):
     input_fn_params = {input_fn_param_name: getattr(args, input_fn_param_name) for input_fn_param_name in input_fn_param_names}
 
     # Build the input_fn.
-    train_input_fn = partial(train_input_fn, input_fn_params=input_fn_params)
+    train_input_fn = partial(_train_input_fn, input_fn_params=input_fn_params)
 
     estimator.train(train_input_fn, max_steps=args.max_steps)
 
