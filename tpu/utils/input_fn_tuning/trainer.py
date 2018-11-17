@@ -66,12 +66,6 @@ def model_fn(features, labels, mode, params):
         train_op=train_op)
 
 
-def fetch_tfrecords(filenames):
-    dataset = tf.data.TFRecordDataset(filenames, buffer_size=input_fn_params['tfrecord_dataset_buffer_size'],
-        num_parallel_reads=input_fn_params['tfrecord_dataset_num_parallel_reads'])
-    return dataset
-
-
 def dataset_parser(value):
     keys_to_features = {
         'image/encoded': tf.FixedLenFeature((), tf.string, ''),
@@ -116,6 +110,11 @@ def _train_input_fn(params, input_fn_params):
     filenames_dataset = filenames_dataset.cache()
 
     filenames_dataset = filenames_dataset.apply(tf.contrib.data.shuffle_and_repeat(buffer_size=32))
+
+    def fetch_tfrecords(filenames):
+        dataset = tf.data.TFRecordDataset(filenames, buffer_size=input_fn_params['tfrecord_dataset_buffer_size'],
+            num_parallel_reads=input_fn_params['tfrecord_dataset_num_parallel_reads'])
+        return dataset
 
     # Get data from GCS.
     tfrecord_dataset = filenames_dataset.apply(
