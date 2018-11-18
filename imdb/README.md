@@ -19,12 +19,12 @@ reviews.
 This dataset is provided by a third party. Google provides no representation,
 warranty, or other guarantees about the validity or any other aspects of this dataset.
 
-* **Set up and test your GCP environment**
+* **Setup and test your GCP environment**
 
 The best way to setup your GCP project is to use this section in this
 [tutorial](https://cloud.google.com/ml-engine/docs/tensorflow/getting-started-training-prediction#set-up-your-gcp-project).
 
-* **Environment set-up:**
+* **Environment setup:**
 
 Virtual environments are strongly suggested, but not required. Installing this
 sample's dependencies in a new virtual environment allows you to run the sample
@@ -75,8 +75,8 @@ contains the integer to string mapping `imdb_word_index.json`.
 
 ```shell
 mkdir data
-curl -O https://s3.amazonaws.com/text-datasets/imdb.npz
-curl -O https://s3.amazonaws.com/text-datasets/imdb_word_index.json
+gsutil cp gs://cloud-samples-data/ml-engine/imdb/imdb.npz data
+gsutil cp gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json data
 ```
 
 * **Upload the data to a Google Cloud Storage bucket**
@@ -98,7 +98,6 @@ gsutil cp -r data/imdb_word_index.json gs://your-bucket-name/imdb_word_index.jso
 
 ```
 IMDB_DATA=data
-mkdir $IMDB_DATA
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=imdb_$DATE
 export TRAIN_FILE=$IMDB_DATA/imdb.npz
@@ -122,7 +121,6 @@ python -m trainer.task --train-file=$TRAIN_FILE \
 export BUCKET_NAME=your-bucket-name
 export JOB_NAME="imbd_keras_$(date +%Y%m%d_%H%M%S)"
 export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
-export REGION=us-central1
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
 export WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
 ```
@@ -138,18 +136,37 @@ gcloud ml-engine local train --module-name=trainer.task \
     --job-dir=$JOB_DIR
 ```
 
-*Feel free to modify the destination file for in utils.py
-
-* **Run in Google Cloud ML Engine:**
+* **Run in Google Cloud ML Engine**
 
 You can train the model on Cloud ML Engine:
 
+*NOTE:* If you downloaded the training files to your local filesystem, be sure
+to reset the `TRAIN_FILE` and `WORD_INDEX_FILE` environment variables to refer to a GCS location.
+Data must be in GCS for cloud-based training.
+
+Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
+before `--` while training on the cloud and this is so that we can have
+different trial runs during Hyperparameter tuning.
+
+* **GCloud configuration:**
+
+```
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME=imdb_$DATE
+export GCS_JOB_DIR=gs://your-bucket-name/to/my/jobs/$JOB_NAME
+echo $GCS_JOB_DIR
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
+export WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
+export REGION=us-central1
+```
+
+* **Run in Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
     --runtime-version 1.10 \
-    --job-dir=$JOB_DIR \
+    --job-dir=$GCS_JOB_DIR \
     --package-path=trainer \
     --module-name trainer.task \
     --region $REGION \
@@ -161,7 +178,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 * **Monitor with TensorBoard:**
 
 ```
-tensorboard --logdir=$JOB_DIR
+tensorboard --logdir=$GCS_JOB_DIR
 ```
 
 ## References

@@ -29,12 +29,17 @@ The dataset contains 13 different features:
 12. 1000 * (Bk - 0.63) ** 2 where Bk is the proportion of African-american people by town.
 13. Percentage lower status of the population.
 
-* **Set up and test your GCP environment**
+* **Disclaimer**
+
+This dataset is provided by a third party. Google provides no representation,
+warranty, or other guarantees about the validity or any other aspects of this dataset.
+
+* **Setup and test your GCP environment**
 
 The best way to setup your GCP project is to use this section in this
 [tutorial](https://cloud.google.com/ml-engine/docs/tensorflow/getting-started-training-prediction#set-up-your-gcp-project).
 
-* **Environment set-up:**
+* **Environment setup:**
 
 Virtual environments are strongly suggested, but not required. Installing this
 sample's dependencies in a new virtual environment allows you to run the sample
@@ -70,7 +75,6 @@ The basic project structure will look something like this:
     └── task.py
 ```
 
-
 <h1>Data processing</h1>
 
 The code from the Tensorflow website
@@ -104,15 +108,10 @@ gsutil cp -r data/boston_housing.npz gs://your-bucket-name/boston_housing.npz
 * **GCloud configuration:**
 
 ```
-export DATA_FOLDER=data
-mkdir $DATA_FOLDER
 DATE=`date '+%Y%m%d_%H%M%S'`
-export JOB_NAME="boston_keras_$DATE"
 export JOB_DIR=boston_$DATE
-export TRAIN_FILE=$DATA_FOLDER/boston_housing.npz
-export JOB_DIR=/tmp/$JOB_NAME
-export REGION=us-central1
 rm -rf $JOB_DIR
+export TRAIN_FILE=boston_data/boston_housing.npz
 ```
 
 * **Test locally:**
@@ -123,16 +122,15 @@ python -m trainer.task \
  --job-dir=$JOB_DIR
 ```
 
-* **Google Cloud ML Engine:**
+* **Google Cloud ML Engine**
 
 * **GCloud configuration:**
 
 ```
-export BUCKET_NAME=your-bucket-name
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME="boston_keras_$DATE"
-export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
-export REGION=us-central1
+export JOB_DIR=boston_$DATE
+rm -rf $JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
 ```
 * **Run locally:**
@@ -144,17 +142,36 @@ gcloud ml-engine local train --module-name=trainer.task \
  --job-dir=$JOB_DIR
 ```
 
-*Feel free to modify the destination file for in utils.py
-
-* **Run in Google Cloud ML Engine:**
+* **Run in Google Cloud ML Engine**
 
 You can train the model on Cloud ML Engine:
+
+*NOTE:* If you downloaded the training files to your local filesystem, be sure
+to reset the `TRAIN_FILE` environment variable to refer to a GCS location.
+Data must be in GCS for cloud-based training.
+
+Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
+before `--` while training on the cloud and this is so that we can have
+different trial runs during Hyperparameter tuning.
+
+* **GCloud configuration:**
+
+```
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME=census_$DATE
+export GCS_JOB_DIR=gs://your-bucket-name/to/my/jobs/$JOB_NAME
+echo $GCS_JOB_DIR
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+export REGION=us-central1
+```
+
+* **Run in Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
  --stream-logs \
  --runtime-version 1.10 \
- --job-dir=$JOB_DIR \
+ --job-dir=$GCS_JOB_DIR \
  --package-path=trainer \
  --module-name trainer.task \
  --region $REGION -- \
@@ -164,7 +181,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 * **Monitor with TensorBoard:**
 
 ```
-tensorboard --logdir=$JOB_DIR
+tensorboard --logdir=$GCS_JOB_DIR
 ```
 
 ## References

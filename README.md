@@ -1,5 +1,7 @@
 # Google Cloud Machine Learning Engine
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 Welcome to the [Google Cloud Machine Learning Engine (Cloud ML Engine)](https://cloud.google.com/ml-engine/docs/) sample code repository. This repository contains samples for how to use Cloud ML Engine for model training and serving.
 
 Note: If you’re looking for our guides on how to do Machine Learning on Google Cloud Platform (GCP) using other services, please checkout our other repository: [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp), which has guides on how to bring your code from various ML frameworks to [Google Cloud Platform](https://cloud.google.com/) using things like [Google Compute Engine](https://cloud.google.com/compute/) or [Kubernetes](https://kubernetes.io/).
