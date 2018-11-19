@@ -82,7 +82,7 @@ class EvaluationRunHook(tf.train.SessionRunHook):
 
       # Creates a global step to contain a counter for
       # the global training step
-      self._gs = tf.contrib.framework.get_or_create_global_step()
+      self._gs = tf.train.get_or_create_global_step()
 
       self._final_ops_dict = value_dict
       self._eval_ops = update_dict.values()
