@@ -57,7 +57,6 @@ class Evaluator(object):
                                                  self.eval_batch_size)
 
       self.summary = tf.summary.merge_all()
-
       self.saver = tf.train.Saver()
 
     self.summary_writer = tf.summary.FileWriter(self.output_path)
@@ -300,7 +299,7 @@ class Trainer(object):
     self.sv.summary_writer.flush()
 
 
-def main(_):
+def run_main():
   model, argv = model_lib.create_model()
   run(model, argv)
 
@@ -334,9 +333,13 @@ def run(model, argv):
       type=int,
       help='Number of examples to be processed per mini-batch.')
   parser.add_argument(
-      '--eval_set_size', type=int, help='Number of examples in the eval set.')
+      '--eval_set_size',
+      type=int,
+      help='Number of examples in the eval set.')
   parser.add_argument(
-      '--eval_batch_size', type=int, help='Number of examples per eval batch.')
+      '--eval_batch_size',
+      type=int,
+      help='Number of examples per eval batch.')
   parser.add_argument(
       '--eval_interval_secs',
       type=float,
@@ -398,7 +401,6 @@ def run(model, argv):
       'used - which may exceed eval data size).')
 
   args, _ = parser.parse_known_args(argv)
-
   env = json.loads(os.environ.get('TF_CONFIG', '{}'))
 
   # Print the job data as provided by the service.
@@ -539,4 +541,4 @@ def model_dir(output_path):
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO)
-  tf.app.run()
+  run_main()

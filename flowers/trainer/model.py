@@ -11,8 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Flowers classification model.
-"""
+"""Flowers classification model."""
 
 import argparse
 import logging
@@ -43,7 +42,7 @@ DEFAULT_INCEPTION_CHECKPOINT = (
 BOTTLENECK_TENSOR_SIZE = 2048
 
 
-class GraphMod():
+class GraphMod(object):
   TRAIN = 1
   EVALUATE = 2
   PREDICT = 3
@@ -76,14 +75,17 @@ def build_signature(inputs, outputs):
 def create_model():
   """Factory method that creates model to be used by generic task.py."""
   parser = argparse.ArgumentParser()
-  # Label count needs to correspond to nubmer of labels in dictionary used
+  # Label count needs to correspond to number of labels in dictionary used
   # during preprocessing.
-  parser.add_argument('--label_count', type=int, default=5)
-  parser.add_argument('--dropout', type=float, default=0.5)
-  parser.add_argument(
-      '--inception_checkpoint_file',
-      type=str,
-      default=DEFAULT_INCEPTION_CHECKPOINT)
+  parser.add_argument('--label_count',
+                      type=int,
+                      default=5)
+  parser.add_argument('--dropout',
+                      type=float,
+                      default=0.5)
+  parser.add_argument('--inception_checkpoint_file',
+                      type=str,
+                      default=DEFAULT_INCEPTION_CHECKPOINT)
   args, task_args = parser.parse_known_args()
   override_if_not_in_args('--max_steps', '1000', task_args)
   override_if_not_in_args('--batch_size', '100', task_args)
@@ -322,7 +324,7 @@ class Model(object):
     var_to_shape_map = reader.get_variable_to_shape_map()
 
     # Get all variables to restore. Exclude Logits and AuxLogits because they
-    # depend on the input data and we do not need to intialize them.
+    # depend on the input data and we do not need to initialize them.
     all_vars = tf.contrib.slim.get_variables_to_restore(
         exclude=inception_exclude_scopes)
     # Remove variables that do not exist in the inception checkpoint (for
