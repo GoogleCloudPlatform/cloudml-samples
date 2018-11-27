@@ -1,4 +1,3 @@
-#!/bin/bash
 # Copyright 2018 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +16,7 @@
 import csv
 
 import apache_beam as beam
+import tensorflow as tf
 
 
 class CsvFileSource(beam.io.filebasedsource.FileBasedSource):
@@ -28,7 +28,7 @@ class CsvFileSource(beam.io.filebasedsource.FileBasedSource):
       yield rec
 
 
-def run(p, input_path, output_train_path, output_eval_path):
-                  
+def run(p, input_path):
+
   raw_data = (p
-      | 'ReadTrainData' >> beam.io.Read(CsvFileSource(input_path)))
+              | 'ReadTrainData' >> beam.io.Read(CsvFileSource(input_path)))

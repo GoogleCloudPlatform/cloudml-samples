@@ -55,9 +55,11 @@ def _parse_arguments(argv):
 
 def _parse_config(env, config_file_path):
   """Parses configuration file.
+
   Args:
     env: The environment in which the preprocessing job will be run.
     config_file_path: Path to the configuration file to be parsed.
+
   Returns:
     A dictionary containing the parsed runtime config.
   """
@@ -94,11 +96,10 @@ def main():
         })
   pipeline_options = beam.pipeline.PipelineOptions(flags=[], **options)
   _set_logging(config.get('log_level'))
-  temp_dir = os.path.join(args.job_dir, 'tmp')
 
   with beam.Pipeline(
       config.get('runner'), options=pipeline_options) as pipeline:
-    preprocess.run(pipeline, args.input_data, None, None)
+    preprocess.run(pipeline, args.input_data)
 
 
 if __name__ == '__main__':
