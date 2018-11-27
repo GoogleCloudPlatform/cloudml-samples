@@ -20,6 +20,7 @@ import os
 import sys
 
 import apache_beam as beam
+
 from preprocessing import preprocess
 
 
@@ -85,8 +86,8 @@ def main():
         'job_name': args.job_name,
         'num_workers': int(config.get('num_workers')),
         'max_num_workers': int(config.get('max_num_workers')),
-        'setup_file': os.path.abspath(os.path.join(
-            os.path.dirname(__file__), 'setup.py')),
+        # 'setup_file': os.path.abspath(os.path.join(
+        #     os.path.dirname(__file__), 'setup.py')),
         'staging_location': os.path.join(args.job_dir, 'staging'),
         'temp_location': os.path.join(args.job_dir, 'tmp'),
         'region': config.get('region')

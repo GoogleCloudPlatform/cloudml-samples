@@ -12,13 +12,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Defines the Beam pipeline to preprocess the data."""
 
 import csv
-import os
-import random
 
 import apache_beam as beam
-import tensorflow as tf
 
 
 class CsvFileSource(beam.io.filebasedsource.FileBasedSource):
