@@ -17,7 +17,6 @@ import json
 import os
 
 import tensorflow as tf
-from tensorflow.contrib.training.python.training import hparam
 
 import trainer.model as model
 
@@ -43,43 +42,43 @@ def _get_session_config_from_env_var():
   return None
 
 
-def train_and_evaluate(hparams):
+def train_and_evaluate(args):
   """Run the training and evaluate using the high level API."""
 
   train_input = lambda: model.input_fn(
-      hparams.train_files,
-      num_epochs=hparams.num_epochs,
-      batch_size=hparams.train_batch_size
+    args.train_files,
+      num_epochs=args.num_epochs,
+      batch_size=args.train_batch_size
   )
 
   # Don't shuffle evaluation data
   eval_input = lambda: model.input_fn(
-      hparams.eval_files,
-      batch_size=hparams.eval_batch_size,
+      args.eval_files,
+      batch_size=args.eval_batch_size,
       shuffle=False
   )
 
   train_spec = tf.estimator.TrainSpec(
-      train_input, max_steps=hparams.train_steps)
+      train_input, max_steps=args.train_steps)
 
   exporter = tf.estimator.FinalExporter(
-      'census', model.SERVING_FUNCTIONS[hparams.export_format])
+      'census', model.SERVING_FUNCTIONS[args.export_format])
   eval_spec = tf.estimator.EvalSpec(
       eval_input,
-      steps=hparams.eval_steps,
+      steps=args.eval_steps,
       exporters=[exporter],
       name='census-eval')
 
   run_config = tf.estimator.RunConfig(
       session_config=_get_session_config_from_env_var())
-  run_config = run_config.replace(model_dir=hparams.job_dir)
+  run_config = run_config.replace(model_dir=args.job_dir)
   print('Model dir %s' % run_config.model_dir)
   estimator = model.build_estimator(
-      embedding_size=hparams.embedding_size,
+      embedding_size=args.embedding_size,
       # Construct layers sizes with exponential decay
       hidden_units=[
-          max(2, int(hparams.first_layer_size * hparams.scale_factor**i))
-          for i in range(hparams.num_layers)
+          max(2, int(args.first_layer_size * args.scale_factor**i))
+          for i in range(args.num_layers)
       ],
       config=run_config)
 
@@ -133,7 +132,10 @@ if __name__ == '__main__':
       default=100,
       type=int)
   parser.add_argument(
-      '--num-layers', help='Number of layers in the DNN', default=4, type=int)
+      '--num-layers',
+      help='Number of layers in the DNN',
+      default=4,
+      type=int)
   parser.add_argument(
       '--scale-factor',
       help='How quickly should the size of the layers in the DNN decay',
@@ -143,8 +145,7 @@ if __name__ == '__main__':
       '--train-steps',
       help="""\
       Steps to run the training job for. If --num-epochs is not specified,
-      this must be. Otherwise the training job will run indefinitely.\
-      """,
+      this must be. Otherwise the training job will run indefinitely.""",
       default=100,
       type=int)
   parser.add_argument(
@@ -171,5 +172,4 @@ if __name__ == '__main__':
       tf.logging.__dict__[args.verbosity] / 10)
 
   # Run the training job
-  hparams = hparam.HParams(**args.__dict__)
-  train_and_evaluate(hparams)
+  train_and_evaluate(args)
