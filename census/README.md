@@ -2,8 +2,6 @@
 This code implements a Logistic Regression model using the Google Cloud Platform. 
 It includes code to process data, train a tensorflow model with hyperparameter tuning, run predictions on new data and assess model performance.
 
-![Build Status](https://storage.googleapis.com/cloudml-samples-test-public/badges/flowers.png)
-
 #
 *  **Examples**
  
@@ -171,7 +169,7 @@ export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 export TRAIN_STEPS=1000
 ```
 
-* **Run locally:**
+* **Run locally via the gcloud emulator for Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine local train --package-path trainer \
@@ -201,7 +199,7 @@ different trial runs during Hyperparameter tuning.
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=census_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/to/my/jobs/$JOB_NAME
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
 echo $GCS_JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv

@@ -125,7 +125,7 @@ export TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
 export WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json
 ```
 
-* **Run locally:**
+* **Run locally via the gcloud emulator for Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine local train --module-name=trainer.task \
@@ -153,7 +153,7 @@ different trial runs during Hyperparameter tuning.
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=imdb_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/to/my/jobs/$JOB_NAME
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
 echo $GCS_JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb.npz
 export WORD_INDEX_FILE=gs://cloud-samples-data/ml-engine/imdb/imdb_word_index.json

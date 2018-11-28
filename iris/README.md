@@ -121,7 +121,7 @@ export TRAIN_STEPS=1000
 export EVAL_STEPS=100
 ```
 
-* **Run locally:**
+* **Run locally via the gcloud emulator for Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine local train --package-path trainer \
@@ -151,7 +151,7 @@ different trial runs during Hyperparameter tuning.
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=iris_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/to/my/jobs/$JOB_NAME
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
 echo $GCS_JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv

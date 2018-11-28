@@ -133,7 +133,7 @@ export JOB_DIR=boston_$DATE
 rm -rf $JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/boston/boston_housing.npz
 ```
-* **Run locally:**
+* **Run locally via the gcloud emulator for Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine local train --module-name=trainer.task \
@@ -159,7 +159,7 @@ different trial runs during Hyperparameter tuning.
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=census_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/to/my/jobs/$JOB_NAME
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
 echo $GCS_JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 export REGION=us-central1

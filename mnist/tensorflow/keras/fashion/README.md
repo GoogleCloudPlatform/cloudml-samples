@@ -100,7 +100,7 @@ gsutil cp -r data/train-images-idx3-ubyte.gz gs://your-bucket-name/t10k-labels-i
 ```
 MNIST_DATA=data
 DATE=`date '+%Y%m%d_%H%M%S'`
-export JOB_DIR=boston_$DATE
+export JOB_DIR=mnist_$DATE
 rm -rf $JOB_DIR
 export TRAIN_FILE=$MNIST_DATA/train-images-idx3-ubyte.gz
 export TRAIN_LABELS_FILE=$MNIST_DATA/train-labels-idx1-ubyte.gz
@@ -133,7 +133,7 @@ export TEST_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-images-idx3-ubyte.
 export TEST_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-labels-idx1-ubyte.gz
 ```
 
-* **Run locally in Google Cloud ML Engine:**
+* **Run locally via the gcloud emulator for Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -- \
@@ -161,7 +161,7 @@ different trial runs during Hyperparameter tuning.
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=mnist_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/to/my/jobs/$JOB_NAME
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
 echo $GCS_JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/mnist/train-images-idx3-ubyte.gz
 export TRAIN_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/train-labels-idx1-ubyte.gz
