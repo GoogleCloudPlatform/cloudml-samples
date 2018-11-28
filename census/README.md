@@ -1,4 +1,4 @@
-<h1>Overview</h1>
+# Overview
 This code implements a Logistic Regression model using the Google Cloud Platform. 
 It includes code to process data, train a tensorflow model with hyperparameter tuning, run predictions on new data and assess model performance.
 
@@ -72,7 +72,7 @@ The best way to setup your GCP project is to use this section in this
 
 Virtual environments are strongly suggested, but not required. Installing this
 sample's dependencies in a new virtual environment allows you to run the sample
-without changing global python packages on your system.
+locally without changing global python packages on your system.
 
 There are two options for the virtual environments:
 
@@ -89,23 +89,13 @@ Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
 #
 
-* **How to satisfy Cloud ML Engine project structure requirements:**
+* **How to satisfy Cloud ML Engine project structure requirements**
 
-The basic project structure will look something like this:
-
-```shell
-.
-├── README.md
-├── requirements.txt
-├── setup.py
-└── trainer
-    ├── __init__.py
-    ├── model.py
-    └── task.py
-```
+Follow [this](https://cloud.google.com/ml-engine/docs/tensorflow/packaging-trainer#project-structure) guide to structure your training application.
 
 
-<h1>Data processing</h1>
+
+# Data processing
 
 We host the Census files required for you to run this sample. Files are hosted in a Public Bucket.
 
@@ -133,7 +123,7 @@ gsutil cp -r data/adult.data.csv gs://your-bucket-name/adult.data.csv
 gsutil cp -r data/adult.test.csv gs://your-bucket-name/adult.test.csv
 ```
 
-<h1>Training</h1>
+# Training
 
 * **GCloud configuration:**
 
@@ -169,7 +159,7 @@ export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 export TRAIN_STEPS=1000
 ```
 
-* **Run locally via the gcloud emulator for Google Cloud ML Engine:**
+* **Run locally via the gcloud command for Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine local train --package-path trainer \
@@ -247,7 +237,7 @@ environment variable. The environment variable is generated using `gcloud` and p
 export SCALE_TIER=STANDARD_1
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=census_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/to/my/jobs/$JOB_NAME
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 export TRAIN_STEPS=5000
@@ -286,7 +276,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --eval-steps $EVAL_STEPS
 ```
 
-<h1>Hyperparameter Tuning</h1>
+# Hyperparameter Tuning
 
 Cloud ML Engine allows you to perform Hyperparameter tuning to find out the
 most optimal hyperparameters. See [Overview of Hyperparameter Tuning]
@@ -316,7 +306,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --eval-steps $EVAL_STEPS                        
 ```
 
-<h1>Prediction</h1>
+# Prediction
 
 Once your training job has finished, you can use the exported model to create a prediction server. To do this you first create a model:
 

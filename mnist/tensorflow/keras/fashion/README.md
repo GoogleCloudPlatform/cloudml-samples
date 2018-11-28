@@ -1,4 +1,4 @@
-<h1>Overview</h1>
+# Overview
 This code implements a Multi-class classification model using the Google Cloud Platform. It includes code to process data, train a TensorFlow model and assess model performance.
 This guide trains a neural network model to classify images of clothing, like sneakers and shirts.
 
@@ -28,7 +28,7 @@ The best way to setup your GCP project is to use this section in this
 
 Virtual environments are strongly suggested, but not required. Installing this
 sample's dependencies in a new virtual environment allows you to run the sample
-without changing global python packages on your system.
+locally without changing global python packages on your system.
 
 There are two options for the virtual environments:
 
@@ -46,20 +46,10 @@ Install the python dependencies. `pip install --upgrade -r requirements.txt`
 # 
 * **How to satisfy Cloud ML Engine project structure requirements**
 
-The basic project structure will look something like this:
+Follow [this](https://cloud.google.com/ml-engine/docs/tensorflow/packaging-trainer#project-structure) guide to structure your training application.
 
-```shell
-.
-├── README.md
-├── requirements.txt
-├── setup.py
-└── trainer
-    ├── __init__.py
-    ├── model.py
-    └── task.py
-```
 
-<h1>Data processing</h1>
+# Data processing
 
 The code from the Keras github
 [MNIST Fashion example](https://www.tensorflow.org/tutorials/keras/basic_classification)
@@ -93,7 +83,7 @@ gsutil cp -r data/train-labels-idx1-ubyte.gz gs://your-bucket-name/t10k-images-i
 gsutil cp -r data/train-images-idx3-ubyte.gz gs://your-bucket-name/t10k-labels-idx1-ubyte.gz
 ```
 
-<h1>Training</h1>
+# Training
 
 * **GCloud configuration:**
 
@@ -133,7 +123,7 @@ export TEST_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-images-idx3-ubyte.
 export TEST_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-labels-idx1-ubyte.gz
 ```
 
-* **Run locally via the gcloud emulator for Google Cloud ML Engine:**
+* **Run locally via the gcloud command for Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -- \

@@ -1,4 +1,4 @@
-<h1>Overview</h1>
+# Overview
 This code implements a classification model using the Google Cloud Platform. It includes code to process data, train, predict a TensorFlow model 
 and assess model performance. This guide trains a neural network model to classify a set of irises in three different classes.
 
@@ -26,7 +26,7 @@ The best way to setup your GCP project is to use this section in this
 
 Virtual environments are strongly suggested, but not required. Installing this
 sample's dependencies in a new virtual environment allows you to run the sample
-without changing global python packages on your system.
+locally without changing global python packages on your system.
 
 There are two options for the virtual environments:
 
@@ -43,20 +43,10 @@ Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
 #
 
-* **How to satisfy Cloud ML Engine project structure requirements:**
+* **How to satisfy Cloud ML Engine project structure requirements**
 
-The basic project structure will look something like this:
+Follow [this](https://cloud.google.com/ml-engine/docs/tensorflow/packaging-trainer#project-structure) guide to structure your training application.
 
-```shell
-.
-├── README.md
-├── requirements.txt
-├── setup.py
-└── trainer
-    ├── __init__.py
-    ├── model.py
-    └── task.py
-```
 
 <h1>Data processing</h1>
 
@@ -121,7 +111,7 @@ export TRAIN_STEPS=1000
 export EVAL_STEPS=100
 ```
 
-* **Run locally via the gcloud emulator for Google Cloud ML Engine:**
+* **Run locally via the gcloud command for Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine local train --package-path trainer \
@@ -217,7 +207,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --eval-steps $EVAL_STEPS
 ```
 
-<h1>Hyperparameter Tuning</h1>
+# Hyperparameter Tuning
 
 ```
 export HPTUNING_CONFIG=hptuning_config.yaml
@@ -240,7 +230,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --eval-steps $EVAL_STEPS                        
 ```
 
-<h1>Prediction</h1>
+# Prediction
 
 Once your training job has finished, you can use the exported model to create a prediction server. To do this you first create a model:
 
