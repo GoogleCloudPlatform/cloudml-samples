@@ -1,0 +1,4 @@
+tensorflow-gpu==1.10
+box2d-py==2.3.5
+gym
+ffmpeg
