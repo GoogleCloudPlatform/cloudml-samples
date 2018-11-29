@@ -1,9 +1,9 @@
 # Reinforcement Learning using Cloud ML Engine
 
 We present examples of running reinforcement learning (RL) algorithms on GCP
-using Cloud ML Engine, specifically, we provide implementations of [DDPG](https://arxiv.org/abs/1509.02971) and [TD3](https://arxiv.org/abs/1802.09477), train and tune their hyper-parameters in the [BipedalWalker](https://gym.openai.com/envs/BipedalWalker-v2) environment.
+using Cloud ML Engine, specifically, we provide implementations of [DDPG](https://arxiv.org/abs/1509.02971), [TD3](https://arxiv.org/abs/1802.09477) and C2A2 (our improved version of TD3), train and tune their hyper-parameters in the [BipedalWalker](https://gym.openai.com/envs/BipedalWalker-v2) environment.
 
-## Learning curves from hyper-parameter tuning
+## Learning curves from hyper-parameter tuning a TD3 agent
 Learning curves from hyper-parameter tuning.  
 ![Learning curves](img/learning_curve.png?raw=true)  
 Learning curve from the trial with best scores.  
