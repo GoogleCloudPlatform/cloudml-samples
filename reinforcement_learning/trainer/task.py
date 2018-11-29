@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from absl import app
+from absl import flags
+from c2a2_agent import C2A2
 from ddpg_agent import DDPG
 from td3_agent import TD3
 import gym
 from gym import wrappers
+import json
 import numpy as np
 import os
 import tensorflow as tf
-from tensorflow.logging import DEBUG
 from common import util
 
 
-flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_float('critic_lr', 2e-4, 'critic learning rate')
 flags.DEFINE_float('actor_lr', 1e-4, 'actor learning rate')
@@ -36,17 +38,16 @@ flags.DEFINE_float('c', 0.15, 'noise cap')
 flags.DEFINE_float('grad_norm_clip', 5.0, 'maximum allowed gradient norm')
 flags.DEFINE_integer('buffer_size', 1000000, 'replay buffer size')
 flags.DEFINE_integer('d', 2, 'target update interval')
-flags.DEFINE_integer('warmup_size', 10000,
-                     'warm up buffer size')
-flags.DEFINE_integer('batch_size', 32,
-                     'mini-batch size')
+flags.DEFINE_integer('warmup_size', 10000, 'warm up buffer size')
+flags.DEFINE_integer('batch_size', 32, 'mini-batch size')
 flags.DEFINE_integer('rand_steps', 10,
                      'number of steps to use random actions in a new episode')
 flags.DEFINE_integer('max_episodes', 3000,
                      'maximum number of episodes to train')
 flags.DEFINE_integer('eval_interval', 100, 'interval to test')
+flags.DEFINE_integer('max_to_keep', 5, 'number of model generations to save')
 flags.DEFINE_string('agent', 'DDPG', 'type of agent, one of [DDPG|TD3]')
-flags.DEFINE_string('log_dir', './results', 'dir to save logs and videos')
+flags.DEFINE_string('logdir', './results', 'dir to save logs and videos')
 flags.DEFINE_boolean('record_video', True, 'whether to record video when testing')
 
 
@@ -110,17 +111,20 @@ def test(env, agent):
 def train():
     """Train."""
 
-    log_dir = os.path.join(FLAGS.log_dir, 'log')
-    model_path = os.path.join(FLAGS.log_dir,
-                              'model/{}.ckpt'.format(FLAGS.agent))
-    video_dir = os.path.join(FLAGS.log_dir, 'video')
+    trial_id =  json.loads(
+        os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
+    log_dir = os.path.join(FLAGS.logdir, trial_id, 'log')
+    video_dir = os.path.join(FLAGS.logdir, trial_id, 'video')
+    model_path = os.path.join(
+        FLAGS.logdir, trial_id, 'model/{}.ckpt'.format(FLAGS.agent))
 
     env = gym.make('BipedalWalker-v2')
     if FLAGS.record_video:
-      ev_t = FLAGS.eval_interval
+      eval_interval = FLAGS.eval_interval
       env = wrappers.Monitor(
           env, video_dir,
-          video_callable=lambda ep: (ep + 1 - (ep + 1) / ev_t) % ev_t == 0)
+          video_callable = lambda ep: (ep + 1 - (ep + 1) / eval_interval
+                                       ) % eval_interval == 0)
 
     (summary_ops, summary_vars,
      eval_summary_ops, eval_summary_vars) = build_summaries()
@@ -131,10 +135,12 @@ def train():
             agent = DDPG(env, sess, FLAGS)
         elif FLAGS.agent == 'TD3':
             agent = TD3(env, sess, FLAGS)
+        elif FLAGS.agent == 'C2A2':
+            agent = C2A2(env, sess, FLAGS)
         else:
             raise ValueError('Unknown agent type {}'.format(FLAGS.agent))
 
-        saver = tf.train.Saver(max_to_keep=5)
+        saver = tf.train.Saver(max_to_keep=FLAGS.max_to_keep)
         tf.logging.info('Start to train {} ...'.format(FLAGS.agent))
         init = tf.global_variables_initializer()
         sess.run(init)
@@ -215,5 +221,5 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    tf.logging.set_verbosity(DEBUG)
-    tf.app.run()
+    tf.logging.set_verbosity(tf.logging.DEBUG)
+    app.run(main)

@@ -26,7 +26,17 @@ class ReplayBuffer(object):
         self.buffer = deque()
 
     def add(self, s, a, r, t, s2):
-        """Add experience to the buffer."""
+        """Add experience to the buffer.
+
+        Add experience (s, a, r, t, s2) to the buffer.
+
+        Args:
+          s  - state/observation at time t
+          a  - action taken at time t
+          r  - reward received from the environment
+          t  - termination flag, indicating whether the episode ends
+          s2 - state/observation at time t+1
+        """
         experience = (s, a, r, t, s2)
         if self.count < self.buffer_size:
             self.buffer.append(experience)
