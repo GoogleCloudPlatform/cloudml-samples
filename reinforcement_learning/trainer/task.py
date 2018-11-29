@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from c2a2_agent import C2A2
 from ddpg_agent import DDPG
 from td3_agent import TD3
 import gym
 from gym import wrappers
+import json
 import numpy as np
 import os
 import tensorflow as tf
@@ -45,7 +47,7 @@ flags.DEFINE_integer('rand_steps', 10,
 flags.DEFINE_integer('max_episodes', 3000,
                      'maximum number of episodes to train')
 flags.DEFINE_integer('eval_interval', 100, 'interval to test')
-flags.DEFINE_string('agent', 'DDPG', 'type of agent, one of [DDPG|TD3]')
+flags.DEFINE_string('agent', 'DDPG', 'type of agent, one of [DDPG|TD3|C2A2]')
 flags.DEFINE_string('log_dir', './results', 'dir to save logs and videos')
 flags.DEFINE_boolean('record_video', True, 'whether to record video when testing')
 
@@ -110,10 +112,12 @@ def test(env, agent):
 def train():
     """Train."""
 
-    log_dir = os.path.join(FLAGS.log_dir, 'log')
-    model_path = os.path.join(FLAGS.log_dir,
-                              'model/{}.ckpt'.format(FLAGS.agent))
-    video_dir = os.path.join(FLAGS.log_dir, 'video')
+    trial_id =  json.loads(
+        os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
+    log_dir = os.path.join(FLAGS.log_dir, trial_id, 'log')
+    video_dir = os.path.join(FLAGS.log_dir, trial_id, 'video')
+    model_path = os.path.join(
+        FLAGS.log_dir, trial_id, 'model/{}.ckpt'.format(FLAGS.agent))
 
     env = gym.make('BipedalWalker-v2')
     if FLAGS.record_video:
@@ -131,6 +135,8 @@ def train():
             agent = DDPG(env, sess, FLAGS)
         elif FLAGS.agent == 'TD3':
             agent = TD3(env, sess, FLAGS)
+        elif FLAGS.agent == 'C2A2':
+            agent = C2A2(env, sess, FLAGS)
         else:
             raise ValueError('Unknown agent type {}'.format(FLAGS.agent))
 

@@ -14,6 +14,7 @@
 # limitations under the License.
 
 PROJECT_ID=${1}
+AGENT=${2:-"C2A2"}
 now=$(date +"%Y%m%d%H%M%S")
 REGION="us-central1"
 BUCKET_NAME=${PROJECT_ID}
@@ -35,4 +36,4 @@ gcloud ml-engine jobs submit training $JOB_NAME \
   --record_video=False \
   --max_episodes 3000 \
   --eval_interval 100 \
-  --agent TD3
+  --agent $AGENT
