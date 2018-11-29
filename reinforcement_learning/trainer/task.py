@@ -48,6 +48,7 @@ flags.DEFINE_integer('eval_interval', 100, 'interval to test')
 flags.DEFINE_integer('max_to_keep', 5, 'number of model generations to save')
 flags.DEFINE_string('agent', 'DDPG', 'type of agent, one of [DDPG|TD3]')
 flags.DEFINE_string('logdir', './results', 'dir to save logs and videos')
+flags.DEFINE_string('job-dir', './results', 'dir to save logs and videos')
 flags.DEFINE_boolean('record_video', True, 'whether to record video when testing')
 
 
