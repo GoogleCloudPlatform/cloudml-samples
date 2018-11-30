@@ -280,8 +280,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--record-video',
       help='whether to record video when testing',
-      type=bool,
-      default=True)
+      action='store_true')
   parser.add_argument(
       '--verbosity',
       choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARN'],

@@ -80,9 +80,8 @@ if (($HP_TUNING==1))
 then
   CMLE_FLAGS=$CMLE_FLAGS"--config $HP_CONFIG "
 fi
-PKG_FLAGS="--record_video=False \
-           --max_episodes 3000 \
-           --eval_interval 100 \
+PKG_FLAGS="--max-episodes 3000 \
+           --eval-interval 100 \
            --agent $AGENT
           "
 ALL_FLAGS=$CMLE_FLAGS"-- "$PKG_FLAGS
