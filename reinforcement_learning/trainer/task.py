@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from absl import app
-from absl import flags
+import argparse
 from c2a2_agent import C2A2
 from ddpg_agent import DDPG
 from td3_agent import TD3
@@ -23,33 +22,8 @@ import json
 import numpy as np
 import os
 import tensorflow as tf
+from tensorflow.contrib.training.python.training import hparam
 from common import util
-
-
-FLAGS = flags.FLAGS
-flags.DEFINE_float('critic_lr', 2e-4, 'critic learning rate')
-flags.DEFINE_float('actor_lr', 1e-4, 'actor learning rate')
-flags.DEFINE_float('gamma', 0.99, 'reward discounting factor')
-flags.DEFINE_float('tau', 0.001, 'target network update ratio')
-flags.DEFINE_float('sigma', 0.1, 'exploration noise standard deviation')
-flags.DEFINE_float('sigma_tilda', 0.05,
-                   'noise standard deviation for smoothing regularization')
-flags.DEFINE_float('c', 0.15, 'noise cap')
-flags.DEFINE_float('grad_norm_clip', 5.0, 'maximum allowed gradient norm')
-flags.DEFINE_integer('buffer_size', 1000000, 'replay buffer size')
-flags.DEFINE_integer('d', 2, 'target update interval')
-flags.DEFINE_integer('warmup_size', 10000, 'warm up buffer size')
-flags.DEFINE_integer('batch_size', 32, 'mini-batch size')
-flags.DEFINE_integer('rand_steps', 10,
-                     'number of steps to use random actions in a new episode')
-flags.DEFINE_integer('max_episodes', 3000,
-                     'maximum number of episodes to train')
-flags.DEFINE_integer('eval_interval', 100, 'interval to test')
-flags.DEFINE_integer('max_to_keep', 5, 'number of model generations to save')
-flags.DEFINE_string('agent', 'DDPG', 'type of agent, one of [DDPG|TD3]')
-flags.DEFINE_string('logdir', './results', 'dir to save logs and videos')
-flags.DEFINE_string('job-dir', './results', 'dir to save logs and videos')
-flags.DEFINE_boolean('record_video', True, 'whether to record video when testing')
 
 
 def build_summaries():
@@ -89,7 +63,7 @@ def log_metrics(sess, writer, summary_ops, summary_vals, metrics, test=False):
     writer.flush()
 
 
-def test(env, agent):
+def test(env, agent, config):
     """Test the trained agent"""
     tf.logging.info('Testing ...')
     s = env.reset()
@@ -98,7 +72,7 @@ def test(env, agent):
     done = False
 
     while not done:
-        if ep_steps < FLAGS.rand_steps:
+        if ep_steps < config.rand_steps:
             action = agent.random_action(s)
         else:
             action = agent.action(s)
@@ -109,19 +83,17 @@ def test(env, agent):
     return ep_reward, ep_steps
 
 
-def train():
+def train(config):
     """Train."""
 
-    trial_id =  json.loads(
-        os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
-    log_dir = os.path.join(FLAGS.logdir, trial_id, 'log')
-    video_dir = os.path.join(FLAGS.logdir, trial_id, 'video')
+    log_dir = os.path.join(config.job_dir, 'log')
+    video_dir = os.path.join(config.job_dir, 'video')
     model_path = os.path.join(
-        FLAGS.logdir, trial_id, 'model/{}.ckpt'.format(FLAGS.agent))
+        config.job_dir, 'model/{}.ckpt'.format(config.agent))
 
     env = gym.make('BipedalWalker-v2')
-    if FLAGS.record_video:
-      eval_interval = FLAGS.eval_interval
+    if config.record_video:
+      eval_interval = config.eval_interval
       env = wrappers.Monitor(
           env, video_dir,
           video_callable = lambda ep: (ep + 1 - (ep + 1) / eval_interval
@@ -132,24 +104,24 @@ def train():
 
     with tf.Session() as sess:
 
-        if FLAGS.agent == 'DDPG':
-            agent = DDPG(env, sess, FLAGS)
-        elif FLAGS.agent == 'TD3':
-            agent = TD3(env, sess, FLAGS)
-        elif FLAGS.agent == 'C2A2':
-            agent = C2A2(env, sess, FLAGS)
+        if config.agent == 'DDPG':
+            agent = DDPG(env, sess, config)
+        elif config.agent == 'TD3':
+            agent = TD3(env, sess, config)
+        elif config.agent == 'C2A2':
+            agent = C2A2(env, sess, config)
         else:
-            raise ValueError('Unknown agent type {}'.format(FLAGS.agent))
+            raise ValueError('Unknown agent type {}'.format(config.agent))
 
-        saver = tf.train.Saver(max_to_keep=FLAGS.max_to_keep)
-        tf.logging.info('Start to train {} ...'.format(FLAGS.agent))
+        saver = tf.train.Saver(max_to_keep=config.max_to_keep)
+        tf.logging.info('Start to train {} ...'.format(config.agent))
         init = tf.global_variables_initializer()
         sess.run(init)
         writer = tf.summary.FileWriter(log_dir, sess.graph)
 
         agent.initialize()
         global_step = 0
-        for i in xrange(FLAGS.max_episodes):
+        for i in xrange(config.max_episodes):
 
             s = env.reset()
             ep_reward = 0
@@ -159,7 +131,7 @@ def train():
             done = False
 
             while not done:
-                if ep_steps < FLAGS.rand_steps:
+                if ep_steps < config.rand_steps:
                     action = agent.random_action(s)
                 else:
                     action, action_org, noise = agent.action_with_noise(s)
@@ -194,9 +166,9 @@ def train():
                                          ep_steps,
                                          actions,
                                          noises))
-                    if ep_cnt % FLAGS.eval_interval == 0:
-                        eval_ep_reward, eval_ep_steps = test(env, agent)
-                        eval_ep_cnt = ep_cnt / FLAGS.eval_interval
+                    if ep_cnt % config.eval_interval == 0:
+                        eval_ep_reward, eval_ep_steps = test(env, agent, config)
+                        eval_ep_cnt = ep_cnt / config.eval_interval
                         log_metrics(sess,
                                     writer,
                                     eval_summary_ops,
@@ -214,13 +186,116 @@ def train():
     env.close()
 
 
-def main(argv):
-    del argv
-    for k, v in FLAGS.flag_values_dict().iteritems():
-        tf.logging.info('{}: {}'.format(k, v))
-    train()
-
-
 if __name__ == '__main__':
-    tf.logging.set_verbosity(tf.logging.DEBUG)
-    app.run(main)
+
+  parser = argparse.ArgumentParser()
+  parser.add_argument(
+      '--critic-lr',
+      help='critic learning rate',
+      type=float,
+      default=2e-4)
+  parser.add_argument(
+      '--actor-lr',
+      help='actor learning rate',
+      type=float,
+      default=1e-4)
+  parser.add_argument(
+      '--gamma',
+      help='reward discounting factor',
+      type=float,
+      default=0.99)
+  parser.add_argument(
+      '--tau',
+      help='target network update ratio',
+      type=float,
+      default=0.001)
+  parser.add_argument(
+      '--sigma',
+      help='exploration noise standard deviation',
+      type=float,
+      default=0.1)
+  parser.add_argument(
+      '--sigma-tilda',
+      help='noise standard deviation for smoothing regularization',
+      type=float,
+      default=0.05)
+  parser.add_argument(
+      '--c',
+      help='noise cap',
+      type=float,
+      default=0.15)
+  parser.add_argument(
+      '--grad-norm-clip',
+      help='maximum allowed gradient norm',
+      type=float,
+      default=5.0)
+  parser.add_argument(
+      '--buffer-size',
+      help='replay buffer size',
+      type=int,
+      default=1000000)
+  parser.add_argument(
+      '--d',
+      help='target update interval',
+      type=int,
+      default=2)
+  parser.add_argument(
+      '--warmup-size',
+      help='warm up buffer size',
+      type=int,
+      default=10000)
+  parser.add_argument(
+      '--batch-size',
+      help='mini-batch size',
+      type=int,
+      default=32)
+  parser.add_argument(
+      '--rand-steps',
+      help='number of steps to user random actions in a new episode',
+      type=int,
+      default=10)
+  parser.add_argument(
+      '--max-episodes',
+      help='maximum number of episodes to train',
+      type=int,
+      default=3000)
+  parser.add_argument(
+      '--eval-interval',
+      help='interval to test',
+      type=int,
+      default=100)
+  parser.add_argument(
+      '--max-to-keep',
+      help='number of model generations to keep',
+      type=int,
+      default=5)
+  parser.add_argument(
+      '--agent',
+      help='type of agent, one of [DDPG|TD3|C2A2]',
+      default='DDPG')
+  parser.add_argument(
+      '--job-dir',
+      help='dir to save logs and videos',
+      default='./results')
+  parser.add_argument(
+      '--record-video',
+      help='whether to record video when testing',
+      type=bool,
+      default=True)
+  parser.add_argument(
+      '--verbosity',
+      choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARN'],
+      default='INFO')
+
+  args, _ = parser.parse_known_args()
+  # Set python level verbosity
+  tf.logging.set_verbosity(args.verbosity)
+  # Set C++ Graph Execution level verbosity
+  os.environ['TF_CPP_MIN_LOG_LEVEL'] = str(
+      tf.logging.__dict__[args.verbosity] / 10)
+
+  for k, v in args.__dict__.iteritems():
+    tf.logging.info('{}: {}'.format(k, v))
+
+  config = hparam.HParams(**args.__dict__)
+  train(config)

@@ -80,8 +80,7 @@ if (($HP_TUNING==1))
 then
   CMLE_FLAGS=$CMLE_FLAGS"--config $HP_CONFIG "
 fi
-PKG_FLAGS="--logdir $LOG_DIR \
-           --record_video=False \
+PKG_FLAGS="--record_video=False \
            --max_episodes 3000 \
            --eval_interval 100 \
            --agent $AGENT
