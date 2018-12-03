@@ -35,7 +35,7 @@ from tensorflow.python.lib.io import file_io
 
 # Path to a default checkpoint file for the Inception graph.
 DEFAULT_INCEPTION_CHECKPOINT = (
-    'gs://cloud-ml-data/img/flower_photos/inception_v3_2016_08_28.ckpt')
+    'gs://cloud-samples-data/ml-engine/flowers/inception_v3_2016_08_28.ckpt')
 
 
 class Evaluator(object):
