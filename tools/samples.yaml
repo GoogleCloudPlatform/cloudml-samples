@@ -116,3 +116,11 @@ tpu-templates-tpu-film-estimator:
     trainer.py
   colab:
     git-clone: True
+
+tpu-templates-tpu-grl-estimator:
+  path:
+    tpu/templates/tpu_grl_estimator
+  filename:
+    trainer.py
+  colab:
+    git-clone: True
