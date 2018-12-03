@@ -13,15 +13,12 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
-import logging
 import json
 import os
-import sys
 
 from . import model
 
 import tensorflow as tf
-from tensorflow.contrib.training.python.training import hparam
 
 
 def get_args():
@@ -87,7 +84,9 @@ def get_args():
     '--verbosity',
     choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARN'],
     default='INFO')
-  return parser.parse_args()
+
+  args, _ = parser.parse_known_args()
+  return args
 
 
 def _get_session_config_from_env_var():
@@ -108,7 +107,7 @@ def _get_session_config_from_env_var():
   return None
 
 
-def train_and_evaluate(hparams):
+def train_and_evaluate(args):
   """Runs the training and evaluate using the high level API."""
 
   # Running configuration.
@@ -116,27 +115,27 @@ def train_and_evaluate(hparams):
       session_config=_get_session_config_from_env_var(),
       save_checkpoints_steps=100,
       save_summary_steps=100,
-      model_dir=hparams.job_dir)
+      model_dir=args.job_dir)
 
   # Create TrainSpec.
   train_input_fn = lambda: model.input_fn(
-      filename=hparams.train_files,
-      batch_size=hparams.train_batch_size,
+      filename=args.train_files,
+      batch_size=args.train_batch_size,
       shuffle=True)
   train_spec = tf.estimator.TrainSpec(
-      train_input_fn, max_steps=hparams.train_steps)
+      train_input_fn, max_steps=args.train_steps)
 
   # Define evaluating spec. Don't shuffle evaluation data.
   exporter = tf.estimator.FinalExporter('exporter',
                                         model.serving_input_receiver_fn)
   # Create EvalSpec.
   eval_input_fn = lambda: model.input_fn(
-      filename=hparams.eval_files,
-      batch_size=hparams.eval_batch_size,
+      filename=args.eval_files,
+      batch_size=args.eval_batch_size,
       shuffle=False)
   eval_spec = tf.estimator.EvalSpec(
       eval_input_fn,
-      steps=hparams.eval_steps,
+      steps=args.eval_steps,
       exporters=[exporter],
       name='iris-eval')
 
@@ -146,7 +145,7 @@ def train_and_evaluate(hparams):
   estimator = model.build_estimator(
       # Construct layers sizes.
       config=run_config,
-      learning_rate=hparams.learning_rate,
+      learning_rate=args.learning_rate,
       hidden_units=[10, 20, 10],
       num_classes=3)
 
@@ -158,5 +157,4 @@ if __name__ == '__main__':
   args = get_args()
   tf.logging.set_verbosity(args.verbosity)
 
-  hparams = hparam.HParams(**args.__dict__)
-  train_and_evaluate(hparams)
+  train_and_evaluate(args)
