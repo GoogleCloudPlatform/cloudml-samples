@@ -17,17 +17,12 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
-import logging
-import os
-import sys
 
 from . import model
 from . import utils
 
 import numpy as np
 import tensorflow as tf
-
-from tensorflow.contrib.training.python.training import hparam
 
 
 def get_args():
@@ -71,19 +66,20 @@ def get_args():
 		choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARN'],
 		default='INFO')
 
-	return parser.parse_args()
+	args, _ = parser.parse_known_args()
+	return args
 
 
-def train_and_evaluate(hparams):
+def train_and_evaluate(args):
 	"""Helper function: Trains and evaluate model.
 
 	Args:
-		hparams: (dict) Command line parameters passed from task.py
+		args: (dict) Command line parameters passed from task.py
 	"""
 	# Load data.
 	(train_data,
 	 train_labels), (test_data,
-									 test_labels) = utils.load_data(path=hparams.train_file)
+									 test_labels) = utils.load_data(path=args.train_file)
 
 	# Shuffle data.
 	order = np.argsort(np.random.random(train_labels.shape))
@@ -97,7 +93,7 @@ def train_and_evaluate(hparams):
 	run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
 
 	# Training steps
-	train_steps = hparams.num_epochs * len(train_data) / hparams.batch_size
+	train_steps = args.num_epochs * len(train_data) / args.batch_size
 	# Reshape Label numpy array.
 	train_labels = np.asarray(train_labels).astype('float32').reshape((-1, 1))
 	# Create TrainSpec.
@@ -105,7 +101,7 @@ def train_and_evaluate(hparams):
 		input_fn=lambda: model.input_fn(
 			train_data,
 			train_labels,
-			hparams.batch_size,
+			args.batch_size,
 			mode=tf.estimator.ModeKeys.TRAIN),
 		max_steps=train_steps)
 
@@ -118,7 +114,7 @@ def train_and_evaluate(hparams):
 		input_fn=lambda: model.input_fn(
 			test_data,
 			test_labels,
-			hparams.batch_size,
+			args.batch_size,
 			mode=tf.estimator.ModeKeys.EVAL),
 		steps=None,
 		exporters=[exporter],
@@ -127,9 +123,9 @@ def train_and_evaluate(hparams):
 
 	# Create estimator.
 	estimator = model.keras_estimator(
-		model_dir=hparams.job_dir,
+		model_dir=args.job_dir,
 		config=run_config,
-		params={'learning_rate': hparams.learning_rate,
+		params={'learning_rate': args.learning_rate,
 						'num_features': train_data.shape[1]})
 
 	# Start training.
@@ -142,5 +138,4 @@ if __name__ == '__main__':
 	tf.logging.set_verbosity(args.verbosity)
 
 	# Run the training job
-	hparams = hparam.HParams(**args.__dict__)
-	train_and_evaluate(hparams)
+	train_and_evaluate(args)
