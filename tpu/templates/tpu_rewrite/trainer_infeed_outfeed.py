@@ -25,12 +25,17 @@ import tensorflow as tf
 from tensorflow.contrib.cluster_resolver import TPUClusterResolver
 
 
+def build_model(features):
+    hidden = tf.layers.dense(features, 10, activation=tf.nn.relu)
+    outputs = tf.layers.dense(hidden, 1)
+
+    return outputs
+
+
 def fit_batch(features, labels):
     # inner function that specifies one step of calculation to be done on TPU.
 
-    # build model
-    hidden = tf.layers.dense(features, 10, activation=tf.nn.relu)
-    outputs = tf.layers.dense(hidden, 1)
+    outputs = build_model(features)
     loss = tf.nn.l2_loss(outputs - labels)
 
     optimizer = tf.train.RMSPropOptimizer(learning_rate=0.05)
