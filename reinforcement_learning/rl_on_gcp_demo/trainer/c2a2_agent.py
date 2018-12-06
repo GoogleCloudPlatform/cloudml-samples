@@ -25,7 +25,8 @@ action = argmax(min(q1, q2))
 """
 import agent
 from common import replay_buffer
-from common.actor_critic import ActorNetwork, CriticNetwork
+from common.actor_critic import ActorNetwork
+from common.actor_critic import CriticNetwork
 import numpy as np
 
 
@@ -34,8 +35,8 @@ class C2A2(agent.Agent):
 
     def __init__(self, env, sess, config):
         """Initialize members."""
-        self.env = env
         state_dim = env.observation_space.shape[0]
+        self.env = env
         self.action_dim = env.action_space.shape[0]
         self.action_high = env.action_space.high
         self.action_low = env.action_space.low
@@ -44,8 +45,8 @@ class C2A2(agent.Agent):
         self.gamma = config.gamma
         self.sigma = config.sigma
         self.sigma_tilda = config.sigma_tilda
-        self.c = config.c
-        self.d = config.d
+        self.noise_cap = config.c
+        self.train_interval = config.d
         self.actor1 = ActorNetwork(sess=sess,
                                    state_dim=state_dim,
                                    action_dim=self.action_dim,
@@ -120,7 +121,7 @@ class C2A2(agent.Agent):
         else:
             action = self.random_action(observation)
         noise = np.clip(np.random.randn(self.action_dim) * self.sigma,
-                        -self.c, self.c)
+                        -self.noise_cap, self.noise_cap)
         action_with_noise = action + noise
         return (np.clip(action_with_noise, self.action_low, self.action_high),
                 action, noise)
@@ -134,7 +135,7 @@ class C2A2(agent.Agent):
         if self.replay_buffer.size > self.warmup_size:
             s0, a, r, t, s1 = self.replay_buffer.sample_batch(self.batch_size)
             epsilon = np.clip(np.random.randn(self.batch_size, self.action_dim),
-                              -self.c, self.c)
+                              -self.noise_cap, self.noise_cap)
             target_actions = self.target_action(s1) + epsilon
             target_actions = np.clip(target_actions,
                                      self.action_low,
@@ -144,7 +145,7 @@ class C2A2(agent.Agent):
             y = r + self.gamma * target_qval * (1 - t)
             self.critic1.train(s0, a, y)
             self.critic2.train(s0, a, y)
-            if global_step % self.d == 0:
+            if global_step % self.train_interval == 0:
                 actions = self.actor1.get_action(s0)
                 grads = self.critic1.get_action_gradients(s0, actions)
                 self.actor1.train(s0, grads[0])

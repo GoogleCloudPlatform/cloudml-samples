@@ -21,7 +21,8 @@ http://arxiv.org/pdf/1509.02971v2.pdf
 """
 import agent
 from common import replay_buffer
-from common.actor_critic import ActorNetwork, CriticNetwork
+from common.actor_critic import ActorNetwork
+from common.actor_critic import CriticNetwork
 import numpy as np
 
 
@@ -30,8 +31,8 @@ class DDPG(agent.Agent):
 
     def __init__(self, env, sess, config):
         """Initialize members."""
-        self.env = env
         state_dim = env.observation_space.shape[0]
+        self.env = env
         self.action_dim = env.action_space.shape[0]
         self.action_high = env.action_space.high
         self.action_low = env.action_space.low
@@ -39,7 +40,7 @@ class DDPG(agent.Agent):
         self.warmup_size = config.warmup_size
         self.gamma = config.gamma
         self.sigma = config.sigma
-        self.c = config.c
+        self.noise_cap = config.c
         self.actor = ActorNetwork(sess=sess,
                                   state_dim=state_dim,
                                   action_dim=self.action_dim,
@@ -73,7 +74,7 @@ class DDPG(agent.Agent):
         else:
             action = self.random_action(observation)
         noise = np.clip(np.random.randn(self.action_dim) * self.sigma,
-                        -self.c, self.c)
+                        -self.noise_cap, self.noise_cap)
         action_with_noise = action + noise
         return (np.clip(action_with_noise, self.action_low, self.action_high),
                 action, noise)
