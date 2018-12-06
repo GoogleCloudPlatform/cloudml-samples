@@ -29,7 +29,7 @@ distiction:
   This example is a great combination of both low level configuration and fast iteration.
   
 * The sample provided in [Estimator](./estimator) uses the high level
-  `tf.contrib.learn.Estimator` API. This API is great for fast iteration, and
+  `tf.estimator.DNNLinearCombinedClassifier` API. This API is great for fast iteration, and
   quickly adapting models to your own datasets without major code overhauls.
 
 * The sample provided in [Keras](./keras) uses the native Keras library.
