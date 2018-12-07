@@ -118,18 +118,22 @@ if __name__ == '__main__':
     parser.add_argument(
         '--model-dir',
         type=str,
-        default='/tmp/tpu-template')
+        default='/tmp/tpu-template',
+        help='Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.')
     parser.add_argument(
         '--max-steps',
         type=int,
-        default=1000)
+        default=1000,
+        help='The total number of steps to train the model.')
     parser.add_argument(
         '--save-checkpoints-steps',
         type=int,
-        default=100)
+        default=100,
+        help='The number of training steps before saving each checkpoint.')
     parser.add_argument(
         '--tpu',
-        default=None)
+        default=None,
+        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on CMLE.')
 
     args, _ = parser.parse_known_args()
 

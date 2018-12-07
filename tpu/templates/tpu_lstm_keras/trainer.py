@@ -91,13 +91,16 @@ if __name__ == '__main__':
     parser.add_argument(
         '--model-dir',
         type=str,
-        default='/tmp/tpu-template')
+        default='/tmp/tpu-template',
+        help='Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.')
     parser.add_argument(
         '--use-tpu',
-        action='store_true')
+        action='store_true',
+        help='Whether to use TPU.')
     parser.add_argument(
         '--tpu',
-        default=None)
+        default=None,
+        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on CMLE.')
 
     args, _ = parser.parse_known_args()
 
