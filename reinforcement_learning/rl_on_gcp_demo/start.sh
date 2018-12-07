@@ -71,6 +71,7 @@ LOG_DIR="gs://${BUCKET_NAME}/${JOB_NAME}"
 
 # submit job
 CMLE_FLAGS="--job-dir $LOG_DIR \
+            --scale-tier $SCALE_TIER \
             --runtime-version 1.10 \
             --module-name $MODULE_NAME \
             --package-path $PACKAGE_PATH \
