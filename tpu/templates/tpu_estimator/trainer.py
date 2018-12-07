@@ -149,7 +149,7 @@ def main(args):
             config=config,
             params=params,
             train_batch_size=args.train_batch_size,
-            eval_batch_size=32, # FIXME
+            eval_batch_size=32,
             export_to_tpu=False)
     else:
         config = tf.estimator.RunConfig(model_dir=args.model_dir)

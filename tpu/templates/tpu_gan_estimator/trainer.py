@@ -190,7 +190,7 @@ def main(args):
             config=gen_config,
             params=params,
             train_batch_size=args.train_batch_size,
-            eval_batch_size=32, # FIXME
+            eval_batch_size=32,
             export_to_tpu=False)
 
         dis_estimator = tf.contrib.tpu.TPUEstimator(
@@ -198,7 +198,7 @@ def main(args):
             config=dis_config,
             params=params,
             train_batch_size=args.train_batch_size,
-            eval_batch_size=32, # FIXME
+            eval_batch_size=32,
             export_to_tpu=False)
     else:
         gen_config = tf.estimator.RunConfig(model_dir=os.path.join(args.model_dir, 'generator'))
