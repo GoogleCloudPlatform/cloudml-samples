@@ -58,7 +58,7 @@ while (( "$#" )); do
       exit 1
       ;;
     *) # preserve positional arguments
-      PARAMS="$PARAMS $1"
+      PARAMS="$PARAMS --$1"
       shift
       ;;
   esac
@@ -81,11 +81,8 @@ if (($HP_TUNING==1))
 then
   CMLE_FLAGS=$CMLE_FLAGS"--config $HP_CONFIG "
 fi
-PKG_FLAGS="--max-episodes 3000 \
-           --eval-interval 100 \
-           --agent $AGENT
-          "
+PKG_FLAGS="--agent=$AGENT"$PARAMS
 ALL_FLAGS=$CMLE_FLAGS"-- "$PKG_FLAGS
 echo $ALL_FLAGS
-gcloud ml-engine jobs submit training $JOB_NAME $ALL_FLAGS
+gcloud --project=${PROJECT_ID} ml-engine jobs submit training $JOB_NAME $ALL_FLAGS
 

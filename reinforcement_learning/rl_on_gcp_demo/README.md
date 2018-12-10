@@ -9,6 +9,9 @@ Reinforcement learning (RL) using Clould ML Engine gives you two key benefits:
 
 We present examples of running RL algorithms on Cloud ML Engine. Specifically, we provide implementations of [DDPG](https://arxiv.org/abs/1509.02971), [TD3](https://arxiv.org/abs/1802.09477) and C2A2 (a modification based on TD3), train and tune their hyper-parameters in the [BipedalWalker](https://gym.openai.com/envs/BipedalWalker-v2) environment.
 
+Read more about running RL on Cloud ML Engine
+[here](https://cloud.google.com/blog/products/ai-machine-learning/deep-reinforcement-learning-on-gcp-using-hyperparameters-and-cloud-ml-engine-to-best-openai-gym-games?fbclid=IwAR1i2Q-J_FXs8cZifkt7K8u5xWXzwM_U6Ls6KpMA0utVifhvsDTpLKkPGo4).  
+
 ## Run the code on GCP
 
 We assume you have created a google cloud project and have a google cloud
@@ -35,7 +38,7 @@ Check out start.sh for more options.
 Learning curves from hyper-parameter tuning.  
 ![Learning curves](https://storage.googleapis.com/gcp_blog/img/learning_curve.png)  
 Learning curve from the trial with best scores.  
-BipedalWalker is considered “solved” if the agent can an average reward of 300 for 100 episodes in a row.
+BipedalWalker is considered “solved” if the agent can reach an average reward of 300 for 100 episodes in a row.
 The agent we trained meet the criteria before episode #2000 and this can put us at the third place on the [leaderboard](https://github.com/openai/gym/wiki/Leaderboard).
 ![Optimal curve](https://storage.googleapis.com/gcp_blog/img/optimal_curve.png)  
 
