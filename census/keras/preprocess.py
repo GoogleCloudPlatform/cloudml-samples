@@ -18,6 +18,7 @@
 
 import json
 import sys
+
 from trainer import model
 
 if __name__=='__main__':

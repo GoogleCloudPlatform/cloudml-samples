@@ -1,5 +1,5 @@
 # Requirements for all census samples.
-tensorflow==1.8
+tensorflow==1.10
 # Requirements for keras example only for sample.sh.
 future==0.16.0
 h5py>=2.7.0,<3.0

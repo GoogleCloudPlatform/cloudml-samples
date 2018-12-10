@@ -19,7 +19,7 @@ distiction:
     Tensorflow `tf.estimator.EstimatorSpec` to create a High level custom Estimator.
     This example is a great combination of both low level configuration and fast iteration.
   
-   - The sample provided in [Estimator](./estimator) uses the high level
+  - The sample provided in [Estimator](./estimator) uses the high level
     `tf.estimator.DNNLinearCombinedClassifier` API. This API is great for fast iteration, and
     quickly adapting models to your own datasets without major code overhauls.
 
@@ -27,7 +27,7 @@ distiction:
     This API is great for fast iteration, and quickly adapting models to your own datasets 
     without major code overhauls.
   
-* The sample provided in [TFT Transform Estimator](./tfttransformestimator) shows how to use [tf transform](https://github.com/tensorflow/transform) together with [Cloud Dataflow](https://cloud.google.com/dataflow) and [Cloud ML Engine](https://cloud.google.com/ml-engine/).
+* The sample provided in [TFT Transform Estimator](./tftransformestimator) shows how to use [tf transform](https://github.com/tensorflow/transform) together with [Cloud Dataflow](https://cloud.google.com/dataflow) and [Cloud ML Engine](https://cloud.google.com/ml-engine/).
 
 All the models provided in this directory can be run on the Cloud Machine Learning Engine.
 

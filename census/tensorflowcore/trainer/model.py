@@ -140,7 +140,7 @@ def model_fn(mode,
 
     # global_step is necessary in eval to correctly load the step
     # of the checkpoint we are evaluating
-    global_step = tf.contrib.framework.get_or_create_global_step()
+    global_step = tf.train.get_or_create_global_step()
 
   if mode == PREDICT:
     # Convert predicted_indices back into strings

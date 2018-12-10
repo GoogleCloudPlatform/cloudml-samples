@@ -200,6 +200,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --region us-central1 \
   --config config-small.yaml \
   --async \
+  --runtime-version=1.4 \
   -- \
   --dataset kaggle \
   --model_type linear \
@@ -223,6 +224,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --region us-central1 \
   --config config-small.yaml \
   --async \
+  --runtime-version=1.4 \
   -- \
   --dataset kaggle \
   --model_type deep \
@@ -254,6 +256,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --region us-central1 \
   --config config-large.yaml \
   --async \
+  --runtime-version=1.4 \
   -- \
   --dataset large \
   --model_type linear \
@@ -281,6 +284,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --region us-central1 \
   --config config-large.yaml \
   --async \
+  --runtime-version=1.4 \
   -- \
   --dataset large \
   --model_type deep \

@@ -21,3 +21,7 @@ gan:
 film:
   estimator:
     tpu_film_estimator
+
+grl:
+  estimator:
+    tpu_grl_estimator

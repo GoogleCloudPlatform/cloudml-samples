@@ -26,7 +26,6 @@ import threading
 import six
 
 import tensorflow as tf
-from tensorflow.contrib.training.python.training import hparam
 
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import lookup_ops
@@ -82,7 +81,7 @@ class EvaluationRunHook(tf.train.SessionRunHook):
 
       # Creates a global step to contain a counter for
       # the global training step
-      self._gs = tf.contrib.framework.get_or_create_global_step()
+      self._gs = tf.train.get_or_create_global_step()
 
       self._final_ops_dict = value_dict
       self._eval_ops = update_dict.values()
@@ -158,7 +157,7 @@ class EvaluationRunHook(tf.train.SessionRunHook):
       tf.logging.info(final_values)
 
 
-def run(target, cluster_spec, is_chief, hparams):
+def run(target, cluster_spec, is_chief, args):
 
   """Runs the training and evaluation graph.
 
@@ -166,13 +165,13 @@ def run(target, cluster_spec, is_chief, hparams):
     target (str): Tensorflow server target.
     cluster_spec: (cluster spec) Cluster specification.
     is_chief (bool): Boolean flag to specify a chief server.
-    hparams (tf.hparams): Input Arguments.
+    args (args): Input Arguments.
   """
 
   # Calculate the number of hidden units
   hidden_units = [
-      max(2, int(hparams.first_layer_size * hparams.scale_factor**i))
-      for i in range(hparams.num_layers)
+      max(2, int(args.first_layer_size * args.scale_factor**i))
+      for i in range(args.num_layers)
   ]
 
   # If the server is chief which is `master`
@@ -189,9 +188,9 @@ def run(target, cluster_spec, is_chief, hparams):
 
       # Features and label tensors
       features, labels = model.input_fn(
-          hparams.eval_files,
-          num_epochs=None if hparams.eval_steps else 1,
-          batch_size=hparams.eval_batch_size,
+        args.eval_files,
+          num_epochs=None if args.eval_steps else 1,
+          batch_size=args.eval_batch_size,
           shuffle=False
       )
       # Accuracy and AUROC metrics
@@ -201,15 +200,15 @@ def run(target, cluster_spec, is_chief, hparams):
           features.copy(),
           labels,
           hidden_units=hidden_units,
-          learning_rate=hparams.learning_rate
+          learning_rate=args.learning_rate
       )
 
     hooks = [EvaluationRunHook(
-        hparams.job_dir,
+        args.job_dir,
         metric_dict,
         evaluation_graph,
-        hparams.eval_frequency,
-        eval_steps=hparams.eval_steps,
+        args.eval_frequency,
+        eval_steps=args.eval_steps,
     )]
   else:
     hooks = []
@@ -226,9 +225,9 @@ def run(target, cluster_spec, is_chief, hparams):
 
       # Features and label tensors as read using filename queue.
       features, labels = model.input_fn(
-          hparams.train_files,
-          num_epochs=hparams.num_epochs,
-          batch_size=hparams.train_batch_size
+          args.train_files,
+          num_epochs=args.num_epochs,
+          batch_size=args.train_batch_size
       )
 
       # Returns the training graph and global step tensor.
@@ -237,7 +236,7 @@ def run(target, cluster_spec, is_chief, hparams):
           features.copy(),
           labels,
           hidden_units=hidden_units,
-          learning_rate=hparams.learning_rate
+          learning_rate=args.learning_rate
       )
 
     # Creates a MonitoredSession for training.
@@ -246,7 +245,7 @@ def run(target, cluster_spec, is_chief, hparams):
     # https://www.tensorflow.org/api_docs/python/tf/train/MonitoredTrainingSession
     with tf.train.MonitoredTrainingSession(master=target,
                                            is_chief=is_chief,
-                                           checkpoint_dir=hparams.job_dir,
+                                           checkpoint_dir=args.job_dir,
                                            hooks=hooks,
                                            save_checkpoint_secs=20,
                                            save_summaries_steps=50) as session:
@@ -257,18 +256,18 @@ def run(target, cluster_spec, is_chief, hparams):
       # Run the training graph which returns the step number as tracked by
       # the global step tensor.
       # When train epochs is reached, session.should_stop() will be true.
-      while (hparams.train_steps is None or
-             step < hparams.train_steps) and not session.should_stop():
+      while (args.train_steps is None or
+             step < args.train_steps) and not session.should_stop():
         step, _ = session.run([global_step_tensor, train_op])
 
     # Find the filename of the latest saved checkpoint file
-    latest_checkpoint = tf.train.latest_checkpoint(hparams.job_dir)
+    latest_checkpoint = tf.train.latest_checkpoint(args.job_dir)
 
     # Only perform this if chief
     if is_chief:
       build_and_run_exports(latest_checkpoint,
-                            hparams.job_dir,
-                            model.SERVING_INPUT_FUNCTIONS[hparams.export_format],
+                            args.job_dir,
+                            model.SERVING_INPUT_FUNCTIONS[args.export_format],
                             hidden_units)
 
 
@@ -331,7 +330,7 @@ def build_and_run_exports(latest, job_dir, serving_input_fn, hidden_units):
   exporter.save()
 
 
-def train_and_evaluate(hparams):
+def train_and_evaluate(args):
   """Parse TF_CONFIG to cluster_spec and call run() method.
 
   TF_CONFIG environment variable is available when running using
@@ -339,13 +338,13 @@ def train_and_evaluate(hparams):
   to create a ClusterSpec which is important for running distributed code.
 
   Args:
-    hparams (tf.hparams): Input arguments.
+    args (args): Input arguments.
   """
 
   tf_config = os.environ.get('TF_CONFIG')
   # If TF_CONFIG is not available run local.
   if not tf_config:
-    return run(target='', cluster_spec=None, is_chief=True, hparams=hparams)
+    return run(target='', cluster_spec=None, is_chief=True, args=args)
 
   tf_config_json = json.loads(tf_config)
   cluster = tf_config_json.get('cluster')
@@ -354,7 +353,7 @@ def train_and_evaluate(hparams):
 
   # If cluster information is empty run local.
   if job_name is None or task_index is None:
-    return run(target='', cluster_spec=None, is_chief=True, hparams=hparams)
+    return run(target='', cluster_spec=None, is_chief=True, args=args)
 
   cluster_spec = tf.train.ClusterSpec(cluster)
   server = tf.train.Server(cluster_spec,
@@ -372,7 +371,7 @@ def train_and_evaluate(hparams):
     return
   elif job_name in ['master', 'worker']:
     return run(server.target, cluster_spec, is_chief=(job_name == 'master'),
-               hparams=hparams)
+               args=args)
 
 
 if __name__ == '__main__':
@@ -464,5 +463,4 @@ if __name__ == '__main__':
       tf.logging.__dict__[args.verbosity] / 10)
 
   # Run the training job.
-  hparams = hparam.HParams(**args.__dict__)
-  train_and_evaluate(hparams)
+  train_and_evaluate(args)
