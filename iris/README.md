@@ -1,4 +1,4 @@
-<h1>Overview</h1>
+# Overview
 This code implements a classification model using the Google Cloud Platform. It includes code to process data, train, predict a TensorFlow model 
 and assess model performance. This guide trains a neural network model to classify a set of irises in three different classes.
 
@@ -17,25 +17,25 @@ The following four numerical features describe their geometrical shape: Sepal Le
 This dataset is provided by a third party. Google provides no representation,
 warranty, or other guarantees about the validity or any other aspects of this dataset.
 
-* **Set up and test your GCP environment**
+* **Setup and test your GCP environment**
 
 The best way to setup your GCP project is to use this section in this
 [tutorial](https://cloud.google.com/ml-engine/docs/tensorflow/getting-started-training-prediction#set-up-your-gcp-project).
 
-* **Environment set-up:**
+* **Environment setup:**
 
 Virtual environments are strongly suggested, but not required. Installing this
 sample's dependencies in a new virtual environment allows you to run the sample
-without changing global python packages on your system.
+locally without changing global python packages on your system.
 
 There are two options for the virtual environments:
 
 *   Install [Virtualenv](https://virtualenv.pypa.io/en/stable/) 
-    *   Create virtual environment `virtualenv iris`
-    *   Activate env `source iris/bin/activate`
+    *   Create virtual environment `virtualenv myvirtualenv`
+    *   Activate env `source myvirtualenv/bin/activate`
 *   Install [Miniconda](https://conda.io/miniconda.html)
-    *   Create conda environment `conda create --name iris python=2.7`
-    *   Activate env `source activate iris`
+    *   Create conda environment `conda create --name myvirtualenv python=2.7`
+    *   Activate env `source activate myvirtualenv`
 
 * **Install dependencies**
 
@@ -43,20 +43,9 @@ Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
 #
 
-* **How to satisfy Cloud ML Engine project structure requirements:**
+* **How to satisfy Cloud ML Engine project structure requirements**
 
-The basic project structure will look something like this:
-
-```shell
-.
-├── README.md
-├── requirements.txt
-├── setup.py
-└── trainer
-    ├── __init__.py
-    ├── model.py
-    └── task.py
-```
+Follow [this](https://cloud.google.com/ml-engine/docs/tensorflow/packaging-trainer#project-structure) guide to structure your training application.
 
 
 <h1>Data processing</h1>
@@ -107,7 +96,7 @@ python -m trainer.task \
  --job-dir=$JOB_DIR
 ```
 
-* **Google Cloud ML Engine:**
+* **Google Cloud ML Engine**
 
 * **GCloud configuration:**
 
@@ -122,7 +111,7 @@ export TRAIN_STEPS=1000
 export EVAL_STEPS=100
 ```
 
-* **Run locally:**
+* **Run locally via the gcloud command for Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine local train --package-path trainer \
@@ -135,18 +124,42 @@ gcloud ml-engine local train --package-path trainer \
     --eval-steps $EVAL_STEPS
 ```
 
-* **Run in Google Cloud ML Engine:**
+* **Run in Google Cloud ML Engine**
 
 You can train the model on Cloud ML Engine:
+
+*NOTE:* If you downloaded the training files to your local filesystem, be sure
+to reset the `TRAIN_FILE` and `EVAL_FILE` environment variables to refer to a GCS location.
+Data must be in GCS for cloud-based training.
+
+Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
+before `--` while training on the cloud and this is so that we can have
+different trial runs during Hyperparameter tuning.
+
+* **GCloud configuration:**
+
+```
+DATE=`date '+%Y%m%d_%H%M%S'`
+export JOB_NAME=iris_$DATE
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
+echo $GCS_JOB_DIR
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
+export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
+export TRAIN_STEPS=1000
+export EVAL_STEPS=100
+export REGION=us-central1
+```
+
+* **Run in Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
     --runtime-version 1.10 \
-    --job-dir $JOB_DIR \
+    --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
-    --region us-central1 \
+    --region $REGION \
     -- \
     --train-file $TRAIN_FILE \
     --eval-file $EVAL_FILE \
@@ -183,10 +196,10 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
     --runtime-version 1.10 \
-    --job-dir $JOB_DIR \
+    --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
-    --region us-central1 \
+    --region $REGION \
     -- \
     --train-file $TRAIN_FILE \
     --eval-file $EVAL_FILE \
@@ -194,7 +207,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --eval-steps $EVAL_STEPS
 ```
 
-<h1>Hyperparameter Tuning</h1>
+# Hyperparameter Tuning
 
 ```
 export HPTUNING_CONFIG=hptuning_config.yaml
@@ -206,10 +219,10 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --scale-tier $SCALE_TIER \
     --runtime-version 1.10 \
     --config $HPTUNING_CONFIG \
-    --job-dir $JOB_DIR \
+    --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
-    --region us-central1 \
+    --region $REGION \
     -- \
     --train-file $TRAIN_FILE \
     --eval-file $EVAL_FILE \
@@ -217,7 +230,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --eval-steps $EVAL_STEPS                        
 ```
 
-<h1>Prediction</h1>
+# Prediction
 
 Once your training job has finished, you can use the exported model to create a prediction server. To do this you first create a model:
 
@@ -228,20 +241,20 @@ gcloud ml-engine models create iris --regions us-central1
 Then we'll look up the exact path that your exported trained model binaries live in:
 
 ```
-gsutil ls -r $JOB_DIR/export
+gsutil ls -r $GCS_JOB_DIR/export
 ```
 
 
- * Estimator Based: You should see a directory named: `$JOB_DIR/export/exporter/<timestamp>`.
+ * Estimator Based: You should see a directory named: `$GCS_JOB_DIR/export/iris/<timestamp>`.
 ```
-export MODEL_BINARIES=$JOB_DIR/export/exporter/<timestamp>
+export MODEL_BINARIES=$GCS_JOB_DIR/export/iris/<timestamp>
 ```
 
  * Low Level Based: You should see a directory named `$JOB_DIR/export/JSON/`
    for `JSON`. See other formats `CSV` and `TFRECORD`.
  
 ```
-export MODEL_BINARIES=$JOB_DIR/export/CSV/
+export MODEL_BINARIES=$GCS_JOB_DIR/export/CSV/
 ```
 
 ```
@@ -286,10 +299,10 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --model iris \
     --version v1 \
     --data-format TEXT \
-    --region us-central1 \
+    --region $REGION \
     --runtime-version 1.10 \
     --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/iris.json \
-    --output-path $JOB_DIR/predictions
+    --output-path $GCS_JOB_DIR/predictions
 ```
 
 Check the status of your prediction job:
@@ -304,7 +317,7 @@ Once the job is `SUCCEEDED` you can check the results in `--output-path`.
 * **Monitor with TensorBoard:**
 
 ```
-tensorboard --logdir=$JOB_DIR
+tensorboard --logdir=$GCS_JOB_DIR
 ```
 
 ## References
