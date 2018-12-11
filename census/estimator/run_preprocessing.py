@@ -29,7 +29,7 @@ def _parse_arguments(argv):
   parser = argparse.ArgumentParser(
       description='Runs preprocessing on census train data.')
   parser.add_argument(
-      '--project_name',
+      '--project_id',
       required=True,
       help='Name of the project.')
   parser.add_argument(
@@ -78,7 +78,7 @@ def main():
   args = _parse_arguments(sys.argv)
   config = _parse_config('CLOUD' if args.cloud else 'LOCAL',
                          'preprocessing_config.ini')
-  ml_project = args.project_name
+  ml_project = args.project_id
   options = {'project': ml_project}
 
   if args.cloud:

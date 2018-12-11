@@ -21,7 +21,7 @@ import tensorflow as tf
 
 class CsvFileSource(beam.io.filebasedsource.FileBasedSource):
 
-  def read_records(self, file_name, range_tracker):
+  def read_records(self, file_name, unused_range_tracker):
     self._file = tf.gfile.GFile(file_name)
     reader = csv.reader(self._file)
     for rec in reader:
