@@ -15,9 +15,11 @@
 """Convenience script for running preprocessing jobs."""
 
 
+BUCKET_NAME='census-example'
 PROJECT_ID=$(gcloud config list --format 'value(core.project)' 2>/dev/null)
+
 JOB_NAME=preprocessing-${DATE_TIME}-${USER}
-DATAFLOW_DIR=gs://census-example/preprocessing/${JOB_NAME}
+DATAFLOW_DIR=gs://$BUCKET_NAME/preprocessing/${JOB_NAME}
 TRAINING_DATA=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 
 
