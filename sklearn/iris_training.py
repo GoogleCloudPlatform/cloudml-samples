@@ -31,7 +31,7 @@ subprocess.check_call(['gsutil', 'cp', os.path.join(data_dir,
 
 
 # [START load-into-pandas]
-# Load data into pandas, then use `.values` to get numpy arrays
+# Load data into pandas, then use `.values` to get NumPy arrays
 iris_data = pd.read_csv(iris_data_filename).values
 iris_target = pd.read_csv(iris_target_filename).values
 
