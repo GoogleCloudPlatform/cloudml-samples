@@ -35,20 +35,20 @@ def get_args():
       '--job-dir',
       type=str,
       required=True,
-      help='GCS location to write checkpoints and export models')
+      help='local or GCS location for writing checkpoints and exporting models')
   parser.add_argument(
       '--num-epochs',
       type=float,
-      default=40,
+      default=5,
       help='number of times to go through the data, default=5')
   parser.add_argument(
       '--batch-size',
-      default=20,
+      default=128,
       type=int,
       help='number of records to read during each training step, default=128')
   parser.add_argument(
       '--learning-rate',
-      default=.001,
+      default=.01,
       type=float,
       help='learning rate for gradient descent, default=.01')
   parser.add_argument(
@@ -96,7 +96,7 @@ def train_and_evaluate(hparams):
 
   # Setup Learning Rate decay.
   lr_decay = tf.keras.callbacks.LearningRateScheduler(
-      lambda epoch: hparams.learning_rate + 0.02 * (0.5**(1 + epoch)),
+      lambda epoch: hparams.learning_rate + 0.02 * (0.5 ** (1 + epoch)),
       verbose=True)
 
   # Train model

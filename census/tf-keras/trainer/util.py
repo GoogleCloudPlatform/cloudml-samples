@@ -112,7 +112,7 @@ def preprocess(dataframe):
   return dataframe
 
 
-def standardization(dataframe):
+def standardize(dataframe):
   """Standardizes numeric fields to have mean of 0 and standard deviation of 1.
 
   Args:
@@ -160,8 +160,8 @@ def load_data():
   train_x, train_y = train, train.pop(_LABEL_COLUMN)
   test_x, test_y = test, test.pop(_LABEL_COLUMN)
 
-  train_x = standardization(train_x)
-  test_x = standardization(test_x)
+  train_x = standardize(train_x)
+  test_x = standardize(test_x)
 
   # Drop unused and biased columns
   train_x = train_x.drop(FAIR_COLUMNS + UNUSED_COLUMNS, axis=1)
