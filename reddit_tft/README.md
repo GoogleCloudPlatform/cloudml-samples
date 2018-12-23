@@ -110,6 +110,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --staging-bucket "$BUCKET" \
   --region us-central1 \
   --config config-small.yaml \
+  --runtime-version=1.2 \
   -- \
   --model_type linear \
   --l2_regularization 3000 \
@@ -133,6 +134,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --staging-bucket "$BUCKET" \
   --region us-central1 \
   --config config-small.yaml \
+  --runtime-version=1.2 \
   -- \
   --model_type deep \
   --hidden_units 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 \

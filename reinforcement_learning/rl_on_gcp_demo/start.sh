@@ -58,7 +58,7 @@ while (( "$#" )); do
       exit 1
       ;;
     *) # preserve positional arguments
-      PARAMS="$PARAMS $1"
+      PARAMS="$PARAMS --$1"
       shift
       ;;
   esac
@@ -71,6 +71,7 @@ LOG_DIR="gs://${BUCKET_NAME}/${JOB_NAME}"
 
 # submit job
 CMLE_FLAGS="--job-dir $LOG_DIR \
+            --scale-tier $SCALE_TIER \
             --runtime-version 1.10 \
             --module-name $MODULE_NAME \
             --package-path $PACKAGE_PATH \
@@ -80,11 +81,8 @@ if (($HP_TUNING==1))
 then
   CMLE_FLAGS=$CMLE_FLAGS"--config $HP_CONFIG "
 fi
-PKG_FLAGS="--max-episodes 3000 \
-           --eval-interval 100 \
-           --agent $AGENT
-          "
+PKG_FLAGS="--agent=$AGENT"$PARAMS
 ALL_FLAGS=$CMLE_FLAGS"-- "$PKG_FLAGS
 echo $ALL_FLAGS
-gcloud ml-engine jobs submit training $JOB_NAME $ALL_FLAGS
+gcloud --project=${PROJECT_ID} ml-engine jobs submit training $JOB_NAME $ALL_FLAGS
 
