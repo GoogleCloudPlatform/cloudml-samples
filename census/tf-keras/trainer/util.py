@@ -16,13 +16,14 @@ from __future__ import print_function
 
 import os
 from six.moves import urllib
+import tempfile
 
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 # Storage directory
-DATA_DIR = '/tmp/census_data/'
+DATA_DIR = os.path.join(tempfile.gettempdir(), 'census_data')
 
 # Download options.
 DATA_URL = 'https://archive.ics.uci.edu/ml/machine-learning-databases/adult'
