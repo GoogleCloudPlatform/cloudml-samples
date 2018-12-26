@@ -32,6 +32,7 @@ TRAINING_URL = '%s/%s' % (DATA_URL, TRAINING_FILE)
 EVAL_URL = '%s/%s' % (DATA_URL, EVAL_FILE)
 
 # These are the features in the dataset.
+# Dataset information: https://archive.ics.uci.edu/ml/datasets/census+income
 _CSV_COLUMNS = [
     'age', 'workclass', 'fnlwgt', 'education', 'education_num',
     'marital_status', 'occupation', 'relationship', 'race', 'gender',
@@ -42,14 +43,13 @@ _CSV_COLUMNS = [
 # This is the label (target) we want to predict.
 _LABEL_COLUMN = 'income_bracket'
 
-# Dataset information: https://archive.ics.uci.edu/ml/datasets/census+income
-# fnlwgt: The number of people the census takers believe that observation
-# represents. We will be ignoring this variable.
-UNUSED_COLUMNS = ['fnlwgt']
-
-# Make model "Fairer"
-# More info: https://developers.google.com/machine-learning/fairness-overview/
-FAIR_COLUMNS = ['gender']
+# These are columns we will not use as features for training. There are many
+# reasons not to use certain attributes of data for training. Perhaps their
+# values are noisy or inconsistent, or perhaps they encode bias that we do not
+# want our trained model to learn. For a deep dive into the features of this
+# Census dataset and the challenges they pose, see the Introduction to ML
+# Fairness notebook: https://colab.research.google.com/github/google/eng-edu/blob/master/ml/cc/exercises/intro_to_fairness.ipynb
+UNUSED_COLUMNS = ['fnlwgt', 'gender']
 
 
 def _download_and_clean_file(filename, url):
@@ -163,9 +163,9 @@ def load_data():
   train_x = standardize(train_x)
   test_x = standardize(test_x)
 
-  # Drop unused and biased columns
-  train_x = train_x.drop(FAIR_COLUMNS + UNUSED_COLUMNS, axis=1)
-  test_x = test_x.drop(FAIR_COLUMNS + UNUSED_COLUMNS, axis=1)
+  # Drop unused columns
+  train_x = train_x.drop(UNUSED_COLUMNS, axis=1)
+  test_x = test_x.drop(UNUSED_COLUMNS, axis=1)
 
   # Reshape Label for Dataset.
   train_y = np.asarray(train_y).astype('float32').reshape((-1, 1))
