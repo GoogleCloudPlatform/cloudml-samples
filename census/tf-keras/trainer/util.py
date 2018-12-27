@@ -135,24 +135,6 @@ def preprocess_csv(csv_filename):
   return preprocess(dataframe)
 
 
-def standardize(dataframe):
-  """Standardizes numeric fields to have mean of 0 and standard deviation of 1.
-
-  Args:
-    dataframe: Pandas dataframe with fields to standardize
-
-  Returns:
-    Dataframe with standardized fields
-  """
-  dtypes = list(zip(dataframe.dtypes.index, map(str, dataframe.dtypes)))
-  # Normalize numeric columns.
-  for column, dtype in dtypes:
-    if dtype == 'float32':
-      dataframe[column] -= dataframe[column].mean()
-      dataframe[column] /= dataframe[column].std()
-  return dataframe
-
-
 def load_data():
   """Loads data into preprocessed (train_x, train_y, eval_y, eval_y) dataframes.
 
@@ -172,9 +154,6 @@ def load_data():
   # dataframe
   train_x, train_y = train_df, train_df.pop(_LABEL_COLUMN)
   eval_x, eval_y = eval_df, eval_df.pop(_LABEL_COLUMN)
-
-  train_x = standardize(train_x)
-  eval_x = standardize(eval_x)
 
   # Reshape Label for Dataset.
   train_y = np.asarray(train_y).astype('float32').reshape((-1, 1))
