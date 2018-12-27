@@ -69,7 +69,7 @@ def train_and_evaluate(hparams):
     hparams: dictionary of hyperparameters - see get_args() for details
   """
 
-  train_x, train_y, test_x, test_y = util.load_data()
+  train_x, train_y, eval_x, eval_y = util.load_data()
 
   # dimensions
   num_examples, input_dim = train_x.shape
@@ -88,8 +88,8 @@ def train_and_evaluate(hparams):
 
   # Pass a numpy array by passing DataFrame.values
   validation_dataset = model.input_fn(
-      features=test_x.values,
-      labels=test_y,
+      features=eval_x.values,
+      labels=eval_y,
       shuffle=False,
       num_epochs=1,
       batch_size=hparams.batch_size)

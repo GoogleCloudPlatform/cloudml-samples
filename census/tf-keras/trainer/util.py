@@ -90,6 +90,8 @@ def download(data_dir):
   eval_file_path = os.path.join(data_dir, EVAL_FILE)
   if not tf.gfile.Exists(eval_file_path):
     _download_and_clean_file(eval_file_path, EVAL_URL)
+  
+  return training_file_path, eval_file_path  
 
 
 def preprocess(dataframe):
@@ -118,7 +120,7 @@ def preprocess(dataframe):
 def preprocess_csv(csv_filename):
   """Loads a CSV into a dataframe and preprocesses it for our model.
   
-  Can be used to load training data, or test data used for prediction.
+  Can be used to load training/eval data, or test data used for prediction.
 
   Args:
     csv_filename: Path to a CSV file to load with Pandas and preprocess
@@ -152,33 +154,30 @@ def standardize(dataframe):
 
 
 def load_data():
-  """Loads data into preprocessed (train_x, train_y, test_x, test_y) dataframes.
+  """Loads data into preprocessed (train_x, train_y, eval_y, eval_y) dataframes.
 
   Returns:
-    A tuple (train_x, train_y, test_x, test_y), where train_x and test_x are
-    Pandas dataframes with features for training and train_y and test_y are
+    A tuple (train_x, train_y, eval_x, eval_y), where train_x and eval_x are
+    Pandas dataframes with features for training and train_y and eval_y are
     numpy arrays with the corresponding labels.
   """
-  # Download Census dataset: Training and test csv files.
-  download(DATA_DIR)
+  # Download Census dataset: Training and eval csv files.
+  training_file_path, eval_file_path = download(DATA_DIR)
 
-  # Define the full path for training and test files.
-  train_file = os.path.join(DATA_DIR, TRAINING_FILE)
-  test_file = os.path.join(DATA_DIR, EVAL_FILE)
-  train = preprocess_csv(train_file)
-  test = preprocess_csv(test_file)
+  train_df = preprocess_csv(training_file_path)
+  eval_df = preprocess_csv(eval_file_path)
 
-  # Split train and test data with labels.
+  # Split train and eval data with labels.
   # The pop() method will extract (copy) and remove the label column from the
   # dataframe
-  train_x, train_y = train, train.pop(_LABEL_COLUMN)
-  test_x, test_y = test, test.pop(_LABEL_COLUMN)
+  train_x, train_y = train_df, train_df.pop(_LABEL_COLUMN)
+  eval_x, eval_y = eval_df, eval_df.pop(_LABEL_COLUMN)
 
   train_x = standardize(train_x)
-  test_x = standardize(test_x)
+  eval_x = standardize(eval_x)
 
   # Reshape Label for Dataset.
   train_y = np.asarray(train_y).astype('float32').reshape((-1, 1))
-  test_y = np.asarray(test_y).astype('float32').reshape((-1, 1))
+  eval_y = np.asarray(eval_y).astype('float32').reshape((-1, 1))
 
-  return train_x, train_y, test_x, test_y
+  return train_x, train_y, eval_x, eval_y
