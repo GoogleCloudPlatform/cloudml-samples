@@ -93,7 +93,7 @@ def download(data_dir):
 
 
 def preprocess(dataframe):
-  """Converts categorical features in the data to be numeric.
+  """Converts categorical features to numeric. Removes unused columns.
 
   Args:
     dataframe: Pandas dataframe with raw data
@@ -101,6 +101,8 @@ def preprocess(dataframe):
   Returns:
     Dataframe with preprocessed data
   """
+  dataframe = dataframe.drop(columns=UNUSED_COLUMNS)
+
   # Convert integer valued (numeric) columns to floating point
   numeric_columns = dataframe.select_dtypes(['int64']).columns
   dataframe[numeric_columns] = dataframe[numeric_columns].astype('float32')
@@ -111,6 +113,24 @@ def preprocess(dataframe):
       'category'))
   dataframe[cat_columns] = dataframe[cat_columns].apply(lambda x: x.cat.codes)
   return dataframe
+
+
+def preprocess_csv(csv_filename):
+  """Loads a CSV into a dataframe and preprocesses it for our model.
+  
+  Can be used to load training data, or test data used for prediction.
+
+  Args:
+    csv_filename: Path to a CSV file to load with Pandas and preprocess
+
+  Returns:
+    Dataframe with preprocessed data
+  """
+  # This census data uses the value '?' for fields (column) that are missing
+  # data. We use na_values to find ? and set it to NaN values.
+  # https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html
+  dataframe = pd.read_csv(csv_filename, names=_CSV_COLUMNS, na_values='?')
+  return preprocess(dataframe)
 
 
 def standardize(dataframe):
@@ -145,15 +165,8 @@ def load_data():
   # Define the full path for training and test files.
   train_file = os.path.join(DATA_DIR, TRAINING_FILE)
   test_file = os.path.join(DATA_DIR, EVAL_FILE)
-
-  # This census data uses the value '?' for fields (column) that are missing
-  # data. We use na_values to find ? and set it to NaN values.
-  # https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html
-  train = pd.read_csv(train_file, names=_CSV_COLUMNS, na_values='?')
-  test = pd.read_csv(test_file, names=_CSV_COLUMNS, na_values='?')
-
-  train = preprocess(train)
-  test = preprocess(test)
+  train = preprocess_csv(train_file)
+  test = preprocess_csv(test_file)
 
   # Split train and test data with labels.
   # The pop() method will extract (copy) and remove the label column from the
@@ -163,10 +176,6 @@ def load_data():
 
   train_x = standardize(train_x)
   test_x = standardize(test_x)
-
-  # Drop unused columns
-  train_x = train_x.drop(UNUSED_COLUMNS, axis=1)
-  test_x = test_x.drop(UNUSED_COLUMNS, axis=1)
 
   # Reshape Label for Dataset.
   train_y = np.asarray(train_y).astype('float32').reshape((-1, 1))
