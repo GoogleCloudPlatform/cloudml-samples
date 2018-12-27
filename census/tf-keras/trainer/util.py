@@ -47,9 +47,9 @@ _LABEL_COLUMN = 'income_bracket'
 # These are columns we will not use as features for training. There are many
 # reasons not to use certain attributes of data for training. Perhaps their
 # values are noisy or inconsistent, or perhaps they encode bias that we do not
-# want our trained model to learn. For a deep dive into the features of this
-# Census dataset and the challenges they pose, see the Introduction to ML
-# Fairness notebook: https://colab.research.google.com/github/google/eng-edu/blob/master/ml/cc/exercises/intro_to_fairness.ipynb
+# want our model to learn. For a deep dive into the features of this Census
+# dataset and the challenges they pose, see the Introduction to ML Fairness
+# notebook: https://colab.research.google.com/github/google/eng-edu/blob/master/ml/cc/exercises/intro_to_fairness.ipynb
 UNUSED_COLUMNS = ['fnlwgt', 'gender']
 
 
