@@ -171,7 +171,8 @@ def preprocess_csv(csv_filename):
   # This census data uses the value '?' for fields (column) that are missing
   # data. We use na_values to find ? and set it to NaN values.
   # https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html
-  dataframe = pd.read_csv(csv_filename, names=_CSV_COLUMNS, na_values='?')
+  dataframe = pd.read_csv(csv_filename, names=_CSV_COLUMNS, na_values='?',
+    sep=r'\s*,\s*', engine='python')
   return preprocess(dataframe)
 
 

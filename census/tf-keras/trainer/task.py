@@ -38,7 +38,7 @@ def get_args():
       help='local or GCS location for writing checkpoints and exporting models')
   parser.add_argument(
       '--num-epochs',
-      type=float,
+      type=int,
       default=5,
       help='number of times to go through the data, default=5')
   parser.add_argument(
