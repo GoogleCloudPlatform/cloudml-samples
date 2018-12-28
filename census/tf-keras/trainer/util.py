@@ -50,11 +50,51 @@ _LABEL_COLUMN = 'income_bracket'
 # want our model to learn. For a deep dive into the features of this Census
 # dataset and the challenges they pose, see the Introduction to ML Fairness
 # notebook: https://colab.research.google.com/github/google/eng-edu/blob/master/ml/cc/exercises/intro_to_fairness.ipynb
-UNUSED_COLUMNS = ['fnlwgt', 'gender']
+UNUSED_COLUMNS = ['fnlwgt', 'education', 'gender']
+
+_CATEGORICAL_TYPES = {
+  'workclass': pd.api.types.CategoricalDtype(categories=[
+    'Federal-gov', 'Local-gov', 'Never-worked', 'Private', 'Self-emp-inc',
+    'Self-emp-not-inc', 'State-gov', 'Without-pay'
+  ]),
+  'marital_status': pd.api.types.CategoricalDtype(categories=[
+    'Divorced', 'Married-AF-spouse', 'Married-civ-spouse',
+    'Married-spouse-absent', 'Never-married', 'Separated', 'Widowed'
+  ]),
+  'occupation': pd.api.types.CategoricalDtype([
+    'Adm-clerical', 'Armed-Forces', 'Craft-repair', 'Exec-managerial',
+    'Farming-fishing', 'Handlers-cleaners', 'Machine-op-inspct',
+    'Other-service', 'Priv-house-serv', 'Prof-specialty', 'Protective-serv',
+    'Sales', 'Tech-support', 'Transport-moving'
+  ]),
+  'relationship': pd.api.types.CategoricalDtype(categories=[
+    'Husband', 'Not-in-family', 'Other-relative', 'Own-child', 'Unmarried',
+    'Wife'
+  ]),
+  'race': pd.api.types.CategoricalDtype(categories=[
+    'Amer-Indian-Eskimo', 'Asian-Pac-Islander', 'Black', 'Other', 'White'
+  ]),
+  'native_country': pd.api.types.CategoricalDtype(categories=[
+    'Cambodia', 'Canada', 'China', 'Columbia', 'Cuba', 'Dominican-Republic',
+    'Ecuador', 'El-Salvador', 'England', 'France', 'Germany', 'Greece',
+    'Guatemala', 'Haiti', 'Holand-Netherlands', 'Honduras', 'Hong', 'Hungary',
+    'India', 'Iran', 'Ireland', 'Italy', 'Jamaica', 'Japan', 'Laos', 'Mexico',
+    'Nicaragua', 'Outlying-US(Guam-USVI-etc)', 'Peru', 'Philippines', 'Poland',
+    'Portugal', 'Puerto-Rico', 'Scotland', 'South', 'Taiwan', 'Thailand', 
+    'Trinadad&Tobago', 'United-States', 'Vietnam', 'Yugoslavia'
+  ]),
+  'income_bracket': pd.api.types.CategoricalDtype(categories=[
+    '<=50K', '>50K'
+  ])
+}
 
 
 def _download_and_clean_file(filename, url):
   """Downloads data from url, and makes changes to match the CSV format.
+
+  The CSVs may use spaces after the comma delimters (non-standard) or include
+  rows which do not represent well-formed examples. This function strips out
+  some of these problems.
 
   Args:
     filename: filename to save url to
@@ -112,7 +152,7 @@ def preprocess(dataframe):
   # Convert categorical columns to numeric
   cat_columns = dataframe.select_dtypes(['object']).columns
   dataframe[cat_columns] = dataframe[cat_columns].apply(lambda x: x.astype(
-      'category'))
+    _CATEGORICAL_TYPES[x.name]))
   dataframe[cat_columns] = dataframe[cat_columns].apply(lambda x: x.cat.codes)
   return dataframe
 
