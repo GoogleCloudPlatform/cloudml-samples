@@ -12,8 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Convenience script for running preprocessing jobs."""
 
+# Convenience script for running preprocessing jobs on Dataflow.
 
 BUCKET_NAME='census-example'
 PROJECT_ID=$(gcloud config list --format 'value(core.project)' 2>/dev/null)
@@ -24,7 +24,7 @@ TRAINING_DATA=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 
 
 python run_preprocessing.py \
-  --project_name $PROJECT_ID \
+  --project_id $PROJECT_ID \
   --job_name $JOB_NAME \
   --job_dir $DATAFLOW_DIR \
   --input_data $TRAINING_DATA \
