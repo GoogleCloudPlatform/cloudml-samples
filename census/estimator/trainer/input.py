@@ -65,7 +65,8 @@ def input_fn(filenames,
              num_epochs=None,
              shuffle=True,
              skip_header_lines=0,
-             batch_size=200):
+             batch_size=200,
+             num_parallel_calls=1):
     """Generates features and labels for training or evaluation.
 
     This uses the input pipeline based approach using file name queue
@@ -86,7 +87,7 @@ def input_fn(filenames,
           Tensors, and indices is a single Tensor of label indices.
     """
     dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(
-        _decode_csv)
+        _decode_csv, num_parallel_calls)
 
     if shuffle:
         dataset = dataset.shuffle(buffer_size=batch_size * 10)

@@ -55,7 +55,8 @@ def train_and_evaluate(args):
         return input_module.input_fn(
             args.train_files,
             num_epochs=args.num_epochs,
-            batch_size=args.train_batch_size)
+            batch_size=args.train_batch_size,
+            num_parallel_calls=args.num_parallel_calls)
 
     def eval_input():
         """Input function returning the entire validation data
@@ -64,7 +65,8 @@ def train_and_evaluate(args):
         return input_module.input_fn(
             args.eval_files,
             batch_size=args.eval_batch_size,
-            shuffle=False)
+            shuffle=False,
+            num_parallel_calls=args.num_parallel_calls)
 
     train_spec = tf.estimator.TrainSpec(
         train_input, max_steps=args.train_steps)
@@ -110,6 +112,11 @@ if __name__ == '__main__':
         '--job-dir',
         help='GCS location to write checkpoints and export models',
         default='/tmp/census-estimator')
+    PARSER.add_argument(
+        '--num-parallel-calls',
+        help='Number of threads used to read in parallel the training and evaluation',
+        type=int,
+        default=1)
     PARSER.add_argument(
         '--num-epochs',
         help="""\
