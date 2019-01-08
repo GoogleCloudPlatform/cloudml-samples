@@ -90,14 +90,16 @@ def main():
         'max_num_workers': int(config.get('max_num_workers')),
         'staging_location': os.path.join(args.job_dir, 'staging'),
         'temp_location': os.path.join(args.job_dir, 'tmp'),
-        'region': config.get('region')
+        'region': config.get('region'),
+        'setup_file': os.path.abspath(os.path.join(
+            os.path.dirname(__file__), 'setup.py')),
         })
   pipeline_options = beam.pipeline.PipelineOptions(flags=[], **options)
   _set_logging(config.get('log_level'))
 
   with beam.Pipeline(
       config.get('runner'), options=pipeline_options) as pipeline:
-    preprocess.run(pipeline, args.input_data)
+    preprocess.run(pipeline, args.input_data, args.job_dir)
 
 
 if __name__ == '__main__':
