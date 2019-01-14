@@ -53,7 +53,7 @@ Notebook Tutorial:
 # Complete Guide: Model Training and Serving on ML Engine
 
 Code Guide:
-* [Tensorflow: Deep Neural Network Regressor](molecules) - How to train a DNN on a text based molecular dataset from Kaggle to predict predict the molecular energy.
+* [Tensorflow: Deep Neural Network Regressor](molecules) - How to train a DNN on a text based molecular dataset from Kaggle to predict the molecular energy.
 * [Tensorflow: Softmax / Fully-connected layer](flowers) - How to train a fully connected model with softmax using an image dataset of flowers to recognize the type of a flower from its image.
 
 ### Hyperparameter Tuning (HP Tuning)
