@@ -96,3 +96,9 @@ tpu-templates-tpu-grl-estimator:
     tpu/templates/tpu_grl_estimator
   filename:
     trainer.py
+
+tpu-templates-tpu-infeed-outfeed:
+  path:
+    tpu/templates/tpu_rewrite
+  filename:
+    trainer_infeed_outfeed.py
