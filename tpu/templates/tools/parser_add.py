@@ -17,7 +17,7 @@ help_dict = {
 filenames = glob.glob('../**/trainer*.py')
 
 for filename in filenames:
-    with open(filename) as f:
+    with open(filename, 'r') as f:
         red = RedBaron(f.read())
 
     # the `if __name__ == '__main__':` block
@@ -29,6 +29,7 @@ for filename in filenames:
         if node.type != 'atomtrailers':
             continue
 
+        # reference on the node structure: https://redbaron.readthedocs.io/en/latest/nodes_reference.html#atomtrailersnode
         if node.value[0].name.value != 'parser' or node.value[1].name.value != 'add_argument':
             continue
 
@@ -38,7 +39,6 @@ for filename in filenames:
         # get the arg name
         assert args[0].target is None
         arg_name = args[0].value.value.replace("'", '')
-        # print(arg_name)
 
         assert arg_name.startswith('--')
 
@@ -48,11 +48,9 @@ for filename in filenames:
                 break
 
         else:
-            # create a CallArgumentNode
+            # create a CallArgumentNode for the `help` keyward argument
             arg = args[-1].copy()
             arg.target.value = 'help'
-
-            # append
             node.value[2].value.append(arg)
 
         if arg_name in help_dict:
