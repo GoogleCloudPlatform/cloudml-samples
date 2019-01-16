@@ -80,7 +80,8 @@ def process_between(group):
     # Keep only comments
     group = [line for line in group if line.strip().startswith('#')]
     group = [re.sub(r'^#', '', line) for line in group]
-    group = [re.sub(r'===', '', line) for line in group]
+    # Markdown could interpret this as header.
+    group = [re.sub(r'={3,}', '', line) for line in group]
 
     return group
 
@@ -113,7 +114,7 @@ def markdown_cell(group):
     return new_markdown_cell(source)
 
 
-def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
+def py_to_ipynb(root, path, py_filename, remove=None):
     """This function converts the .py file at <root>/<path>/<py_filename> into a .ipynb of the same name in <root>/<path>.
 
     - Consecutive comments are grouped into the same cell.
@@ -121,7 +122,6 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
     - The last part of the .py file is expected to be an `if __name__ == '__main__':` block.
 
     Args:
-    git_clone: (bool) Include the Colab-specific git_clone cell.
     remove: (None or dict) A Dict describing what code to be removed according to specified node type.
 
     Returns
@@ -190,18 +190,32 @@ def py_to_ipynb(root, path, py_filename, git_clone=False, remove=None):
     # Skipping the line `if __name__ == '__main__':` and removing indentation
     indent = node.body[0].col_offset
     cell_source = [line[indent:] for line in cell_source][1:]
-    cells.append(code_cell(cell_source))
 
-    # git clone
-    if git_clone:
-        with open('git_clone.p', 'r') as template_file:
-            template = template_file.read()
+    if 'tpu' in py_filepath:
+        # special handling for tpu samples.
+        cs0 = [line for line in cell_source if 'main(args)' not in line]
+        cells.append(code_cell(cs0))
 
-        content = template.format(path=path)
-        cell = new_code_cell(content)
+        with open('colab_tpu.p') as colab_tpu:
+            cs1 = colab_tpu.read()
+        cells.append(new_code_cell(cs1))
 
-        # The 0-th cell should be the license.
-        cells.insert(1, cell)
+        cs2 = 'main(args)'
+        cells.append(new_code_cell(cs2))
+
+    else:
+        cells.append(code_cell(cell_source))
+
+
+    # Add git clone code and user auth
+    with open('colab.p', 'r') as template_file:
+        template = template_file.read()
+
+    content = template.format(path=path)
+    cell = new_code_cell(content)
+
+    # The 0-th cell should be the license.
+    cells.insert(1, cell)
 
     notebook = new_notebook(cells=cells)
 
@@ -214,10 +228,9 @@ if __name__ == '__main__':
         root = '..'
         path = info['path']
         filename = info['filename']
-        git_clone = info['colab']['git-clone']
         remove = info.get('remove', None)
 
-        py_to_ipynb(root, path, filename, git_clone=git_clone, remove=remove)
+        py_to_ipynb(root, path, filename, remove=remove)
 
 
     # Testing, make sure sample.py has the same output.

@@ -385,6 +385,7 @@ def resnet_model_fn(features, labels, mode, params):
 
 
 def main(unused_argv):
+  # [START tpu-cluster-revolver]
   tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
       FLAGS.tpu,
       zone=FLAGS.tpu_zone,
@@ -398,6 +399,7 @@ def main(unused_argv):
           iterations_per_loop=FLAGS.iterations_per_loop,
           num_shards=FLAGS.num_cores,
           per_host_input_for_training=tpu_config.InputPipelineConfig.PER_HOST_V2))  # pylint: disable=line-too-long
+  # [END tpu-cluster-revolver]
 
   resnet_classifier = tpu_estimator.TPUEstimator(
       use_tpu=FLAGS.use_tpu,
