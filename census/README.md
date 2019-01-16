@@ -34,7 +34,7 @@ All the models provided in this directory can be run on the Cloud Machine Learni
 #
 * **Notebooks**
 
-    - [Estimator](estimator/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/estimator/trainer/task.ipynb))
+    - [Estimator](estimator/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/estimator/task.ipynb))
 
     - [Custom Estimator](customestimator/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/customestimator/trainer/task.ipynb))
 
