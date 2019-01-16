@@ -24,7 +24,7 @@ TRAINING_DATA=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 
 rm -rf $DATAFLOW_DIR
 
-python run_preprocessing.py \
+python -m preprocessing/run_preprocessing \
   --project_id $PROJECT_ID \
   --job_name $JOB_NAME \
   --job_dir $DATAFLOW_DIR \

@@ -76,8 +76,10 @@ def main():
   """Configures pipeline and spawns preprocessing job."""
 
   args = _parse_arguments(sys.argv)
+  config_path = os.path.abspath(
+      os.path.join(__file__, os.pardir, 'preprocessing_config.ini'))
   config = _parse_config('CLOUD' if args.cloud else 'LOCAL',
-                         'preprocessing_config.ini')
+                         config_path)
   ml_project = args.project_id
   options = {'project': ml_project}
 
@@ -91,8 +93,8 @@ def main():
         'staging_location': os.path.join(args.job_dir, 'staging'),
         'temp_location': os.path.join(args.job_dir, 'tmp'),
         'region': config.get('region'),
-        'setup_file': os.path.abspath(os.path.join(
-            os.path.dirname(__file__), 'setup.py')),
+        'setup_file': os.path.abspath(
+            os.path.join(__file__, '../..', 'dataflow_setup.py')),
         })
   pipeline_options = beam.pipeline.PipelineOptions(flags=[], **options)
   _set_logging(config.get('log_level'))
