@@ -12,19 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Reference: https://colab.research.google.com/gist/rjpower/169b2843a506d090f47d25122f82a28f
+
 
 import argparse
+from functools import partial
 import numpy as np
 import os
+import threading
+
 import tensorflow as tf
 from tensorflow.contrib.cluster_resolver import TPUClusterResolver
 
-def tpu_computation(features, labels):
-    # Similar to the role of model_fn, the TPU function builds the part of the graph to be run on TPUs
 
-    # build model
+def build_model(features):
     hidden = tf.layers.dense(features, 10, activation=tf.nn.relu)
     outputs = tf.layers.dense(hidden, 1)
+
+    return outputs
+
+
+def fit_batch(features, labels):
+    # inner function that specifies one step of calculation to be done on TPU.
+
+    outputs = build_model(features)
     loss = tf.nn.l2_loss(outputs - labels)
 
     optimizer = tf.train.RMSPropOptimizer(learning_rate=0.05)
@@ -35,8 +46,49 @@ def tpu_computation(features, labels):
     global_step = tf.train.get_or_create_global_step()
     train_op = optimizer.minimize(loss, global_step=global_step) 
 
-    # TPU functions must return zero-or more Tensor values followed by zero or more Operations.
     return global_step, loss, train_op
+
+
+def tpu_computation_with_infeed(batch_size, num_shards):
+    # This function wrap around `fit_batch` and handles infeed/outfeed queues from the perspective of a TPU device.
+
+    # The infeed queue is implicit and the tensors in it are not passed in as function arguments like in model_fn.
+    features, labels = tf.contrib.tpu.infeed_dequeue_tuple(
+        # the dtypes and shapes need to be consistent with what is fed into the infeed queue.
+        dtypes=[tf.float32, tf.float32],
+        shapes=[(batch_size // num_shards, 5), (batch_size // num_shards)]
+    )
+
+    global_step, loss, train_op = fit_batch(features, labels)
+
+    # TPU functions must return zero-or more Tensor values followed by zero or more Operations.
+    # The outfeed queue is also implicit.
+    return tf.contrib.tpu.outfeed_enqueue_tuple((global_step, loss)), train_op
+
+
+def setup_feed(features, labels, num_shards):
+    # This function handles infeed/outfeed queues from the perspective of the CPU.
+    infeed_ops = []
+    outfeed_ops = []
+
+    infeed_batches = zip(tf.split(features, num_shards), tf.split(labels, num_shards))
+
+    for i, batch in enumerate(infeed_batches):
+        infeed_op = tf.contrib.tpu.infeed_enqueue_tuple(
+            batch,
+            [b.shape for b in batch],
+            device_ordinal=i
+        )
+        infeed_ops.append(infeed_op)
+
+        outfeed_op = tf.contrib.tpu.outfeed_dequeue_tuple(
+                dtypes=[tf.int64, tf.float32],
+                shapes=[(), ()],
+                device_ordinal=i
+            )
+        outfeed_ops.append(outfeed_op)
+
+    return infeed_ops, outfeed_ops
 
 
 def train_input_fn():
@@ -77,13 +129,19 @@ def train_input_fn():
 
 
 def main(args):
-    # unpack the tensor batch to be used as the list of inputs of the TPU function
+    # Unpack the tensor batch to be used to set up the infeed/outfeed queues.
     dataset = train_input_fn()
     iterator = dataset.make_one_shot_iterator()
     features, labels = iterator.get_next()
 
-    # mark part of the graph to be run on the TPUs
-    global_step_tensor, loss_tensor = tf.contrib.tpu.rewrite(tpu_computation, [features, labels])
+    infeed_ops, outfeed_ops = setup_feed(features, labels, num_shards=8)
+
+    # Wrap the tpu computation function to be run in a loop.
+    def computation_loop():
+        return tf.contrib.tpu.repeat(args.max_steps, partial(tpu_computation_with_infeed, batch_size=16, num_shards=8))
+
+    # Since we are using infeed/outfeed queues, tensors are not explicitly passed in or returned.
+    tpu_computation_loop = tf.contrib.tpu.batch_parallel(computation_loop, num_shards=8)
 
     # utility ops
     tpu_init = tf.contrib.tpu.initialize_system()
@@ -97,19 +155,43 @@ def main(args):
     tpu_grpc_url = TPUClusterResolver(tpu=args.tpu).get_master()
     sess = tf.Session(tpu_grpc_url)
 
+    # Use separate threads to run infeed and outfeed.
+    def _run_infeed():
+        for i in range(args.max_steps):
+            sess.run(infeed_ops)
+
+            if i % args.save_checkpoints_steps == 0:
+                print('infeed {}'.format(i))
+
+
+    def _run_outfeed():
+        for i in range(args.max_steps):
+            outfeed_data = sess.run(outfeed_ops)
+
+            if i % args.save_checkpoints_steps == 0:
+                print('outfeed {}'.format(i))
+                print('data returned from outfeed: {}'.format(outfeed_data))
+
+                saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=i)
+
+
+    infeed_thread = threading.Thread(target=_run_infeed)
+    outfeed_thread = threading.Thread(target=_run_outfeed)
+
     sess.run(tpu_init)
     sess.run(variables_init)
 
-    for i in range(args.max_steps):
-        # the tensor values in the TPU function are returned in a list, and the operations in the TPU function are called with no return value
-        global_step, loss = sess.run([global_step_tensor, loss_tensor])
+    infeed_thread.start()
+    outfeed_thread.start()
 
-        if i % args.save_checkpoints_steps == 0:
-            saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=global_step)
+    sess.run(tpu_computation_loop)
 
-            tf.logging.info('global_step: {}, loss: {}'.format(global_step, loss))
+    infeed_thread.join()
+    outfeed_thread.join()
 
     sess.run(tpu_shutdown)
+
+    saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=args.max_steps)
 
 
 if __name__ == '__main__':

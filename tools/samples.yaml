@@ -3,8 +3,6 @@ sample:
     tools
   filename:
     sample.py
-  colab:
-    git-clone: False
   remove:
     ImportFrom:
       - "module."
@@ -14,8 +12,6 @@ census-estimator:
     census/estimator/trainer
   filename:
     task.py
-  colab:
-    git-clone: True
   remove:
     Import:
       - "trainer."
@@ -25,8 +21,6 @@ census-customestimator:
     census/customestimator/trainer
   filename:
     task.py
-  colab:
-    git-clone: True
   remove:
     Import:
       - "trainer."
@@ -36,8 +30,6 @@ census-keras:
     census/keras/trainer
   filename:
     task.py
-  colab:
-    git-clone: True
   remove:
     Import:
       - "trainer."
@@ -47,8 +39,6 @@ census-tensorflowcore:
     census/tensorflowcore/trainer
   filename:
     task.py
-  colab:
-    git-clone: True
   remove:
     Import:
       - "trainer."
@@ -58,69 +48,57 @@ tpu-templates-tpu-estimator:
     tpu/templates/tpu_estimator
   filename:
     trainer.py
-  colab:
-    git-clone: True
 
 tpu-templates-tpu-cnn-estimator:
   path:
     tpu/templates/tpu_cnn_estimator
   filename:
     trainer.py
-  colab:
-    git-clone: True
 
 tpu-templates-tpu-gan-estimator:
   path:
     tpu/templates/tpu_gan_estimator
   filename:
     trainer.py
-  colab:
-    git-clone: True
 
 tpu-templates-tpu-gan-estimator-single:
   path:
     tpu/templates/tpu_gan_estimator
   filename:
     trainer_single.py
-  colab:
-    git-clone: True
 
 tpu-templates-tpu-lstm-estimator:
   path:
     tpu/templates/tpu_lstm_estimator
   filename:
     trainer.py
-  colab:
-    git-clone: True
 
 tpu-templates-tpu-lstm-keras:
   path:
     tpu/templates/tpu_lstm_keras
   filename:
     trainer.py
-  colab:
-    git-clone: True
 
 tpu-templates-tpu-rewrite:
   path:
     tpu/templates/tpu_rewrite
   filename:
     trainer.py
-  colab:
-    git-clone: True
 
 tpu-templates-tpu-film-estimator:
   path:
     tpu/templates/tpu_film_estimator
   filename:
     trainer.py
-  colab:
-    git-clone: True
 
 tpu-templates-tpu-grl-estimator:
   path:
     tpu/templates/tpu_grl_estimator
   filename:
     trainer.py
-  colab:
-    git-clone: True
+
+tpu-templates-tpu-infeed-outfeed:
+  path:
+    tpu/templates/tpu_rewrite
+  filename:
+    trainer_infeed_outfeed.py
