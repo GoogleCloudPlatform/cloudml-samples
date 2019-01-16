@@ -23,7 +23,7 @@ DATAFLOW_DIR=gs://$BUCKET_NAME/preprocessing/${JOB_NAME}
 TRAINING_DATA=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 
 
-python run_preprocessing.py \
+python -m preprocessing/run_preprocessing \
   --project_id $PROJECT_ID \
   --job_name $JOB_NAME \
   --job_dir $DATAFLOW_DIR \
