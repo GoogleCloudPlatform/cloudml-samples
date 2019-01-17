@@ -23,7 +23,6 @@ from keras.callbacks import ModelCheckpoint
 from keras.callbacks import TensorBoard
 from keras.models import load_model
 
-from tensorflow.contrib.training.python.training import hparam
 from tensorflow.python.lib.io import file_io
 
 import trainer.model as model
@@ -80,34 +79,34 @@ class ContinuousEval(Callback):
         print('\nEvaluation epoch[{}] (no checkpoints found)'.format(epoch))
 
 
-def train_and_evaluate(hparams):
+def train_and_evaluate(args):
   census_model = model.model_fn(INPUT_SIZE, CLASS_SIZE)
   try:
-    os.makedirs(hparams.job_dir)
+    os.makedirs(args.job_dir)
   except:
     pass
 
   # Unhappy hack to workaround h5py not being able to write to GCS.
   # Force snapshots and saves to local filesystem, then copy them over to GCS.
   checkpoint_path = CHECKPOINT_FILE_PATH
-  if not hparams.job_dir.startswith('gs://'):
-    checkpoint_path = os.path.join(hparams.job_dir, checkpoint_path)
+  if not args.job_dir.startswith('gs://'):
+    checkpoint_path = os.path.join(args.job_dir, checkpoint_path)
 
   # Model checkpoint callback.
   checkpoint = ModelCheckpoint(
       checkpoint_path,
       monitor='val_loss',
       verbose=1,
-      period=hparams.checkpoint_epochs,
+      period=args.checkpoint_epochs,
       mode='min')
 
   # Continuous eval callback.
-  evaluation = ContinuousEval(hparams.eval_frequency, hparams.eval_files,
-                              hparams.learning_rate, hparams.job_dir)
+  evaluation = ContinuousEval(args.eval_frequency, args.eval_files,
+															args.learning_rate, args.job_dir)
 
   # Tensorboard logs callback.
   tb_log = TensorBoard(
-      log_dir=os.path.join(hparams.job_dir, 'logs'),
+      log_dir=os.path.join(args.job_dir, 'logs'),
       histogram_freq=0,
       write_graph=True,
       embeddings_freq=0)
@@ -115,21 +114,21 @@ def train_and_evaluate(hparams):
   callbacks = [checkpoint, evaluation, tb_log]
 
   census_model.fit_generator(
-      model.generator_input(hparams.train_files, chunk_size=CHUNK_SIZE),
-      steps_per_epoch=hparams.train_steps,
-      epochs=hparams.num_epochs,
+      model.generator_input(args.train_files, chunk_size=CHUNK_SIZE),
+      steps_per_epoch=args.train_steps,
+      epochs=args.num_epochs,
       callbacks=callbacks)
 
   # Unhappy hack to workaround h5py not being able to write to GCS.
   # Force snapshots and saves to local filesystem, then copy them over to GCS.
-  if hparams.job_dir.startswith('gs://'):
+  if args.job_dir.startswith('gs://'):
     census_model.save(CENSUS_MODEL)
-    copy_file_to_gcs(hparams.job_dir, CENSUS_MODEL)
+    copy_file_to_gcs(args.job_dir, CENSUS_MODEL)
   else:
-    census_model.save(os.path.join(hparams.job_dir, CENSUS_MODEL))
+    census_model.save(os.path.join(args.job_dir, CENSUS_MODEL))
 
   # Convert the Keras model to TensorFlow SavedModel.
-  model.to_savedmodel(census_model, os.path.join(hparams.job_dir, 'export'))
+  model.to_savedmodel(census_model, os.path.join(args.job_dir, 'export'))
 
 
 # h5py workaround: copy local models over to GCS if the job_dir is GCS.
@@ -223,6 +222,4 @@ if __name__ == '__main__':
       help='Checkpoint per n training epochs')
 
   args, _ = parser.parse_known_args()
-
-  hparams = hparam.HParams(**args.__dict__)
-  train_and_evaluate(hparams)
+  train_and_evaluate(args)

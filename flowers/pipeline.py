@@ -12,9 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Flowers Sample Cloud Runner."""
 
-"""Flowers Sample Cloud Runner.
-"""
 from __future__ import print_function
 import argparse
 import base64
@@ -62,7 +61,8 @@ def process_args():
       default=None,
       help='The project to which the job will be submitted.')
   parser.add_argument(
-      '--cloud', action='store_true',
+      '--cloud',
+      action='store_true',
       help='Run preprocessing on the cloud.')
   parser.add_argument(
       '--train_input_path',

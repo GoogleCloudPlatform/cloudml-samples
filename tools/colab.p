@@ -1,7 +1,7 @@
-# This is only for when running on Colab:
-# Get the dependency .py files, if any.
+# Only for when running on Colab:
 import sys
 if 'google.colab' in sys.modules:
+    # Get the dependency .py files, if any.
     ! git clone https://github.com/GoogleCloudPlatform/cloudml-samples.git
     ! cp cloudml-samples/{path}/* .
 

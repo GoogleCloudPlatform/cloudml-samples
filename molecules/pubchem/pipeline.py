@@ -166,7 +166,7 @@ class SimpleFeatureExtraction(beam.PTransform):
   """The feature extraction (element-wise transformations).
 
   We create a `PTransform` class. This `PTransform` is a bundle of
-  transformations that cann be applied to any other pipeline as a step.
+  transformations that can be applied to any other pipeline as a step.
 
   We'll extract all the raw features here. Due to the nature of `PTransform`s,
   we can only do element-wise transformations here. Anything that requires a

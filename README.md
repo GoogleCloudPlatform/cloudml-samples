@@ -1,5 +1,7 @@
 # Google Cloud Machine Learning Engine
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 Welcome to the [Google Cloud Machine Learning Engine (Cloud ML Engine)](https://cloud.google.com/ml-engine/docs/) sample code repository. This repository contains samples for how to use Cloud ML Engine for model training and serving.
 
 Note: If you’re looking for our guides on how to do Machine Learning on Google Cloud Platform (GCP) using other services, please checkout our other repository: [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp), which has guides on how to bring your code from various ML frameworks to [Google Cloud Platform](https://cloud.google.com/) using things like [Google Compute Engine](https://cloud.google.com/compute/) or [Kubernetes](https://kubernetes.io/).
@@ -51,7 +53,7 @@ Notebook Tutorial:
 # Complete Guide: Model Training and Serving on ML Engine
 
 Code Guide:
-* [Tensorflow: Deep Neural Network Regressor](molecules) - How to train a DNN on a text based molecular dataset from Kaggle to predict predict the molecular energy.
+* [Tensorflow: Deep Neural Network Regressor](molecules) - How to train a DNN on a text based molecular dataset from Kaggle to predict the molecular energy.
 * [Tensorflow: Softmax / Fully-connected layer](flowers) - How to train a fully connected model with softmax using an image dataset of flowers to recognize the type of a flower from its image.
 
 ### Hyperparameter Tuning (HP Tuning)
