@@ -72,18 +72,18 @@ def run(p, input_path, output_directory, train_fraction=0.8):
   raw_data = (p
       | "ReadTrainData" >> beam.io.Read(CsvFileSource(
           input_path,
-          column_names=constants.CSV_ORDERED_COLUMNS)))
+          column_names=constants.CSV_COLUMNS)))
   train_data, eval_data = split_data(raw_data, train_fraction)
 
   _ = (train_data
       | "PrepareCSV_train" >> beam.ParDo(
-          ConvertDictToCSV(ordered_fieldnames=constants.CSV_ORDERED_COLUMNS))
+          ConvertDictToCSV(ordered_fieldnames=constants.CSV_COLUMNS))
       | "Write_train" >> beam.io.WriteToText(
           os.path.join(output_directory, "output_data", "train"),
           file_name_suffix=".csv"))
   _ = (eval_data 
       | "PrepareCSV_eval" >> beam.ParDo(
-          ConvertDictToCSV(ordered_fieldnames=constants.CSV_ORDERED_COLUMNS))
+          ConvertDictToCSV(ordered_fieldnames=constants.CSV_COLUMNS))
       | "Write_eval" >> beam.io.WriteToText(
           os.path.join(output_directory, "output_data", "eval"),
           file_name_suffix=".csv"))
