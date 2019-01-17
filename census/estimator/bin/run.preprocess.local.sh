@@ -26,6 +26,5 @@ rm -rf $DATAFLOW_DIR
 
 python -m preprocessing/run_preprocessing \
   --project_id $PROJECT_ID \
-  --job_name $JOB_NAME \
   --job_dir $DATAFLOW_DIR \
   --input_data $TRAINING_DATA
