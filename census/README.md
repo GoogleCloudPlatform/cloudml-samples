@@ -424,6 +424,7 @@ python -m preprocessing/run_preprocessing \
 * **Run preprocessing on Dataflow**
 
 ```
+DATE_TIME=$(date +"%Y%m%d_%H%M%S")
 DATAFLOW_DIR=gs://$BUCKET_NAME/preprocessing/${JOB_NAME}
 JOB_NAME=preprocessing-${DATE_TIME}-${USER}
 
@@ -433,6 +434,14 @@ python -m preprocessing/run_preprocessing \
     --job_dir $DATAFLOW_DIR \
     --input_data $TRAINING_DATA \
     --cloud
+```
+
+
+* **Use the updated train and eval files**
+
+```
+export TRAIN_FILE=${DATAFLOW_DIR}/output_data/train*.csv
+export EVAL_FILE=${DATAFLOW_DIR}/output_data/eval*.csv
 ```
 
 ## References
