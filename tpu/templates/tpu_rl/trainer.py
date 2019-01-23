@@ -177,6 +177,10 @@ def main(args):
     actions, actions_init = make_ds(actions, args.train_batch_size)
     rewards, rewards_init = make_ds(rewards, args.train_batch_size)
 
+    features_shape = [args.batch_size, FEATURE_SIZE]
+    actions_shape = [args.batch_size, ACTION_SIZE]
+    rewards_shape = [args.batch_size]
+
     features.set_shape(features_shape)
     actions.set_shape(actions_shape)
     rewards.set_shape(rewards_shape)
