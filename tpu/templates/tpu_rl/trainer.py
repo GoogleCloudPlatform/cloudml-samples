@@ -273,7 +273,7 @@ def main(args):
     infeed_thread.start()
     outfeed_thread.start()
 
-    for i in range(args.num_loop):
+    for i in range(args.num_loops):
         print('Iteration: {}'.format(i))
 
         run_rollout()
