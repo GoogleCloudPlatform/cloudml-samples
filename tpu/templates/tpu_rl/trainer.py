@@ -236,11 +236,11 @@ def main(args):
     def run_rollout():
         episode_length = MAXLEN // N_PARALLEL_GAMES
         
-        rollout_features = []
-        rollout_actions = []
-        rollout_rewards = []
+        batch_features = []
+        batch_actions = []
+        batch_rewards = []
 
-        while len(rollout_features) < MAXLEN:
+        while len(batch_features) < MAXLEN:
             # Randomly generate features, not feeding the actions to the environment.
             step_features = np.random.random((N_PARALLEL_GAMES, FEATURE_SIZE))
 
@@ -249,14 +249,14 @@ def main(args):
 
             step_rewards = np.random.random((N_PARALLEL_GAMES, 1))
 
-            rollout_features.extend(step_features.tolist())
-            rollout_actions.extend(step_actions)
-            rollout_rewards.extend(step_rewards.tolist())
+            batch_features.extend(step_features.tolist())
+            batch_actions.extend(step_actions)
+            batch_rewards.extend(step_rewards.tolist())
 
         rollout_feed_dict = {
-            rollout_features_ph: np.array(rollout_features),
-            rollout_actions_ph: np.array(rollout_actions),
-            rollout_rewards_ph: np.array(rollout_rewards)
+            rollout_features_ph: np.array(batch_features),
+            rollout_actions_ph: np.array(batch_actions),
+            rollout_rewards_ph: np.array(batch_rewards)
         }
         sess.run(rollout_update_ops, rollout_feed_dict)
 
