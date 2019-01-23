@@ -250,7 +250,7 @@ def main(args):
             step_rewards = np.random.random((N_PARALLEL_GAMES, 1))
 
             rollout_features.extend(step_features.tolist())
-            rollout_actions.extend(step_actions.tolist())
+            rollout_actions.extend(step_actions)
             rollout_rewards.extend(step_rewards.tolist())
 
         rollout_feed_dict = {
