@@ -102,3 +102,9 @@ tpu-templates-tpu-infeed-outfeed:
     tpu/templates/tpu_rewrite
   filename:
     trainer_infeed_outfeed.py
+
+tpu-templates-tpu-rl:
+  path:
+    tpu/templates/tpu_rl
+  filename:
+    trainer.py
