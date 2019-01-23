@@ -254,9 +254,9 @@ def main(args):
             rollout_rewards.extend(step_rewards.tolist())
 
         rollout_feed_dict = {
-            rollout_features_ph: rollout_features,
-            rollout_actions_ph: rollout_actions,
-            rollout_rewards_ph: rollout_rewards
+            rollout_features_ph: np.array(rollout_features),
+            rollout_actions_ph: np.array(rollout_actions),
+            rollout_rewards_ph: np.array(rollout_rewards)
         }
         sess.run(rollout_update_ops, rollout_feed_dict)
 
