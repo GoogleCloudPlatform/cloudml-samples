@@ -34,15 +34,8 @@ FEATURE_SIZE = 128
 ACTION_SIZE = 3
 N_PARALLEL_GAMES = 16
 
-# Store (observation, onehot label of action, processed reward) tuples
+# size of the experience
 MAXLEN = 1024
-
-EXPERIENCE = deque([], maxlen=1000)
-
-def experience_generator():
-    while True:
-        yield random.choice(list(EXPERIENCE))
-
 
 def policy(features):
     with tf.variable_scope('agent', reuse=tf.AUTO_REUSE):
@@ -115,34 +108,6 @@ def cpu_setup_feed(features, actions, rewards, num_shards):
     return infeed_ops, outfeed_ops
 
 
-def train_input_fn():
-    # data input function runs on the CPU, not TPU
-
-    dataset = tf.data.Dataset.from_generator(experience_generator, output_types=(tf.float32, tf.int32, tf.float32))
-
-    batch_size = 16
-
-    dataset = dataset.repeat().shuffle(32).batch(batch_size)
-
-    # TPUs need to know all dimensions when the graph is built
-    # Datasets know the batch size only when the graph is run
-    def set_shapes(features, actions, rewards):
-        features_shape = [batch_size, FEATURE_SIZE]
-        actions_shape = [batch_size, ACTION_SIZE]
-        rewards_shape = [batch_size]
-
-        features.set_shape(features_shape)
-        actions.set_shape(actions_shape)
-        rewards.set_shape(rewards_shape)
-
-        return features, actions, rewards
-
-    dataset = dataset.map(set_shapes)
-    dataset = dataset.prefetch(tf.contrib.data.AUTOTUNE)
-
-    return dataset
-
-
 def make_ds(v, batch_size):
     ds = tf.data.Dataset.from_tensor_slices(v)
     ds = ds.repeat().shuffle(32).batch(batch_size)
@@ -153,11 +118,6 @@ def make_ds(v, batch_size):
 
 
 def main(args):
-    # Unpack the tensor batch to be used to set up the infeed/outfeed queues.
-    # dataset = train_input_fn()
-    # iterator = dataset.make_one_shot_iterator()
-    # features, actions, rewards = iterator.get_next()
-
     # use variables to store experience
     features = tf.get_variable('features', dtype=tf.float32, shape=(MAXLEN, FEATURE_SIZE), trainable=False)
     actions = tf.get_variable('actions', dtype=tf.int32, shape=(MAXLEN, ACTION_SIZE), trainable=False)
@@ -232,7 +192,7 @@ def main(args):
                 saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=i)
 
 
-    # In the main thread, interact with th environment and collect data into EXPERIENCE.
+    # In the main thread, interact with th environment and collect data into the experience variables.
     def run_rollout():
         episode_length = MAXLEN // N_PARALLEL_GAMES
         
@@ -259,9 +219,6 @@ def main(args):
             rollout_rewards_ph: np.array(batch_rewards)
         }
         sess.run(rollout_update_ops, rollout_feed_dict)
-
-        # for triple in zip(episode_features, episode_actions, episode_rewards):
-        #     EXPERIENCE.append(triple)
 
     infeed_thread = threading.Thread(target=_run_infeed)
     outfeed_thread = threading.Thread(target=_run_outfeed)
@@ -298,7 +255,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--iterations-per-loop',
         type=int,
-        default=10,
+        default=100,
         help='The number of iterations on TPU before switching to CPU.')
     parser.add_argument(
         '--num-loops',

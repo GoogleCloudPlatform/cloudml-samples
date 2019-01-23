@@ -25,3 +25,7 @@ film:
 grl:
   estimator:
     tpu_grl_estimator
+
+rl:
+  rewrite:
+    tpu_rl
