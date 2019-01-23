@@ -238,7 +238,7 @@ def main(args):
         
         rollout_features = []
         rollout_actions = []
-        rolloout_rewards = []
+        rollout_rewards = []
 
         while len(rollout_features) < MAXLEN:
             # Randomly generate features, not feeding the actions to the environment.
