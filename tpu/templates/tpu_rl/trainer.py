@@ -247,7 +247,7 @@ def main(args):
             # Since the CPU and the TPU share the model variables, this is using the updated policy.
             step_actions = sess.run(rollout_actions, {features_ph: step_features})
 
-            step_rewards = np.random.random((N_PARALLEL_GAMES, 1))
+            step_rewards = np.random.random((N_PARALLEL_GAMES,))
 
             batch_features.extend(step_features.tolist())
             batch_actions.extend(step_actions)
