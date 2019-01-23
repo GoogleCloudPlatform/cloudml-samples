@@ -177,6 +177,10 @@ def main(args):
     actions, actions_init = make_ds(actions, args.train_batch_size)
     rewards, rewards_init = make_ds(rewards, args.train_batch_size)
 
+    features.set_shape(features_shape)
+    actions.set_shape(actions_shape)
+    rewards.set_shape(rewards_shape)
+
     ds_inits = [features_init, actions_init, rewards_init]
 
     infeed_ops, outfeed_ops = cpu_setup_feed(features, actions, rewards, num_shards=8)
