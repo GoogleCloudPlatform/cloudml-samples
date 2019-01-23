@@ -11,7 +11,9 @@ help_dict = {
     '--save-checkpoints-steps': 'The number of training steps before saving each checkpoint.',
     '--sequence-length': 'The sequence length for an LSTM model.',
     '--gr-weight': 'The weight used in the gradient reversal layer.',
-    '--lambda': 'The trade-off between label_prediction_loss and domain_classification_loss.'
+    '--lambda': 'The trade-off between label_prediction_loss and domain_classification_loss.',
+    '--iterations-per-loop': 'The number of iterations on TPU before switching to CPU.',
+    '--num-loops': 'The number of times switching to CPU.'
 }
 
 filenames = glob.glob('../**/trainer*.py')

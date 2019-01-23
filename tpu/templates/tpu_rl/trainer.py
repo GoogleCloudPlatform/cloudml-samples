@@ -35,6 +35,8 @@ ACTION_SIZE = 3
 N_PARALLEL_GAMES = 16
 
 # Store (observation, onehot label of action, processed reward) tuples
+MAXLEN = 1024
+
 EXPERIENCE = deque([], maxlen=1000)
 
 def experience_generator():
@@ -141,11 +143,41 @@ def train_input_fn():
     return dataset
 
 
+def make_ds(v, batch_size):
+    ds = tf.data.Dataset.from_tensor_slices(v)
+    ds = ds.repeat().shuffle(32).batch(batch_size)
+    it = ds.make_initializable_iterator()
+    nb = it.get_next()
+
+    return nb, it.initializer
+
+
 def main(args):
     # Unpack the tensor batch to be used to set up the infeed/outfeed queues.
-    dataset = train_input_fn()
-    iterator = dataset.make_one_shot_iterator()
-    features, actions, rewards = iterator.get_next()
+    # dataset = train_input_fn()
+    # iterator = dataset.make_one_shot_iterator()
+    # features, actions, rewards = iterator.get_next()
+
+    # use variables to store experience
+    features = tf.get_variable('features', dtype=tf.float32, shape=(MAXLEN, FEATURE_SIZE), trainable=False)
+    actions = tf.get_variable('actions', dtype=tf.int32, shape=(MAXLEN, ACTION_SIZE), trainable=False)
+    rewards = tf.get_variable('rewards', dtype=tf.float32, shape=(MAXLEN,), trainable=False)
+
+    rollout_features_ph = tf.placeholder(dtype=tf.float32, shape=(MAXLEN, FEATURE_SIZE))
+    rollout_actions_ph = tf.placeholder(dtype=tf.int32, shape=(MAXLEN, ACTION_SIZE))
+    rollout_rewards_ph = tf.placeholder(dtype=tf.float32, shape=(MAXLEN,))
+
+    rollout_update_ops = [
+        features.assign(rollout_features_ph),
+        actions.assign(rollout_actions_ph),
+        rewards.assign(rollout_rewards_ph)
+    ]
+
+    features, features_init = make_ds(features, args.train_batch_size)
+    actions, actions_init = make_ds(actions, args.train_batch_size)
+    rewards, rewards_init = make_ds(rewards, args.train_batch_size)
+
+    ds_inits = [features_init, actions_init, rewards_init]
 
     infeed_ops, outfeed_ops = cpu_setup_feed(features, actions, rewards, num_shards=8)
 
@@ -194,30 +226,46 @@ def main(args):
 
     # In the main thread, interact with th environment and collect data into EXPERIENCE.
     def run_rollout():
-        episode_length = 20
+        episode_length = MAXLEN // N_PARALLEL_GAMES
         
-        for _ in range(episode_length):
+        rollout_features = []
+        rollout_actions = []
+        rolloout_rewards = []
+
+        while len(rollout_features) < MAXLEN:
             # Randomly generate features, not feeding the actions to the environment.
-            episode_features = np.random.random((N_PARALLEL_GAMES, FEATURE_SIZE))
+            step_features = np.random.random((N_PARALLEL_GAMES, FEATURE_SIZE))
 
             # Since the CPU and the TPU share the model variables, this is using the updated policy.
-            episode_actions = sess.run(rollout_actions, {features_ph: episode_features})
+            step_actions = sess.run(rollout_actions, {features_ph: step_features})
 
-            episode_rewards = np.random.random((N_PARALLEL_GAMES, 1))
+            step_rewards = np.random.random((N_PARALLEL_GAMES, 1))
 
-        for triple in zip(episode_features, episode_actions, episode_rewards):
-            EXPERIENCE.append(triple)
+            rollout_features.extend(step_features.tolist())
+            rollout_actions.extend(step_actions.tolist())
+            rollout_rewards.extend(step_rewards.tolist())
+
+        rollout_feed_dict = {
+            rollout_features_ph: rollout_features,
+            rollout_actions_ph: rollout_actions,
+            rollout_rewards_ph: rollout_rewards
+        }
+        sess.run(rollout_update_ops, rollout_feed_dict)
+
+        # for triple in zip(episode_features, episode_actions, episode_rewards):
+        #     EXPERIENCE.append(triple)
 
     infeed_thread = threading.Thread(target=_run_infeed)
     outfeed_thread = threading.Thread(target=_run_outfeed)
 
     sess.run(tpu_init)
     sess.run(variables_init)
+    sess.run(ds_inits)
 
     infeed_thread.start()
     outfeed_thread.start()
 
-    for i in range(args.num_iterations):
+    for i in range(args.num_loop):
         print('Iteration: {}'.format(i))
 
         run_rollout()
@@ -242,16 +290,23 @@ if __name__ == '__main__':
     parser.add_argument(
         '--iterations-per-loop',
         type=int,
-        default=10)
+        default=10,
+        help='The number of iterations on TPU before switching to CPU.')
     parser.add_argument(
-        '--num-iterations',
+        '--num-loops',
         type=int,
-        default=10)
+        default=10,
+        help='The number of times switching to CPU.')
     parser.add_argument(
         '--save-checkpoints-steps',
         type=int,
         default=100,
         help='The number of training steps before saving each checkpoint.')
+    parser.add_argument(
+        '--train-batch-size',
+        type=int,
+        default=16,
+        help='The training batch size.  The training batch is divided evenly across the TPU cores.')
     parser.add_argument(
         '--tpu',
         default=None,
@@ -259,6 +314,6 @@ if __name__ == '__main__':
 
     args, _ = parser.parse_known_args()
 
-    args.max_steps = args.iterations_per_loop * args.num_iterations
+    args.max_steps = args.iterations_per_loop * args.num_loops
 
     main(args)
