@@ -90,8 +90,11 @@ def test(args, model, device, test_loader, epoch):
       global_step=epoch)
 
 
-def main():
-  # Training settings
+def get_args():
+  """Argument parser.
+  Returns:
+    Dictionary of arguments.
+  """
   parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
   parser.add_argument(
       '--batch-size',
@@ -146,6 +149,11 @@ def main():
       help='The directory to store the model')
 
   args = parser.parse_args()
+  return args
+
+def main():
+  # Training settings
+  args = get_args()
   use_cuda = not args.no_cuda and torch.cuda.is_available()
 
   torch.manual_seed(args.seed)
@@ -160,7 +168,8 @@ def main():
           download=True,
           transform=transforms.Compose([
               transforms.ToTensor(),
-              transforms.Normalize((0.1307,), (0.3081,))
+              # Normalize a tensor image with mean and standard deviation
+              transforms.Normalize(mean=(0.1307,), std=(0.3081,))
           ])),
       batch_size=args.batch_size,
       shuffle=True,
@@ -171,7 +180,8 @@ def main():
           train=False,
           transform=transforms.Compose([
               transforms.ToTensor(),
-              transforms.Normalize((0.1307,), (0.3081,))
+              # Normalize a tensor image with mean and standard deviation              
+              transforms.Normalize(mean=(0.1307,), std=(0.3081,))
           ])),
       batch_size=args.test_batch_size,
       shuffle=True,
