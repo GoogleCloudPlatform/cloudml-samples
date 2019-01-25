@@ -39,7 +39,12 @@ class CsvFileSource(beam.io.filebasedsource.FileBasedSource):
 
 
 def split_data(examples, train_fraction):
-  """Splits the data into train/eval."""
+  """Splits the data into train/eval.
+
+  Args:
+    examples: A PCollection.
+    train_fraction: fraction of examples to keep in the train set (float).
+  """
 
   def partition_fn(data, n_partition):
     random_value = random.random()
