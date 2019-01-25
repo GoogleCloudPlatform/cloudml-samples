@@ -13,7 +13,7 @@
 Tutorial on wide and deep: https://www.tensorflow.org/tutorials/wide_and_deep/
 """
 
-
+import multiprocessing
 import tensorflow as tf
 
 import trainer.featurizer as featurizer
@@ -66,7 +66,7 @@ def input_fn(filenames,
              shuffle=True,
              skip_header_lines=0,
              batch_size=200,
-             num_parallel_calls=1):
+             num_parallel_calls=None):
     """Generates features and labels for training or evaluation.
 
     This uses the input pipeline based approach using file name queue
@@ -86,6 +86,9 @@ def input_fn(filenames,
         A (features, indices) tuple where features is a dictionary of
           Tensors, and indices is a single Tensor of label indices.
     """
+    if num_parallel_calls is None:
+        num_parallel_calls = multiprocessing.cpu_count()
+
     dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(
         _decode_csv, num_parallel_calls)
 

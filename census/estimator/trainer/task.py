@@ -115,8 +115,7 @@ if __name__ == '__main__':
     PARSER.add_argument(
         '--num-parallel-calls',
         help='Number of threads used to read in parallel the training and evaluation',
-        type=int,
-        default=1)
+        type=int)
     PARSER.add_argument(
         '--num-epochs',
         help="""\
