@@ -18,7 +18,7 @@ import os
 
 NAME = 'preprocessing'
 VERSION = '1.0'
-REQUIRED_PACKAGES = ['tensorflow-transform==0.9.0']
+REQUIRED_PACKAGES = ['tensorflow-transform==0.11.0']
 
 
 setup(

@@ -390,7 +390,7 @@ Once the job is `SUCCEEDED` you can check the results in `--output-path`.
 
 # (Optional) Preprocessing with Dataflow
 
-**Note: This is available only for estimator/.**
+**Note: This is available only for [Estimator](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/master/census/estimator)/.**
 
 * **Objective**
 
