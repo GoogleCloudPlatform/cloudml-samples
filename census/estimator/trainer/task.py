@@ -56,7 +56,8 @@ def train_and_evaluate(args):
             args.train_files,
             num_epochs=args.num_epochs,
             batch_size=args.train_batch_size,
-            num_parallel_calls=args.num_parallel_calls)
+            num_parallel_calls=args.num_parallel_calls,
+            prefetch_buffer_size=args.prefetch_buffer_size)
 
     def eval_input():
         """Input function returning the entire validation data
@@ -66,7 +67,8 @@ def train_and_evaluate(args):
             args.eval_files,
             batch_size=args.eval_batch_size,
             shuffle=False,
-            num_parallel_calls=args.num_parallel_calls)
+            num_parallel_calls=args.num_parallel_calls,
+            prefetch_buffer_size=args.prefetch_buffer_size)
 
     train_spec = tf.estimator.TrainSpec(
         train_input, max_steps=args.train_steps)
@@ -115,8 +117,11 @@ if __name__ == '__main__':
     PARSER.add_argument(
         '--num-parallel-calls',
         help='Number of threads used to read in parallel the training and evaluation',
-        type=int,
-        default=1)
+        type=int)
+    PARSER.add_argument(
+        '--prefetch_buffer_size',
+        help='Naximum number of input elements that will be buffered when prefetching',
+        type=int)
     PARSER.add_argument(
         '--num-epochs',
         help="""\
