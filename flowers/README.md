@@ -38,6 +38,8 @@ There are two options for the virtual environments:
 
 Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
+**Note:** Currently Apache Beam is only supported with [Python 2.7](https://beam.apache.org/get-started/quickstart-py/). 
+
 #
 
 * **How to satisfy Cloud ML Engine project structure requirements**
