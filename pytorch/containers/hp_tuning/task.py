@@ -40,18 +40,10 @@ def train(net, train_loader, optimizer):
         optimizer.step()
 
 
-def set_value_(item):
-    """Take the predictions and assign them a binary target value."""
-    if item < 0.5:
-        return 0.0
-    else:
-        return 1.0
-
-
 def test(net, test_loader):
     """Test the DNN"""
     net.eval()
-    criterion = nn.BCELoss()
+    criterion = nn.BCELoss()  # https://pytorch.org/docs/stable/nn.html#bceloss
     test_loss = 0
     correct = 0
 
@@ -61,10 +53,8 @@ def test(net, test_loader):
             target = data['target']
             output = net(features)
             # Binarize the output
-            pred = output.apply_(set_value_)
-
+            pred = output.apply_(lambda x: 0.0 if x < 0.5 else 1.0)
             test_loss += criterion(output, target)  # sum up batch loss
-
             correct += pred.eq(target.view_as(pred)).sum().item()
 
     test_loss /= len(test_loader.dataset)
@@ -73,7 +63,7 @@ def test(net, test_loader):
     return accuracy
 
 
-def task(args):
+def train_model(args):
     """Load the data, train the model, test the model, export / save the model
     """
     torch.manual_seed(args.seed)
@@ -116,8 +106,11 @@ def task(args):
         print('Accuracy: {:.0f}%'.format(latest_accuracy))
 
 
-def main():
-    # Training settings
+def get_args():
+    """Argument parser.
+    Returns:
+        Dictionary of arguments.
+    """
     parser = argparse.ArgumentParser(description='PyTorch Sonar Example')
     parser.add_argument('--job-dir',  # handled automatically by ML Engine
                         help='GCS location to write checkpoints and export ' \
@@ -152,7 +145,12 @@ def main():
                         help='random seed (default: 42)')
     args = parser.parse_args()
 
-    task(args)
+    return args
+
+
+def main():
+    args = get_args()
+    train_model(args)
 
 
 if __name__ == '__main__':

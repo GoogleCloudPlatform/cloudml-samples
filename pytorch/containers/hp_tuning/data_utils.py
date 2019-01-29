@@ -49,6 +49,7 @@ class SonarDataset(Dataset):
 
 
 def load_data(test_split, seed, batch_size):
+    """Loads the data"""
     sonar_dataset = SonarDataset('./sonar.all-data')
     # Create indices for the split
     dataset_size = len(sonar_dataset)
@@ -71,6 +72,7 @@ def load_data(test_split, seed, batch_size):
 
 
 def save_model(job_dir, model_name):
+    """Saves the model to Google Cloud Storage"""
     # Example: job_dir = 'gs://BUCKET_ID/hptuning_sonar/1'
     job_dir = job_dir.replace('gs://', '')  # Remove the 'gs://'
     # Get the Bucket Id
