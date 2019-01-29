@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Install the latest version of pytorch
-FROM pytorch/pytorch:latest
+FROM pytorch/pytorch:1.0-cuda10.0-cudnn7-runtime 
 WORKDIR /root
 
 # Installs pandas, and google-cloud-storage.
@@ -21,12 +21,12 @@ RUN pip install pandas google-cloud-storage
 
 # The data for this sample has been publicly hosted on a GCS bucket.
 # Download the data from the public Google Cloud Storage bucket for this sample
-RUN curl https://storage.googleapis.com/cloud-samples-data/ml-engine/sonar/sonar.all-data --output /root/sonar.all-data
+RUN curl https://storage.googleapis.com/cloud-samples-data/ml-engine/sonar/sonar.all-data --output ./sonar.all-data
 
 # Copies the trainer code to the docker image.
-COPY model.py /root/model.py
-COPY data_utils.py /root/data_utils.py
-COPY task.py /root/task.py
+COPY model.py ./model.py
+COPY data_utils.py ./data_utils.py
+COPY task.py ./task.py
 
 # Set up the entry point to invoke the trainer.
 ENTRYPOINT ["python", "task.py"]
