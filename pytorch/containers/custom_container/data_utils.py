@@ -50,6 +50,7 @@ class SonarDataset(Dataset):
 
 
 def load_data(test_split, batch_size):
+    """Loads the data"""
     sonar_dataset = SonarDataset('./sonar.all-data')
     # Create indices for the split
     dataset_size = len(sonar_dataset)
@@ -72,6 +73,7 @@ def load_data(test_split, batch_size):
 
 
 def save_model(model_dir, model_name):
+    """Saves the model to Google Cloud Storage"""
     bucket = storage.Client().bucket(model_dir)
     blob = bucket.blob('{}/{}'.format(
         datetime.datetime.now().strftime('sonar_%Y%m%d_%H%M%S'),

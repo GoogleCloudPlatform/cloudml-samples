@@ -47,18 +47,10 @@ def train(net, train_loader, optimizer, epoch):
             running_loss = 0.0
 
 
-def set_value_(item):
-    """Take the predictions and assign them a binary target value."""
-    if item < 0.5:
-        return 0.0
-    else:
-        return 1.0
-
-
 def test(net, test_loader):
     """Test the DNN"""
     net.eval()
-    criterion = nn.BCELoss()
+    criterion = nn.BCELoss()  # https://pytorch.org/docs/stable/nn.html#bceloss
     test_loss = 0
     correct = 0
 
@@ -68,10 +60,8 @@ def test(net, test_loader):
             target = data['target']
             output = net(features)
             # Binarize the output
-            pred = output.apply_(set_value_)
-
+            pred = output.apply_(lambda x: 0.0 if x < 0.5 else 1.0)
             test_loss += criterion(output, target)  # sum up batch loss
-
             correct += pred.eq(target.view_as(pred)).sum().item()
 
     test_loss /= len(test_loader.dataset)
@@ -82,7 +72,7 @@ def test(net, test_loader):
             100. * correct / (len(test_loader) * test_loader.batch_size)))
 
 
-def task(args):
+def train_model(args):
     """Load the data, train the model, test the model, export / save the model
     """
     torch.manual_seed(args.seed)
@@ -110,8 +100,11 @@ def task(args):
             data_utils.save_model(args.model_dir, args.model_name)
 
 
-def main():
-    # Training settings
+def get_args():
+    """Argument parser.
+    Returns:
+        Dictionary of arguments.
+    """
     parser = argparse.ArgumentParser(description='PyTorch Sonar Example')
     parser.add_argument('--model-dir',
                         type=str,
@@ -146,7 +139,12 @@ def main():
                         help='random seed (default: 42)')
     args = parser.parse_args()
 
-    task(args)
+    return args
+
+
+def main():
+    args = get_args()
+    train_model(args)
 
 
 if __name__ == '__main__':
