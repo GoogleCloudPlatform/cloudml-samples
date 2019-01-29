@@ -96,13 +96,12 @@ def train_model(args):
         train(net, train_loader, optimizer, epoch)
         test(net, test_loader)
 
-    if args.model_name:
-        # Export the trained model
-        torch.save(net.state_dict(), args.model_name)
+    # Export the trained model
+    torch.save(net.state_dict(), args.model_name)
 
-        if args.model_dir:
-            # Save the model to GCS
-            data_utils.save_model(args.model_dir, args.model_name)
+    if args.model_dir:
+        # Save the model to GCS
+        data_utils.save_model(args.model_dir, args.model_name)
 
 
 def get_args():
