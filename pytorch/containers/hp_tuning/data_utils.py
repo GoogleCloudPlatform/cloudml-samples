@@ -53,7 +53,7 @@ def load_data(test_split, seed, batch_size):
     sonar_dataset = SonarDataset('./sonar.all-data')
     # Create indices for the split
     dataset_size = len(sonar_dataset)
-    test_size = int(np.ceil(test_split * dataset_size))
+    test_size = int(test_split * dataset_size)
     train_size = dataset_size - test_size
 
     train_dataset, test_dataset = random_split(sonar_dataset,

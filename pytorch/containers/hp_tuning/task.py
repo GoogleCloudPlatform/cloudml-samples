@@ -95,13 +95,12 @@ def train_model(args):
         metric_value=latest_accuracy,
         global_step=args.epochs)
 
-    if args.model_name:
-        # Export the trained model
-        torch.save(net.state_dict(), args.model_name)
+    # Export the trained model
+    torch.save(net.state_dict(), args.model_name)
 
-        if args.job_dir:
-            # Save the model to GCS
-            data_utils.save_model(args.job_dir, args.model_name)
+    if args.job_dir:
+        # Save the model to GCS
+        data_utils.save_model(args.job_dir, args.model_name)
     else:
         print('Accuracy: {:.0f}%'.format(latest_accuracy))
 
