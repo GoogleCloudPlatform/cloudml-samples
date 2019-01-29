@@ -48,30 +48,35 @@ Before you jump in, let’s cover some of the different tools you’ll be using 
 
 These variables will be needed for the following steps.
 
-**Replace**
-* `PROJECT_ID <YOUR_PROJECT_ID>` - with your project's id. Use the PROJECT_ID that matches your Google Cloud Platform project.
-* `BUCKET_ID <YOUR_BUCKET_ID>` - with the bucket id you created above.
-* `JOB_DIR <gs://YOUR_BUCKET_ID/hp_tuning>` - with the path to a Google Cloud Storage location to use for job output.
-* `IMAGE_REPO_NAME <sonar_hp_tuning_pytorch_container>` - where the image will be stored on Cloud Container Registry
-* `IMAGE_TAG <sonar_hp_tuning_pytorch>` - a easily identifiable tag for your docker image
-* `IMAGE_URI <gcr.io/$PROJECT_ID/$IMAGE_REPO_NAME:$IMAGE_TAG>` - the complete URI location for Cloud Container Registry
-* `REGION <REGION>` - select a region from [here](https://cloud.google.com/ml-engine/docs/regions) or use the default '`us-central1`'. The region is where the model will be deployed.
-* `JOB_NAME <hp_tuning_container_job_...>` - the name of your job running on Cloud ML Engine.
-* `MODEL_NAME <hptuning_sonar_model>` - the name of your saved model file
-
+**Replace these variables:**
 ```
-# Replace YOUR_PROJECT_ID
+# PROJECT_ID: your project's id. Use the PROJECT_ID that matches your Google Cloud Platform project.
 export PROJECT_ID=YOUR_PROJECT_ID
-# Replace YOUR_BUCKET_ID
-export BUCKET_ID=YOUR_BUCKET_ID
-# Replace YOUR_BUCKET_ID
+
+# BUCKET_ID: the bucket id you created above.
+export BUCKET_ID=BUCKET_ID
+```
+
+Additional variables:
+```
+# JOB_DIR: with the path to a Google Cloud Storage location to use for job output.
 export JOB_DIR=gs://YOUR_BUCKET_ID/hp_tuning
+
+# IMAGE_REPO_NAME: where the image will be stored on Cloud Container Registry
 export IMAGE_REPO_NAME=sonar_hp_tuning_pytorch_container
+
+# IMAGE_TAG: a easily identifiable tag for your docker image
 export IMAGE_TAG=sonar_hp_tuning_pytorch
+
+# IMAGE_URI: the complete URI location for Cloud Container Registry
 export IMAGE_URI=gcr.io/$PROJECT_ID/$IMAGE_REPO_NAME:$IMAGE_TAG
+
+# REGION: select a region from https://cloud.google.com/ml-engine/docs/regions
+# or use the default '`us-central1`'. The region is where the model will be deployed.
 export REGION=us-central1
+
+# JOB_NAME: the name of your job running on Cloud ML Engine.
 export JOB_NAME=hp_tuning_container_job_$(date +%Y%m%d_%H%M%S)
-export MODEL_NAME=hptuning_sonar_model
 ```
 
 # Part 1: Create the model you want to train
@@ -157,9 +162,7 @@ gcloud components install alpha
 gcloud alpha ml-engine jobs submit training $JOB_NAME \
   --job-dir=$JOB_DIR \
   --region=$REGION \
-  --config=hptuning_config.yaml \
-  -- \
-  --model-name $MODEL_NAME
+  --config=hptuning_config.yaml
 ```
 
 # [Optional] StackDriver Logging

@@ -122,11 +122,9 @@ def main():
     parser.add_argument('--job-dir',  # handled automatically by ML Engine
                         help='GCS location to write checkpoints and export ' \
                              'models')
-    # parser.add_argument('--model-dir',
-    #                     type=str,
-    #                     help='Where to save the model')
     parser.add_argument('--model-name',
                         type=str,
+                        default="hptuning_sonar_model",
                         help='What to name the saved model file')
     parser.add_argument('--batch-size',
                         type=int,
