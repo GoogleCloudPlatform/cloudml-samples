@@ -121,6 +121,7 @@ def main():
                         help='Where to save the model')
     parser.add_argument('--model-name',
                         type=str,
+                        default='sonar_model',
                         help='What to name the saved model file')
     parser.add_argument('--batch-size',
                         type=int,

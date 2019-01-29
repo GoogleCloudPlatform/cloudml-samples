@@ -51,28 +51,35 @@ package their applications and dependencies easily so that they can be run anywh
 
 These variables will be needed for the following steps.
 
-**Replace**
-* `PROJECT_ID <YOUR_PROJECT_ID>` - with your project's id. Use the PROJECT_ID that matches your Google Cloud Platform project.
-* `BUCKET_ID <YOUR_BUCKET_ID>` - with the bucket id you created above.
-* `PUBLISHED_IMAGE_URI <gcr.io/cloud-ml-public/pytorch_cpu_2_7:1_0_preview>` - the complete URI location for Cloud Container Registry
-* `REGION <REGION>` - select a region from [here](https://cloud.google.com/ml-engine/docs/regions) or use the default '`us-central1`'. The region is where the model will be deployed.
-* `JOB_NAME <published_container_job_...>` - the name of your job running on Cloud ML Engine.
-* `MODEL_NAME <sonar_model>` - the name of your saved model file
-* `PACKAGE_PATH <./sonar_training>` - A packaged training application that will be staged in a Google Cloud Storage location. The model file created below is placed inside this package path.
-* `PACKAGE_NAME <sonar_package.tar.gz>` - The name of your packaged training application.
-* `TRAINER_MODULE <trainer.task>` - Tells ML Engine which file to execute. This is formatted as follows `<folder_name.python_file_name>`
-
+**Replace these variables:**
 ```
-# Replace YOUR_PROJECT_ID
+# PROJECT_ID: your project's id. Use the PROJECT_ID that matches your Google Cloud Platform project.
 export PROJECT_ID=YOUR_PROJECT_ID
-# Replace BUCKET_ID
+
+# BUCKET_ID: the bucket id you created above.
 export BUCKET_ID=BUCKET_ID
+```
+Additional variables:
+```
+# PUBLISHED_IMAGE_URI: the complete URI location for Cloud Container Registry
 export PUBLISHED_IMAGE_URI=gcr.io/cloud-ml-public/pytorch_cpu_2_7:1_0_preview
+
+# REGION: select a region from https://cloud.google.com/ml-engine/docs/regions
+# or use the default '`us-central1`'. The region is where the model will be deployed.
 export REGION=us-central1
+
+# JOB_NAME: the name of your job running on Cloud ML Engine.
 export JOB_NAME=published_container_job_$(date +%Y%m%d_%H%M%S)
-export MODEL_NAME=sonar_model
+
+# PACKAGE_PATH: A packaged training application that will be staged in a Google Cloud Storage
+# location. The model file created below is placed inside this package path.
 export PACKAGE_PATH=./sonar_training
+
+# PACKAGE_NAME: The name of your packaged training application.
 export PACKAGE_NAME=sonar_package.tar.gz
+
+# TRAINER_MODULE: Tells ML Engine which file to execute. This is formatted as follows
+# <folder_name.python_file_name>
 export TRAINER_MODULE=trainer.task
 ```
 
@@ -191,7 +198,6 @@ gcloud alpha ml-engine jobs submit training $JOB_NAME \
   --module_name=$TRAINER_MODULE \
   --package_uris=gs://$BUCKET_ID/$PACKAGE_NAME \
   --model-dir=$BUCKET_ID \
-  --model-name $MODEL_NAME \
   --epochs=10
 ```
 
