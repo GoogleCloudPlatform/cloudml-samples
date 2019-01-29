@@ -66,7 +66,7 @@ Additional variables:
 # IMAGE_REPO_NAME: where the image will be stored on Cloud Container Registry
 export IMAGE_REPO_NAME=sonar_tf_nightly_container
 
-# IMAGE_TAG: a easily identifiable tag for your docker image
+# IMAGE_TAG: an easily identifiable tag for your docker image
 export IMAGE_TAG=sonar_tf
 
 # IMAGE_URI: the complete URI location for Cloud Container Registry

@@ -31,13 +31,12 @@ def train_model(args):
                                  batch_size=args.batch_size)
     print(score)
 
-    if args.model_name:
-        # Export the trained model
-        sonar_model.save(args.model_name)
+    # Export the trained model
+    sonar_model.save(args.model_name)
 
-        if args.model_dir:
-            # Save the model to GCS
-            data_utils.save_model(args.model_dir, args.model_name)
+    if args.model_dir:
+        # Save the model to GCS
+        data_utils.save_model(args.model_dir, args.model_name)
 
 
 def get_args():
