@@ -18,7 +18,7 @@ import data_utils
 import model
 
 
-def task(args):
+def train_model(args):
     train_features, test_features, train_labels, test_labels = \
         data_utils.load_data(args)
 
@@ -40,8 +40,7 @@ def task(args):
             data_utils.save_model(args.model_dir, args.model_name)
 
 
-def main():
-    # Training settings
+def get_args():
     parser = argparse.ArgumentParser(description='PyTorch Sonar Example')
     parser.add_argument('--model-dir',
                         type=str,
@@ -67,8 +66,12 @@ def main():
                         default=42,
                         help='random seed (default: 42)')
     args = parser.parse_args()
+    return args
 
-    task(args)
+
+def main():
+    args = get_args()
+    train_model(args)
 
 
 if __name__ == '__main__':

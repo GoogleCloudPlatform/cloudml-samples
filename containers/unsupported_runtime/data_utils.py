@@ -20,6 +20,7 @@ from sklearn import preprocessing
 
 
 def load_data(args):
+    """Loads the data"""
     features = pd.read_csv('./sonar.all-data', header=None)
     labels = features[60].values
     features = features.drop(columns=60).values
@@ -34,6 +35,7 @@ def load_data(args):
 
 
 def save_model(model_dir, model_name):
+    """Saves the model to Google Cloud Storage"""
     bucket = storage.Client().bucket(model_dir)
     blob = bucket.blob('{}/{}'.format(
         datetime.datetime.now().strftime('sonar_%Y%m%d_%H%M%S'),

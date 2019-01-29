@@ -25,6 +25,7 @@ def sonar_model():
     model.add(Dense(1, activation='sigmoid'))
 
     # Use the Binary Cross Entropy loss function for a Binary Classifier.
+    # https://www.tensorflow.org/api_docs/python/tf/keras/models/Sequential#compile
     model.compile(loss='binary_crossentropy',
                   optimizer='sgd',
                   metrics=['accuracy'])
