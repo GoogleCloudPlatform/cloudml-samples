@@ -388,6 +388,62 @@ gcloud ml-engine jobs describe $JOB_NAME
 Once the job is `SUCCEEDED` you can check the results in `--output-path`.
 
 
+# (Optional) Preprocessing with Dataflow
+
+**Note: This is available only for [Estimator](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/master/census/estimator)/.**
+
+* **Objective**
+
+Data preprocessing is not an absolute necessity in our use case. You can see running instructions without preprocessing: in this case, we are training the model on train.csv, evaluating it on test.csv and keeping one example in test.json to call the deployed model with.
+
+One minor caveat is that we do not have a perfect train/eval/test split: we are using the real test set as a validation one and have only one example in the real test set, which is enough to debug the model API but not enough to run complementary analysis. Hence, we build a data preprocessing pipeline that will correct this by splitting the initial train csv into a train and eval sets. 
+
+We will implement this in Dataflow, which like using a sledgehammer to crack a nut, however this is a great opportunity to showcase the key principles of this tool. In other applications, it is likely that your initial data will require some cleaning with Dataflow.
+
+
+* **GCloud configuration:**
+
+```
+export BUCKET_NAME=your-bucket-name
+export PROJECT_ID=$(gcloud config list --format 'value(core.project)' 2>/dev/null)
+
+export TRAINING_DATA=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+```
+
+* **Run preprocessing locally**
+
+```
+DATAFLOW_DIR=dataflow_dir
+
+python -m preprocessing/run_preprocessing \
+    --project_id $PROJECT_ID \
+    --job_dir $DATAFLOW_DIR \
+    --input_data $TRAINING_DATA
+```
+
+* **Run preprocessing on Dataflow**
+
+```
+DATE_TIME=$(date +"%Y%m%d_%H%M%S")
+DATAFLOW_DIR=gs://$BUCKET_NAME/preprocessing/${JOB_NAME}
+JOB_NAME=preprocessing-${DATE_TIME}-${USER}
+
+python -m preprocessing/run_preprocessing \
+    --project_id $PROJECT_ID \
+    --job_name $JOB_NAME \
+    --job_dir $DATAFLOW_DIR \
+    --input_data $TRAINING_DATA \
+    --cloud
+```
+
+
+* **Use the updated train and eval files**
+
+```
+export TRAIN_FILE=${DATAFLOW_DIR}/output_data/train*.csv
+export EVAL_FILE=${DATAFLOW_DIR}/output_data/eval*.csv
+```
+
 ## References
 
 [Tensorflow tutorial](https://www.tensorflow.org/guide/premade_estimators)

@@ -16,8 +16,8 @@ Tutorial on wide and deep: https://www.tensorflow.org/tutorials/wide_and_deep/
 import multiprocessing
 import tensorflow as tf
 
+from constants import constants
 import trainer.featurizer as featurizer
-import trainer.metadata as metadata
 
 
 def _decode_csv(line):
@@ -29,13 +29,13 @@ def _decode_csv(line):
     # tuple of tensors: [['csv'], ['csv']], [['line'], ['line']], [[1], [2]]
     row_columns = tf.expand_dims(line, -1)
     columns = tf.decode_csv(
-        row_columns, record_defaults=metadata.CSV_COLUMN_DEFAULTS)
-    features = dict(zip(metadata.CSV_COLUMNS, columns))
+        row_columns, record_defaults=constants.CSV_COLUMN_DEFAULTS)
+    features = dict(zip(constants.CSV_COLUMNS, columns))
 
     # Remove unused columns
-    unused_columns = set(metadata.CSV_COLUMNS) - \
+    unused_columns = set(constants.CSV_COLUMNS) - \
         {col.name for col in featurizer.INPUT_COLUMNS} - \
-        {metadata.LABEL_COLUMN}
+        {constants.LABEL_COLUMN}
     for col in unused_columns:
         features.pop(col)
     return features
@@ -55,7 +55,7 @@ def _parse_label_column(label_string_tensor):
     """
     # Build a Hash Table inside the graph
     table = tf.contrib.lookup.index_table_from_tensor(
-        tf.constant(metadata.LABELS))
+        tf.constant(constants.LABELS))
 
     # Use the hash table to convert string labels to ints and one-hot encode
     return table.lookup(label_string_tensor)
@@ -101,7 +101,7 @@ def input_fn(filenames,
     iterator = dataset.repeat(num_epochs).batch(
         batch_size).make_one_shot_iterator()
     features = iterator.get_next()
-    return features, _parse_label_column(features.pop(metadata.LABEL_COLUMN))
+    return features, _parse_label_column(features.pop(constants.LABEL_COLUMN))
 
 
 # ************************************************************************
@@ -113,7 +113,7 @@ def csv_serving_input_fn():
     """Build the serving inputs."""
     csv_row = tf.placeholder(shape=[None], dtype=tf.string)
     features = _decode_csv(csv_row)
-    features.pop(metadata.LABEL_COLUMN)
+    features.pop(constants.LABEL_COLUMN)
     return tf.estimator.export.ServingInputReceiver(features,
                                                     {'csv_row': csv_row})
 
