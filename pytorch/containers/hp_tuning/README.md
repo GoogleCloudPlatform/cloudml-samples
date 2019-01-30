@@ -131,7 +131,7 @@ trainingInput:
     goal: MAXIMIZE
     maxTrials: 10
     maxParallelTrials: 5
-    hyperparameterMetricTag: my_metric_tag
+    hyperparameterMetricTag: my_accuracy_tag
     enableTrialEarlyStopping: TRUE
     params:
     - parameterName: epochs

@@ -91,7 +91,7 @@ def train_model(args):
     # https://cloud.google.com/ml-engine/reference/rest/v1/projects.jobs#HyperparameterSpec
     hpt = hypertune.HyperTune()
     hpt.report_hyperparameter_tuning_metric(
-        hyperparameter_metric_tag='my_metric_tag',
+        hyperparameter_metric_tag='my_accuracy_tag',
         metric_value=latest_accuracy,
         global_step=args.epochs)
 
