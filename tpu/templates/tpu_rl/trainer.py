@@ -35,7 +35,8 @@ ACTION_SIZE = 3
 N_PARALLEL_GAMES = 16
 
 # size of the experience
-MAXLEN = 1024
+ROLLOUT_LENGTH = 1024
+EXPERIENCE_LENGTH = ROLLOUT_LENGTH * 8
 
 def policy(features):
     with tf.variable_scope('agent', reuse=tf.AUTO_REUSE):
@@ -109,41 +110,43 @@ def cpu_setup_feed(features, actions, rewards, num_shards):
 
 
 def make_ds(v, batch_size):
-    ds = tf.data.Dataset.from_tensor_slices(v)
-    ds = ds.repeat().shuffle(32).batch(batch_size)
-    it = ds.make_initializable_iterator()
-    nb = it.get_next()
+    dataset = tf.data.Dataset.from_tensor_slices(v)
+    dataset = dataset.repeat().shuffle(32).batch(batch_size)
+    iterator = dataset.make_initializable_iterator()
+    next_batch = iterator.get_next()
 
-    return nb, it.initializer
+    n_dim = len(next_batch.shape)
+    merge_shape = [batch_size] + [None] * (n_dim - 1)
+    shape = next_batch.shape.merge_with(merge_shape) 
+    next_batch.set_shape(shape)
+
+    return next_batch, iterator.initializer
+
+
+def tf_deque(name, dtype, shape, update_size):
+    variable = tf.get_variable(name, dtype=dtype, shape=shape, trainable=False)
+
+    update_shape = [update_size] + shape[1:]
+    update_ph = tf.placeholder(dtype=dtype, shape=update_shape)
+
+    updated_value = tf.concat([v[update_size:], update_ph], axis=0)
+
+    update_op = variable.assign(updated_value)
+
+    return variable, update_ph, update_op
 
 
 def main(args):
     # use variables to store experience
-    features = tf.get_variable('features', dtype=tf.float32, shape=(MAXLEN, FEATURE_SIZE), trainable=False)
-    actions = tf.get_variable('actions', dtype=tf.int32, shape=(MAXLEN, ACTION_SIZE), trainable=False)
-    rewards = tf.get_variable('rewards', dtype=tf.float32, shape=(MAXLEN,), trainable=False)
+    features, update_features_ph, update_features_op = tf_deque('features', tf.float32, (EXPERIENCE_LENGTH, FEATURE_SIZE), ROLLOUT_LENGTH)
+    actions, update_actions_ph, update_actions_op = tf_deque('actions', tf.int32, (EXPERIENCE_LENGTH, ACTION_SIZE), ROLLOUT_LENGTH)
+    rewards, update_rewards_ph, update_rewards_op = tf_deque('rewards', tf.float32, (EXPERIENCE_LENGTH,), ROLLOUT_LENGTH)
 
-    rollout_features_ph = tf.placeholder(dtype=tf.float32, shape=(MAXLEN, FEATURE_SIZE))
-    rollout_actions_ph = tf.placeholder(dtype=tf.int32, shape=(MAXLEN, ACTION_SIZE))
-    rollout_rewards_ph = tf.placeholder(dtype=tf.float32, shape=(MAXLEN,))
-
-    rollout_update_ops = [
-        features.assign(rollout_features_ph),
-        actions.assign(rollout_actions_ph),
-        rewards.assign(rollout_rewards_ph)
-    ]
+    rollout_update_ops = [update_features_op, update_actions_op, update_rewards_op]
 
     features, features_init = make_ds(features, args.train_batch_size)
     actions, actions_init = make_ds(actions, args.train_batch_size)
     rewards, rewards_init = make_ds(rewards, args.train_batch_size)
-
-    features_shape = [args.train_batch_size, FEATURE_SIZE]
-    actions_shape = [args.train_batch_size, ACTION_SIZE]
-    rewards_shape = [args.train_batch_size]
-
-    features.set_shape(features_shape)
-    actions.set_shape(actions_shape)
-    rewards.set_shape(rewards_shape)
 
     ds_inits = [features_init, actions_init, rewards_init]
 
@@ -194,7 +197,7 @@ def main(args):
 
     # In the main thread, interact with th environment and collect data into the experience variables.
     def run_rollout():
-        episode_length = MAXLEN // N_PARALLEL_GAMES
+        episode_length = ROLLOUT_LENGTH // N_PARALLEL_GAMES
         
         batch_features = []
         batch_actions = []
@@ -214,9 +217,9 @@ def main(args):
             batch_rewards.extend(step_rewards.tolist())
 
         rollout_feed_dict = {
-            rollout_features_ph: np.array(batch_features),
-            rollout_actions_ph: np.array(batch_actions),
-            rollout_rewards_ph: np.array(batch_rewards)
+            update_features_ph: np.array(batch_features),
+            update_actions_ph: np.array(batch_actions),
+            update_rewards_ph: np.array(batch_rewards)
         }
         sess.run(rollout_update_ops, rollout_feed_dict)
 
@@ -226,6 +229,8 @@ def main(args):
     sess.run(tpu_init)
     sess.run(variables_init)
     sess.run(ds_inits)
+
+    run_rollout()
 
     infeed_thread.start()
     outfeed_thread.start()
