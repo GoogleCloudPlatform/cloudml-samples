@@ -108,3 +108,9 @@ tpu-templates-tpu-rl:
     tpu/templates/tpu_rl
   filename:
     trainer.py
+
+tpu-templates-tpu-rl:
+  path:
+    tpu/templates/tpu_rl
+  filename:
+    trainer_pong.py
