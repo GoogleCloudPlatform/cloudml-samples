@@ -208,7 +208,10 @@ def main(args):
 
     def action_to_env_action(action):
         ACTIONS = [0, 2, 3]
-        return ACTIONS[action]
+        if action in range(3):
+            return ACTIONS[action]
+        else:
+            return random.choice(ACTIONS)
 
     # initialize env
     import gym
