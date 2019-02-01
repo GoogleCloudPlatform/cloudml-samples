@@ -264,6 +264,8 @@ def main(args):
     for _ in range(N_ROLLOUTS):
         run_rollout()
 
+    rollout_q.put(0)
+
     infeed_thread.start()
     outfeed_thread.start()
 
