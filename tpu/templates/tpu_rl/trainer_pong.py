@@ -181,7 +181,7 @@ def main(args):
     def _run_infeed(rollout_q):
         while True:
             if not rollout_q.empty():
-                print('infeeding data after rollout {}'.format(q.get()))
+                print('infeeding data after rollout {}'.format(rollout_q.get()))
 
                 for i in range(args.iterations_per_loop):
                     sess.run(infeed_ops)
