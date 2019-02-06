@@ -132,7 +132,7 @@ gcloud components install beta
 gcloud beta ml-engine jobs submit training $JOB_NAME \
   --region $REGION \
   --master-image-uri $IMAGE_URI \
-  --scale-tier BASIC
+  --scale-tier BASIC \
   -- \
   --model-dir=$BUCKET_ID \
   --epochs=10
