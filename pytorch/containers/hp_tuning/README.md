@@ -60,7 +60,7 @@ export BUCKET_ID=BUCKET_ID
 Additional variables:
 ```
 # JOB_DIR: with the path to a Google Cloud Storage location to use for job output.
-export JOB_DIR=gs://YOUR_BUCKET_ID/hp_tuning
+export JOB_DIR=gs://$BUCKET_ID/hp_tuning
 
 # IMAGE_REPO_NAME: where the image will be stored on Cloud Container Registry
 export IMAGE_REPO_NAME=sonar_hp_tuning_pytorch_container
@@ -119,50 +119,22 @@ docker push $IMAGE_URI
 ```
 
 # Part 6: Submit your training job
-Creates a hptuning config file for your job request.
-```
-cat > hptuning_config.yaml <<EOF
-# hptuning_config.yaml
-trainingInput:
-  scaleTier: BASIC
-  masterConfig:
-    imageUri: $IMAGE_URI
-  hyperparameters:
-    goal: MAXIMIZE
-    maxTrials: 10
-    maxParallelTrials: 5
-    hyperparameterMetricTag: my_accuracy_tag
-    enableTrialEarlyStopping: TRUE
-    params:
-    - parameterName: epochs
-      type: INTEGER
-      minValue: 10
-      maxValue: 250
-      scaleType: UNIT_LINEAR_SCALE
-    - parameterName: lr
-      type: DOUBLE
-      minValue: 0.0001
-      maxValue: 0.1
-      scaleType: UNIT_LINEAR_SCALE
-    - parameterName: momentum
-      type: DOUBLE
-      minValue: 0.0
-      maxValue: 1.0
-      scaleType: UNIT_LINEAR_SCALE
-EOF
-```
+Open `hptuning_config.yaml` to see how to configure the hyper parameters that are passed into the
+model.
 
 Submit the training job to Cloud ML Engine using `gcloud`.
 
-Note: You may need to install gcloud alpha to submit the training job.
+Note: You may need to install gcloud beta to submit the training job.
 ```
-gcloud components install alpha
+gcloud components install beta
 ```
 ```
-gcloud alpha ml-engine jobs submit training $JOB_NAME \
+gcloud beta ml-engine jobs submit training $JOB_NAME \
   --job-dir=$JOB_DIR \
   --region=$REGION \
-  --config=hptuning_config.yaml
+  --master-image-uri $IMAGE_URI \
+  --config=hptuning_config.yaml \
+  --scale-tier BASIC
 ```
 
 # [Optional] StackDriver Logging
