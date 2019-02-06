@@ -31,19 +31,19 @@ This sample consists of two parts:
 
 Data pre-processing step involves reading data from Google Cloud BigQuery
 and converting it to
-[TFRecords](https://www.tensorflow.org/api_guides/python/python_io)
+[TFRecord](https://www.tensorflow.org/guide/datasets#consuming_tfrecord_data)
 format.
 
 ### Model Training
 
-Model training step involves taking the pre-processed TFRecords data and
+Model training step involves taking the pre-processed TFRecord data and
 training a linear classifier using Stochastic Dual Coordinate Ascent (SDCA)
 optimizer, or a deep neural network classifier.
 
 ## Data Format
 
 Above dataset is available in BigQuery and need to be transformed to
-TFRecords format for the sample code to work. Make sure to run the data through
+TFRecord format for the sample code to work. Make sure to run the data through
 the pre-processing step before you proceed to training.
 
 ## Pre-Processing Step
@@ -110,6 +110,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --staging-bucket "$BUCKET" \
   --region us-central1 \
   --config config-small.yaml \
+  --runtime-version=1.2 \
   -- \
   --model_type linear \
   --l2_regularization 3000 \
@@ -133,6 +134,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --staging-bucket "$BUCKET" \
   --region us-central1 \
   --config config-small.yaml \
+  --runtime-version=1.2 \
   -- \
   --model_type deep \
   --hidden_units 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 1062 \

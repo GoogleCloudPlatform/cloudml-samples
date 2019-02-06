@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Example dataflow pipeline for preparing image training data.
+r"""Example dataflow pipeline for preparing image training data.
 
 The tool requires two main input files:
 
@@ -459,6 +459,7 @@ def default_args(argv):
 
 
 def get_cloud_project():
+  """Get GCP cloud project information."""
   cmd = [
       'gcloud', '-q', 'config', 'list', 'project',
       '--format=value(core.project)'

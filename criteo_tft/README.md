@@ -176,6 +176,14 @@ at least 2 hours to train, and the deep model more than 8 hours. You can use
 [Tensorboard](https://www.tensorflow.org/how_tos/summaries_and_tensorboard/) to
 follow the job's progress.
 
+#### How to run Tensorboard
+
+You can run Tensorboard using the command:
+
+```
+tensorboard --logdir=$TRAINING_OUTPUT_PATH
+```
+
 ### Cloud Run for the Small Dataset
 
 You can train using either a single worker (config-single.yaml), or using
@@ -192,6 +200,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --region us-central1 \
   --config config-small.yaml \
   --async \
+  --runtime-version=1.4 \
   -- \
   --dataset kaggle \
   --model_type linear \
@@ -215,6 +224,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --region us-central1 \
   --config config-small.yaml \
   --async \
+  --runtime-version=1.4 \
   -- \
   --dataset kaggle \
   --model_type deep \
@@ -246,6 +256,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --region us-central1 \
   --config config-large.yaml \
   --async \
+  --runtime-version=1.4 \
   -- \
   --dataset large \
   --model_type linear \
@@ -273,6 +284,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --region us-central1 \
   --config config-large.yaml \
   --async \
+  --runtime-version=1.4 \
   -- \
   --dataset large \
   --model_type deep \

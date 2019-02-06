@@ -33,6 +33,10 @@ import model as model_lib
 import tensorflow as tf
 from tensorflow.python.lib.io import file_io
 
+# Path to a default checkpoint file for the Inception graph.
+DEFAULT_INCEPTION_CHECKPOINT = (
+    'gs://cloud-samples-data/ml-engine/flowers/inception_v3_2016_08_28.ckpt')
+
 
 class Evaluator(object):
   """Loads variables from latest checkpoint and performs model evaluation."""
@@ -57,7 +61,6 @@ class Evaluator(object):
                                                  self.eval_batch_size)
 
       self.summary = tf.summary.merge_all()
-
       self.saver = tf.train.Saver()
 
     self.summary_writer = tf.summary.FileWriter(self.output_path)
@@ -156,7 +159,7 @@ class Trainer(object):
     log_interval = self.args.log_interval_secs
     self.eval_interval = self.args.eval_interval_secs
     if self.is_master and self.task.index > 0:
-      raise StandardError('Only one replica of master expected')
+      raise Exception('Only one replica of master expected')
 
     if self.cluster:
       logging.info('Starting %s/%d', self.task.type, self.task.index)
@@ -300,105 +303,8 @@ class Trainer(object):
     self.sv.summary_writer.flush()
 
 
-def main(_):
-  model, argv = model_lib.create_model()
-  run(model, argv)
-
-
-def run(model, argv):
-  """Runs the training loop."""
-  parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--train_data_paths',
-      type=str,
-      action='append',
-      help='The paths to the training data files. '
-      'Can be comma separated list of files or glob pattern.')
-  parser.add_argument(
-      '--eval_data_paths',
-      type=str,
-      action='append',
-      help='The path to the files used for evaluation. '
-      'Can be comma separated list of files or glob pattern.')
-  parser.add_argument(
-      '--output_path',
-      type=str,
-      help='The path to which checkpoints and other outputs '
-      'should be saved. This can be either a local or GCS '
-      'path.')
-  parser.add_argument(
-      '--max_steps',
-      type=int,)
-  parser.add_argument(
-      '--batch_size',
-      type=int,
-      help='Number of examples to be processed per mini-batch.')
-  parser.add_argument(
-      '--eval_set_size', type=int, help='Number of examples in the eval set.')
-  parser.add_argument(
-      '--eval_batch_size', type=int, help='Number of examples per eval batch.')
-  parser.add_argument(
-      '--eval_interval_secs',
-      type=float,
-      default=5,
-      help='Minimal interval between calculating evaluation metrics and saving'
-      ' evaluation summaries.')
-  parser.add_argument(
-      '--log_interval_secs',
-      type=float,
-      default=5,
-      help='Minimal interval between logging training metrics and saving '
-      'training summaries.')
-  parser.add_argument(
-      '--write_predictions',
-      action='store_true',
-      default=False,
-      help='If set, model is restored from latest checkpoint '
-      'and predictions are written to a csv file and no training is performed.')
-  parser.add_argument(
-      '--min_train_eval_rate',
-      type=int,
-      default=20,
-      help='Minimal train / eval time ratio on master. '
-      'Default value 20 means that 20x more time is used for training than '
-      'for evaluation. If evaluation takes more time the eval_interval_secs '
-      'is increased.')
-  parser.add_argument(
-      '--write_to_tmp',
-      action='store_true',
-      default=False,
-      help='If set, all checkpoints and summaries are written to '
-      'local filesystem (/tmp/) and copied to gcs once training is done. '
-      'This can speed up training but if training job fails all the summaries '
-      'and checkpoints are lost.')
-  parser.add_argument(
-      '--copy_train_data_to_tmp',
-      action='store_true',
-      default=False,
-      help='If set, training data is copied to local filesystem '
-      '(/tmp/). This can speed up training but requires extra space on the '
-      'local filesystem.')
-  parser.add_argument(
-      '--copy_eval_data_to_tmp',
-      action='store_true',
-      default=False,
-      help='If set, evaluation data is copied to local filesystem '
-      '(/tmp/). This can speed up training but requires extra space on the '
-      'local filesystem.')
-  parser.add_argument(
-      '--streaming_eval',
-      action='store_true',
-      default=False,
-      help='If set to True the evaluation is performed in streaming mode. '
-      'During each eval cycle the evaluation data is read and parsed from '
-      'files. This allows for having very large evaluation set. '
-      'If set to False (default) evaluation data is read once and cached in '
-      'memory. This results in faster evaluation cycle but can potentially '
-      'use more memory (in streaming mode large per-file read-ahead buffer is '
-      'used - which may exceed eval data size).')
-
-  args, _ = parser.parse_known_args(argv)
-
+def train_and_evaluate(args):
+  model = model_lib.create_model(args)
   env = json.loads(os.environ.get('TF_CONFIG', '{}'))
 
   # Print the job data as provided by the service.
@@ -538,5 +444,126 @@ def model_dir(output_path):
 
 
 if __name__ == '__main__':
-  logging.basicConfig(level=logging.INFO)
-  tf.app.run()
+  parser = argparse.ArgumentParser()
+  parser.add_argument(
+    '--train_data_paths',
+    type=str,
+    action='append',
+    help='The paths to the training data files. '
+         'Can be comma separated list of files or glob pattern.')
+  parser.add_argument(
+    '--eval_data_paths',
+    type=str,
+    action='append',
+    help='The path to the files used for evaluation. '
+         'Can be comma separated list of files or glob pattern.')
+  parser.add_argument(
+    '--output_path',
+    type=str,
+    help='The path to which checkpoints and other outputs '
+         'should be saved. This can be either a local or GCS '
+         'path.')
+  parser.add_argument(
+    '--max_steps',
+    type=int,
+    default=1000)
+  parser.add_argument(
+    '--batch_size',
+    type=int,
+    default=100,
+    help='Number of examples to be processed per mini-batch.')
+  parser.add_argument(
+    '--eval_set_size',
+    type=int,
+    default=370,
+    help='Number of examples in the eval set.')
+  parser.add_argument(
+    '--eval_batch_size',
+    type=int,
+    help='Number of examples per eval batch.')
+  parser.add_argument(
+    '--eval_interval_secs',
+    type=float,
+    default=2,
+    help='Minimal interval between calculating evaluation metrics and saving'
+         ' evaluation summaries.')
+  parser.add_argument(
+    '--log_interval_secs',
+    type=float,
+    default=2,
+    help='Minimal interval between logging training metrics and saving '
+         'training summaries.')
+  parser.add_argument(
+    '--write_predictions',
+    action='store_true',
+    default=False,
+    help='If set, model is restored from latest checkpoint '
+         'and predictions are written to a csv file and no training is '
+         'performed.')
+  parser.add_argument(
+    '--min_train_eval_rate',
+    type=int,
+    default=2,
+    help='Minimal train / eval time ratio on master. '
+         'Default value 2 means that 2x more time is used for training than '
+         'for evaluation. If evaluation takes more time the eval_interval_secs '
+         'is increased.')
+  parser.add_argument(
+    '--write_to_tmp',
+    action='store_true',
+    default=False,
+    help='If set, all checkpoints and summaries are written to '
+         'local filesystem (/tmp/) and copied to gcs once training is done. '
+         'This can speed up training but if training job fails all the '
+         'summaries '
+         'and checkpoints are lost.')
+  parser.add_argument(
+    '--copy_train_data_to_tmp',
+    action='store_true',
+    default=False,
+    help='If set, training data is copied to local filesystem '
+         '(/tmp/). This can speed up training but requires extra space on the '
+         'local filesystem.')
+  parser.add_argument(
+    '--copy_eval_data_to_tmp',
+    action='store_true',
+    default=False,
+    help='If set, evaluation data is copied to local filesystem '
+         '(/tmp/). This can speed up training but requires extra space on the '
+         'local filesystem.')
+  parser.add_argument(
+    '--streaming_eval',
+    action='store_true',
+    default=False,
+    help="""If set to True the evaluation is performed in streaming mode. 
+         During each eval cycle the evaluation data is read and parsed from 
+         files. This allows for having very large evaluation set. 
+         If set to False (default) evaluation data is read once and cached in 
+         memory. This results in faster evaluation cycle but can potentially 
+         use more memory (in streaming mode large per-file read-ahead buffer 
+         is used - which may exceed eval data size).""")
+  parser.add_argument(
+    '--label_count',
+    type=int,
+    default=5)
+  parser.add_argument(
+    '--dropout',
+    type=float,
+    default=0.5)
+  parser.add_argument(
+    '--inception_checkpoint_file',
+    type=str,
+    default=DEFAULT_INCEPTION_CHECKPOINT)
+  parser.add_argument(
+    '--verbosity',
+    choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARN'],
+    default='INFO')
+
+  args, _ = parser.parse_known_args()
+
+  tf.logging.set_verbosity(args.verbosity)
+  # Set C++ Graph Execution level verbosity
+  os.environ['TF_CPP_MIN_LOG_LEVEL'] = str(
+    tf.logging.__dict__[args.verbosity] / 10)
+
+  train_and_evaluate(args)

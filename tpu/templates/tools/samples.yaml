@@ -1,0 +1,27 @@
+dense:
+  estimator: 
+    tpu_estimator
+  rewrite: 
+    tpu_rewrite
+
+lstm:
+  estimator: 
+    tpu_lstm_estimator
+  keras:
+    tpu_lstm_keras
+
+cnn:
+  estimator: 
+    tpu_cnn_estimator
+
+gan:
+  estimator: 
+    tpu_gan_estimator
+
+film:
+  estimator:
+    tpu_film_estimator
+
+grl:
+  estimator:
+    tpu_grl_estimator

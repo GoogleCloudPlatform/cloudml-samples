@@ -12,9 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Flowers Sample Cloud Runner."""
 
-"""Flowers Sample Cloud Runner.
-"""
+from __future__ import print_function
 import argparse
 import base64
 import datetime
@@ -61,7 +61,8 @@ def process_args():
       default=None,
       help='The project to which the job will be submitted.')
   parser.add_argument(
-      '--cloud', action='store_true',
+      '--cloud',
+      action='store_true',
       help='Run preprocessing on the cloud.')
   parser.add_argument(
       '--train_input_path',
@@ -290,7 +291,7 @@ class FlowersE2E(object):
         '--project', self.args.project,
     ]
 
-    print create_model_cmd
+    print(create_model_cmd)
     subprocess.check_call(create_model_cmd)
 
     submit = [
@@ -303,13 +304,13 @@ class FlowersE2E(object):
     ]
     if not model_path.startswith('gs://'):
       submit.extend(['--staging-bucket', self.args.gcs_bucket])
-    print submit
+    print(submit)
     subprocess.check_call(submit)
 
     self.adaptive_wait()
 
-    print 'Deployed %s version: %s' % (self.args.deploy_model_name,
-                                       self.args.deploy_model_version)
+    print('Deployed %s version: %s' % (self.args.deploy_model_name,
+                                       self.args.deploy_model_version))
 
   def adaptive_wait(self):
     """Waits for a model to be fully deployed.

@@ -15,7 +15,6 @@
 import argparse
 import datetime
 import os
-import random
 import subprocess
 import sys
 
@@ -112,6 +111,7 @@ class _ReadData(beam.PTransform):
 # TODO: Perhaps use Reshuffle (https://issues.apache.org/jira/browse/BEAM-1872)?
 @beam.ptransform_fn
 def _Shuffle(pcoll):  # pylint: disable=invalid-name
+  import random
   return (pcoll
           | 'PairWithRandom' >> beam.Map(lambda x: (random.random(), x))
           | 'GroupByRandom' >> beam.GroupByKey()

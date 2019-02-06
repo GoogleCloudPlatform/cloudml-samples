@@ -1,0 +1,2 @@
+tensorflow==1.10
+setuptools==39.1.0

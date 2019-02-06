@@ -22,7 +22,7 @@ declare -r PROJECT=$(gcloud config list project --format "value(core.project)")
 declare -r JOB_ID="flowers_${USER}_$(date +%Y%m%d_%H%M%S)"
 declare -r BUCKET="gs://${PROJECT}-ml"
 declare -r GCS_PATH="${BUCKET}/${USER}/${JOB_ID}"
-declare -r DICT_FILE=gs://cloud-ml-data/img/flower_photos/dict.txt
+declare -r DICT_FILE=gs://cloud-samples-data/ml-engine/flowers/dict.txt
 
 declare -r MODEL_NAME=flowers
 declare -r VERSION_NAME=v1
@@ -39,13 +39,13 @@ set -v -e
 # CPU's.  Check progress here: https://console.cloud.google.com/dataflow
 python trainer/preprocess.py \
   --input_dict "$DICT_FILE" \
-  --input_path "gs://cloud-ml-data/img/flower_photos/eval_set.csv" \
+  --input_path "gs://cloud-samples-data/ml-engine/flowers/eval_set.csv" \
   --output_path "${GCS_PATH}/preproc/eval" \
   --cloud
 
 python trainer/preprocess.py \
   --input_dict "$DICT_FILE" \
-  --input_path "gs://cloud-ml-data/img/flower_photos/train_set.csv" \
+  --input_path "gs://cloud-samples-data/ml-engine/flowers/train_set.csv" \
   --output_path "${GCS_PATH}/preproc/train" \
   --cloud
 
@@ -57,7 +57,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --package-path trainer \
   --staging-bucket "$BUCKET" \
   --region us-central1 \
-  --runtime-version=1.4 \
+  --runtime-version=1.10 \
   -- \
   --output_path "${GCS_PATH}/training" \
   --eval_data_paths "${GCS_PATH}/preproc/eval*" \
@@ -79,7 +79,7 @@ gcloud ml-engine models create "$MODEL_NAME" \
 gcloud ml-engine versions create "$VERSION_NAME" \
   --model "$MODEL_NAME" \
   --origin "${GCS_PATH}/training/model" \
-  --runtime-version=1.4
+  --runtime-version=1.10
 
 # Models do not need a default version, but its a great way move your production
 # service from one version to another with a single gcloud command.
@@ -87,7 +87,7 @@ gcloud ml-engine versions set-default "$VERSION_NAME" --model "$MODEL_NAME"
 
 # Finally, download a daisy and so we can test online prediction.
 gsutil cp \
-  gs://cloud-ml-data/img/flower_photos/daisy/100080576_f52e8ee070_n.jpg \
+  gs://cloud-samples-data/ml-engine/flowers/daisy/100080576_f52e8ee070_n.jpg \
   daisy.jpg
 
 # Since the image is passed via JSON, we have to encode the JPEG string first.

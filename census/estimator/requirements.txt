@@ -1,0 +1,4 @@
+google-cloud-dataflow
+apache-beam[gcp]
+tensorflow==1.12.0
+tensorboard==1.12.0
