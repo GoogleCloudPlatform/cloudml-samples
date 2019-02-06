@@ -118,30 +118,17 @@ docker push $IMAGE_URI
 ```
 
 # Part 6: Submit your training job
-
-Creates a config file for your job request. This tells ML Engine where to find your container.
-
-```
-cat > config.yaml <<EOF
-# config.yaml
----
-trainingInput:
-  scaleTier: BASIC
-  masterConfig:
-    imageUri: $IMAGE_URI
-EOF
-```
-
 Submit the training job to Cloud ML Engine using `gcloud`.
 
-Note: You may need to install gcloud alpha to submit the training job.
+Note: You may need to install gcloud beta to submit the training job.
 ```
-gcloud components install alpha
+gcloud components install beta
 ```
 ```
-gcloud alpha ml-engine jobs submit training $JOB_NAME \
+gcloud beta ml-engine jobs submit training $JOB_NAME \
   --region $REGION \
-  --config=config.yaml \
+  --master-image-uri $IMAGE_URI \
+  --scale-tier BASIC \
   -- \
   --model-dir=$BUCKET_ID \
   --epochs=10
