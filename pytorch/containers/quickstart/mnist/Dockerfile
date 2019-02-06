@@ -17,7 +17,7 @@ FROM python:2.7.15-jessie
 WORKDIR /root
 
 # Installs pytorch and torchvision.
-RUN pip install torch torchvision
+RUN pip install torch==1.0.0 torchvision==0.2.1
 
 # Installs cloudml-hypertune for hyperparameter tuning.
 # It’s not needed if you don’t want to do hyperparameter tuning.
