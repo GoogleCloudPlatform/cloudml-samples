@@ -45,5 +45,5 @@ RUN echo '[GoogleCompute]\nservice_account = default' > /etc/boto.cfg
 RUN mkdir /root/trainer
 COPY trainer/mnist.py /root/trainer/mnist.py
 
-# Setups the entry point to invoke the trainer.
+# Sets up the entry point to invoke the trainer.
 ENTRYPOINT ["python", "trainer/mnist.py"]
