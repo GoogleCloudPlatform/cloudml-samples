@@ -191,7 +191,7 @@ def main(args):
     from distutils.version import StrictVersion
 
     # strip off `-rc?'
-    tf_version = tf.version.VERSION.split('-')[0]
+    tf_version = tf.__version__.split('-')[0]
 
     if StrictVersion(tf_version) >= StrictVersion('1.13'):
         rollout_actions = tf.squeeze(tf.random.categorical(logits=rollout_logits, num_samples=1))
