@@ -385,7 +385,7 @@ def main(args):
 
         # TODO: split the updating step into a separate thread
 
-    def run_update(update_queue)
+    def run_update(update_queue):
         while thread.do_work:
             if not update_queue.empty():
                 start_time = time.time()
