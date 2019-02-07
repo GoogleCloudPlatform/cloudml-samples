@@ -199,13 +199,20 @@ def main(args):
         rollout_actions = tf.squeeze(tf.random.multinomial(logits=rollout_logits, num_samples=1))
 
     # placeholders and ops for updating after rollout
-    features_var_ph = tf.placeholder(dtype=features_var.dtype, shape=features_var.shape)
-    actions_var_ph = tf.placeholder(dtype=actions_var.dtype, shape=actions_var.shape)
-    rewards_var_ph = tf.placeholder(dtype=rewards_var.dtype, shape=rewards_var.shape)
+    # features_var_ph = tf.placeholder(dtype=features_var.dtype, shape=features_var.shape)
+    # actions_var_ph = tf.placeholder(dtype=actions_var.dtype, shape=actions_var.shape)
+    # rewards_var_ph = tf.placeholder(dtype=rewards_var.dtype, shape=rewards_var.shape)
+    features_var_ph = tf.placeholder(dtype=features_var.dtype, shape=[ROLLOUT_LENGTH, FEATURE_SIZE])
+    actions_var_ph = tf.placeholder(dtype=actions_var.dtype, shape=[ROLLOUT_LENGTH])
+    rewards_var_ph = tf.placeholder(dtype=rewards_var.dtype, shape=[ROLLOUT_LENGTH])
 
-    update_features_op = tf.assign(features_var, features_var_ph)
-    update_actions_op = tf.assign(actions_var, actions_var_ph)
-    update_rewareds_op = tf.assign(rewards_var, rewards_var_ph)
+    new_f = tf.concat([features_var[ROLLOUT_LENGTH:], features_var_ph])
+    new_a = tf.concat([actions_var[ROLLOUT_LENGTH:], actions_var_ph])
+    new_r = tf.concat([rewards_var[ROLLOUT_LENGTH:], rewards_var_ph])
+
+    update_features_op = tf.assign(features_var, new_f)
+    update_actions_op = tf.assign(actions_var, new_a)
+    update_rewareds_op = tf.assign(rewards_var, new_r)
 
 
     # rollout_actions = tf.squeeze(tf.random.multinomial(logits=rollout_logits, num_samples=1))
@@ -382,11 +389,13 @@ def main(args):
         batch_rewards /= np.std(batch_rewards)
 
         fv, av, rv = sess.run([features_var, actions_var, rewards_var])
-        new_fv = np.concatenate([fv[ROLLOUT_LENGTH:], batch_features[-ROLLOUT_LENGTH:]])
-        new_av = np.concatenate([av[ROLLOUT_LENGTH:], batch_actions[-ROLLOUT_LENGTH:]])
-        new_rv = np.concatenate([rv[ROLLOUT_LENGTH:], batch_rewards[-ROLLOUT_LENGTH:]])
+        # new_fv = np.concatenate([fv[ROLLOUT_LENGTH:], batch_features[-ROLLOUT_LENGTH:]])
+        # new_av = np.concatenate([av[ROLLOUT_LENGTH:], batch_actions[-ROLLOUT_LENGTH:]])
+        # new_rv = np.concatenate([rv[ROLLOUT_LENGTH:], batch_rewards[-ROLLOUT_LENGTH:]])
 
-        sess.run([update_features_op, update_actions_op, update_rewareds_op], {features_var_ph: new_fv, actions_var_ph: new_av, rewards_var_ph: new_rv})
+        # sess.run([update_features_op, update_actions_op, update_rewareds_op], {features_var_ph: new_fv, actions_var_ph: new_av, rewards_var_ph: new_rv})
+
+        sess.run([update_features_op, update_actions_op, update_rewareds_op], {features_var_ph: batch_features[-ROLLOUT_LENGTH:], actions_var_ph: batch_actions[-ROLLOUT_LENGTH:], rewards_var_ph: batch_rewards[-ROLLOUT_LENGTH:]})
         print('updated experience, {}'.format(time.time() - end_time))
 
     tpu_queue = Queue(maxsize=0)
