@@ -43,7 +43,7 @@ ACTIONS = [0, 2, 3]
 ROLLOUT_LENGTH = 1024
 
 # the number of rollouts needed to fill up the experience cache
-N_ROLLOUTS = 64
+N_ROLLOUTS = 32
 EXPERIENCE_LENGTH = ROLLOUT_LENGTH * N_ROLLOUTS
 
 # helper taken from: # https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5
@@ -359,7 +359,8 @@ def main(args):
 
             step_features = state_to_features(state)
 
-        print('>>>>>>> collected {} steps, {}'.format(len(batch_features), time.time() - start_time))
+        end_time = time.time()
+        print('>>>>>>> collected {} steps, {}'.format(len(batch_features), end_time - start_time))
 
         # udpate experience variables
         batch_features = np.array(batch_features).squeeze()
@@ -386,6 +387,7 @@ def main(args):
         new_rv = np.concatenate([rv[ROLLOUT_LENGTH:], batch_rewards[-ROLLOUT_LENGTH:]])
 
         sess.run([update_features_op, update_actions_op, update_rewareds_op], {features_var_ph: new_fv, actions_var_ph: new_av, rewards_var_ph: new_rv})
+        print('updated experience, {}'.format(time.time() - end_time))
 
     tpu_queue = Queue(maxsize=0)
     input_queue = Queue(maxsize=0)
