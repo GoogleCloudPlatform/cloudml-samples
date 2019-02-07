@@ -206,9 +206,9 @@ def main(args):
     actions_var_ph = tf.placeholder(dtype=actions_var.dtype, shape=[ROLLOUT_LENGTH])
     rewards_var_ph = tf.placeholder(dtype=rewards_var.dtype, shape=[ROLLOUT_LENGTH])
 
-    new_f = tf.concat([features_var[ROLLOUT_LENGTH:], features_var_ph])
-    new_a = tf.concat([actions_var[ROLLOUT_LENGTH:], actions_var_ph])
-    new_r = tf.concat([rewards_var[ROLLOUT_LENGTH:], rewards_var_ph])
+    new_f = tf.concat([features_var[ROLLOUT_LENGTH:], features_var_ph], axis=0)
+    new_a = tf.concat([actions_var[ROLLOUT_LENGTH:], actions_var_ph], axis=0)
+    new_r = tf.concat([rewards_var[ROLLOUT_LENGTH:], rewards_var_ph], axis=0)
 
     update_features_op = tf.assign(features_var, new_f)
     update_actions_op = tf.assign(actions_var, new_a)
