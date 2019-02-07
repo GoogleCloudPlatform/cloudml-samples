@@ -388,7 +388,7 @@ def main(args):
         batch_rewards -= np.mean(batch_rewards)
         batch_rewards /= np.std(batch_rewards)
 
-        fv, av, rv = sess.run([features_var, actions_var, rewards_var])
+        # fv, av, rv = sess.run([features_var, actions_var, rewards_var])
         # new_fv = np.concatenate([fv[ROLLOUT_LENGTH:], batch_features[-ROLLOUT_LENGTH:]])
         # new_av = np.concatenate([av[ROLLOUT_LENGTH:], batch_actions[-ROLLOUT_LENGTH:]])
         # new_rv = np.concatenate([rv[ROLLOUT_LENGTH:], batch_rewards[-ROLLOUT_LENGTH:]])
