@@ -380,12 +380,13 @@ def main(args):
 
         print('>>>>>>> collected {} steps, {}'.format(len(batch_features), time.time() - start_time))
 
-        udpate_queue.put((batch_features, batch_actions, batch_rewards))
+        update_queue.put((batch_features, batch_actions, batch_rewards))
 
 
         # TODO: split the updating step into a separate thread
 
     def run_update(update_queue):
+        thread = threading.currentThread()
         while thread.do_work:
             if not update_queue.empty():
                 start_time = time.time()
@@ -475,7 +476,7 @@ def main(args):
     infeed_thread.join()
     outfeed_thread.join()
     tpu_thread.join()
-    udpate_thread.join()
+    update_thread.join()
 
     sess.run(tpu_shutdown)
 
