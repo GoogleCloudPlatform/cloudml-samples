@@ -43,7 +43,7 @@ ACTIONS = [0, 2, 3]
 ROLLOUT_LENGTH = 1024
 
 # the number of rollouts needed to fill up the experience cache
-N_ROLLOUTS = 32
+N_ROLLOUTS = 64
 EXPERIENCE_LENGTH = ROLLOUT_LENGTH * N_ROLLOUTS
 
 # helper taken from: # https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5
@@ -280,7 +280,7 @@ def main(args):
         thread = threading.currentThread()
         while thread.do_work:
             if input_queue.empty():
-                time.sleep(2)
+                time.sleep(1)
             else:
                 i = input_queue.get()
 
@@ -331,7 +331,7 @@ def main(args):
     env = suite_gym.load('Pong-v0')
 
     # In the main thread, interact with th environment and collect data into the experience variables.
-    def run_rollout(on_policy=False):
+    def run_rollout(update_queue, on_policy=False):
         start_time = time.time()
 
         ts = env.reset()
@@ -378,40 +378,51 @@ def main(args):
 
             step_features = state_to_features(state)
 
-        end_time = time.time()
-        print('>>>>>>> collected {} steps, {}'.format(len(batch_features), end_time - start_time))
+        print('>>>>>>> collected {} steps, {}'.format(len(batch_features), time.time() - start_time))
 
-        # udpate experience variables
-        batch_features = np.array(batch_features).squeeze()
-        batch_actions = np.array(batch_actions)
-        batch_rewards = np.array(batch_rewards)
+        udpate_queue.put((batch_features, batch_actions, batch_rewards))
 
-        # for debugging:
-        # print(batch_actions)
-        # print(batch_logits)
-        sum_reward = batch_rewards.sum()
-        print('>>>>>>> {}'.format(sum_reward))
 
-        # summary, gs = sess.run([merged, tf.train.get_or_create_global_step()], feed_dict={summary_reward: sum_reward})
-        # summary_writer.add_summary(summary, gs)
+        # TODO: split the updating step into a separate thread
 
-        # process the rewards
-        batch_rewards = discount_rewards(batch_rewards, 0.95)
-        batch_rewards -= np.mean(batch_rewards)
-        batch_rewards /= np.std(batch_rewards)
+    def run_update(update_queue)
+        while thread.do_work:
+            if not update_queue.empty():
+                start_time = time.time()
 
-        # fv, av, rv = sess.run([features_var, actions_var, rewards_var])
-        # new_fv = np.concatenate([fv[ROLLOUT_LENGTH:], batch_features[-ROLLOUT_LENGTH:]])
-        # new_av = np.concatenate([av[ROLLOUT_LENGTH:], batch_actions[-ROLLOUT_LENGTH:]])
-        # new_rv = np.concatenate([rv[ROLLOUT_LENGTH:], batch_rewards[-ROLLOUT_LENGTH:]])
+                batch_features, batch_actions, batch_rewards = update_queue.get()
 
-        # sess.run([update_features_op, update_actions_op, update_rewareds_op], {features_var_ph: new_fv, actions_var_ph: new_av, rewards_var_ph: new_rv})
+                batch_features = np.array(batch_features).squeeze()
+                batch_actions = np.array(batch_actions)
+                batch_rewards = np.array(batch_rewards)
 
-        sess.run([update_features_op, update_actions_op, update_rewareds_op], {features_var_ph: batch_features[-ROLLOUT_LENGTH:], actions_var_ph: batch_actions[-ROLLOUT_LENGTH:], rewards_var_ph: batch_rewards[-ROLLOUT_LENGTH:]})
-        print('updated experience, {}'.format(time.time() - end_time))
+                # for debugging:
+                # print(batch_actions)
+                # print(batch_logits)
+                sum_reward = batch_rewards.sum()
+                print('>>>>>>> {}'.format(sum_reward))
+
+                # summary, gs = sess.run([merged, tf.train.get_or_create_global_step()], feed_dict={summary_reward: sum_reward})
+                # summary_writer.add_summary(summary, gs)
+
+                # process the rewards
+                batch_rewards = discount_rewards(batch_rewards, 0.95)
+                batch_rewards -= np.mean(batch_rewards)
+                batch_rewards /= np.std(batch_rewards)
+
+                # fv, av, rv = sess.run([features_var, actions_var, rewards_var])
+                # new_fv = np.concatenate([fv[ROLLOUT_LENGTH:], batch_features[-ROLLOUT_LENGTH:]])
+                # new_av = np.concatenate([av[ROLLOUT_LENGTH:], batch_actions[-ROLLOUT_LENGTH:]])
+                # new_rv = np.concatenate([rv[ROLLOUT_LENGTH:], batch_rewards[-ROLLOUT_LENGTH:]])
+
+                # sess.run([update_features_op, update_actions_op, update_rewareds_op], {features_var_ph: new_fv, actions_var_ph: new_av, rewards_var_ph: new_rv})
+
+                sess.run([update_features_op, update_actions_op, update_rewareds_op], {features_var_ph: batch_features[-ROLLOUT_LENGTH:], actions_var_ph: batch_actions[-ROLLOUT_LENGTH:], rewards_var_ph: batch_rewards[-ROLLOUT_LENGTH:]})
+                print('updated experience, {}'.format(time.time() - start_time))
 
     tpu_queue = Queue(maxsize=0)
     input_queue = Queue(maxsize=0)
+    update_queue = Queue(maxsize=0)
 
     infeed_thread = threading.Thread(target=_run_infeed1, args=(input_queue,))
     infeed_thread.do_work = True
@@ -421,26 +432,34 @@ def main(args):
     tpu_thread = threading.Thread(target=_run_tpu_computation, args=(tpu_queue,))
     tpu_thread.do_work = True
 
+    update_thread = threading.Thread(target=run_update, args=(update_queue,))
+    update_thread.do_work = True
+
     sess.run(tpu_init)
     sess.run(variables_init)
     sess.run(ds_init)
 
+    update_thread.start()
+
     # fill up the experience buffer
     for _ in range(N_ROLLOUTS):
-        run_rollout(on_policy=False)
+        run_rollout(update_queue, on_policy=False)
 
     input_queue.put(-1)
 
     infeed_thread.start()
     outfeed_thread.start()
     tpu_thread.start()
+    
 
     for i in range(args.num_loops):
         print('Iteration: {}'.format(i))
 
         tpu_queue.put(i)
         input_queue.put(i)
-        run_rollout(on_policy=True)
+
+        # run_rollout adds to update_queue
+        run_rollout(update_queue, on_policy=True)
 
         gs = sess.run(tf.train.get_or_create_global_step())
 
@@ -449,12 +468,14 @@ def main(args):
 
     tpu_thread.do_work = False
     infeed_thread.do_work = False
+    update_thread.do_work = False
 
     # input_queue.join()
     # tpu_queue.join()
     infeed_thread.join()
     outfeed_thread.join()
     tpu_thread.join()
+    udpate_thread.join()
 
     sess.run(tpu_shutdown)
 
@@ -487,7 +508,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--train-batch-size',
         type=int,
-        default=8192,
+        default=16384,
         help='The training batch size.  The training batch is divided evenly across the TPU cores.')
     parser.add_argument(
         '--tpu',
