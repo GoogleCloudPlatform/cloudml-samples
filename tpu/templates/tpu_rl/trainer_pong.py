@@ -187,7 +187,16 @@ def main(args):
     # Batch size of 1 for rollout against a single environment.
     features_ph = tf.placeholder(dtype=tf.float32, shape=(1, FEATURE_SIZE)) 
     rollout_logits = policy(features_ph)
-    rollout_actions = tf.squeeze(tf.random.categorical(logits=rollout_logits, num_samples=1))
+
+    from distutils.version import StrictVersion
+
+    # strip off `-rc?'
+    tf_version = tf.version.VERSION.split('-')[0]
+
+    if StrictVersion(tf_version) >= StrictVersion('1.13'):
+        rollout_actions = tf.squeeze(tf.random.categorical(logits=rollout_logits, num_samples=1))
+    else:
+        rollout_actions = tf.squeeze(tf.random.multinomial(logits=rollout_logits, num_samples=1))
 
     # placeholders and ops for updating after rollout
     features_var_ph = tf.placeholder(dtype=features_var.dtype, shape=features_var.shape)
