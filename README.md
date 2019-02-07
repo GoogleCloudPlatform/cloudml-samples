@@ -44,6 +44,12 @@ Notebook Tutorial:
 * [scikit-learn: Lasso Regressor](sklearn/notebooks/hp_tuning_auto_mpg/ml_engine_hp_tuning_training.ipynb) - How to train a Lasso Regressor in scikit-learn using a text based dataset, auto mpg, to predict a car's miles per gallon.
 * [XGBoost: XGBRegressor](xgboost/notebooks/XGBoost&#32;Hyperparameter&#32;Tuning.ipynb) - How to train a Regressor in XGBoost using a text based dataset, auto mpg, to predict a car's miles per gallon.
 
+### Containers
+* [Keras: Sequential / Dense](tensorflow/containers/unsupported_runtime) - How to train a Keras model using the Nightly Build of TensorFlow on ML Engine using a structured dataset, sonar signals, to predict whether the given sonar signals are bouncing off a metal cylinder or off a cylindrical rock.
+* [PyTorch: Deep Neural Network](pytorch/containers/quickstart) - How to train a PyTorch model on ML Engine using a custom container with a image dataset, mnist, to classify handwritten digits.
+* [PyTorch: Sequential](pytorch/containers/custom_container) - How to train a PyTorch model on ML Engine using a custom container with a structured dataset, sonar signals, to predict whether the given sonar signals are bouncing off a metal cylinder or off a cylindrical rock.
+* [PyTorch: Sequential / HP Tuning](pytorch/containers/hp_tuning) - How to train a PyTorch model on ML Engine using a custom container and Hyperparameter Tuning with a structured dataset, sonar signals, to predict whether the given sonar signals are bouncing off a metal cylinder or off a cylindrical rock.
+
 # Model Serving (Online Predictions)
 
 Notebook Tutorial:
