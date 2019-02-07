@@ -36,6 +36,7 @@ RUN wget -nv \
     ln -s /root/.config /config && \
     # Remove the backup directory that gcloud creates
     rm -rf /root/tools/google-cloud-sdk/.install/.backup
+
 # Path configuration
 ENV PATH $PATH:/root/tools/google-cloud-sdk/bin
 # Make sure gsutil will use the default service account
