@@ -43,7 +43,7 @@ ACTIONS = [0, 2, 3]
 ROLLOUT_LENGTH = 1024
 
 # the number of rollouts needed to fill up the experience cache
-N_ROLLOUTS = 10
+N_ROLLOUTS = 64
 EXPERIENCE_LENGTH = ROLLOUT_LENGTH * N_ROLLOUTS
 
 # helper taken from: # https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5
@@ -312,7 +312,7 @@ def main(args):
     env = suite_gym.load('Pong-v0')
 
     # In the main thread, interact with th environment and collect data into the experience variables.
-    def run_rollout():
+    def run_rollout(on_policy=False):
         start_time = time.time()
 
         ts = env.reset()
@@ -335,7 +335,10 @@ def main(args):
             # step_actions = sess.run(rollout_actions, {features_ph: step_features})
 
             # for debugging
-            [step_actions, step_logits] = sess.run([rollout_actions, rollout_logits], {features_ph: step_features})
+            if on_policy:
+                [step_actions, step_logits] = sess.run([rollout_actions, rollout_logits], {features_ph: step_features})
+            else:
+                step_actions = random.randint(0, 2)
 
             env_action = action_to_env_action(step_actions)
 
@@ -400,8 +403,9 @@ def main(args):
     sess.run(variables_init)
     sess.run(ds_init)
 
+    # fill up the experience buffer
     for _ in range(N_ROLLOUTS):
-        run_rollout()
+        run_rollout(on_policy=False)
 
     input_queue.put(-1)
 
@@ -414,7 +418,7 @@ def main(args):
 
         tpu_queue.put(i)
         input_queue.put(i)
-        run_rollout()
+        run_rollout(on_policy=True)
 
         gs = sess.run(tf.train.get_or_create_global_step())
 
