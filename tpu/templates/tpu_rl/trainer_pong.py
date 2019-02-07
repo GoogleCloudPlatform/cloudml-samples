@@ -23,7 +23,6 @@ import numpy as np
 import os
 import random
 import time
-import threading
 import datetime
 
 import tensorflow as tf
@@ -32,7 +31,11 @@ from tensorflow.contrib.cluster_resolver import TPUClusterResolver
 from tf_agents.environments import suite_gym
 # from tf_agents.environments import tf_py_environment
 
-from Queue import Queue
+# import threading
+# from Queue import Queue
+
+import multiprocessing
+from multiprocessing import Process, Queue
 
 # Using the first channel of state downsampled by a factor of 2 as features
 FEATURE_SIZE = 80 * 80
@@ -277,7 +280,10 @@ def main(args):
                 print('infeed {}'.format(i))
 
     def _run_infeed1(input_queue):
-        thread = threading.currentThread()
+        # thread = threading.currentThread()
+
+        thread = multiprocessing.current_process()
+
         while thread.do_work:
             if input_queue.empty():
                 time.sleep(1)
@@ -303,7 +309,9 @@ def main(args):
 
 
     def _run_tpu_computation(tpu_queue):
-        thread = threading.currentThread()
+        # thread = threading.currentThread()
+
+        thread = multiprocessing.current_process()
         while thread.do_work:
             if not tpu_queue.empty():
                 v = tpu_queue.get()
@@ -386,7 +394,9 @@ def main(args):
         # TODO: split the updating step into a separate thread
 
     def run_update(update_queue):
-        thread = threading.currentThread()
+        # thread = threading.currentThread()
+
+        thread = multiprocessing.current_process()
         while thread.do_work:
             if not update_queue.empty():
                 start_time = time.time()
@@ -427,16 +437,32 @@ def main(args):
     input_queue = Queue(maxsize=0)
     update_queue = Queue(maxsize=0)
 
-    infeed_thread = threading.Thread(target=_run_infeed1, args=(input_queue,))
+
+    # TODO: use multiprocessing instead
+    # infeed_thread = threading.Thread(target=_run_infeed1, args=(input_queue,))
+    # infeed_thread.do_work = True
+
+    # outfeed_thread = threading.Thread(target=_run_outfeed)
+
+    # tpu_thread = threading.Thread(target=_run_tpu_computation, args=(tpu_queue,))
+    # tpu_thread.do_work = True
+
+    # update_thread = threading.Thread(target=run_update, args=(update_queue,))
+    # update_thread.do_work = True
+
+
+    infeed_thread = Process(target=_run_infeed1, args=(input_queue,))
     infeed_thread.do_work = True
 
-    outfeed_thread = threading.Thread(target=_run_outfeed)
+    outfeed_thread = Process(target=_run_outfeed)
 
-    tpu_thread = threading.Thread(target=_run_tpu_computation, args=(tpu_queue,))
+    tpu_thread = Process(target=_run_tpu_computation, args=(tpu_queue,))
     tpu_thread.do_work = True
 
-    update_thread = threading.Thread(target=run_update, args=(update_queue,))
+    update_thread = Process(target=run_update, args=(update_queue,))
     update_thread.do_work = True
+
+
 
     sess.run(tpu_init)
     sess.run(variables_init)
