@@ -337,6 +337,8 @@ def main(args):
             # for debugging
             if on_policy:
                 [step_actions, step_logits] = sess.run([rollout_actions, rollout_logits], {features_ph: step_features})
+                # for debugging
+                batch_logits.append(step_logits)
             else:
                 step_actions = random.randint(0, 2)
 
@@ -350,9 +352,6 @@ def main(args):
             batch_features.append(step_features)
             batch_actions.append(step_actions)
             batch_rewards.append(reward)
-
-            # for debugging
-            batch_logits.append(step_logits)
 
             if done:
                 ts = env.reset()
