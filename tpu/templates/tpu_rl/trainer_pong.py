@@ -43,7 +43,7 @@ ACTIONS = [0, 2, 3]
 ROLLOUT_LENGTH = 1024
 
 # the number of rollouts needed to fill up the experience cache
-N_ROLLOUTS = 64
+N_ROLLOUTS = 32
 EXPERIENCE_LENGTH = ROLLOUT_LENGTH * N_ROLLOUTS
 
 # helper taken from: # https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5
@@ -420,6 +420,8 @@ def main(args):
 
                 sess.run([update_features_op, update_actions_op, update_rewareds_op], {features_var_ph: batch_features[-ROLLOUT_LENGTH:], actions_var_ph: batch_actions[-ROLLOUT_LENGTH:], rewards_var_ph: batch_rewards[-ROLLOUT_LENGTH:]})
                 print('updated experience, {}'.format(time.time() - start_time))
+
+                update_queue.task_done()
 
     tpu_queue = Queue(maxsize=0)
     input_queue = Queue(maxsize=0)
