@@ -206,13 +206,24 @@ def main(args):
     actions_var_ph = tf.placeholder(dtype=actions_var.dtype, shape=[ROLLOUT_LENGTH])
     rewards_var_ph = tf.placeholder(dtype=rewards_var.dtype, shape=[ROLLOUT_LENGTH])
 
-    new_f = tf.concat([features_var[ROLLOUT_LENGTH:], features_var_ph], axis=0)
-    new_a = tf.concat([actions_var[ROLLOUT_LENGTH:], actions_var_ph], axis=0)
-    new_r = tf.concat([rewards_var[ROLLOUT_LENGTH:], rewards_var_ph], axis=0)
 
-    update_features_op = tf.assign(features_var, new_f)
-    update_actions_op = tf.assign(actions_var, new_a)
-    update_rewareds_op = tf.assign(rewards_var, new_r)
+    # TODO: replace a random segment of experience with sliced assign
+    # NOTE: this isn't really uniformly selecting the slice
+    replace_start = tf.random.uniform(shape=(), minval=0, maxval=EXPERIENCE_LENGTH-ROLLOUT_LENGTH, dtype=tf.float32)
+    replace_end = replace_start + ROLLOUT_LENGTH
+
+    update_features_op = tf.assign(features_var[replace_start:replace_end], features_var_ph)
+    update_actions_op = tf.assign(actions_var[replace_start:replace_end], actions_var_ph)
+    update_rewareds_op = tf.assign(rewards_var[replace_start:replace_end], rewards_var_ph)
+
+
+    # new_f = tf.concat([features_var[ROLLOUT_LENGTH:], features_var_ph], axis=0)
+    # new_a = tf.concat([actions_var[ROLLOUT_LENGTH:], actions_var_ph], axis=0)
+    # new_r = tf.concat([rewards_var[ROLLOUT_LENGTH:], rewards_var_ph], axis=0)
+
+    # update_features_op = tf.assign(features_var, new_f)
+    # update_actions_op = tf.assign(actions_var, new_a)
+    # update_rewareds_op = tf.assign(rewards_var, new_r)
 
 
     # rollout_actions = tf.squeeze(tf.random.multinomial(logits=rollout_logits, num_samples=1))
