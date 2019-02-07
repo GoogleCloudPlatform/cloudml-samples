@@ -209,7 +209,8 @@ def main(args):
 
     # TODO: replace a random segment of experience with sliced assign
     # NOTE: this isn't really uniformly selecting the slice
-    replace_start = tf.random.uniform(shape=(), minval=0, maxval=EXPERIENCE_LENGTH-ROLLOUT_LENGTH, dtype=tf.float32)
+    # replace_start = tf.random.uniform(shape=(), minval=0, maxval=EXPERIENCE_LENGTH-ROLLOUT_LENGTH, dtype=tf.float32)
+    replace_start = 0
     replace_end = replace_start + ROLLOUT_LENGTH
 
     update_features_op = tf.assign(features_var[replace_start:replace_end], features_var_ph)
