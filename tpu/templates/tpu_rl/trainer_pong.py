@@ -43,7 +43,7 @@ ACTIONS = [0, 2, 3]
 ROLLOUT_LENGTH = 1024
 
 # the number of rollouts needed to fill up the experience cache
-N_ROLLOUTS = 32
+N_ROLLOUTS = 128
 EXPERIENCE_LENGTH = ROLLOUT_LENGTH * N_ROLLOUTS
 
 # helper taken from: # https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5
@@ -402,6 +402,9 @@ def main(args):
                 # print(batch_logits)
                 sum_reward = batch_rewards.sum()
                 print('>>>>>>> {}'.format(sum_reward))
+
+                with open('reward.txt', 'a') as f:
+                    f.write('{},{}\n'.format(len(batch_features),sum_reward))
 
                 # summary, gs = sess.run([merged, tf.train.get_or_create_global_step()], feed_dict={summary_reward: sum_reward})
                 # summary_writer.add_summary(summary, gs)
