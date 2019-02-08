@@ -43,7 +43,7 @@ ACTIONS = [0, 2, 3]
 ROLLOUT_LENGTH = 1024
 
 # the number of rollouts needed to fill up the experience cache
-N_ROLLOUTS = 128
+N_ROLLOUTS = 64
 EXPERIENCE_LENGTH = ROLLOUT_LENGTH * N_ROLLOUTS
 
 # helper taken from: # https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5
