@@ -279,9 +279,7 @@ def main(args):
     def _run_infeed1(input_queue):
         thread = threading.currentThread()
         while thread.do_work:
-            if input_queue.empty():
-                time.sleep(1)
-            else:
+            if not input_queue.empty():
                 i = input_queue.get()
 
                 if i % args.save_checkpoints_steps == 0:
