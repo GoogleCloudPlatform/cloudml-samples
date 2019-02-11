@@ -289,6 +289,8 @@ def main(args):
                     sess.run(infeed_ops)
 
                 input_queue.task_done()
+            else:
+                time.sleep(1)
 
 
     def _run_outfeed():
@@ -309,6 +311,8 @@ def main(args):
                 print('tpu computation: {}'.format(v))
 
                 tpu_queue.task_done()
+            else:
+                time.sleep(1)
 
     # https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5
     def state_to_features(state):
@@ -469,7 +473,9 @@ def main(args):
 
         gs = sess.run(tf.train.get_or_create_global_step())
 
-        if i % args.save_checkpoints_steps == 0:
+        # if i % args.save_checkpoints_steps == 0:
+        if i % 500 == 0:
+            print('saving checkpoint')
             saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=gs)
 
     tpu_thread.do_work = False
@@ -509,7 +515,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--save-checkpoints-steps',
         type=int,
-        default=500,
+        default=10,
         help='The number of training steps before saving each checkpoint.')
     parser.add_argument(
         '--train-batch-size',
