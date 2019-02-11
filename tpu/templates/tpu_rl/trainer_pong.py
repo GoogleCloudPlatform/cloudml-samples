@@ -504,17 +504,17 @@ if __name__ == '__main__':
     parser.add_argument(
         '--num-loops',
         type=int,
-        default=100,
+        default=6000,
         help='The number of times switching to CPU.')
     parser.add_argument(
         '--save-checkpoints-steps',
         type=int,
-        default=10,
+        default=500,
         help='The number of training steps before saving each checkpoint.')
     parser.add_argument(
         '--train-batch-size',
         type=int,
-        default=16384,
+        default=8192,
         help='The training batch size.  The training batch is divided evenly across the TPU cores.')
     parser.add_argument(
         '--tpu',
