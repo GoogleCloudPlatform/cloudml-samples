@@ -19,7 +19,7 @@ JOB_NAME=train_${MODEL_NAME}_${TIER}_${CURRENT_DATE}
 
 gcloud ml-engine jobs submit training ${JOB_NAME} \
         --job-dir=${MODEL_DIR} \
-        --runtime-version=1.4 \
+        --runtime-version=1.12 \
         --region=${REGION} \
         --scale-tier=${TIER} \
         --module-name=trainer.task \
