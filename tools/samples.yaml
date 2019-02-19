@@ -102,3 +102,9 @@ tpu-templates-tpu-infeed-outfeed:
     tpu/templates/tpu_rewrite
   filename:
     trainer_infeed_outfeed.py
+
+tpu-templates-tpu-triplet-loss-estimator:
+  path:
+    tpu/templates/tpu_triplet_loss_estimator
+  filename:
+    trainer.py
