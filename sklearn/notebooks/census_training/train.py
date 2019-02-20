@@ -5,7 +5,7 @@ import pandas as pd
 from google.cloud import storage
 
 from sklearn.ensemble import RandomForestClassifier
-import joblib
+from sklearn.externals import joblib
 from sklearn.feature_selection import SelectKBest
 from sklearn.pipeline import FeatureUnion
 from sklearn.pipeline import Pipeline

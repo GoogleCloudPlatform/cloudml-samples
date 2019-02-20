@@ -8,7 +8,7 @@ import subprocess
 import sys
 import pandas as pd
 from sklearn import svm
-import joblib
+from sklearn.externals import joblib
 
 # Fill in your Cloud Storage bucket name
 BUCKET_NAME = '<YOUR_BUCKET_NAME>'
