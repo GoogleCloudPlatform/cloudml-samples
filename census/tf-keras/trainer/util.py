@@ -26,9 +26,9 @@ import tensorflow as tf
 DATA_DIR = os.path.join(tempfile.gettempdir(), 'census_data')
 
 # Download options.
-DATA_URL = 'https://archive.ics.uci.edu/ml/machine-learning-databases/adult'
-TRAINING_FILE = 'adult.data'
-EVAL_FILE = 'adult.test'
+DATA_URL = 'https://storage.googleapis.com/cloud-samples-data/ml-engine/census/data'
+TRAINING_FILE = 'adult.data.csv'
+EVAL_FILE = 'adult.test.csv'
 TRAINING_URL = '%s/%s' % (DATA_URL, TRAINING_FILE)
 EVAL_URL = '%s/%s' % (DATA_URL, EVAL_FILE)
 
