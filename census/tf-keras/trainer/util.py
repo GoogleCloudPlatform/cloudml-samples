@@ -156,25 +156,24 @@ def preprocess(dataframe):
   dataframe[cat_columns] = dataframe[cat_columns].apply(lambda x: x.cat.codes)
   return dataframe
 
-
-def preprocess_csv(csv_filename):
-  """Loads a CSV into a dataframe and preprocesses it for our model.
-  
-  Can be used to load training/eval data, or test data used for prediction.
+def standardize(dataframe):
+  """Scales numerical columns using their means and standard deviation to get
+  z-scores: the mean of each numerical column becomes 0, and the standard
+  deviation becomes 1. This can help the model converge during training.
 
   Args:
-    csv_filename: Path to a CSV file to load with Pandas and preprocess
-
+    dataframe: Pandas dataframe
+  
   Returns:
-    Dataframe with preprocessed data
+    Input dataframe with the numerical columns scaled to z-scores
   """
-  # This census data uses the value '?' for fields (column) that are missing
-  # data. We use na_values to find ? and set it to NaN values.
-  # https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html
-  dataframe = pd.read_csv(csv_filename, names=_CSV_COLUMNS, na_values='?',
-    sep=r'\s*,\s*', engine='python')
-  return preprocess(dataframe)
-
+  dtypes = list(zip(dataframe.dtypes.index, map(str, dataframe.dtypes)))
+  # Normalize numeric columns.
+  for column, dtype in dtypes:
+      if dtype == 'float32':
+          dataframe[column] -= dataframe[column].mean()
+          dataframe[column] /= dataframe[column].std()
+  return dataframe
 
 def load_data():
   """Loads data into preprocessed (train_x, train_y, eval_y, eval_y) dataframes.
@@ -187,16 +186,27 @@ def load_data():
   # Download Census dataset: Training and eval csv files.
   training_file_path, eval_file_path = download(DATA_DIR)
 
-  train_df = preprocess_csv(training_file_path)
-  eval_df = preprocess_csv(eval_file_path)
+  # This census data uses the value '?' for missing entries. We use na_values to
+  # find ? and set it to NaN.
+  # https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html
+  train_df = pd.read_csv(training_file_path, names=_CSV_COLUMNS, na_values='?')
+  eval_df = pd.read_csv(eval_file_path, names=_CSV_COLUMNS, na_values='?')
 
-  # Split train and eval data with labels.
-  # The pop() method will extract (copy) and remove the label column from the
-  # dataframe
+  train_df = preprocess(train_df)
+  eval_df = preprocess(eval_df)
+
+  # Split train and eval data with labels. The pop method copies and removes
+  # the label column from the dataframe.
   train_x, train_y = train_df, train_df.pop(_LABEL_COLUMN)
   eval_x, eval_y = eval_df, eval_df.pop(_LABEL_COLUMN)
 
-  # Reshape Label for Dataset.
+  # Join train_x and eval_x to normalize on overall means and standard
+  # deviations. Then separate them again.
+  all_x = pd.concat([train_x, eval_x], keys=['train', 'eval'])
+  all_x = standardize(all_x)
+  train_x, eval_x = all_x.xs('train'), all_x.xs('eval')
+
+  # Reshape label columns for use with tf.data.Dataset
   train_y = np.asarray(train_y).astype('float32').reshape((-1, 1))
   eval_y = np.asarray(eval_y).astype('float32').reshape((-1, 1))
 
