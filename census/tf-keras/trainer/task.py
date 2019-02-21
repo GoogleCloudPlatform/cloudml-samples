@@ -39,8 +39,8 @@ def get_args():
   parser.add_argument(
       '--num-epochs',
       type=int,
-      default=5,
-      help='number of times to go through the data, default=5')
+      default=20,
+      help='number of times to go through the data, default=20')
   parser.add_argument(
       '--batch-size',
       default=128,
@@ -72,7 +72,8 @@ def train_and_evaluate(hparams):
   train_x, train_y, eval_x, eval_y = util.load_data()
 
   # dimensions
-  num_examples, input_dim = train_x.shape
+  num_train_examples, input_dim = train_x.shape
+  num_eval_examples = eval_x.shape[0]
 
   # Create the Keras Model
   keras_model = model.create_keras_model(
@@ -91,8 +92,8 @@ def train_and_evaluate(hparams):
       features=eval_x.values,
       labels=eval_y,
       shuffle=False,
-      num_epochs=1,
-      batch_size=hparams.batch_size)
+      num_epochs=hparams.num_epochs,
+      batch_size=num_eval_examples)
 
   # Setup Learning Rate decay.
   lr_decay = tf.keras.callbacks.LearningRateScheduler(
@@ -102,7 +103,7 @@ def train_and_evaluate(hparams):
   # Train model
   keras_model.fit(
       training_dataset,
-      steps_per_epoch=int(num_examples / hparams.batch_size),
+      steps_per_epoch=int(num_train_examples / hparams.batch_size),
       epochs=hparams.num_epochs,
       validation_data=validation_dataset,
       validation_steps=1,
