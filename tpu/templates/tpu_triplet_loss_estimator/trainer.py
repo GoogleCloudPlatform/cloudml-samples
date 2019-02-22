@@ -173,6 +173,7 @@ def main(args):
 
     # Labels do not pass through the estimator.predict call, so we get it separately.
     _, (_, labels) = tf.keras.datasets.mnist.load_data()
+    labels = labels[:PREDICT_BATCH_SIZE]
 
     # Write the metadata file for the projector.
     metadata_path = os.path.join(estimator.model_dir, 'metadata.tsv')
