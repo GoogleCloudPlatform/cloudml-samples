@@ -21,6 +21,7 @@ from tensorflow.contrib.tensorboard.plugins import projector
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
+PREDICT_BATCH_SIZE = 2000
 EMBEDDING_SIZE = 64
 
 # Triplet loss metric learning with TPU based on https://arxiv.org/abs/1503.03832
@@ -104,10 +105,15 @@ def train_input_fn(params={}):
     return dataset
 
 
-def eval_input_fn(params={}):
+def predict_input_fn(params={}):
+    batch_size = params.get('predict_batch_size', PREDICT_BATCH_SIZE)
+
     mnist = tf.keras.datasets.mnist
     _, (x_test, y_test) = mnist.load_data()
     x_test = x_test / 255.0
+
+    x_test = x_test[:batch_size]
+    y_test = y_test[:batch_size]
 
     x_tensor = tf.constant(x_test, dtype=tf.float32)
     x_tensor = tf.reshape(x_tensor, (-1, 28*28))
@@ -146,8 +152,7 @@ def main(args):
             params=params,
             train_batch_size=args.train_batch_size,
             # Calling TPUEstimator.predict requires setting predict_bath_size.
-            # The size MNIST test data.
-            predict_batch_size=10000,
+            predict_batch_size=PREDICT_BATCH_SIZE,
             eval_batch_size=32,
             export_to_tpu=False)
     else:
@@ -161,7 +166,7 @@ def main(args):
     estimator.train(train_input_fn, max_steps=args.max_steps)
 
     # After training, apply the learned embedding to the test data and visualize with tensorboard Projector.
-    embeddings = next(estimator.predict(eval_input_fn, yield_single_examples=False))['embeddings']
+    embeddings = next(estimator.predict(predict_input_fn, yield_single_examples=False))['embeddings']
 
     # Put the embeddings into a variable to be visualized.
     embedding_var = tf.Variable(embeddings, name='test_embeddings')
@@ -180,7 +185,9 @@ def main(args):
     projector_config = projector.ProjectorConfig()
     embedding_config = projector_config.embeddings.add()
     embedding_config.tensor_name = embedding_var.name
-    embedding_config.metadata_path = metadata_path
+
+    # The metadata_path is relative to the summary_writer's log_dir.
+    embedding_config.metadata_path = 'metadata.tsv'
 
     summary_writer = tf.summary.FileWriter(estimator.model_dir)
 
