@@ -14,9 +14,12 @@
 
 
 import argparse
+import os
 import numpy as np
 import tensorflow as tf
+from tensorflow.contrib.tensorboard.plugins import projector
 
+tf.logging.set_verbosity(tf.logging.INFO)
 
 EMBEDDING_SIZE = 64
 
@@ -26,18 +29,20 @@ def model_fn(features, labels, mode, params):
     # build model
     global_step = tf.train.get_global_step()
     hidden = tf.layers.dense(features, 100, activation=tf.nn.relu)
-    output = tf.layers.dense(hidden, EMBEDDING_SIZE)
+    outputs = tf.layers.dense(hidden, EMBEDDING_SIZE)
 
     # normalize
-    embedding = tf.math.l2_normalize(output, axis=1)
+    embeddings = tf.math.l2_normalize(outputs, axis=1)
 
-    predictions = embedding
+    # TPUEstimatorSpec.predictions must be dict of Tensors.
+    predictions = {'embeddings': embeddings}
+
     loss = None
     train_op = None
 
     if mode == tf.estimator.ModeKeys.TRAIN:
         # define loss
-        loss = tf.contrib.losses.metric_learning.triplet_semihard_loss(labels, embedding)
+        loss = tf.contrib.losses.metric_learning.triplet_semihard_loss(labels, embeddings)
 
         # define train_op
         optimizer = tf.train.RMSPropOptimizer(learning_rate=0.05)
@@ -99,6 +104,21 @@ def train_input_fn(params={}):
     return dataset
 
 
+def eval_input_fn(params={}):
+    mnist = tf.keras.datasets.mnist
+    _, (x_test, y_test) = mnist.load_data()
+    x_test = x_test / 255.0
+
+    x_tensor = tf.constant(x_test, dtype=tf.float32)
+    x_tensor = tf.reshape(x_tensor, (-1, 28*28))
+
+    y_tensor = tf.constant(y_test, dtype=tf.int32)
+
+    dataset = tf.data.Dataset.from_tensors((x_tensor, y_tensor))
+
+    return dataset
+
+
 def main(args):
     # pass the args as params so the model_fn can use
     # the TPU specific args
@@ -125,6 +145,9 @@ def main(args):
             config=config,
             params=params,
             train_batch_size=args.train_batch_size,
+            # Calling TPUEstimator.predict requires setting predict_bath_size.
+            # The size MNIST test data.
+            predict_batch_size=10000,
             eval_batch_size=32,
             export_to_tpu=False)
     else:
@@ -136,6 +159,38 @@ def main(args):
             params=params)
 
     estimator.train(train_input_fn, max_steps=args.max_steps)
+
+    # After training, apply the learned embedding to the test data and visualize with tensorboard Projector.
+    embeddings = next(estimator.predict(eval_input_fn, yield_single_examples=False))['embeddings']
+
+    # Put the embeddings into a variable to be visualized.
+    embedding_var = tf.Variable(embeddings, name='test_embeddings')
+
+    # Labels do not pass through the estimator.predict call, so we get it separately.
+    _, (_, labels) = tf.keras.datasets.mnist.load_data()
+
+    # Write the metadata file for the projector.
+    metadata_path = os.path.join(estimator.model_dir, 'metadata.tsv')
+    with tf.gfile.GFile(metadata_path, 'w') as f:
+        f.write('index\tlabel\n')
+        for i, label in enumerate(labels):
+            f.write('{}\t{}\n'.format(i, label))
+
+    # Configure the projector.
+    projector_config = projector.ProjectorConfig()
+    embedding_config = projector_config.embeddings.add()
+    embedding_config.tensor_name = embedding_var.name
+    embedding_config.metadata_path = metadata_path
+
+    summary_writer = tf.summary.FileWriter(estimator.model_dir)
+
+    projector.visualize_embeddings(summary_writer, projector_config)
+
+    # Start a session to actually write the embeddings into a new checkpoint.
+    sess = tf.Session()
+    sess.run(tf.global_variables_initializer())
+    saver = tf.train.Saver()
+    saver.save(sess, os.path.join(estimator.model_dir, 'model.ckpt'), args.max_steps+1)
 
 
 if __name__ == '__main__':
@@ -149,12 +204,12 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max-steps',
         type=int,
-        default=1000,
+        default=3000,
         help='The total number of steps to train the model.')
     parser.add_argument(
         '--train-batch-size',
         type=int,
-        default=256,
+        default=128,
         help='The training batch size.  The training batch is divided evenly across the TPU cores.')
     parser.add_argument(
         '--save-checkpoints-steps',
