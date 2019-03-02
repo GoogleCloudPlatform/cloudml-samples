@@ -6,14 +6,6 @@ Welcome to the [Google Cloud Machine Learning Engine (Cloud ML Engine)](https://
 
 Note: If you’re looking for our guides on how to do Machine Learning on Google Cloud Platform (GCP) using other services, please checkout our other repository: [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp), which has guides on how to bring your code from various ML frameworks to [Google Cloud Platform](https://cloud.google.com/) using things like [Google Compute Engine](https://cloud.google.com/compute/) or [Kubernetes](https://kubernetes.io/).
 
-Setup
--------
-For installation instructions and overview, please see [the documentation](https://cloud.google.com/ml-engine/docs/). Please refer to **README.md** in each sample directory for more specific instructions.
-
-Getting Started
----------------
-If this is your first time using [Cloud ML Engine](https://cloud.google.com/ml-engine/docs/), we suggest you take a look at the [Introduction to ML Engine](https://cloud.google.com/ml-engine/docs/technical-overview) docs to get started.
-
 Overview
 ----------
 
@@ -25,12 +17,20 @@ The repository is organized by tasks:
  
 Each task can be broken down to general usage `(CPU/GPU)` to specific features: 
 
- - Hyperparameter Tuning 
- - TPUs. 
+ - [Hyperparameter Tuning](#hyperparameter-tuning-hp-tuning)
+ - [TPUs](#cloud-tpu) 
  
 Scroll down to see what we have available, each task may provide a notebook or code solution. Where the code solution will have a `README` guide and the notebook solution is a full walkthrough. Our code guides are designed to provide you with the code and instructions on how to run the code, but leave you to do the digging, where our notebook tutorials try to walk you through the whole process by having the code available in the notebook throughout the guide.
 
 If you don’t see something for the task you’re trying to complete, please head down to our section [What do you want to see?](#what-do-you-want-to-see)
+
+Setup
+-------
+For installation instructions and overview, please see [the documentation](https://cloud.google.com/ml-engine/docs/). Please refer to `README.md` in each sample directory for more specific instructions.
+
+Getting Started
+---------------
+If this is your first time using [Cloud ML Engine](https://cloud.google.com/ml-engine/docs/), we suggest you take a look at the [Introduction to ML Engine](https://cloud.google.com/ml-engine/docs/technical-overview) docs to get started.
 
 ## Model Training with Cloud ML Engine
 
@@ -97,12 +97,12 @@ Templates
 Additional Resources
 --------------------
 
-### Cloud TPU 
+- ### Cloud TPU 
 Please see the [Cloud TPU guide](tpu) for how to use Cloud TPU.
 
-### Google Samples
+- ### Google Samples
 
-* [Genomics Ancestry Inference](https://github.com/googlegenomics/cloudml-examples) - Genomics ancestry inference using 1000 Genomes dataset
+  * [Genomics Ancestry Inference](https://github.com/googlegenomics/cloudml-examples) - Genomics ancestry inference using 1000 Genomes dataset
 
 
 ## What do you want to see?
