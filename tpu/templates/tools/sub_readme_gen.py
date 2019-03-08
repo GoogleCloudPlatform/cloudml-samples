@@ -52,11 +52,18 @@ for name, info_dict in samples.items():
             ipynb_url = BASE_URL.format(sample_name, part+'.ipynb')
             sub_readme_url = BASE_URL.format(sample_name, sub_readme_filename)
 
-            manifest.append((ipynb_url, sub_readme_url))
+            manifest.append({
+                'ipynb_url': ipynb_url,
+                'sub_readme_url': sub_readme_url,
+                'mapped_sample_name': mapped_sample_name,
+                'mapped_interface': mapped_interface
+            })
 
-with open('manifest.txt', 'w') as f:
-    for ipynb_url, sub_readme_url in manifest:
-        f.write('{},{}\n'.format(ipynb_url, sub_readme_url))
+manifest_template = 'czahedi,DevRel,Cloud TPU training template for {mapped_sample_name} with {mapped_interface},Notebooks,Yu-Han Liu,yuhanliu,Google,This is a TPU training template for {mapped_sample_name} expressed with {mapped_interface}.,{sub_readme_url},,"GCP,Cloud TPU,training,template",,{ipynb_url}\n'
+
+with open('manifest.csv', 'w') as f:
+    for part_dict in manifest:
+        f.write(manifest_template.format(**part_dict))
 
 
 
