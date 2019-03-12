@@ -20,6 +20,7 @@ import multiprocessing
 
 import tensorflow as tf
 from tensorflow import data
+from tensorflow_model_analysis import export as tfma_export
 
 import metadata
 import featurizer
@@ -335,6 +336,32 @@ def csv_serving_input_fn():
     )
 
 
+def tfma_csv_serving_input_fn():
+    """Build everything needed to run tf-model-analysis when using CSV as input
+    for the model.
+
+    Returns:
+        EvalInputReceiver function, which contains:
+          - Tensorflow graph which parses raw untranformed features, applies the
+            tf-transform preprocessing operators.
+          - Set of raw, untransformed features.
+          - Label against which predictions will be compared.
+    """
+
+    # Notice that the inputs are raw features, not transformed features here.
+    csv_row = tf.placeholder(shape=[None], dtype=tf.string)
+
+    features = parse_csv(csv_row, is_serving=False)
+
+    # The key name MUST be 'examples'. See https://goo.gl/2SV7Ug
+    receiver_tensors = {'examples': csv_row}
+
+    return tfma_export.EvalInputReceiver(
+        features=process_features(features),
+        receiver_tensors=receiver_tensors,
+        labels=features[metadata.TARGET_NAME])
+
+
 def example_serving_input_fn():
     feature_columns = featurizer.create_feature_columns()
     input_feature_columns = [feature_columns[feature_name] for feature_name in metadata.INPUT_FEATURE_NAMES]
@@ -359,9 +386,49 @@ def example_serving_input_fn():
     )
 
 
+def tfma_example_serving_input_fn():
+    """Build everything needed to run tf-model-analysis when using examples as
+    input for the model.
+
+    Returns:
+        EvalInputReceiver function, which contains:
+          - Tensorflow graph which parses raw untranformed features, applies the
+            tf-transform preprocessing operators.
+          - Set of raw, untransformed features.
+          - Label against which predictions will be compared.
+    """
+    feature_columns = featurizer.create_feature_columns()
+    input_feature_columns = [feature_columns[feature_name] for feature_name in metadata.INPUT_FEATURE_NAMES]
+
+    example_bytestring = tf.placeholder(
+        shape=[None],
+        dtype=tf.string,
+    )
+    feature_scalars = tf.parse_example(
+        example_bytestring,
+        tf.feature_column.make_parse_example_spec(input_feature_columns)
+    )
+
+    features = {
+        key: tf.expand_dims(tensor, -1)
+        for key, tensor in feature_scalars.iteritems()
+    }
+
+    return tfma_export.EvalInputReceiver(
+        features=process_features(features),
+        # The key name MUST be 'examples'. See https://goo.gl/2SV7Ug
+        receiver_tensors={'examples': example_bytestring},
+        labels=features[metadata.TARGET_NAME])
+
+
 SERVING_FUNCTIONS = {
     'JSON': json_serving_input_fn,
     'EXAMPLE': example_serving_input_fn,
     'CSV': csv_serving_input_fn
+}
+
+TFMA_SERVING_FUNCTIONS = {
+    'EXAMPLE': tfma_example_serving_input_fn,
+    'CSV': tfma_csv_serving_input_fn
 }
 
