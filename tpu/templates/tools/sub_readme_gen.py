@@ -58,14 +58,3 @@ for name, info_dict in samples.items():
                 'mapped_sample_name': mapped_sample_name,
                 'mapped_interface': mapped_interface
             })
-
-manifest_template = 'czahedi,DevRel,Cloud TPU training template for {mapped_sample_name} with {mapped_interface},Notebooks,Yu-Han Liu,yuhanliu,Google,This is a TPU training template for {mapped_sample_name} expressed with {mapped_interface}.,{sub_readme_url},,"GCP,Cloud TPU,training,template",,{ipynb_url}\n'
-
-with open('manifest.csv', 'w') as f:
-    for part_dict in manifest:
-        f.write(manifest_template.format(**part_dict))
-
-
-
-
-
