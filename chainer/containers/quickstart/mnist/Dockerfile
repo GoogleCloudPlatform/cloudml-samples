@@ -12,12 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Dockerfile
-FROM python:3.5.6-jessie
-WORKDIR /root
+# Dockerfile-gpu
+FROM chainer/chainer:v5.3.0-python2
 
-# Installs chainer.
-RUN pip install chainer==5.3.0
+# Installs necessary dependencies.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    wget \
+    && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+WORKDIR /root
 
 # Installs cloudml-hypertune for hyperparameter tuning.
 # It’s not needed if you don’t want to do hyperparameter tuning.
@@ -44,7 +49,7 @@ RUN echo '[GoogleCompute]\nservice_account = default' > /etc/boto.cfg
 
 # Copies the trainer code 
 RUN mkdir /root/trainer
-COPY trainer/mnist-chainer.py /root/trainer/mnist.py
+COPY trainer/mnist.py /root/trainer/mnist.py
 
 # Sets up the entry point to invoke the trainer.
 ENTRYPOINT ["python", "trainer/mnist.py"]
