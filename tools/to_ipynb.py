@@ -238,6 +238,12 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
     indent = node.body[0].col_offset
     cell_source = [line[indent:] for line in cell_source][1:]
 
+    # Add precell
+    if style_dict['precells'] is not None:
+        # we might be inserting multiple cells at the same position, so reversing the ordering to keep the correct order.
+        for filename in reversed(style_dict['precells']):
+            add_cell(cells, filename, insert=1, path=path)
+
     # special handling for tpu samples.
     if 'tpu' in py_filepath and style_dict['tpu_precells'] is not None:
         cs0 = [line for line in cell_source if 'main(args)' not in line]
@@ -251,12 +257,6 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
 
     else:
         cells.append(code_cell(cell_source))
-
-    # Add precell
-    if style_dict['precells'] is not None:
-        # we might be inserting multiple cells at the same position, so reversing the ordering to keep the correct order.
-        for filename in reversed(style_dict['precells']):
-            add_cell(cells, filename, insert=1, path=path)
 
     # Add tpu postcell
     if 'tpu' in py_filepath and style_dict['tpu_postcells'] is not None:
