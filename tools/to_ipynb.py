@@ -26,18 +26,21 @@ import yaml
 STYLES = {
     'colab': {
         # code template to be added right after the license.
-        'precell': 'templates/colab_pre.p',
+        'precells': ['templates/colab_pre.p'],
         # TPU specific code template to be added right before running main.
-        'tpu': 'templates/colab_tpu.p',
+        'tpu_precells': ['templates/colab_tpu.p'],
         # TPU specific code template to be added at the end.
-        'tpu_post': None,
+        'tpu_postcells': None,
         # additional path segment.
         'prefix': ''
     },
     'jaas': {
-        'precell': 'templates/jaas_pre.p',
-        'tpu': 'templates/jaas_tpu.p',
-        'tpu_post': 'templates/jaas_tpu_post.p',
+        'precells': ['templates/jaas_pre.p'],
+        'tpu_precells': [
+            'templates/jaas_tpu_args.p',
+            'templates/jaas_tpu_create.p'
+        ],
+        'tpu_postcells': ['templates/jaas_tpu_post.p'],
         'prefix': 'jaas'
     }
 }
@@ -134,6 +137,26 @@ def markdown_cell(group):
     return new_markdown_cell(source)
 
 
+def add_cell(cells, filename, insert=None, **kwargs):
+    """Modifies cells in place by adding the content of filename as a new cell in position `insert`.
+    When `insert` is None, the new cell is appended to cells.
+    Allows optional formatting arguments as kwargs."""
+    with open(filename, 'r') as f:
+        code_source = f.read()
+
+    if kwargs:
+        code_source = code_source.format(**kwargs)
+
+    new_cell = new_code_cell(code_source)
+
+    if insert is None:
+        cells.append(new_cell)
+    else:
+        cells.insert(insert, new_cell)
+
+    return cells
+
+
 def py_to_ipynb(root, path, py_filename, style, remove=None):
     """This function converts the .py file at <root>/<path>/<py_filename> into a .ipynb of the same name in <root>/<path>.
 
@@ -215,15 +238,13 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
     indent = node.body[0].col_offset
     cell_source = [line[indent:] for line in cell_source][1:]
 
-    if 'tpu' in py_filepath and style_dict['tpu'] is not None:
-        tpu_file = style_dict['tpu']
-        # special handling for tpu samples.
+    # special handling for tpu samples.
+    if 'tpu' in py_filepath and style_dict['tpu_precells'] is not None:
         cs0 = [line for line in cell_source if 'main(args)' not in line]
         cells.append(code_cell(cs0))
 
-        with open(tpu_file, 'r') as colab_tpu:
-            cs1 = colab_tpu.read()
-        cells.append(new_code_cell(cs1))
+        for filename in style_dict['tpu_precells']:
+            add_cell(cells, filename)
 
         cs2 = 'main(args)'
         cells.append(new_code_cell(cs2))
@@ -232,26 +253,15 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
         cells.append(code_cell(cell_source))
 
     # Add precell
-    if style_dict['precell'] is not None:
-        precell_file = style_dict['precell']
-        with open(precell_file, 'r') as template_file:
-            template = template_file.read()
-
-        content = template.format(path=path)
-        precell = new_code_cell(content)
-
-        # The 0-th cell should be the license.
-        cells.insert(1, precell)
+    if style_dict['precells'] is not None:
+        # we might be inserting multiple cells at the same position, so reversing the ordering to keep the correct order.
+        for filename in reversed(style_dict['precells']):
+            add_cell(cells, filename, insert=1, path=path)
 
     # Add tpu postcell
-    if 'tpu' in py_filepath and style_dict['tpu_post'] is not None:
-        tpu_post_file = style_dict['tpu_post']
-        with open(tpu_post_file, 'r') as template_file:
-            content = template_file.read()
-
-        tpu_postcell = new_code_cell(content)
-
-        cells.append(tpu_postcell)
+    if 'tpu' in py_filepath and style_dict['tpu_postcells'] is not None:
+        for filename in style_dict['tpu_postcells']:
+            add_cell(cells, filename)
 
     notebook = new_notebook(cells=cells)
 
