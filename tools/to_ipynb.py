@@ -23,6 +23,26 @@ from nbformat.v4 import new_notebook
 import yaml
 
 
+STYLES = {
+    'colab': {
+        # code template to be added right after the license.
+        'precell': 'templates/colab_pre.p',
+        # TPU specific code template to be added right before running main.
+        'tpu': 'templates/colab_tpu.p',
+        # TPU specific code template to be added at the end.
+        'tpu_post': None,
+        # additional path segment.
+        'prefix': ''
+    },
+    'jaas': {
+        'precell': 'templates/jaas_pre.p',
+        'tpu': 'templates/jaas_tpu.p',
+        'tpu_post': 'templates/jaas_tpu_post.p',
+        'prefix': 'jaas'
+    }
+}
+
+
 # Only samples registered and configured in samples.yaml will be converted.
 with open('samples.yaml', 'r') as f:
     samples = yaml.load(f.read())
@@ -114,7 +134,7 @@ def markdown_cell(group):
     return new_markdown_cell(source)
 
 
-def py_to_ipynb(root, path, py_filename, remove=None):
+def py_to_ipynb(root, path, py_filename, style, remove=None):
     """This function converts the .py file at <root>/<path>/<py_filename> into a .ipynb of the same name in <root>/<path>.
 
     - Consecutive comments are grouped into the same cell.
@@ -122,16 +142,20 @@ def py_to_ipynb(root, path, py_filename, remove=None):
     - The last part of the .py file is expected to be an `if __name__ == '__main__':` block.
 
     Args:
+    style: 'colab' or 'jaas'.
     remove: (None or dict) A Dict describing what code to be removed according to specified node type.
 
     Returns
     None
     """
+    style_dict = STYLES[style]
+    prefix = style_dict['prefix']
+
     py_filepath = os.path.join(root, path, py_filename)
     print('Converting {}'.format(py_filepath))
 
     ipynb_filename = py_filename.split('.')[0] + '.ipynb'
-    ipynb_filepath = os.path.join(root, path, ipynb_filename)
+    ipynb_filepath = os.path.join(root, prefix, path, ipynb_filename)
 
     with open(py_filepath, 'r') as py_file:
         source = py_file.read()
@@ -191,12 +215,13 @@ def py_to_ipynb(root, path, py_filename, remove=None):
     indent = node.body[0].col_offset
     cell_source = [line[indent:] for line in cell_source][1:]
 
-    if 'tpu' in py_filepath:
+    if 'tpu' in py_filepath and style_dict['tpu'] is not None:
+        tpu_file = style_dict['tpu']
         # special handling for tpu samples.
         cs0 = [line for line in cell_source if 'main(args)' not in line]
         cells.append(code_cell(cs0))
 
-        with open('colab_tpu.p') as colab_tpu:
+        with open(tpu_file, 'r') as colab_tpu:
             cs1 = colab_tpu.read()
         cells.append(new_code_cell(cs1))
 
@@ -206,20 +231,34 @@ def py_to_ipynb(root, path, py_filename, remove=None):
     else:
         cells.append(code_cell(cell_source))
 
+    # Add precell
+    if style_dict['precell'] is not None:
+        precell_file = style_dict['precell']
+        with open(precell_file, 'r') as template_file:
+            template = template_file.read()
 
-    # Add git clone code and user auth
-    with open('colab.p', 'r') as template_file:
-        template = template_file.read()
+        content = template.format(path=path)
+        precell = new_code_cell(content)
 
-    content = template.format(path=path)
-    cell = new_code_cell(content)
+        # The 0-th cell should be the license.
+        cells.insert(1, precell)
 
-    # The 0-th cell should be the license.
-    cells.insert(1, cell)
+    # Add tpu postcell
+    if 'tpu' in py_filepath and style_dict['tpu_post'] is not None:
+        tpu_post_file = style_dict['tpu_post']
+        with open(tpu_post_file, 'r') as template_file:
+            content = template_file.read()
+
+        tpu_postcell = new_code_cell(content)
+
+        cells.append(tpu_postcell)
 
     notebook = new_notebook(cells=cells)
 
     # output
+    outpath, _ = os.path.split(ipynb_filepath)
+    if not os.path.exists(outpath):
+        os.makedirs(outpath)
     with open(ipynb_filepath, 'w') as ipynb_file:
         nbformat.write(notebook, ipynb_file)
 
@@ -230,7 +269,8 @@ if __name__ == '__main__':
         filename = info['filename']
         remove = info.get('remove', None)
 
-        py_to_ipynb(root, path, filename, remove=remove)
+        for style in ['colab', 'jaas']:
+            py_to_ipynb(root, path, filename, style, remove=remove)
 
 
     # Testing, make sure sample.py has the same output.
