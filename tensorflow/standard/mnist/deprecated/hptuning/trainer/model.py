@@ -26,7 +26,6 @@ import os
 
 import tensorflow as tf
 from tensorflow.contrib import layers
-from tensorflow.contrib.metrics.python.ops import metric_ops
 from . import util
 
 # The MNIST dataset has 10 classes, representing the digits 0 through 9.

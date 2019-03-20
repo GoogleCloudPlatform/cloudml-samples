@@ -17,9 +17,6 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
-import logging
-import os
-import sys
 
 import numpy as np
 import tensorflow as tf
@@ -83,8 +80,8 @@ def train_and_evaluate(hparams):
 	# Load data.
 	(train_data, train_labels), (test_data, test_labels) = \
 		utils.preprocess(train_data_file=hparams.train_file,
-										 word_index_file=hparams.word_index_file,
-										 num_words=model.TOP_K)
+                         word_index_file=hparams.word_index_file,
+                         num_words=model.TOP_K)
 
 	# Training steps
 	train_steps = hparams.num_epochs * len(train_data) / hparams.batch_size
@@ -117,10 +114,10 @@ def train_and_evaluate(hparams):
 	# Generate Configuration.
 	run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
 	# Create estimator
-	estimator = model.keras_estimator(model_dir=hparams.job_dir, 
-										config=run_config,
-										learning_rate=hparams.learning_rate,
-										vocab_size=model.VOCAB_SIZE)
+	estimator = model.keras_estimator(model_dir=hparams.job_dir,
+                                      config=run_config,
+                                      learning_rate=hparams.learning_rate,
+                                      vocab_size=model.VOCAB_SIZE)
 	# Start training
 	tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
