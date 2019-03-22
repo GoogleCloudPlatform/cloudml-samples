@@ -39,8 +39,8 @@ If this is your first time using [Cloud ML Engine](https://cloud.google.com/ml-e
 * [XGBoost](xgboost/notebooks/xgboost-training-with-ml-engine.ipynb) - How to train an XGBoost model using a text based dataset, Census, to predict a person’s income level.
 
 #### Code Guide:
-* [Tensorflow: Linear Classifier with Stochastic Dual Coordinate Ascent (SDCA) Optimizer / Deep Neural Network Classifier](criteo_tft) - How to train a Linear Classifier with SDCA and a DNN using a text (discrete feature) based dataset, Criteo, to predict how likely a person is to click on an advertisement.
-* [Tensorflow: Linear Regression with Stochastic Dual Coordinate Ascent (SDCA) / Deep Neural Network Regressor](reddit_tft) - How to train a Linear Regressor with SDCA and a DNN using the a text based dataset of Reddit Comments to predict the score of a Reddit thread using a wide and deep model.
+* [Tensorflow: Linear Classifier with Stochastic Dual Coordinate Ascent (SDCA) Optimizer / Deep Neural Network Classifier](tensorflow/standard/legacy/criteo_tft) - How to train a Linear Classifier with SDCA and a DNN using a text (discrete feature) based dataset, Criteo, to predict how likely a person is to click on an advertisement.
+* [Tensorflow: Linear Regression with Stochastic Dual Coordinate Ascent (SDCA) / Deep Neural Network Regressor](tensorflow/standard/legacy/reddit_tft) - How to train a Linear Regressor with SDCA and a DNN using the a text based dataset of Reddit Comments to predict the score of a Reddit thread using a wide and deep model.
 * [Tensorflow: ResNet](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10_estimator) - How to train a model for image recognition using the CIFAR10 dataset to classify image content (training on one CPU, a single host with multiple GPUs, and multiple hosts with CPU or multiple GPUs).
 
 ### Cloud TPUs
@@ -84,7 +84,7 @@ Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to acc
 * [Tensorflow Pre-made Estimator: Deep Neural Network Linear Combined Classifier](census/estimator) -How to train a DNN using Tensorflow’s Pre-made Estimators using a text based dataset, Census, to predict a person’s income level. [TensorFlow Pre-made Estimator](https://www.tensorflow.org/programmers_guide/estimators#pre-made_estimators), an estimator is “a high-level TensorFlow API that greatly simplifies machine learning programming.”
 * [Tensorflow Custom Estimator: Deep Neural Network](census/customestimator) - How to train a DNN using Tensorflow’s Custom Estimators using a text based dataset, Census, to predict a person’s income level. [TensorFlow Custom Estimator](https://www.tensorflow.org/programmers_guide/estimators#custom_estimators), which is when you write your own model function. 
 * [Tensorflow: Deep Neural Network](census/tensorflowcore) - How to train a DNN using TensorFlow’s low level APIs to create your DNN model on a single node using a text based dataset, Census, to predict a person’s income level.
-* [Tensorflow: Matrix Factorization / Deep Neural Network with Softmax](movielens) - How to train a Matrix Factorization and DNN with Softmax using a text based dataset, MovieLens 20M, to make movie recommendations.
+* [Tensorflow: Matrix Factorization / Deep Neural Network with Softmax](tensorflow/standard/legacy/movielens) - How to train a Matrix Factorization and DNN with Softmax using a text based dataset, MovieLens 20M, to make movie recommendations.
 
 Templates
 ---------

@@ -17,9 +17,6 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
-import logging
-import os
-import sys
 
 import numpy as np
 from . import model
