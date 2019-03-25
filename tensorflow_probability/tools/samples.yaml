@@ -1,0 +1,9 @@
+samples:
+  - source_name: bayesian_neural_network.py
+    requires:
+      - "seaborn==0.9.0"
+    tfgfile_wrap:
+      - plot_weight_posteriors
+      - plot_heldout_prediction
+
+  - source_name: grammar_vae.py
