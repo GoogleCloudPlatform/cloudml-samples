@@ -34,14 +34,14 @@ STYLES = {
         # additional path segment.
         'prefix': ''
     },
-    'jaas': {
-        'precells': ['templates/jaas_pre.p'],
+    'notebooks': {
+        'precells': ['templates/notebooks_pre.p'],
         'tpu_precells': [
-            'templates/jaas_tpu_args.p',
-            'templates/jaas_tpu_create.p'
+            'templates/notebooks_tpu_args.p',
+            'templates/notebooks_tpu_create.p'
         ],
-        'tpu_postcells': ['templates/jaas_tpu_post.p'],
-        'prefix': 'jaas'
+        'tpu_postcells': ['templates/notebooks_tpu_post.p'],
+        'prefix': 'notebooks'
     }
 }
 
@@ -165,7 +165,7 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
     - The last part of the .py file is expected to be an `if __name__ == '__main__':` block.
 
     Args:
-    style: 'colab' or 'jaas'.
+    style: 'colab' or 'notebooks'.
     remove: (None or dict) A Dict describing what code to be removed according to specified node type.
 
     Returns
@@ -279,7 +279,7 @@ if __name__ == '__main__':
         filename = info['filename']
         remove = info.get('remove', None)
 
-        for style in ['colab', 'jaas']:
+        for style in ['colab', 'notebooks']:
             py_to_ipynb(root, path, filename, style, remove=remove)
 
 
