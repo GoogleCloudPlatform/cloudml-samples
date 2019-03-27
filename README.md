@@ -35,8 +35,8 @@ If this is your first time using [Cloud ML Engine](https://cloud.google.com/ml-e
 ## Model Training with Cloud ML Engine
 
 #### Notebook Tutorial:
-* [scikit-learn: Random Forest Classifier](sklearn/notebooks/ml_engine_training.ipynb) - How to train a Random Forest Classifier in scikit-learn using a text based dataset, Census, to predict a person’s income level.
-* [XGBoost](xgboost/notebooks/xgboost-training-with-ml-engine.ipynb) - How to train an XGBoost model using a text based dataset, Census, to predict a person’s income level.
+* [scikit-learn: Random Forest Classifier](notebooks/scikit-learn/Training%20with%20scikit-learn%20in%20CMLE.ipynb) - How to train a Random Forest Classifier in scikit-learn using a text based dataset, Census, to predict a person’s income level.
+* [XGBoost](notebooks/xgboost/Training%20with%20XGBoost%20in%20CMLE.ipynb) - How to train an XGBoost model using a text based dataset, Census, to predict a person’s income level.
 
 #### Code Guide:
 * [Tensorflow: Linear Classifier with Stochastic Dual Coordinate Ascent (SDCA) Optimizer / Deep Neural Network Classifier](tensorflow/standard/legacy/criteo_tft) - How to train a Linear Classifier with SDCA and a DNN using a text (discrete feature) based dataset, Criteo, to predict how likely a person is to click on an advertisement.
@@ -55,8 +55,8 @@ Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to acc
 ### Hyperparameter Tuning (HP Tuning)
 
 #### Notebook Tutorial:
-* [scikit-learn: Lasso Regressor](sklearn/notebooks/hp_tuning_auto_mpg/ml_engine_hp_tuning_training.ipynb) - How to train a Lasso Regressor in scikit-learn using a text based dataset, auto mpg, to predict a car's miles per gallon.
-* [XGBoost: XGBRegressor](xgboost/notebooks/XGBoost&#32;Hyperparameter&#32;Tuning.ipynb) - How to train a Regressor in XGBoost using a text based dataset, auto mpg, to predict a car's miles per gallon.
+* [scikit-learn: Lasso Regressor](notebooks/scikit-learn/Hyperparameter%20Tuning%20with%20scikit-learn%20in%20CMLE.ipynb) - How to train a Lasso Regressor in scikit-learn using a text based dataset, auto mpg, to predict a car's miles per gallon.
+* [XGBoost: XGBRegressor](notebooks/xgboost/Hyperparameter%20Tuning%20with%20XGBoost%20in%20CMLE.ipynb) - How to train a Regressor in XGBoost using a text based dataset, auto mpg, to predict a car's miles per gallon.
 
 ### Containers
 * [Keras: Sequential / Dense](tensorflow/containers/unsupported_runtime) - How to train a Keras model using the Nightly Build of TensorFlow on ML Engine using a structured dataset, sonar signals, to predict whether the given sonar signals are bouncing off a metal cylinder or off a cylindrical rock.
@@ -67,8 +67,8 @@ Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to acc
 ## Model Serving (Online Predictions)
 
 #### Notebook Tutorial:
-* [scikit-learn: Model Serving](sklearn/notebooks/Online%20Prediction%20with%20scikit-learn.ipynb) - How to train a Random Forest Classifier in scikit-learn on your local machine using a text based dataset, Census, to predict a person’s income level and deploy it on Cloud ML Engine to create predictions.
-* [XGBoost: Model Serving](xgboost/notebooks/Online%20Prediction%20with%20XGBoost.ipynb) -  How to train an XGBoost model on your local machine using a text based dataset, Census, to predict a person’s income level and deploy it on Cloud ML Engine to create predictions.
+* [scikit-learn: Model Serving](notebooks/scikit-learn/Online%20Prediction%20with%20scikit-learn%20in%20CMLE.ipynb) - How to train a Random Forest Classifier in scikit-learn on your local machine using a text based dataset, Census, to predict a person’s income level and deploy it on Cloud ML Engine to create predictions.
+* [XGBoost: Model Serving](notebooks/xgboost/Online%20Prediction%20with%20XGBoost%20in%20CMLE.ipynb) -  How to train an XGBoost model on your local machine using a text based dataset, Census, to predict a person’s income level and deploy it on Cloud ML Engine to create predictions.
 
 ## Complete Guide: Model Training and Serving on ML Engine
 
