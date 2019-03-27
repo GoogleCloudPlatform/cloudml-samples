@@ -5,28 +5,33 @@ It includes code to process data, train a tensorflow model with hyperparameter t
 #
 *  **Examples**
  
-There are five samples provided in this directory. They allow you to move from
+There are six samples provided in this directory. They allow you to move from
 single-worker training to distributed training without any code changes, and
 make it easy to export model binaries for prediction, but with the following
 distiction:
   
-   - The sample provided in [TensorFlow Core](./tensorflowcore) uses the low level
-    bindings to build a model. This example is great for understanding the
-    underlying workings of TensorFlow, best practices when using the low-level
-    APIs.
+* The sample provided in [TensorFlow Core](./tensorflowcore) uses the low level
+bindings to build a model. This example is great for understanding the
+underlying workings of TensorFlow, best practices when using the low-level
+APIs.
 
-   - The sample provided in [Custom Estimator](./customestimator) uses the custom
-    Tensorflow `tf.estimator.EstimatorSpec` to create a High level custom Estimator.
-    This example is a great combination of both low level configuration and fast iteration.
-  
-  - The sample provided in [Estimator](./estimator) uses the high level
-    `tf.estimator.DNNLinearCombinedClassifier` API. This API is great for fast iteration, and
-    quickly adapting models to your own datasets without major code overhauls.
+* The sample provided in [Custom Estimator](./customestimator) uses the custom
+  Tensorflow `tf.estimator.EstimatorSpec` to create a High level custom Estimator.
+  This example is a great combination of both low level configuration and fast iteration.
 
-   - The sample provided in [Keras](./keras) uses the native Keras library.
-    This API is great for fast iteration, and quickly adapting models to your own datasets 
-    without major code overhauls.
-  
+* The sample provided in [Estimator](./estimator) uses the high level
+  `tf.estimator.DNNLinearCombinedClassifier` API. This API is great for fast iteration, and
+  quickly adapting models to your own datasets without major code overhauls.
+
+* The sample provided in [Keras](./keras) uses the native Keras library.
+  This API is great for fast iteration, and quickly adapting models to your own datasets 
+  without major code overhauls.
+
+* The sample provided in [TensorFlow Keras](./tf-keras) uses `tf.keras`,
+  TensorFlow's implementation of the Keras API specification. This provides the
+  benefits of Keras and also first-class support for TensorFlow-specific
+  functionality.
+
 * The sample provided in [TFT Transform Estimator](./tftransformestimator) shows how to use [tf transform](https://github.com/tensorflow/transform) together with [Cloud Dataflow](https://cloud.google.com/dataflow) and [Cloud ML Engine](https://cloud.google.com/ml-engine/).
 
 All the models provided in this directory can be run on the Cloud Machine Learning Engine.
@@ -39,6 +44,8 @@ All the models provided in this directory can be run on the Cloud Machine Learni
     - [Custom Estimator](customestimator/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/customestimator/trainer/task.ipynb))
 
     - [Keras](keras/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/keras/trainer/task.ipynb))
+
+    - [TensorFlow Keras](../notebooks/tensorflow/getting-started-keras.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/notebooks/tensorflow/getting-started-keras.ipynb))
 
     - [TensorFlow Core](tensorflowcore/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/tensorflowcore/trainer/task.ipynb))
 
