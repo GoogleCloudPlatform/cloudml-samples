@@ -45,7 +45,7 @@ All the models provided in this directory can be run on the Cloud Machine Learni
 
     - [Keras](keras/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/keras/trainer/task.ipynb))
 
-    - [TensorFlow Keras](../notebooks/tf-keras/getting-started-keras.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/notebooks/tf-keras/getting-started-keras.ipynb)))
+    - [TensorFlow Keras](../notebooks/tensorflow/getting-started-keras.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/notebooks/tensorflow/getting-started-keras.ipynb))
 
     - [TensorFlow Core](tensorflowcore/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/tensorflowcore/trainer/task.ipynb))
 
