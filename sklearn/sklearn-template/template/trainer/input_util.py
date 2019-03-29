@@ -13,21 +13,29 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Setup package dependencies for model development."""
+"""Data ingest operations."""
 
-import setuptools
+# TODO(cezequiel): Remove when done using sns dataset
+import seaborn as sns
+
+from sklearn import model_selection
+
+from trainer import metadata
 
 
-REQUIRED_PACKAGES = [
-    'scikit-learn==0.20.3',
-]
+def _feature_label_split(data, label_column):
+  return data.loc[:, data.columns != label_column], data[label_column]
 
 
-setuptools.setup(
-    name='',
-    version='',
-    install_requires=REQUIRED_PACKAGES,
-    packages=setuptools.find_packages(),
-    include_package_data=True,
-    description=''
-)
+def read_from_bigquery(table_name):
+  # TODO(cezequiel): Implement BQ reader
+  data = sns.load_dataset('titanic')
+
+  _ = table_name
+  label_column = metadata.LABEL
+
+  train, val = model_selection.train_test_split(data)
+  x_train, y_train = _feature_label_split(train, label_column)
+  x_val, y_val= _feature_label_split(val, label_column)
+
+  return x_train, y_train, x_val, y_val
