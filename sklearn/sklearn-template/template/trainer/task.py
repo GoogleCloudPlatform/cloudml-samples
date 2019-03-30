@@ -15,23 +15,14 @@
 
 """Executes model training and evaluation."""
 
-
 import argparse
 import logging
 import sys
 
 from sklearn import model_selection
-from tensorflow import gfile
 
 from trainer import input_util
 from trainer import model
-
-
-def _makedirs(dirname):
-  """Similar to `mkdir -p` that works locally and on GCS."""
-
-  if not gfile.Exists(dirname):
-    gfile.MakeDirs(dirname)
 
 
 def _train_and_evaluate(estimator, dataset, output_dir):
@@ -70,21 +61,21 @@ def _parse_args(argv):
 
   # TODO(cezequiel): Change to read from BigQuery table instead.
   parser.add_argument(
-      '--bq_table',
-      help='Bigquery table containing input dataset.',
-      required=True,
+    '--bq_table',
+    help='Bigquery table containing input dataset.',
+    required=True,
   )
 
   parser.add_argument(
-      '--job-dir',
-      help='Output directory for exporting model and other metadata.',
-      required=True,
+    '--job-dir',
+    help='Output directory for exporting model and other metadata.',
+    required=True,
   )
 
   parser.add_argument(
-      '--log_level',
-      help='Logging level.',
-      default='INFO',
+    '--log_level',
+    help='Logging level.',
+    default='INFO',
   )
 
   return parser.parse_args(argv)
@@ -98,4 +89,3 @@ def main():
 
 if __name__ == '__main__':
   main()
-
