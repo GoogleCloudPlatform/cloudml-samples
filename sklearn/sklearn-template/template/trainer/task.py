@@ -31,7 +31,7 @@ import hypertune
 
 from google.cloud import storage
 
-from trainer.input_util import read_from_bigquery
+from trainer.input_util import read_from_bigquery_dump
 from trainer.model import get_estimator
 from trainer.metadata import MODEL_FILE_NAME_PREFIX
 from trainer.metadata import METRIC_FILE_NAME_PREFIX
@@ -137,7 +137,8 @@ def _train_and_evaluate(estimator, dataset, output_dir):
 def run_experiment(flags):
   """Testbed for running model training and evaluation."""
   # Get data for training and evaluation
-  dataset = read_from_bigquery(flags.bq_table)
+
+  dataset = read_from_bigquery_dump(flags.bq_table)
 
   # Get model
   estimator = get_estimator(flags)
