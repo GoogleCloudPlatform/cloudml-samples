@@ -20,6 +20,8 @@ from sklearn import impute
 from sklearn import pipeline
 from sklearn import preprocessing
 
+import numpy as np
+
 from trainer import metadata
 
 
@@ -30,24 +32,38 @@ def get_estimator(flags):
   _ = flags
 
   numeric_transformer = pipeline.Pipeline([
-      ('imputer', impute.SimpleImputer(strategy='median')),
-      ('scaler', preprocessing.StandardScaler()),
+    ('imputer', impute.SimpleImputer(strategy='median')),
+    ('scaler', preprocessing.StandardScaler()),
+  ])
+
+  numeric_log_transformer = pipeline.Pipeline([
+    ('imputer', impute.SimpleImputer(strategy='median')),
+    ('log', preprocessing.FunctionTransformer(
+      func=np.log1p, inverse_func=np.expm1, validate=True)),
+    ('scaler', preprocessing.StandardScaler()),
+  ])
+
+  numeric_bin_transformer = pipeline.Pipeline([
+    ('imputer', impute.SimpleImputer(strategy='median')),
+    ('bin', preprocessing.KBinsDiscretizer(n_bins=5, encode='onehot-dense')),
   ])
 
   categorical_transformer = pipeline.Pipeline([
-      ('imputer', impute.SimpleImputer(
-          strategy='constant', fill_value='missing')),
-      ('onehot', preprocessing.OneHotEncoder(handle_unknown='ignore')),
+    ('imputer', impute.SimpleImputer(
+      strategy='constant', fill_value='missing')),
+    ('onehot', preprocessing.OneHotEncoder(handle_unknown='ignore')),
   ])
 
   preprocessor = compose.ColumnTransformer([
-      ('numeric', numeric_transformer, metadata.NUMERIC_FEATURES),
-      ('categorical', categorical_transformer, metadata.CATEGORICAL_FEATURES),
+    ('numeric', numeric_transformer, metadata.NUMERIC_FEATURES),
+    ('numeric', numeric_log_transformer, metadata.NUMERIC_FEATURES),
+    ('numeric', numeric_bin_transformer, metadata.NUMERIC_FEATURES),
+    ('categorical', categorical_transformer, metadata.CATEGORICAL_FEATURES),
   ])
 
   estimator = pipeline.Pipeline([
-      ('preprocessor', preprocessor),
-      ('classifier', classifier),
+    ('preprocessor', preprocessor),
+    ('classifier', classifier),
   ])
 
   return estimator
