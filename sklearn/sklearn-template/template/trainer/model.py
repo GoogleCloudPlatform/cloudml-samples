@@ -26,10 +26,8 @@ from trainer import metadata
 
 
 def get_estimator(flags):
-  classifier = ensemble.RandomForestClassifier()
-
-  # TODO(cezequiel): Make use of flags for hparams
-  _ = flags
+  # TODO: Allow pre-processing to be configurable through flags
+  classifier = ensemble.RandomForestClassifier(**flags)
 
   numeric_transformer = pipeline.Pipeline([
     ('imputer', impute.SimpleImputer(strategy='median')),
@@ -51,7 +49,7 @@ def get_estimator(flags):
   categorical_transformer = pipeline.Pipeline([
     ('imputer', impute.SimpleImputer(
       strategy='constant', fill_value='missing')),
-    ('onehot', preprocessing.OneHotEncoder(handle_unknown='ignore')),
+    ('onehot', preprocessing.OneHotEncoder(handle_unknown='ignore', sparse=False)),
   ])
 
   preprocessor = compose.ColumnTransformer([
