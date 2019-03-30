@@ -15,22 +15,29 @@
 
 """Executes model training and evaluation."""
 
+import os
+import time
 import argparse
 import logging
 import sys
 from urllib.parse import urlparse
 
 from sklearn import model_selection
+from sklearn.externals import joblib
 
 from google.cloud import storage
 
-from trainer import input_util
-from trainer import model
+from trainer.input_util import read_from_bigquery
+from trainer.model import get_estimator
+from trainer.metadata import MODEL_FILE_NAME_PREFIX
+from trainer.metadata import METRIC_FILE_NAME_PREFIX
+from trainer.metadata import DUMP_FILE_NAME_SUFFIX
 
 
 def _upload_gcs_file(local_path, gcs_path):
   """
   Upload local file to Google Cloud Storage
+
   Args:
     local_path: (string) Local file
     gcs_path: (string) Google Cloud Storage destination
@@ -49,12 +56,41 @@ def _upload_gcs_file(local_path, gcs_path):
   blob_path = gcs_path[1:] if gcs_path[0] == '/' else gcs_path
   blob = bucket.blob(blob_path)
 
+  if blob.exists():
+    blob.delete()
   blob.upload_from_filename(local_path)
+
+
+def _dump_file(object, output_path):
+  """
+  Pickle the object and save to the output_path
+
+  Args:
+    object: Python object to be pickled
+    output_path: (string) output path which can be Google Cloud Storage
+
+  Returns:
+    None
+  """
+  gcs_path = None
+  parse_result = urlparse(output_path)
+
+  if parse_result.scheme == 'gs':
+    file_name = os.path.basename(parse_result.path)
+    gcs_path = output_path
+  else:
+    file_name = output_path
+
+  with open(file_name, 'wb') as wf:
+    joblib.dump(object, wf)
+
+  if gcs_path:
+    _upload_gcs_file(file_name, gcs_path)
 
 
 def _train_and_evaluate(estimator, dataset, output_dir):
   """Runs model training and evalation."""
-
+  # TODO: How to recover the dumped model with corresponding setting of hyperparameters ?
   x_train, y_train, x_val, y_val = dataset
 
   estimator.fit(x_train, y_train)
@@ -64,17 +100,29 @@ def _train_and_evaluate(estimator, dataset, output_dir):
 
   logging.info(scores)
 
-  # TODO(cezequiel): Write model and eval metrics to `output_dir`.
-  _ = output_dir
+  timestamp = str(int(time.time()))
+
+  model_output_path = os.path.join(output_dir,
+                                   (MODEL_FILE_NAME_PREFIX
+                                    + '_' + timestamp
+                                    + DUMP_FILE_NAME_SUFFIX))
+
+  metric_output_path = os.path.join(output_dir,
+                                    (METRIC_FILE_NAME_PREFIX
+                                     + '_' + timestamp
+                                     + DUMP_FILE_NAME_SUFFIX))
+
+  _dump_file(estimator, model_output_path)
+  _dump_file(scores, metric_output_path)
 
 
 def run_experiment(flags):
   """Testbed for running model training and evaluation."""
   # Get data for training and evaluation
-  dataset = input_util.read_from_bigquery(flags.bq_table)
+  dataset = read_from_bigquery(flags.bq_table)
 
   # Get model
-  estimator = model.get_estimator(flags)
+  estimator = get_estimator(flags)
 
   # Run training and evaluation
   _train_and_evaluate(estimator, dataset, flags.job_dir)

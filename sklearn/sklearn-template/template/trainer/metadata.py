@@ -19,17 +19,20 @@
 
 
 NUMERIC_FEATURES = [
-    'age',
-    'fare',
+  'age',
+  'fare',
 ]
 
 CATEGORICAL_FEATURES = [
-    'embarked',
-    'sex',
-    'pclass',
+  'embarked',
+  'sex',
+  'pclass',
 ]
 
 LABEL = 'survived'
 
 DATASET_SPLIT_KEY = 'dataset_type'
 
+METRIC_FILE_NAME_PREFIX = 'metric'
+MODEL_FILE_NAME_PREFIX = 'model'
+DUMP_FILE_NAME_SUFFIX = '.joblib'
