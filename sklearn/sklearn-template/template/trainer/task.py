@@ -70,7 +70,6 @@ def _train_and_evaluate(estimator, dataset, output_dir):
 
 def run_experiment(flags):
   """Testbed for running model training and evaluation."""
-
   # Get data for training and evaluation
   dataset = input_util.read_from_bigquery(flags.bq_table)
 
@@ -102,7 +101,45 @@ def _parse_args(argv):
   parser.add_argument(
     '--log_level',
     help='Logging level.',
+    choices=[
+      'DEBUG',
+      'ERROR',
+      'FATAL',
+      'INFO',
+      'WARN'
+    ],
     default='INFO',
+  )
+
+  parser.add_argument(
+    '--n_estimator',
+    help='Number of trees in the forest.',
+    default=10,
+    type=int
+  )
+
+  parser.add_argument(
+    '--max_depth',
+    help='The maximum depth of the tree.',
+    type=int,
+    default=None
+  )
+
+  parser.add_argument(
+    '--min_samples_leaf',
+    help='The minimum number of samples required to be at a leaf node.',
+    default=1,
+    type=int
+  )
+
+  parser.add_argument(
+    '--criterion',
+    help='The function to measure the quality of a split.',
+    choices=[
+      'gini',
+      'entropy',
+    ],
+    default='gini'
   )
 
   return parser.parse_args(argv)
