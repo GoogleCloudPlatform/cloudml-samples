@@ -18,11 +18,38 @@
 import argparse
 import logging
 import sys
+from urllib.parse import urlparse
 
 from sklearn import model_selection
 
+from google.cloud import storage
+
 from trainer import input_util
 from trainer import model
+
+
+def _upload_gcs_file(local_path, gcs_path):
+  """
+  Upload local file to Google Cloud Storage
+  Args:
+    local_path: (string) Local file
+    gcs_path: (string) Google Cloud Storage destination
+
+  Returns:
+    None
+  """
+  storage_client = storage.Client()
+  parse_result = urlparse(gcs_path)
+
+  # Parse bucket name
+  gcs_path = parse_result.path
+  bucket_name = parse_result.hostname
+  bucket = storage_client.get_bucket(bucket_name)
+
+  blob_path = gcs_path[1:] if gcs_path[0] == '/' else gcs_path
+  blob = bucket.blob(blob_path)
+
+  blob.upload_from_filename(local_path)
 
 
 def _train_and_evaluate(estimator, dataset, output_dir):
