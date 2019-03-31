@@ -25,6 +25,10 @@ from urllib.parse import urlparse
 from sklearn import model_selection
 from sklearn.externals import joblib
 
+import numpy as np
+
+import hypertune
+
 from google.cloud import storage
 
 from trainer.input_util import read_from_bigquery
@@ -34,7 +38,7 @@ from trainer.metadata import METRIC_FILE_NAME_PREFIX
 from trainer.metadata import DUMP_FILE_NAME_SUFFIX
 
 
-def _upload_gcs_file(local_path, gcs_path):
+def _upload_to_gcs(local_path, gcs_path):
   """
   Upload local file to Google Cloud Storage
 
@@ -61,12 +65,12 @@ def _upload_gcs_file(local_path, gcs_path):
   blob.upload_from_filename(local_path)
 
 
-def _dump_file(object, output_path):
+def _dump_object(object_to_dump, output_path):
   """
   Pickle the object and save to the output_path
 
   Args:
-    object: Python object to be pickled
+    object_to_dump: Python object to be pickled
     output_path: (string) output path which can be Google Cloud Storage
 
   Returns:
@@ -82,10 +86,10 @@ def _dump_file(object, output_path):
     file_name = output_path
 
   with open(file_name, 'wb') as wf:
-    joblib.dump(object, wf)
+    joblib.dump(object_to_dump, wf)
 
   if gcs_path:
-    _upload_gcs_file(file_name, gcs_path)
+    _upload_to_gcs(file_name, gcs_path)
 
 
 def _train_and_evaluate(estimator, dataset, output_dir):
@@ -112,8 +116,18 @@ def _train_and_evaluate(estimator, dataset, output_dir):
                                      + '_' + timestamp
                                      + DUMP_FILE_NAME_SUFFIX))
 
-  _dump_file(estimator, model_output_path)
-  _dump_file(scores, metric_output_path)
+  _dump_object(estimator, model_output_path)
+  _dump_object(scores, metric_output_path)
+
+  # The default name of the metric is training/hptuning/metric.
+  # We recommend that you assign a custom name. The only functional difference is that
+  # if you use a custom name, you must set the hyperparameterMetricTag value in the
+  # HyperparameterSpec object in your job request to match your chosen name.
+  hpt = hypertune.HyperTune()
+  hpt.report_hyperparameter_tuning_metric(
+    hyperparameter_metric_tag='my_metric_tag',
+    metric_value=np.mean(scores),
+    global_step=1000)
 
 
 def run_experiment(flags):
