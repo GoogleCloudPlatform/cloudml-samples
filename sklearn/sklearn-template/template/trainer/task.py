@@ -104,21 +104,6 @@ def _train_and_evaluate(estimator, dataset, output_dir):
 
   logging.info(scores)
 
-  timestamp = str(int(time.time()))
-
-  model_output_path = os.path.join(output_dir,
-                                   (MODEL_FILE_NAME_PREFIX
-                                    + '_' + timestamp
-                                    + DUMP_FILE_NAME_SUFFIX))
-
-  metric_output_path = os.path.join(output_dir,
-                                    (METRIC_FILE_NAME_PREFIX
-                                     + '_' + timestamp
-                                     + DUMP_FILE_NAME_SUFFIX))
-
-  _dump_object(estimator, model_output_path)
-  _dump_object(scores, metric_output_path)
-
   # The default name of the metric is training/hptuning/metric.
   # We recommend that you assign a custom name. The only functional difference is that
   # if you use a custom name, you must set the hyperparameterMetricTag value in the
@@ -128,6 +113,23 @@ def _train_and_evaluate(estimator, dataset, output_dir):
     hyperparameter_metric_tag='my_metric_tag',
     metric_value=np.mean(scores),
     global_step=1000)
+
+  timestamp = str(int(time.time()))
+  trial_id = str(hpt.trial_id)
+
+  # Export to the folder of output_dir/trial_id/FILE_NAME_PREFIX_timestampFILE_NAME_SUFFIX
+  model_output_path = os.path.join(output_dir, trial_id,
+                                   (MODEL_FILE_NAME_PREFIX
+                                    + '_' + timestamp
+                                    + DUMP_FILE_NAME_SUFFIX))
+
+  metric_output_path = os.path.join(output_dir, trial_id,
+                                    (METRIC_FILE_NAME_PREFIX
+                                     + '_' + timestamp
+                                     + DUMP_FILE_NAME_SUFFIX))
+
+  _dump_object(estimator, model_output_path)
+  _dump_object(scores, metric_output_path)
 
 
 def run_experiment(flags):
