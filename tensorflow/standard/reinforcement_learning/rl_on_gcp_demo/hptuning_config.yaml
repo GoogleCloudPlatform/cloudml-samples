@@ -1,0 +1,50 @@
+trainingInput:
+  hyperparameters:
+    goal: MAXIMIZE
+    hyperparameterMetricTag: Training/Reward
+    maxTrials: 10
+    maxParallelTrials: 2
+    params:
+      - parameterName: critic_lr
+        type: DOUBLE
+        minValue: 0.0001
+        maxValue: 0.001
+      - parameterName: actor_lr
+        type: DOUBLE
+        minValue: 0.0001
+        maxValue: 0.001
+      - parameterName: gamma
+        type: DOUBLE
+        minValue: 0.9
+        maxValue: 0.99
+      - parameterName: tau
+        type: DOUBLE
+        minValue: 0.001
+        maxValue: 0.01
+      - parameterName: sigma
+        type: DOUBLE
+        minValue: 0.05
+        maxValue: 0.15
+      - parameterName: sigma_tilda
+        type: DOUBLE
+        minValue: 0.05
+        maxValue: 0.15
+      - parameterName: c
+        type: DOUBLE
+        minValue: 0.05
+        maxValue: 0.20
+      - parameterName: grad_norm_clip
+        type: DOUBLE
+        minValue: 1.0
+        maxValue: 10.0
+      - parameterName: d
+        type: INTEGER
+        minValue: 2
+        maxValue: 10
+      - parameterName: batch_size
+        type: DISCRETE
+        discreteValues:
+        - 32
+        - 64
+        - 128
+        - 256

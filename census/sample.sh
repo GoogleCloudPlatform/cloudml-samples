@@ -15,6 +15,7 @@
 
 run_script_local() {
 	cd $1
+	echo "Running '$1' code sample."
 	GCS_TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 	GCS_EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 	CENSUS_DATA=census_data
@@ -37,13 +38,14 @@ run_script_local() {
 	                       --eval-steps 100
 
 	if [ $? = 0 ]; then
-		echo "python script succeeded"
+		echo "Python script succeeded!"
+		echo "Cleaning up..."
 		rm -rf $CENSUS_DATA
 		rm -rf $OUTPUT_DIR
 		cd ..
 		return 0
 	fi
-	echo "python script failed"
+	echo "Python script failed!"
 	return 1
 }
 
@@ -58,4 +60,11 @@ if [ $? = 1 ]; then
 fi
 
 run_script_local tensorflowcore
+if [ $? = 1 ]; then
+	exit 1
+fi
 
+run_script_local keras
+if [ $? = 1 ]; then
+	exit 1
+fi

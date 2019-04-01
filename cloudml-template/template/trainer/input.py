@@ -20,6 +20,7 @@ import multiprocessing
 
 import tensorflow as tf
 from tensorflow import data
+from tensorflow_model_analysis import export as tfma_export
 
 import metadata
 import featurizer
@@ -32,17 +33,18 @@ import task
 
 
 def parse_csv(csv_row, is_serving=False):
-    """Takes the string input tensor (csv) and returns a dict of rank-2 tensors.
+    """Takes a batch of csv rows and returns a dict of rank-2 tensors.
 
-    Takes a rank-1 tensor and converts it into rank-2 tensor, with respect to its data type
-    (inferred from the metadata)
+    Takes a rank-2 tensor and converts it into rank-2 tensor, with respect to
+    its data type (inferred from the metadata)
 
     Args:
-        csv_row: rank-2 tensor of type string (csv)
-        is_serving: boolean to indicate whether this function is called during serving or training
-        since the serving csv_row input is different than the training input (i.e., no target column)
+        csv_row: rank-2 tensor of type string (csv rows)
+        is_serving: boolean to indicate whether this function is called during
+        serving or training since the serving csv_row input is different than
+        the training input (i.e., no target column)
     Returns:
-        rank-2 tensor of the correct data type
+        rank-2 tensors' dictionary of the correct data type
     """
 
     if is_serving:
@@ -52,16 +54,17 @@ def parse_csv(csv_row, is_serving=False):
         column_names = metadata.HEADER
         defaults = metadata.HEADER_DEFAULTS
 
-    columns = tf.decode_csv(tf.expand_dims(csv_row, -1), record_defaults=defaults)
+    defaults = [[default] for default in defaults]
+    columns = tf.decode_csv(csv_row, record_defaults=defaults)
     features = dict(zip(column_names, columns))
 
     return features
 
 
 def parse_tf_example(example_proto, is_serving=False):
-    """Takes the string input tensor (example proto) and returns a dict of rank-2 tensors.
+    """Takes a batch of string input tensors (example proto) and returns a dict of rank-2 tensors.
 
-    Takes a rank-1 tensor and converts it into rank-2 tensor, with respect to its data type
+    Takes a rank-2 tensor and converts it into a dictionary of rank-2 tensor, with respect to its data type
     (inferred from the  metadata)
 
     Args:
@@ -69,7 +72,7 @@ def parse_tf_example(example_proto, is_serving=False):
         is_serving: boolean to indicate whether this function is called during serving or training
         since the serving csv_row input is different than the training input (i.e., no target column)
     Returns:
-        rank-2 tensor of the correct data type
+        rank-2 tensors' dictionary of the correct data type
     """
 
     feature_spec = {}
@@ -213,13 +216,22 @@ def generate_input_fn(file_names_pattern,
         file_names = tf.matching_files(file_names_pattern)
 
         if file_encoding == 'csv':
-            dataset = data.TextLineDataset(filenames=file_names)
-            dataset = dataset.skip(skip_header_lines)
-            dataset = dataset.map(lambda csv_row: parse_csv(csv_row))
+            # Parallely processes num_threads files at the time.
+            # Also, since the batch function is called before the map function
+            # we use a block lenght of 1 to output one batch from every input
+            # file before moving to the next file
+            dataset = (data.Dataset.from_tensor_slices(file_names)
+              .interleave(lambda x:
+                data.TextLineDataset(x)
+                .skip(skip_header_lines)
+                .batch(batch_size)
+                .map(parse_csv, num_parallel_calls=num_threads),
+                  cycle_length=num_threads, block_length=1))
 
         else:
             dataset = data.TFRecordDataset(filenames=file_names)
-            dataset = dataset.map(lambda tf_example: parse_tf_example(tf_example),
+            dataset = dataset = dataset.batch(batch_size)
+            dataset = dataset.map(lambda tf_examples: parse_tf_example(tf_examples),
                                   num_parallel_calls=num_threads)
 
         dataset = dataset.map(lambda features: get_features_target_tuple(features),
@@ -230,7 +242,6 @@ def generate_input_fn(file_names_pattern,
         if shuffle:
             dataset = dataset.shuffle(buffer_size)
 
-        dataset = dataset.batch(batch_size)
         dataset = dataset.prefetch(buffer_size)
         dataset = dataset.repeat(num_epochs)
 
@@ -325,6 +336,32 @@ def csv_serving_input_fn():
     )
 
 
+def tfma_csv_serving_input_fn():
+    """Build everything needed to run tf-model-analysis when using CSV as input
+    for the model.
+
+    Returns:
+        EvalInputReceiver function, which contains:
+          - Tensorflow graph which parses raw untranformed features, applies the
+            tf-transform preprocessing operators.
+          - Set of raw, untransformed features.
+          - Label against which predictions will be compared.
+    """
+
+    # Notice that the inputs are raw features, not transformed features here.
+    csv_row = tf.placeholder(shape=[None], dtype=tf.string)
+
+    features = parse_csv(csv_row, is_serving=False)
+
+    # The key name MUST be 'examples'. See https://goo.gl/2SV7Ug
+    receiver_tensors = {'examples': csv_row}
+
+    return tfma_export.EvalInputReceiver(
+        features=process_features(features),
+        receiver_tensors=receiver_tensors,
+        labels=features[metadata.TARGET_NAME])
+
+
 def example_serving_input_fn():
     feature_columns = featurizer.create_feature_columns()
     input_feature_columns = [feature_columns[feature_name] for feature_name in metadata.INPUT_FEATURE_NAMES]
@@ -349,9 +386,49 @@ def example_serving_input_fn():
     )
 
 
+def tfma_example_serving_input_fn():
+    """Build everything needed to run tf-model-analysis when using examples as
+    input for the model.
+
+    Returns:
+        EvalInputReceiver function, which contains:
+          - Tensorflow graph which parses raw untranformed features, applies the
+            tf-transform preprocessing operators.
+          - Set of raw, untransformed features.
+          - Label against which predictions will be compared.
+    """
+    feature_columns = featurizer.create_feature_columns()
+    input_feature_columns = [feature_columns[feature_name] for feature_name in metadata.INPUT_FEATURE_NAMES]
+
+    example_bytestring = tf.placeholder(
+        shape=[None],
+        dtype=tf.string,
+    )
+    feature_scalars = tf.parse_example(
+        example_bytestring,
+        tf.feature_column.make_parse_example_spec(input_feature_columns)
+    )
+
+    features = {
+        key: tf.expand_dims(tensor, -1)
+        for key, tensor in feature_scalars.iteritems()
+    }
+
+    return tfma_export.EvalInputReceiver(
+        features=process_features(features),
+        # The key name MUST be 'examples'. See https://goo.gl/2SV7Ug
+        receiver_tensors={'examples': example_bytestring},
+        labels=features[metadata.TARGET_NAME])
+
+
 SERVING_FUNCTIONS = {
     'JSON': json_serving_input_fn,
     'EXAMPLE': example_serving_input_fn,
     'CSV': csv_serving_input_fn
+}
+
+TFMA_SERVING_FUNCTIONS = {
+    'EXAMPLE': tfma_example_serving_input_fn,
+    'CSV': tfma_csv_serving_input_fn
 }
 

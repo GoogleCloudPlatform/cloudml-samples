@@ -1,8 +1,6 @@
 # [START setup]
 import datetime
-import os
 import pandas as pd
-import subprocess
 
 from google.cloud import storage
 
@@ -14,8 +12,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelBinarizer
 
 
-# TODO: REPLACE 'true-ability-192918' with your GCS BUCKET_ID
-BUCKET_ID = 'true-ability-192918'
+# TODO: REPLACE 'YOUR_BUCKET_NAME' with your GCS Bucket name. 
+BUCKET_NAME = 'YOUR_BUCKET_NAME'
 # [END setup]
 
 
@@ -76,9 +74,9 @@ with open('./adult.data', 'r') as train_data:
 
 # Remove the column we are trying to predict ('income-level') from our features list
 # Convert the Dataframe to a lists of lists
-train_features = raw_training_data.drop('income-level', axis=1).as_matrix().tolist()
+train_features = raw_training_data.drop('income-level', axis=1).values.tolist()
 # Create our training labels list, convert the Dataframe to a lists of lists
-train_labels = (raw_training_data['income-level'] == ' >50K').as_matrix().tolist()
+train_labels = (raw_training_data['income-level'] == ' >50K').values.tolist()
 # [END define-and-load-data]
 
 
@@ -102,14 +100,11 @@ for i, col in enumerate(COLUMNS[:-1]):
         #         'Not-in-family', 'White', 'Male', 2174, 0, 40, 'United-States']
         #  scores = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         #
-        # Returns: [['Sate-gov']]
-        scores = []
-        # Build the scores array
-        for j in range(len(COLUMNS[:-1])):
-            if i == j: # This column is the categorical column we want to extract.
-                scores.append(1) # Set to 1 to select this column
-            else: # Every other column should be ignored.
-                scores.append(0)
+        # Returns: [['State-gov']]      
+        # Build the scores array.
+        scores = [0] * len(COLUMNS[:-1]) 
+        # This column is the categorical column we want to extract.
+        scores[i] = 1  
         skb = SelectKBest(k=1)
         skb.scores_ = scores
         # Convert the categorical column to a numerical value
@@ -156,7 +151,7 @@ model = 'model.joblib'
 joblib.dump(pipeline, model)
 
 # Upload the model to GCS
-bucket = storage.Client().bucket(BUCKET_ID)
+bucket = storage.Client().bucket(BUCKET_NAME)
 blob = bucket.blob('{}/{}'.format(
     datetime.datetime.now().strftime('census_%Y%m%d_%H%M%S'),
     model))

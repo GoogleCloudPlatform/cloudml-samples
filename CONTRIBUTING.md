@@ -29,43 +29,38 @@ We are happy to see your enthusiasm. This table lists the criteria and how impor
 | Maintain version dependency updates     | Yes | Optional |
 
 
-## Expectations
+## How to become a contributor and submit your own code
 
-### Contributors
+## Contributor License Agreements
 
-- Please read the Python Dev Guide and in particular the [Google Python Style Guide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md).
+We'd love to accept your CMLE samples and patches! Before we can take them, we
+have to jump a couple of legal hurdles.
 
-- Your Pull Request for existing samples should be small and include a single logical change.
+Please fill out either the individual or corporate Contributor License Agreement
+(CLA).
 
-- Smaller changes are easier to review and evaluate, and in general smaller self-contained PRs make it easier to debug or, if needed, rollback.
+  * If you are an individual writing original source code and you're sure you
+    own the intellectual property, then you'll need to sign an [individual
+     CLA](https://developers.google.com/open-source/cla/individual).
+  * If you work for a company that wants to allow you to contribute your work,
+    then you'll need to sign a [corporate
+    CLA](https://developers.google.com/open-source/cla/corporate).
 
-- If your code appears to include generic functionality, make sure you have not reinvented the wheel.
-
-- Check other repos and, for instance, prefer adapting code that already exists over a new implementation.
-
-- Your change should pass existing unit tests.
-
-- You should provide a sufficiently detailed description of your Pull Request.
-
-- Good descriptions make it easy to understand what the goal of the change is. Writing a good description may also make it apparent if multiple changes are being bundled in the same Pull Request that could be split.
-
-- The LGTM from the code owner ("code review") should ensure both the change intention and implementation are suitable for the codebase being changed. The review from Google team can then focus on the specificities of the Python language.
-
-- Your Pull Request should not have any pending commits (modified in Local Branch but not uploaded).
-
-- You should be able to make (possibly significant) changes to your Pull Request.
-
-- Because of how Pull Request reviews work, it is possible that your reviewer will ask you to refactor the code you're modifying. If you have a long series of changes that would have to be updated, this can involve a lot of work. Consider this before building a long chain of dependent Pull Requests, preferring instead to make changes independent and self-contained.
+Follow either of the two links above to access the appropriate CLA and
+instructions for how to sign and return it. Once we receive it, we'll be able to
+accept your pull requests.
 
 
-### Reviewers
+### Contributing A Patch
 
-- Your reviewer will respond to your Pull Request within one business day (according to their location schedule, be mindful of timezone and local holidays).
-
-- Please note that in some cases you may be assigned an "overflow reviewer", in which case you may experience further delay.
-
-- The review can be streamlined by pointing out upfront known limitations or team-specific limitations of the code, for instance by providing links to supporting documentation after the code reviewer is assigned.
-
-- Approvers may recuse themselves if a higher urgency interrupt make the review likely to slip through time, or if they don't feel comfortable to review the changelist (e.g. for lack of expertise on a framework).
-
-- If this is to happen, the reviewer is expected to either find an alternative new reviewer.
+1. Submit an issue describing your proposed change to the repo in question.
+1. The repo owner will respond to your issue promptly.
+1. If your proposed change is accepted, and you haven't already done so, sign a
+   Contributor License Agreement (see details above).
+1. Fork the desired repo, develop and test your code changes.
+1. Ensure that your code adheres to the existing style in the sample to which
+   you are contributing. Refer to the
+   [Google Cloud Platform Samples Style Guide](https://github.com/GoogleCloudPlatform/Template/wiki/style.html) for the
+   recommended coding standards for this organization.
+1. Ensure that your code is tested succesfully.
+1. Submit a pull request.

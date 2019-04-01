@@ -1,137 +1,189 @@
-# Predicting Income with the Census Income Dataset
+# Overview
+This code implements a Logistic Regression model using the Google Cloud Platform. 
+It includes code to process data, train a tensorflow model with hyperparameter tuning, run predictions on new data and assess model performance.
 
-Predict a person's income level.
-
-- - -
-
-There are two samples provided in this directory. Both allow you to move from
+#
+*  **Examples**
+ 
+There are six samples provided in this directory. They allow you to move from
 single-worker training to distributed training without any code changes, and
 make it easy to export model binaries for prediction, but with the following
 distiction:
-
-
+  
 * The sample provided in [TensorFlow Core](./tensorflowcore) uses the low level
-  bindings to build a model. This example is great for understanding the
-  underlying workings of TensorFlow, best practices when using the low-level
-  APIs.
+bindings to build a model. This example is great for understanding the
+underlying workings of TensorFlow, best practices when using the low-level
+APIs.
+
+* The sample provided in [Custom Estimator](./customestimator) uses the custom
+  Tensorflow `tf.estimator.EstimatorSpec` to create a High level custom Estimator.
+  This example is a great combination of both low level configuration and fast iteration.
 
 * The sample provided in [Estimator](./estimator) uses the high level
-  `tf.contrib.learn.Estimator` API. This API is great for fast iteration, and
+  `tf.estimator.DNNLinearCombinedClassifier` API. This API is great for fast iteration, and
   quickly adapting models to your own datasets without major code overhauls.
 
-All the models provided in this directory can be run on the Cloud Machine Learning Engine. To follow along, check out the setup instruction [here](https://cloud.google.com/ml/docs/how-tos/getting-set-up).
+* The sample provided in [Keras](./keras) uses the native Keras library.
+  This API is great for fast iteration, and quickly adapting models to your own datasets 
+  without major code overhauls.
 
-## Download the data
+* The sample provided in [TensorFlow Keras](./tf-keras) uses `tf.keras`,
+  TensorFlow's implementation of the Keras API specification. This provides the
+  benefits of Keras and also first-class support for TensorFlow-specific
+  functionality.
+
+* The sample provided in [TFT Transform Estimator](./tftransformestimator) shows how to use [tf transform](https://github.com/tensorflow/transform) together with [Cloud Dataflow](https://cloud.google.com/dataflow) and [Cloud ML Engine](https://cloud.google.com/ml-engine/).
+
+All the models provided in this directory can be run on the Cloud Machine Learning Engine.
+
+#
+* **Notebooks**
+
+    - [Estimator](estimator/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/estimator/task.ipynb))
+
+    - [Custom Estimator](customestimator/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/customestimator/trainer/task.ipynb))
+
+    - [Keras](keras/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/keras/trainer/task.ipynb))
+
+    - [TensorFlow Keras](../notebooks/tensorflow/getting-started-keras.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/notebooks/tensorflow/getting-started-keras.ipynb))
+
+    - [TensorFlow Core](tensorflowcore/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/tensorflowcore/trainer/task.ipynb))
+
+#
+* **Data description**
+
 The [Census Income Data
 Set](https://archive.ics.uci.edu/ml/datasets/Census+Income) that this sample
 uses for training is hosted by the [UC Irvine Machine Learning
-Repository](https://archive.ics.uci.edu/ml/datasets/). We have hosted the data
-on Google Cloud Storage in a slightly cleaned form:
+Repository](https://archive.ics.uci.edu/ml/datasets/).
 
- * Training file is `adult.data.csv`
- * Evaluation file is `adult.test.csv`
+Using census data which contains data a person's age, education, marital status, 
+and occupation (the features), we will try to predict whether or not the person earns 
+more than 50,000 dollars a year (the target label). We will train a logistic regression 
+model that, given an individual's information, outputs a number between 0 and 1, this can 
+be interpreted as the probability that the individual has an annual income of over 50,000 dollars.
 
-### Disclaimer
+As a modeler and developer, think about how this data is used and the potential benefits and harm a model's predictions can cause. A model like this could reinforce societal biases and disparities. Is each feature relevant to the problem you want to solve or will it introduce bias? For more information, read about [ML fairness](https://developers.google.com/machine-learning/fairness-overview/).
+ 
+* **Disclaimer**
+
 This dataset is provided by a third party. Google provides no representation,
 warranty, or other guarantees about the validity or any other aspects of this dataset.
 
-### Set Environment Variables
-Please run the export and copy statements first:
+* **Setup and test your GCP environment**
 
-```
-TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
-EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
-```
+The best way to setup your GCP project is to use this section in this
+[tutorial](https://cloud.google.com/ml-engine/docs/tensorflow/getting-started-training-prediction#set-up-your-gcp-project).
 
-### \*Optional\* Use local training files.
+* **Environment setup:**
 
-Since TensorFlow - not the Cloud ML Engine - handles reading from GCS, you can run all commands below using these environment variables. However, if your network is slow or unreliable, you may want to download the files for local training.
-
-```
-mkdir census_data
-
-gsutil cp $TRAIN_FILE census_data/adult.data.csv
-gsutil cp $EVAL_FILE census_data/adult.test.csv
-
-TRAIN_FILE=census_data/adult.data.csv
-EVAL_FILE=census_data/adult.test.csv
-```
-
-
-## Virtual environment
 Virtual environments are strongly suggested, but not required. Installing this
 sample's dependencies in a new virtual environment allows you to run the sample
-without changing global python packages on your system.
+locally without changing global python packages on your system.
 
 There are two options for the virtual environments:
- * Install [Virtual](https://virtualenv.pypa.io/en/stable/) env
-   * Create virtual environment `virtualenv single-tf`
-   * Activate env `source single-tf/bin/activate`
- * Install [Miniconda](https://conda.io/miniconda.html)
-   * Create conda environment `conda create --name single-tf python=2.7`
-   * Activate env `source activate single-tf`
+
+*   Install [Virtualenv](https://virtualenv.pypa.io/en/stable/) 
+    *   Create virtual environment `virtualenv myvirtualenv`
+    *   Activate env `source myvirtualenv/bin/activate`
+*   Install [Miniconda](https://conda.io/miniconda.html)
+    *   Create conda environment `conda create --name myvirtualenv python=2.7`
+    *   Activate env `source activate myvirtualenv`
+
+* **Install dependencies**
+
+Install the python dependencies. `pip install --upgrade -r requirements.txt`
+
+#
+
+* **How to satisfy Cloud ML Engine project structure requirements**
+
+Follow [this](https://cloud.google.com/ml-engine/docs/tensorflow/packaging-trainer#project-structure) guide to structure your training application.
 
 
-## Install dependencies
 
- * Install [gcloud](https://cloud.google.com/sdk/gcloud/)
- * Install the python dependencies. `pip install --upgrade -r requirements.txt`
+# Data processing
 
-# Single Node Training
-Single node training runs TensorFlow code on a single instance. You can run the exact
-same code locally and on Cloud ML Engine.
+We host the Census files required for you to run this sample. Files are hosted in a Public Bucket.
 
-## How to run the code
-You can run the code either as a stand-alone python program or using `gcloud`.
-See options below:
+If you want to use local files directly, you can use the following commands:
 
-### Using local python
-Run the code on your local machine:
+TensorFlow - not the Cloud ML Engine - handles reading from GCS, you can run all commands below using these environment variables. However, if your network is slow or unreliable, you may want to download the files for local training.
+
+```
+CENSUS_DATA=census_data
+mkdir $CENSUS_DATA
+gsutil cp gs://cloud-samples-data/ml-engine/census/data/adult.data.csv $CENSUS_DATA
+gsutil cp gs://cloud-samples-data/ml-engine/census/data/adult.test.csv $CENSUS_DATA
+```
+
+* **Upload the data to a Google Cloud Storage bucket**
+
+Cloud ML Engine works by using resources available in the cloud, so the training
+data needs to be placed in such a resource. For this example, we'll use [Google
+Cloud Storage], but it's possible to use other resources like [BigQuery]. Make a
+bucket (names must be globally unique) and place the data in there:
+
+```shell
+gsutil mb gs://your-bucket-name
+gsutil cp -r data/adult.data.csv gs://your-bucket-name/adult.data.csv
+gsutil cp -r data/adult.test.csv gs://your-bucket-name/adult.test.csv
+```
+
+# Training
+
+* **GCloud configuration:**
 
 ```
 export TRAIN_STEPS=1000
 DATE=`date '+%Y%m%d_%H%M%S'`
-export OUTPUT_DIR=census_$DATE
-rm -rf $OUTPUT_DIR
+export JOB_DIR=census_$DATE
+rm -rf $JOB_DIR
+export TRAIN_FILE=census_data/adult.data.csv
+export EVAL_FILE=census_data/adult.test.csv
 ```
 
-### Model location reuse
-Its worth calling out that unless you want to reuse the old model output dir,
-model location should be a new location so that old model doesn't conflict with new
-one. 
+* **Test locally:**
 
 ```
 python -m trainer.task --train-files $TRAIN_FILE \
-                       --eval-files $EVAL_FILE \
-                       --job-dir $OUTPUT_DIR \
-                       --train-steps $TRAIN_STEPS \
-                       --eval-steps 100
+    --eval-files $EVAL_FILE \
+    --job-dir $JOB_DIR \
+    --train-steps $TRAIN_STEPS \
+    --eval-steps 100
 ```
 
-### Using gcloud local
-Run the code on your local machine using `gcloud`. This allows you to mock
-running it on the cloud:
+* **Google Cloud ML Engine**
+
+* **GCloud configuration:**
 
 ```
-export TRAIN_STEPS=1000
 DATE=`date '+%Y%m%d_%H%M%S'`
-export OUTPUT_DIR=census_$DATE
-rm -rf $OUTPUT_DIR
+export JOB_DIR=census_$DATE
+rm -rf $JOB_DIR
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
+export TRAIN_STEPS=1000
 ```
+
+* **Run locally via the gcloud command for Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine local train --package-path trainer \
-                           --module-name trainer.task \
-                           -- \
-                           --train-files $TRAIN_FILE \
-                           --eval-files $EVAL_FILE \
-                           --job-dir $OUTPUT_DIR \
-                           --train-steps $TRAIN_STEPS \
-                           --eval-steps 100
+    --module-name trainer.task \
+    -- \
+    --train-files $TRAIN_FILE \
+    --eval-files $EVAL_FILE \
+    --job-dir $JOB_DIR \
+    --train-steps $TRAIN_STEPS \
+    --eval-steps 100
 ```
 
-### Using Cloud ML Engine
-*NOTE* If you used downloaded the training files to your local file system, be sure
+* **Run in Google Cloud ML Engine**
+
+You can train the model on Cloud ML Engine:
+
+*NOTE:* If you downloaded the training files to your local filesystem, be sure
 to reset the `TRAIN_FILE` and `EVAL_FILE` environment variables to refer to a GCS location.
 Data must be in GCS for cloud-based training.
 
@@ -139,144 +191,129 @@ Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
 before `--` while training on the cloud and this is so that we can have
 different trial runs during Hyperparameter tuning.
 
+* **GCloud configuration:**
+
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=census_$DATE
-export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/jobs/$JOB_NAME
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
 echo $GCS_JOB_DIR
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 export TRAIN_STEPS=5000
+export REGION=us-central1
 ```
+
+* **Run in Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
-                                    --stream-logs \
-                                    --runtime-version 1.4 \
-                                    --job-dir $GCS_JOB_DIR \
-                                    --module-name trainer.task \
-                                    --package-path trainer/ \
-                                    --region us-central1 \
-                                    -- \
-                                    --train-files $TRAIN_FILE \
-                                    --eval-files $EVAL_FILE \
-                                    --train-steps $TRAIN_STEPS \
-                                    --eval-steps 100
-
+    --stream-logs \
+    --runtime-version 1.10 \
+    --job-dir $GCS_JOB_DIR \
+    --module-name trainer.task \
+    --package-path trainer/ \
+    --region $REGION \
+    -- \
+    --train-files $TRAIN_FILE \
+    --eval-files $EVAL_FILE \
+    --train-steps $TRAIN_STEPS \
+    --eval-steps 100
 ```
 
-## Tensorboard
-Run the Tensorboard to inspect the details about the graph.
+* **Monitor with TensorBoard:**
 
 ```
 tensorboard --logdir=$GCS_JOB_DIR
 ```
 
-## Accuracy and Output
+* **Accuracy and Output:**
+
 You should see the output for default number of training steps and approx accuracy close to `80%`.
 
-# Distributed Node Training
+* **Distributed Node Training in Google Cloud ML Engine:**
+
 Distributed node training uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed).
 The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml/reference/configuration-data-structures#tf_config_environment_variable)
 environment variable. The environment variable is generated using `gcloud` and parsed to create a
-[ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster). See the [ScaleTier](https://cloud.google.com/ml/pricing#ml_training_units_by_scale_tier) for predefined tiers
+[ClusterSpec](https://www.tensorflow.org/deploy/distributed#create_a_tftrainclusterspec_to_describe_the_cluster). See the [ScaleTier](https://cloud.google.com/ml/pricing#ml_training_units_by_scale_tier) for predefined tiers.
 
-## How to run the code
-You can run the code either locally or on cloud using `gcloud`.
-
-### Using gcloud local
-Run the distributed training code locally using `gcloud`.
-
-```
-export TRAIN_STEPS=1000
-DATE=`date '+%Y%m%d_%H%M%S'`
-export OUTPUT_DIR=census_$DATE
-rm -rf $OUTPUT_DIR
-```
-
-```
-gcloud ml-engine local train --package-path trainer \
-                           --module-name trainer.task \
-                           --distributed \
-                           -- \
-                           --train-files $TRAIN_FILE \
-                           --eval-files $EVAL_FILE \
-                           --train-steps $TRAIN_STEPS \
-                           --job-dir $OUTPUT_DIR \
-                           --eval-steps 100
-
-```
-
-### Using Cloud ML Engine
-Run the distributed training code on cloud using `gcloud`.
+* **GCloud configuration:**
 
 ```
 export SCALE_TIER=STANDARD_1
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=census_$DATE
-export GCS_JOB_DIR=gs://<my-bucket>/path/to/my/models/$JOB_NAME
-echo $GCS_JOB_DIR
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
+export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 export TRAIN_STEPS=5000
+export REGION=us-central1
 ```
+
+* **Run locally:**
+
+```
+gcloud ml-engine local train --package-path trainer \
+    --module-name trainer.task \
+    --distributed \
+    -- \
+    --train-files $TRAIN_FILE \
+    --eval-files $EVAL_FILE \
+    --train-steps $TRAIN_STEPS \
+    --job-dir $GCS_JOB_DIR \
+    --eval-steps 100
+```
+                        
+* **Run in Google Cloud ML Engine:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
-                                    --stream-logs \
-                                    --scale-tier $SCALE_TIER \
-                                    --runtime-version 1.4 \
-                                    --job-dir $GCS_JOB_DIR \
-                                    --module-name trainer.task \
-                                    --package-path trainer/ \
-                                    --region us-central1 \
-                                    -- \
-                                    --train-files $TRAIN_FILE \
-                                    --eval-files $EVAL_FILE \
-                                    --train-steps $TRAIN_STEPS \
-                                    --eval-steps 100
+    --stream-logs \
+    --scale-tier $SCALE_TIER \
+    --runtime-version 1.10 \
+    --job-dir $GCS_JOB_DIR \
+    --module-name trainer.task \
+    --package-path trainer/ \
+    --region $REGION \
+    -- \
+    --train-file $TRAIN_FILE \
+    --eval-file $EVAL_FILE \
+    --train-steps $TRAIN_STEPS \
+    --eval-steps $EVAL_STEPS
 ```
 
 # Hyperparameter Tuning
+
 Cloud ML Engine allows you to perform Hyperparameter tuning to find out the
 most optimal hyperparameters. See [Overview of Hyperparameter Tuning]
 (https://cloud.google.com/ml/docs/concepts/hyperparameter-tuning-overview) for more details.
 
-## Running Hyperparameter Job
+```
+export HPTUNING_CONFIG=hptuning_config.yaml
+```
 
 Running Hyperparameter job is almost exactly same as Training job except that
 you need to add the `--config` argument.
 
 ```
-export HPTUNING_CONFIG=hptuning_config.yaml
-export JOB_NAME=census
-export TRAIN_STEPS=1000
-```
-
-```
 gcloud ml-engine jobs submit training $JOB_NAME \
-                                    --stream-logs \
-                                    --scale-tier $SCALE_TIER \
-                                    --runtime-version 1.4 \
-                                    --config $HPTUNING_CONFIG \
-                                    --job-dir $GCS_JOB_DIR \
-                                    --module-name trainer.task \
-                                    --package-path trainer/ \
-                                    --region us-central1 \
-                                    -- \
-                                    --train-files $TRAIN_FILE \
-                                    --eval-files $EVAL_FILE \
-                                    --train-steps $TRAIN_STEPS \
-                                    --eval-steps 100
-
+    --stream-logs \
+    --scale-tier $SCALE_TIER \
+    --runtime-version 1.10 \
+    --config $HPTUNING_CONFIG \
+    --job-dir $GCS_JOB_DIR \
+    --module-name trainer.task \
+    --package-path trainer/ \
+    --region $REGION \
+    -- \
+    --train-file $TRAIN_FILE \
+    --eval-file $EVAL_FILE \
+    --train-steps $TRAIN_STEPS \
+    --eval-steps $EVAL_STEPS                        
 ```
 
-You can run the Tensorboard command to see the results of different runs and
-compare accuracy / auroc numbers:
-
-```
-tensorboard --logdir=$GCS_JOB_DIR
-```
-
-## Run Predictions
-
-### Create A Prediction Service
+# Prediction
 
 Once your training job has finished, you can use the exported model to create a prediction server. To do this you first create a model:
 
@@ -292,40 +329,47 @@ gsutil ls -r $GCS_JOB_DIR/export
 
 
  * Estimator Based: You should see a directory named `$GCS_JOB_DIR/export/census/<timestamp>`.
- ```
+```
  export MODEL_BINARIES=$GCS_JOB_DIR/export/census/<timestamp>
- ```
+```
 
  * Low Level Based: You should see a directory named `$GCS_JOB_DIR/export/JSON/`
    for `JSON`. See other formats `CSV` and `TFRECORD`.
- ```
- export MODEL_BINARIES=$GCS_JOB_DIR/export/JSON/
- ```
-
+ 
 ```
-gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.4
+export MODEL_BINARIES=$GCS_JOB_DIR/export/CSV/
 ```
 
-### (Optional) Inspect the model binaries with the SavedModel CLI
+```
+gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.10
+
+```
+
+(Optional) Inspect the model binaries with the SavedModel CLI
 TensorFlow ships with a CLI that allows you to inspect the signature of exported binary files. To do this run:
 
 ```
-saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def predict
+SIGNATURE_DEF_KEY=`saved_model_cli show --dir $MODEL_BINARIES --tag serve | grep "SignatureDef key:" | awk 'BEGIN{FS="\""}{print $2}' | head -1`
+saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def $SIGNATURE_DEF_KEY
 ```
 
-### Run Online Predictions
+* **Run Online Predictions**
 
 You can now send prediction requests to the API. To test this out you can use the `gcloud ml-engine predict` tool:
 
 ```
-gcloud ml-engine predict --model census --version v1 --json-instances ../test.json
+gcloud ml-engine predict --model census --version v1 --json-instances test.json
+```
+
+Using CSV:
+
+```
+gcloud ml-engine predict --model census --version v1 --text-instances test.csv
 ```
 
 You should see a response with the predicted labels of the examples!
 
-### Run Batch Prediction
-
-If you have large amounts of data, and no latency requirements on receiving prediction results, you can submit a prediction job to the API. This uses the same format as online prediction, but requires data be stored in Google Cloud Storage
+* **Run Batch Prediction**
 
 ```
 export JOB_NAME=census_prediction
@@ -336,8 +380,8 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --model census \
     --version v1 \
     --data-format TEXT \
-    --region us-central1 \
-    --runtime-version 1.4 \
+    --region $REGION \
+    --runtime-version 1.10 \
     --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/census.json \
     --output-path $GCS_JOB_DIR/predictions
 ```
@@ -349,3 +393,64 @@ gcloud ml-engine jobs describe $JOB_NAME
 ```
 
 Once the job is `SUCCEEDED` you can check the results in `--output-path`.
+
+
+# (Optional) Preprocessing with Dataflow
+
+**Note: This is available only for [Estimator](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/master/census/estimator)/.**
+
+* **Objective**
+
+Data preprocessing is not an absolute necessity in our use case. You can see running instructions without preprocessing: in this case, we are training the model on train.csv, evaluating it on test.csv and keeping one example in test.json to call the deployed model with.
+
+One minor caveat is that we do not have a perfect train/eval/test split: we are using the real test set as a validation one and have only one example in the real test set, which is enough to debug the model API but not enough to run complementary analysis. Hence, we build a data preprocessing pipeline that will correct this by splitting the initial train csv into a train and eval sets. 
+
+We will implement this in Dataflow, which like using a sledgehammer to crack a nut, however this is a great opportunity to showcase the key principles of this tool. In other applications, it is likely that your initial data will require some cleaning with Dataflow.
+
+
+* **GCloud configuration:**
+
+```
+export BUCKET_NAME=your-bucket-name
+export PROJECT_ID=$(gcloud config list --format 'value(core.project)' 2>/dev/null)
+
+export TRAINING_DATA=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
+```
+
+* **Run preprocessing locally**
+
+```
+DATAFLOW_DIR=dataflow_dir
+
+python -m preprocessing/run_preprocessing \
+    --project_id $PROJECT_ID \
+    --job_dir $DATAFLOW_DIR \
+    --input_data $TRAINING_DATA
+```
+
+* **Run preprocessing on Dataflow**
+
+```
+DATE_TIME=$(date +"%Y%m%d_%H%M%S")
+DATAFLOW_DIR=gs://$BUCKET_NAME/preprocessing/${JOB_NAME}
+JOB_NAME=preprocessing-${DATE_TIME}-${USER}
+
+python -m preprocessing/run_preprocessing \
+    --project_id $PROJECT_ID \
+    --job_name $JOB_NAME \
+    --job_dir $DATAFLOW_DIR \
+    --input_data $TRAINING_DATA \
+    --cloud
+```
+
+
+* **Use the updated train and eval files**
+
+```
+export TRAIN_FILE=${DATAFLOW_DIR}/output_data/train*.csv
+export EVAL_FILE=${DATAFLOW_DIR}/output_data/eval*.csv
+```
+
+## References
+
+[Tensorflow tutorial](https://www.tensorflow.org/guide/premade_estimators)

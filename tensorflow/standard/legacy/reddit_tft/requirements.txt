@@ -1,0 +1,8 @@
+# The pip syntax below allows us to not repeat
+# In order to not maintain two separate dependency
+# lists in setup.py vs requirements.txt
+# See https://caremad.io/posts/2013/07/setup-vs-requirement/
+
+--index-url https://pypi.python.org/simple/
+
+-e .

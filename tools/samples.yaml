@@ -1,0 +1,110 @@
+sample:
+  path:
+    tools
+  filename:
+    sample.py
+  remove:
+    ImportFrom:
+      - "module."
+
+census-estimator:
+  path:
+    census/estimator/trainer
+  filename:
+    task.py
+  remove:
+    Import:
+      - "trainer."
+
+census-customestimator:
+  path:
+    census/customestimator/trainer
+  filename:
+    task.py
+  remove:
+    Import:
+      - "trainer."
+
+census-keras:
+  path:
+    census/keras/trainer
+  filename:
+    task.py
+  remove:
+    Import:
+      - "trainer."
+
+census-tensorflowcore:
+  path:
+    census/tensorflowcore/trainer
+  filename:
+    task.py
+  remove:
+    Import:
+      - "trainer."
+
+tpu-templates-tpu-estimator:
+  path:
+    tpu/templates/tpu_estimator
+  filename:
+    trainer.py
+
+tpu-templates-tpu-cnn-estimator:
+  path:
+    tpu/templates/tpu_cnn_estimator
+  filename:
+    trainer.py
+
+tpu-templates-tpu-gan-estimator:
+  path:
+    tpu/templates/tpu_gan_estimator
+  filename:
+    trainer.py
+
+tpu-templates-tpu-gan-estimator-single:
+  path:
+    tpu/templates/tpu_gan_estimator
+  filename:
+    trainer_single.py
+
+tpu-templates-tpu-lstm-estimator:
+  path:
+    tpu/templates/tpu_lstm_estimator
+  filename:
+    trainer.py
+
+tpu-templates-tpu-lstm-keras:
+  path:
+    tpu/templates/tpu_lstm_keras
+  filename:
+    trainer.py
+
+tpu-templates-tpu-rewrite:
+  path:
+    tpu/templates/tpu_rewrite
+  filename:
+    trainer.py
+
+tpu-templates-tpu-film-estimator:
+  path:
+    tpu/templates/tpu_film_estimator
+  filename:
+    trainer.py
+
+tpu-templates-tpu-grl-estimator:
+  path:
+    tpu/templates/tpu_grl_estimator
+  filename:
+    trainer.py
+
+tpu-templates-tpu-infeed-outfeed:
+  path:
+    tpu/templates/tpu_rewrite
+  filename:
+    trainer_infeed_outfeed.py
+
+tpu-templates-tpu-triplet-loss-estimator:
+  path:
+    tpu/templates/tpu_triplet_loss_estimator
+  filename:
+    trainer.py

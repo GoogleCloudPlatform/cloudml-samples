@@ -1,0 +1,2 @@
+pyyaml>=4.2b1
+ipython==5.7.0

@@ -20,6 +20,7 @@ import argparse
 from datetime import datetime
 
 import tensorflow as tf
+from tensorflow_model_analysis import export as tfma_export
 
 import metadata
 import input
@@ -319,6 +320,20 @@ def run_experiment(run_config):
         train_spec,
         eval_spec
     )
+
+    # This is the export for the Tensorflow Model Analysis tool.
+    if HYPER_PARAMS.export_format in ['CSV', 'EXAMPLE']:
+        eval_receiver_fn = input.TFMA_SERVING_FUNCTIONS[HYPER_PARAMS.export_format]
+        tfma_export.export_eval_savedmodel(
+            estimator=estimator,
+            export_dir_base=os.path.join(estimator.model_dir, "tfma_export"),
+            eval_input_receiver_fn=eval_receiver_fn
+        )
+    else:
+        tf.logging.info("TFMA doesn't yet support a JSON input receiver. "
+                        "The TFMA export will not be created.")
+
+
 
 
 # ******************************************************************************

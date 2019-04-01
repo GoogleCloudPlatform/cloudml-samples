@@ -69,15 +69,13 @@ def gen_model_fn(features, labels, mode, params):
             mode=mode,
             predictions=predictions,
             loss=loss,
-            train_op=train_op
-        )
+            train_op=train_op)
     else:
         return tf.estimator.EstimatorSpec(
             mode=mode,
             predictions=predictions,
             loss=loss,
-            train_op=train_op
-        )
+            train_op=train_op)
 
 
 def dis_model_fn(features, labels, mode, params):
@@ -92,8 +90,7 @@ def dis_model_fn(features, labels, mode, params):
 
     predictions = {
         'discriminator_gen_outputs': gan_model.discriminator_gen_outputs,
-        'discriminator_real_outputs': gan_model.discriminator_real_outputs
-    }
+        'discriminator_real_outputs': gan_model.discriminator_real_outputs}
     loss = None
     train_op = None
 
@@ -121,15 +118,13 @@ def dis_model_fn(features, labels, mode, params):
             mode=mode,
             predictions=predictions,
             loss=loss,
-            train_op=train_op
-        )
+            train_op=train_op)
     else:
         return tf.estimator.EstimatorSpec(
             mode=mode,
             predictions=predictions,
             loss=loss,
-            train_op=train_op
-        )
+            train_op=train_op)
 
 
 def train_input_fn(params={}):
@@ -172,8 +167,7 @@ def main(args):
         tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(args.tpu)
         tpu_config = tf.contrib.tpu.TPUConfig(
             num_shards=8, # using Cloud TPU v2-8
-            iterations_per_loop=args.save_checkpoints_steps
-        )
+            iterations_per_loop=args.save_checkpoints_steps)
 
         # use the TPU version of RunConfig
         gen_config = tf.contrib.tpu.RunConfig(
@@ -181,15 +175,14 @@ def main(args):
             model_dir=os.path.join(args.model_dir, 'generator'),
             tpu_config=tpu_config,
             save_checkpoints_steps=args.save_checkpoints_steps,
-            save_summary_steps=100
-        )
+            save_summary_steps=100)
+
         dis_config = tf.contrib.tpu.RunConfig(
             cluster=tpu_cluster_resolver,
             model_dir=os.path.join(args.model_dir, 'discriminator'),
             tpu_config=tpu_config,
             save_checkpoints_steps=args.save_checkpoints_steps,
-            save_summary_steps=100
-        )
+            save_summary_steps=100)
 
         # TPUEstimator
         gen_estimator = tf.contrib.tpu.TPUEstimator(
@@ -197,17 +190,16 @@ def main(args):
             config=gen_config,
             params=params,
             train_batch_size=args.train_batch_size,
-            eval_batch_size=32, # FIXME
-            export_to_tpu=False
-        )
+            eval_batch_size=32,
+            export_to_tpu=False)
+
         dis_estimator = tf.contrib.tpu.TPUEstimator(
             model_fn=dis_model_fn,
             config=dis_config,
             params=params,
             train_batch_size=args.train_batch_size,
-            eval_batch_size=32, # FIXME
-            export_to_tpu=False
-        )
+            eval_batch_size=32,
+            export_to_tpu=False)
     else:
         gen_config = tf.estimator.RunConfig(model_dir=os.path.join(args.model_dir, 'generator'))
         dis_config = tf.estimator.RunConfig(model_dir=os.path.join(args.model_dir, 'discriminator'))
@@ -215,13 +207,12 @@ def main(args):
         gen_estimator = tf.estimator.Estimator(
             gen_model_fn,
             config=gen_config,
-            params=params
-        )
+            params=params)
+
         dis_estimator = tf.estimator.Estimator(
             dis_model_fn,
             config=dis_config,
-            params=params
-        )
+            params=params)
 
     # manage the training loop
     for _ in range(3):
@@ -238,52 +229,27 @@ if __name__ == '__main__':
     parser.add_argument(
         '--model-dir',
         type=str,
-        default='/tmp/tpu-template'
-    )
+        default='/tmp/tpu-template',
+        help='Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.')
     parser.add_argument(
         '--train-batch-size',
         type=int,
-        default=16
-    )
+        default=16,
+        help='The training batch size.  The training batch is divided evenly across the TPU cores.')
     parser.add_argument(
         '--save-checkpoints-steps',
         type=int,
-        default=100
-    )
+        default=100,
+        help='The number of training steps before saving each checkpoint.')
     parser.add_argument(
         '--use-tpu',
-        action='store_true'
-    )
+        action='store_true',
+        help='Whether to use TPU.')
     parser.add_argument(
         '--tpu',
-        default=None
-    )
+        default=None,
+        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on CMLE.')
 
     args, _ = parser.parse_known_args()
-
-    # colab.research.google.com specific
-    import sys
-    if 'google.colab' in sys.modules:
-        import json
-        import os
-        from google.colab import auth
-
-        # Authenticate to access GCS bucket
-        auth.authenticate_user()
-
-        # TODO(user): change this
-        args.model_dir = 'gs://your-gcs-bucket'
-
-        # When connected to the TPU runtime
-        if 'COLAB_TPU_ADDR' in os.environ:
-            tpu_grpc = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])
-
-            args.tpu = tpu_grpc
-            args.use_tpu = True
-
-            # Upload credentials to the TPU
-            with tf.Session(tpu_grpc) as sess:
-                data = json.load(open('/content/adc.json'))
-                tf.contrib.cloud.configure_gcs(sess, credentials=data)
 
     main(args)

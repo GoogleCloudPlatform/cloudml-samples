@@ -18,11 +18,12 @@
 
 import json
 import sys
+
 from trainer import model
 
 if __name__=='__main__':
   gen = model.generator_input(['adult.data.csv'], chunk_size=5000)
-  sample = gen.next()
+  sample = gen.__next__()
 
   input_sample = {}
 

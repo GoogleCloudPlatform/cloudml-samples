@@ -12,34 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Implements the vanilla tensorflow model on single node.
 
-"""Implements the vanilla tensorflow model on single node."""
+See https://goo.gl/JZ6hlH to contrast this with DNN combined
+which the high level estimator based sample implements.
 
-# See https://goo.gl/JZ6hlH to contrast this with DNN combined
-# which the high level estimator based sample implements.
-import multiprocessing
-
+See tutorial on wide and deep.
+https://www.tensorflow.org/tutorials/wide_and_deep/
+"""
 import tensorflow as tf
 from tensorflow.python.ops import string_ops
 
-# See tutorial on wide and deep
-# https://www.tensorflow.org/tutorials/wide_and_deep/
-# https://github.com/tensorflow/tensorflow/blob/master/tensorflow/contrib/layers/python/layers/feature_column.py
-
 # csv columns in the input file
 CSV_COLUMNS = ('age', 'workclass', 'fnlwgt', 'education', 'education_num',
-               'marital_status', 'occupation', 'relationship', 'race',
-               'gender', 'capital_gain', 'capital_loss', 'hours_per_week',
+               'marital_status', 'occupation', 'relationship', 'race', 'gender',
+               'capital_gain', 'capital_loss', 'hours_per_week',
                'native_country', 'income_bracket')
 
-CSV_COLUMN_DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''],
-                       [''], [0], [0], [0], [''], ['']]
+CSV_COLUMN_DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''], [''],
+                       [0], [0], [0], [''], ['']]
 
 # Categorical columns with vocab size
 CATEGORICAL_COLS = (('education', 16), ('marital_status', 7),
                     ('relationship', 6), ('workclass', 9), ('occupation', 15),
-                    ('native_country', 42), ('gender', [' Male', ' Female']),
-                    ('race', 5))
+                    ('native_country', 42), ('gender',
+                                             [' Male', ' Female']), ('race', 5))
 
 CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss',
                    'hours_per_week')
@@ -61,17 +58,18 @@ def model_fn(mode,
              embedding_size=8,
              hidden_units=[100, 70, 50, 20],
              learning_rate=0.1):
-  """Create a Feed forward network classification network
+  """Creates a feed forward network classification network.
 
   Args:
-    mode (string): Mode running training, evaluation or prediction
-    features (dict): Dictionary of input feature Tensors
-    labels (Tensor): Class label Tensor
-    hidden_units (list): Hidden units
-    learning_rate (float): Learning rate for the SGD
+    mode (str): Mode running training, evaluation or prediction.
+    features (dict): Dictionary of input feature Tensors.
+    labels (Tensor): Class label Tensor.
+    embedding_size (int): Size of embeddings.
+    hidden_units (list): Hidden units.
+    learning_rate (float): Learning rate for the SGD.
 
   Returns:
-    Depending on the mode returns Tuple or Dict
+    A Tuple or Dict depending on the mode.
   """
   label_values = tf.constant(LABELS)
 
@@ -83,14 +81,10 @@ def model_fn(mode,
     # Convert categorical (string) values to embeddings
     for col, vals in CATEGORICAL_COLS:
       bucket_size = vals if isinstance(vals, int) else len(vals)
-      embeddings = tf.get_variable(
-          col,
-          shape=[bucket_size, embedding_size]
-      )
-
+      embeddings = tf.get_variable(col, shape=[bucket_size, embedding_size])
       if isinstance(vals, int):
-        indices = string_ops.string_to_hash_bucket_fast(
-          features[col], bucket_size)
+        indices = string_ops.string_to_hash_bucket_fast(features[col],
+                                                        bucket_size)
       else:
         table = tf.contrib.lookup.index_table_from_tensor(vals)
         indices = table.lookup(features[col])
@@ -123,12 +117,11 @@ def model_fn(mode,
 
   # Add the output layer
   logits = tf.layers.dense(
-    curr_layer,
-    len(LABELS),
-    # Do not use ReLU on last layer
-    activation=None,
-    kernel_initializer=tf.contrib.layers.variance_scaling_initializer()
-  )
+      curr_layer,
+      len(LABELS),
+      # Do not use ReLU on last layer
+      activation=None,
+      kernel_initializer=tf.contrib.layers.variance_scaling_initializer())
 
   if mode in (PREDICT, EVAL):
     probabilities = tf.nn.softmax(logits)
@@ -147,7 +140,7 @@ def model_fn(mode,
 
     # global_step is necessary in eval to correctly load the step
     # of the checkpoint we are evaluating
-    global_step = tf.contrib.framework.get_or_create_global_step()
+    global_step = tf.train.get_or_create_global_step()
 
   if mode == PREDICT:
     # Convert predicted_indices back into strings
@@ -165,8 +158,8 @@ def model_fn(mode,
     train_op = tf.train.FtrlOptimizer(
         learning_rate=learning_rate,
         l1_regularization_strength=3.0,
-        l2_regularization_strength=10.0
-    ).minimize(cross_entropy, global_step=global_step)
+        l2_regularization_strength=10.0).minimize(
+            cross_entropy, global_step=global_step)
     return train_op, global_step
 
   if mode == EVAL:
@@ -178,8 +171,7 @@ def model_fn(mode,
         depth=label_values.shape[0],
         on_value=True,
         off_value=False,
-        dtype=tf.bool
-    )
+        dtype=tf.bool)
     return {
         'accuracy': tf.metrics.accuracy(label_indices, predicted_indices),
         'auroc': tf.metrics.auc(labels_one_hot, probabilities)
@@ -190,13 +182,13 @@ def csv_serving_input_fn(default_batch_size=None):
   """Build the serving inputs.
 
   Args:
-    default_batch_size (int): Batch size for the tf.placeholder shape
+    default_batch_size (int): Batch size for the tf.placeholder shape.
+
+  Returns:
+    A tuple of dictionaries.
   """
-  csv_row = tf.placeholder(
-      shape=[default_batch_size],
-      dtype=tf.string
-  )
-  features = parse_csv(csv_row)
+  csv_row = tf.placeholder(shape=[default_batch_size], dtype=tf.string)
+  features = _decode_csv(csv_row)
   features.pop(LABEL_COLUMN)
   return features, {'csv_row': csv_row}
 
@@ -205,7 +197,10 @@ def example_serving_input_fn(default_batch_size=None):
   """Build the serving inputs.
 
   Args:
-    default_batch_size (int): Batch size for the tf.placeholder shape
+    default_batch_size (int): Batch size for the tf.placeholder shape.
+
+  Returns:
+    A tuple of dictionaries.
   """
   feature_spec = {}
   for feat in CONTINUOUS_COLS:
@@ -226,16 +221,17 @@ def json_serving_input_fn(default_batch_size=None):
   """Build the serving inputs.
 
   Args:
-    default_batch_size (int): Batch size for the tf.placeholder shape
+    default_batch_size (int): Batch size for the tf.placeholder shape.
+
+  Returns:
+    A tuple of dictionaries.
   """
   inputs = {}
   for feat in CONTINUOUS_COLS:
-    inputs[feat] = tf.placeholder(
-        shape=[default_batch_size], dtype=tf.float32)
+    inputs[feat] = tf.placeholder(shape=[default_batch_size], dtype=tf.float32)
 
   for feat, _ in CATEGORICAL_COLS:
-    inputs[feat] = tf.placeholder(
-        shape=[default_batch_size], dtype=tf.string)
+    inputs[feat] = tf.placeholder(shape=[default_batch_size], dtype=tf.string)
   return inputs, inputs
 
 
@@ -246,21 +242,21 @@ SERVING_INPUT_FUNCTIONS = {
 }
 
 
-def parse_csv(rows_string_tensor):
+def _decode_csv(line):
   """Takes the string input tensor and returns a dict of rank-2 tensors."""
 
   # Takes a rank-1 tensor and converts it into rank-2 tensor
   # Example if the data is ['csv,line,1', 'csv,line,2', ..] to
   # [['csv,line,1'], ['csv,line,2']] which after parsing will result in a
   # tuple of tensors: [['csv'], ['csv']], [['line'], ['line']], [[1], [2]]
-  columns = tf.decode_csv(
-      rows_string_tensor, record_defaults=CSV_COLUMN_DEFAULTS)
+  columns = tf.decode_csv(line, record_defaults=CSV_COLUMN_DEFAULTS)
   features = dict(zip(CSV_COLUMNS, columns))
 
-  # Remove unused columns
+  # Remove unused columns.
   for col in UNUSED_COLUMNS:
     features.pop(col)
   return features
+
 
 def input_fn(filenames,
              num_epochs=None,
@@ -268,31 +264,31 @@ def input_fn(filenames,
              skip_header_lines=0,
              batch_size=200):
   """Generates features and labels for training or evaluation.
+
   This uses the input pipeline based approach using file name queue
   to read data so that entire data is not loaded in memory.
 
   Args:
-      filenames: [str] list of CSV files to read data from.
-      num_epochs: int how many times through to read the data.
-        If None will loop through data indefinitely
-      shuffle: bool, whether or not to randomize the order of data.
-        Controls randomization of both file order and line order within
-        files.
-      skip_header_lines: int set to non-zero in order to skip header lines
-        in CSV files.
-      batch_size: int First dimension size of the Tensors returned by
-        input_fn
+      filenames: [str] A List of CSV file(s) to read data from.
+      num_epochs: int how many times through to read the data. If None will loop
+        through data indefinitely
+      shuffle: bool, whether or not to randomize the order of data. Controls
+        randomization of both file order and line order within files.
+      skip_header_lines: int set to non-zero in order to skip header lines in
+        CSV files.
+      batch_size: int First dimension size of the Tensors returned by input_fn
+
   Returns:
       A (features, indices) tuple where features is a dictionary of
         Tensors, and indices is a single Tensor of label indices.
   """
 
-  dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(parse_csv)
+  dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(
+      _decode_csv)
 
   if shuffle:
     dataset = dataset.shuffle(buffer_size=batch_size * 10)
-  dataset = dataset.repeat(num_epochs)
-  dataset = dataset.batch(batch_size)
-  iterator = dataset.make_one_shot_iterator()
+  iterator = dataset.repeat(num_epochs).batch(
+      batch_size).make_one_shot_iterator()
   features = iterator.get_next()
   return features, features.pop(LABEL_COLUMN)

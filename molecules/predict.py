@@ -89,7 +89,7 @@ class Predict(beam.DoFn):
     }
 
 
-# [START run_definition]
+# [START dataflow_molecules_run_definition]
 def run(model_dir, feature_extraction, sink, beam_options=None):
   with beam.Pipeline(options=beam_options) as p:
     _ = (p
@@ -97,7 +97,7 @@ def run(model_dir, feature_extraction, sink, beam_options=None):
         | 'Predict' >> beam.ParDo(Predict(model_dir, 'ID'))
         | 'Format as JSON' >> beam.Map(json.dumps)
         | 'Write predictions' >> sink)
-# [END run_definition]
+# [END dataflow_molecules_run_definition]
 
 
 if __name__ == '__main__':
@@ -155,7 +155,7 @@ if __name__ == '__main__':
 
   project = beam_options.view_as(GoogleCloudOptions).project
 
-  # [START batch_or_stream]
+  # [START dataflow_molecules_batch_or_stream]
   if args.verb == 'batch':
     data_files_pattern = os.path.join(args.inputs_dir, '*.sdf')
     results_prefix = os.path.join(args.outputs_dir, 'part')
@@ -173,16 +173,16 @@ if __name__ == '__main__':
         project, args.inputs_topic))
     sink = beam.io.WriteStringsToPubSub(topic='projects/{}/topics/{}'.format(
         project, args.outputs_topic))
-    # [END batch_or_stream]
+    # [END dataflow_molecules_batch_or_stream]
 
   else:
     parser.print_usage()
     sys.exit(1)
 
-  # [START call_run]
+  # [START dataflow_molecules_call_run]
   run(
       args.model_dir,
       pubchem.SimpleFeatureExtraction(source),
       sink,
       beam_options)
-  # [END call_run]
+  # [END dataflow_molecules_call_run]
