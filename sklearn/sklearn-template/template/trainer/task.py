@@ -94,7 +94,6 @@ def _dump_object(object_to_dump, output_path):
 
 def _train_and_evaluate(estimator, dataset, output_dir):
   """Runs model training and evalation."""
-  # TODO: How to recover the dumped model with corresponding setting of hyperparameters ?
   x_train, y_train, x_val, y_val = dataset
 
   estimator.fit(x_train, y_train)
