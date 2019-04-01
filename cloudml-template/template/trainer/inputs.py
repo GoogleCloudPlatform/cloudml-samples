@@ -209,8 +209,7 @@ def make_input_fn(file_pattern,
 
 
 def load_feature_stats(feature_stats_file):
-  """
-  Load numeric column pre-computed statistics (mean, stdv, min, max, etc.)
+  """Load numeric column pre-computed statistics (mean, stdv, min, max, etc.)
   in order to be used for scaling/stretching numeric columns.
 
   In practice, the statistics of large datasets are computed prior to model training,
@@ -247,33 +246,46 @@ def load_feature_stats(feature_stats_file):
 
 
 def json_serving_input_receiver_fn():
-  inputs = {}
+  """Creating an ServingInputReceiver object for JSON data.
 
-  for column in metadata.SERVING_COLUMN_NAMES:
-    if column.name in metadata.INPUT_CATEGORICAL_FEATURE_NAMES_WITH_IDENTITY:
-      inputs[column.name] = tf.placeholder(shape=[None], dtype=tf.int32)
-    elif column.name in metadata.INPUT_NUMERIC_FEATURE_NAMES:
-      inputs[column.name] = tf.placeholder(shape=[None], dtype=tf.float32)
+  Returns:
+    ServingInputReceiver
+  """
+
+  # Note that the inputs are raw features, not transformed features.
+  receiver_tensors = {}
+
+  for column_name in metadata.SERVING_COLUMN_NAMES:
+    if column_name in metadata.INPUT_CATEGORICAL_FEATURE_NAMES_WITH_IDENTITY:
+      receiver_tensors[column_name] = tf.placeholder(
+        shape=[None], dtype=tf.int32)
+    elif column_name in metadata.INPUT_NUMERIC_FEATURE_NAMES:
+      receiver_tensors[column_name] = tf.placeholder(
+        shape=[None], dtype=tf.float32)
     else:
-      inputs[column.name] = tf.placeholder(shape=[None], dtype=tf.string)
+      receiver_tensors[column_name] = tf.placeholder(
+        shape=[None], dtype=tf.string)
 
   features = {
     key: tf.expand_dims(tensor, -1)
-    for key, tensor in inputs.items()
+    for key, tensor in receiver_tensors.items()
   }
 
   return tf.estimator.export.ServingInputReceiver(
     features=process_features(features),
-    receiver_tensors=inputs
+    receiver_tensors=receiver_tensors
   )
 
 
 def csv_serving_input_receiver_fn():
-  csv_row = tf.placeholder(
-    shape=[None],
-    dtype=tf.string
-  )
+  """Creating an ServingInputReceiver object for CSV data.
 
+  Returns:
+    ServingInputReceiver
+  """
+
+  # Note that the inputs are raw features, not transformed features.
+  csv_row = tf.placeholder(shape=[None], dtype=tf.string)
   features = parse_csv(csv_row, is_serving=True)
 
   return tf.estimator.export.ServingInputReceiver(
@@ -283,20 +295,22 @@ def csv_serving_input_receiver_fn():
 
 
 def example_serving_input_receiver_fn():
-  receiver_tensors = tf.placeholder(
-    shape=[None],
-    dtype=tf.string,
-  )
+  """Creating an ServingInputReceiver object for TFRecords data.
 
-  feature_scalars = tf.parse_example(
+  Returns:
+    ServingInputReceiver
+  """
+
+  # Note that the inputs are raw features, not transformed features.
+  receiver_tensors = tf.placeholder(shape=[None], dtype=tf.string)
+
+  features = tf.parse_example(
     receiver_tensors,
     features=get_feature_spec(is_serving=True)
   )
 
-  features = {
-    key: tf.expand_dims(tensor, -1)
-    for key, tensor in feature_scalars.iteritems()
-  }
+  for key in features:
+    features[key] = tf.expand_dims(features[key], -1)
 
   return tf.estimator.export.ServingInputReceiver(
     features=process_features(features),
@@ -312,65 +326,46 @@ SERVING_FUNCTIONS = {
 
 
 # ******************************************************************************
-# VALIDATING INPUT FUNCTIONS - YOU NEED NOT TO CHANGE THE FOLLOWING PART
+# EVALUATING INPUT FUNCTIONS - YOU NEED NOT TO CHANGE THE FOLLOWING PART
 # ******************************************************************************
 
 
-def csv_validating_input_receiver_fn():
-  """Build everything needed to run tf-model-analysis when using CSV as input
-  for the model.
+def csv_evaluating_input_receiver_fn():
+  """Creating an EvalInputReceiver object for CSV data.
 
   Returns:
-      EvalInputReceiver function, which contains:
-        - Tensorflow graph which parses raw untranformed features, applies the
-          tf-transform preprocessing operators.
-        - Set of raw, untransformed features.
-        - Label against which predictions will be compared.
+    EvalInputReceiver
   """
 
-  # Notice that the inputs are raw features, not transformed features here.
+  # Notice that the inputs are raw features, not transformed features.
   csv_row = tf.placeholder(shape=[None], dtype=tf.string)
-
   features = parse_csv(csv_row, is_serving=False)
-
-  # The key name MUST be 'examples'. See https://goo.gl/2SV7Ug
-  receiver_tensors = {'examples': csv_row}
 
   return tfma.export.EvalInputReceiver(
     features=process_features(features),
-    receiver_tensors=receiver_tensors,
+    receiver_tensors={'examples': csv_row},
     labels=features[metadata.TARGET_NAME])
 
 
-def example_validating_input_receiver_fn():
-  """Build everything needed to run tf-model-analysis when using examples as
-  input for the model.
+def example_evaluating_input_receiver_fn():
+  """Creating an EvalInputReceiver object for TFRecords data.
 
   Returns:
-      EvalInputReceiver function, which contains:
-        - Tensorflow graph which parses raw untranformed features, applies the
-          tf-transform preprocessing operators.
-        - Set of raw, untransformed features.
-        - Label against which predictions will be compared.
+      EvalInputReceiver
   """
 
-  receiver_tensors = tf.placeholder(
-    shape=[None],
-    dtype=tf.string,
-  )
-  feature_scalars = tf.parse_example(
-    receiver_tensors,
-    features=get_feature_spec(is_serving=False)
-  )
+  receiver_tensors = tf.placeholder(shape=[None], dtype=tf.string)
 
-  features = {
-    key: tf.expand_dims(tensor, -1)
-    for key, tensor in feature_scalars.iteritems()
-  }
+  features = tf.parse_example(
+    receiver_tensors,
+    features=get_feature_spec(is_serving=False))
+
+  for key in features:
+    features[key] = tf.expand_dims(features[key], -1)
+
 
   return tfma.export.EvalInputReceiver(
     features=process_features(features),
-    # The key name MUST be 'examples'. See https://goo.gl/2SV7Ug
     receiver_tensors={'examples': receiver_tensors},
     labels=features[metadata.TARGET_NAME])
 
