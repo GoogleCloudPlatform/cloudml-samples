@@ -26,6 +26,14 @@ from trainer import metadata
 
 
 def get_estimator(flags):
+  """Generate ML Pipeline which include both pre-processing and model training
+
+  Args:
+    flags: (argparse.ArgumentParser), parameters passed from command-line
+
+  Returns:
+    sklearn.pipeline.Pipeline
+  """
   # TODO: Allow pre-processing to be configurable through flags
   classifier = ensemble.RandomForestClassifier(
       n_estimators=flags.n_estimators,
