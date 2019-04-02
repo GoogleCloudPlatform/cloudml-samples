@@ -101,7 +101,7 @@ def get_args():
   args_parser.add_argument(
     '--eval-frequency-secs',
     help='How many seconds to wait before running the next evaluation.',
-    default=15,
+    default=10,
     type=int
   )
 
@@ -134,7 +134,7 @@ def get_args():
       wide part of the model.
       """,
     action='store_true',
-    default=False,
+    default=True,
   )
   ###########################################
 

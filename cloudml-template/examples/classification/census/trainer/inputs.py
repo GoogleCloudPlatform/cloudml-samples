@@ -89,9 +89,9 @@ def parse_csv(csv_row, is_serving=False):
   return features
 
 
-# ******************************************************************************
+# **************************************************************************
 # YOU MAY IMPLEMENT THIS FUNCTION FOR CUSTOM FEATURE ENGINEERING
-# ******************************************************************************
+# **************************************************************************
 
 
 def process_features(features):
@@ -105,24 +105,21 @@ def process_features(features):
       {string:tensors}: extended feature tensors dictionary
   """
 
-  # examples - given:
-  # 'x' and 'y' are two numeric features:
-  # 'alpha' and 'beta' are two categorical features
+  # Creating a boolean flag
+  capital_indicator = features['capital_gain'] > features['capital_loss']
+  features['capital_indicator'] = tf.cast(capital_indicator, dtype=tf.int32)
 
-  # # create new features using custom logic
-  # features['x_2'] = tf.pow(features['x'],2)
-  # features['y_2'] = tf.pow(features['y'], 2)
-  # features['xy'] = features['x'] * features['y']
-  # features['sin_x'] = tf.sin(features['x'])
-  # features['cos_y'] = tf.cos(features['x'])
-  # features['log_xy'] = tf.log(features['xy'])
-  # features['sqrt_xy'] = tf.sqrt(features['xy'])
+  # Creating a ratio feature
+  features['education_to_age_ratio'] = (
+    features['education_num'] / features['age'])
 
-  # # add created features to metadata (if not already defined in metadata.py)
-  # NUMERIC_FEATURE_NAMES_WITH_STATS['x_2']: None
-  # NUMERIC_FEATURE_NAMES_WITH_STATS['y_2']: None
-  # ....
+  # Clipping feature
+  features['hours_per_week'] = tf.clip_by_value(
+    features['hours_per_week'], clip_value_min=20, clip_value_max=60)
 
+  # Adding constructed features to metadata
+  metadata.NUMERIC_FEATURE_NAMES_WITH_STATS['education_to_age_ratio'] = None
+  metadata.CATEGORICAL_FEATURE_NAMES_WITH_IDENTITY['capital_indicator'] = 2
 
   return features
 
@@ -136,7 +133,7 @@ def make_input_fn(file_pattern,
                   file_encoding='csv',
                   mode=tf.estimator.ModeKeys.EVAL,
                   has_header=False,
-                  batch_size=128,
+                  batch_size=200,
                   multi_threading=True):
   """Makes an input function for reading training and evaluation data file(s).
 
@@ -342,4 +339,3 @@ EVALUATING_INPUT_RECEIVER_FUNCTIONS = {
   'EXAMPLE': example_evaluating_input_receiver_fn,
   'CSV': csv_evaluating_input_receiver_fn
 }
-

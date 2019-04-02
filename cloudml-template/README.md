@@ -24,11 +24,11 @@ Although the template provides standard implementation to different functionalit
     2) Train the model on Cloud ML Engine. 
     3) Deploy the model on GCP as well as to make prediction (inference) using the deployed model.
 
-3. **[examples](examples)**: Currently four different examples are included: 
-    1. Classification, using the [Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) (UCI Machine Learning Repository) dataset.
-    4. Classification, using [Statlog (German Credit Data)](https://archive.ics.uci.edu/ml/datasets/Statlog+%28German+Credit+Data%29) (UCI Machine Learning Repository) dataset.
-    2. Regression, using the [House Pricing](https://www.kaggle.com/apratim87/housingdata/data) (Kaggle) dataset.
-    3. Regression, using [Natality Baby Weight](https://catalog.data.gov/dataset?tags=birth-weight) (data.gov) dataset.
+3. **[examples](examples)**: Four different examples are included:
+    1. [Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) (UCI Machine Learning Repository) dataset (**classification**).
+    2. [Statlog (German Credit Data)](https://archive.ics.uci.edu/ml/datasets/Statlog+%28German+Credit+Data%29) (UCI Machine Learning Repository) dataset (**classification**).
+    3. [House Pricing](https://www.kaggle.com/apratim87/housingdata/data) (Kaggle) dataset (**regression**).
+    4. [Natality Baby Weight](https://catalog.data.gov/dataset?tags=birth-weight) (data.gov) dataset (**regression**).
 
 
 The examples show how the template is adapted given a dataset. The datasets are found in the examples' folders (under "data" sub-directory).

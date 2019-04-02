@@ -40,32 +40,6 @@ def _extend_feature_columns(feature_columns, args):
       list of extended feature_columns
   """
 
-  # # examples - given:
-  # 'x' and 'y' are two numeric features:
-  # 'alpha' and 'beta' are two categorical features
-  #
-  # # crossing
-  # alpha_X_beta = tf.feature_column.crossed_column(
-  #  [feature_columns['alpha'], feature_columns['beta']], 4)
-  #
-  # # bucketization
-  # num_buckets = args.num_buckets
-  # buckets = np.linspace(-2, 2, num_buckets).tolist()
-  #
-  # x_bucketized = tf.feature_column.bucketized_column(
-  #  feature_columns['x'], buckets)
-  #
-  # y_bucketized = tf.feature_column.bucketized_column(
-  #  feature_columns['y'], buckets)
-  #
-  # # crossing bucketized columns
-  # x_bucketized_X_y_bucketized = tf.feature_column.crossed_column(
-  #  [x_bucketized, y_bucketized], int(1e4))
-  #
-  # # embedding
-  # x_bucketized_X_y_bucketized_embedded = tf.feature_column.embedding_column(
-  #  x_bucketized_X_y_bucketized, dimension=args.embedding_size)
-
   extended_feature_columns = []
 
   for column_name in feature_columns:

@@ -14,9 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+import logging
 import argparse
 from datetime import datetime
-import logging
 import tensorflow as tf
 import os
 import sys
@@ -35,23 +36,23 @@ def get_args():
   Returns:
       experiment parameters
   """
-
+  
   args_parser = argparse.ArgumentParser()
-
+  
   # Data files arguments
   args_parser.add_argument(
     '--train-files',
-    help='GCS or local paths to training data.',
+    help='GCS or local paths to training data',
     nargs='+',
     required=True
   )
   args_parser.add_argument(
     '--eval-files',
-    help='GCS or local paths to evaluation data.',
+    help='GCS or local paths to evaluation data',
     nargs='+',
     required=True
   )
-
+  
   ###########################################
 
   # Experiment arguments
@@ -64,7 +65,7 @@ def get_args():
       if --num-epochs and --train-size are specified, 
       then --train-steps will be: (train-size/train-batch-size) * num-epochs
       """,
-    default=1000,
+    default=0,
     type=int
   )
   args_parser.add_argument(
@@ -84,18 +85,18 @@ def get_args():
   )
   args_parser.add_argument(
     '--train-size',
-    help='Size of training set (instance count).',
+    help='Size of training set (instance count)',
     type=int,
-    default=None
+    default=None #63122
   )
   args_parser.add_argument(
     '--num-epochs',
-    help="""
-      Maximum number of training data epochs on which to train.
-      If both --train-size and --num-epochs are specified,
-      --train-steps will be: (train-size/train-batch-size) * num-epochs.
-      """,
-    default=None,
+    help="""\
+        Maximum number of training data epochs on which to train.
+        If both --train-size and --num-epochs are specified,
+        --train-steps will be: (train-size/train-batch-size) * num-epochs.\
+        """,
+    default=100,
     type=int,
   )
   args_parser.add_argument(
@@ -104,9 +105,8 @@ def get_args():
     default=15,
     type=int
   )
-
   ###########################################
-
+  
   # Feature columns arguments
   args_parser.add_argument(
     '--embed-categorical-columns',
@@ -136,6 +136,7 @@ def get_args():
     action='store_true',
     default=False,
   )
+  
   ###########################################
 
   # Estimator arguments
@@ -215,9 +216,11 @@ def get_args():
     choices=['CSV', 'EXAMPLE'],
     default='CSV'
   )
+  
   ###########################################
 
   return args_parser.parse_args()
+
 
 # ******************************************************************************
 # THIS IS ENTRY POINT FOR THE TRAINER TASK

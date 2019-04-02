@@ -136,7 +136,7 @@ def make_input_fn(file_pattern,
                   file_encoding='csv',
                   mode=tf.estimator.ModeKeys.EVAL,
                   has_header=False,
-                  batch_size=128,
+                  batch_size=200,
                   multi_threading=True):
   """Makes an input function for reading training and evaluation data file(s).
 
@@ -177,7 +177,7 @@ def make_input_fn(file_pattern,
         column_names=metadata.COLUMN_NAMES,
         column_defaults=metadata.DEFAULTS,
         label_name=metadata.TARGET_NAME,
-        field_delim=',',
+        field_delim='|',
         header=has_header,
         num_epochs=num_epochs,
         shuffle=shuffle,

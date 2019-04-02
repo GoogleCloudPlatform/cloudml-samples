@@ -21,9 +21,9 @@ from tensorflow.python.feature_column import feature_column_v2 as feature_column
 import metadata
 
 
-# ******************************************************************************
-# YOU MAY CHANGE THIS FUNCTION TO ADD EXTENDED FEATURES
-# ******************************************************************************
+# **************************************************************************
+# YOU MAY IMPLEMENT THIS FUNCTION TO ADD EXTENDED FEATURES
+# **************************************************************************
 
 
 def _extend_feature_columns(feature_columns, args):
@@ -40,33 +40,39 @@ def _extend_feature_columns(feature_columns, args):
       list of extended feature_columns
   """
 
-  # # examples - given:
-  # 'x' and 'y' are two numeric features:
-  # 'alpha' and 'beta' are two categorical features
-  #
-  # # crossing
-  # alpha_X_beta = tf.feature_column.crossed_column(
-  #  [feature_columns['alpha'], feature_columns['beta']], 4)
-  #
-  # # bucketization
-  # num_buckets = args.num_buckets
-  # buckets = np.linspace(-2, 2, num_buckets).tolist()
-  #
-  # x_bucketized = tf.feature_column.bucketized_column(
-  #  feature_columns['x'], buckets)
-  #
-  # y_bucketized = tf.feature_column.bucketized_column(
-  #  feature_columns['y'], buckets)
-  #
-  # # crossing bucketized columns
-  # x_bucketized_X_y_bucketized = tf.feature_column.crossed_column(
-  #  [x_bucketized, y_bucketized], int(1e4))
-  #
-  # # embedding
-  # x_bucketized_X_y_bucketized_embedded = tf.feature_column.embedding_column(
-  #  x_bucketized_X_y_bucketized, dimension=args.embedding_size)
+  age_buckets = tf.feature_column.bucketized_column(
+    feature_columns['age'], boundaries=[18, 25, 30, 35, 40, 45, 50, 55, 60, 65])
 
-  extended_feature_columns = []
+  education_X_occupation = tf.feature_column.crossed_column(
+    ['education', 'occupation'], hash_bucket_size=int(1e4))
+
+  age_buckets_X_race = tf.feature_column.crossed_column(
+    [age_buckets, feature_columns['race']], hash_bucket_size=int(1e4))
+
+  native_country_X_occupation = tf.feature_column.crossed_column(
+    ['native_country', 'occupation'], hash_bucket_size=int(1e4))
+
+  native_country_embedded = tf.feature_column.embedding_column(
+    feature_columns['native_country'],
+    dimension=5)
+
+  occupation_embedded = tf.feature_column.embedding_column(
+    feature_columns['occupation'], dimension=5)
+
+  education_X_occupation_embedded = tf.feature_column.embedding_column(
+    education_X_occupation, dimension=10)
+
+  native_country_X_occupation_embedded = tf.feature_column.embedding_column(
+    native_country_X_occupation, dimension=10)
+
+  extended_feature_columns = [
+    age_buckets,
+    age_buckets_X_race,
+    native_country_embedded,
+    occupation_embedded,
+    education_X_occupation_embedded,
+    native_country_X_occupation_embedded
+  ]
 
   for column_name in feature_columns:
     column = feature_columns[column_name]
@@ -77,7 +83,8 @@ def _extend_feature_columns(feature_columns, args):
         vocab_size = len(column.vocabulary_list)
         extended_feature_columns.append(
           tf.feature_column.embedding_column(column,
-            dimension=math.ceil(math.sqrt(vocab_size))))
+                                             dimension=math.ceil(
+                                               math.sqrt(vocab_size))))
       # Convert the categorical feature to indicator
       if args.use_indicator_columns:
         extended_feature_columns.append(
@@ -89,7 +96,8 @@ def _extend_feature_columns(feature_columns, args):
         vocab_size = column.num_buckets
         extended_feature_columns.append(
           tf.feature_column.embedding_column(column,
-            dimension=math.ceil(math.sqrt(vocab_size))))
+                                             dimension=math.ceil(
+                                               math.sqrt(vocab_size))))
       # Convert the categorical feature to indicator
       if args.use_indicator_columns:
         extended_feature_columns.append(
@@ -192,7 +200,7 @@ def _get_sparse_and_dense_columns(feature_columns):
 
   sparse_columns = [
     column for column in feature_columns
-    if(
+    if (
       isinstance(column, feature_column.VocabularyListCategoricalColumn) or
       isinstance(column, feature_column.IdentityCategoricalColumn) or
       isinstance(column, feature_column.BucketizedColumn) or
