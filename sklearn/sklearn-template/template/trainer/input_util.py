@@ -19,12 +19,12 @@ import pandas as pd
 from sklearn import model_selection
 from google.cloud import storage
 
-from trainer import metadata
+from trainer.metadata import BASE_QUERY
+from trainer.metadata import LABEL
 
 
 def _feature_label_split(data_df, label_column):
-  """
-  Split the DataFrame into two DataFrames including all the features, and label separately
+  """Split the DataFrame into two DataFrames including all the features, and label separately
 
   Args:
     data_df: (pandas.DataFrame) DataFrame the splitting to be performed on
@@ -38,8 +38,7 @@ def _feature_label_split(data_df, label_column):
 
 
 def _data_train_test_split(data_df):
-  """
-  Split the DataFrame two subsets for training and testing
+  """Split the DataFrame two subsets for training and testing
 
   Args:
     data_df: (pandas.DataFrame) DataFrame the splitting to be performed on
@@ -48,7 +47,7 @@ def _data_train_test_split(data_df):
     A Tuple of (pandas.DataFrame, pandas.Series, pandas.DataFrame, pandas.Series)
   """
 
-  label_column = metadata.LABEL
+  label_column = LABEL
   train, val = model_selection.train_test_split(data_df)
   x_train, y_train = _feature_label_split(train, label_column)
   x_val, y_val = _feature_label_split(val, label_column)
@@ -56,8 +55,8 @@ def _data_train_test_split(data_df):
 
 
 def read_from_bigquery(full_table_path, project_id=None):
-  """
-  Read training data from BigQuery given full path of BigQuery table.
+  """Read training data from BigQuery given full path of BigQuery table,
+  and split into train and validation.
 
   Args:
     full_table_path: (string) full path of the table containing training data in the
@@ -68,9 +67,7 @@ def read_from_bigquery(full_table_path, project_id=None):
     A Tuple of (pandas.DataFrame, pandas.Series, pandas.DataFrame, pandas.Series)
   """
 
-  query = '''
-    Select * From `{}`
-  '''.format(full_table_path)
+  query = BASE_QUERY.format(Table=full_table_path)
 
   # Use "application default credentials"
   # Use SQL syntax dialect
@@ -80,8 +77,7 @@ def read_from_bigquery(full_table_path, project_id=None):
 
 
 def read_from_gcs(file_pattern, bucket_name):
-  """
-  Read training data from Google Cloud Storage given the path pattern.
+  """Read training data from Google Cloud Storage given the path pattern, and split into train and validation.
 
   Args:
     file_pattern: (string) pattern of the files containing training data. For example:

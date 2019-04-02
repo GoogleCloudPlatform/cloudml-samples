@@ -36,3 +36,7 @@ DATASET_SPLIT_KEY = 'dataset_type'
 METRIC_FILE_NAME_PREFIX = 'metric'
 MODEL_FILE_NAME_PREFIX = 'model'
 MODEL_FILE_NAME_SUFFIX = '.joblib'
+
+BASE_QUERY = '''
+    Select * From `{Table}`
+  '''
