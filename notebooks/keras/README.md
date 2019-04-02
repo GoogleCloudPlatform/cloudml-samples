@@ -1,10 +1,10 @@
-# Cascade (HD-CNN Model Deriative)
+# Cascade (HD-CNN Model Derivative)
 
-This notebook demonstrates building a hierachical image classifer based on a HD-CNN deriative which uses cascading classifers to predict the class of a label from a coarse to finer classes.
+This notebook demonstrates building a hierarchical image classifier based on a HD-CNN derivative which uses cascading classifiers to predict the class of a label from a coarse to finer classes.
 
-In this demonstration, we have two classes in the heirarchy: fruits and varieties of fruit. The model will first predict the coarse class (type of fruit) and then within that class of fruit, the variety. For example, if given an image of Apple Granny Smith, it would first predict 'Apple' (fruit) and then predict the 'Apple Granny Smith'.
+In this demonstration, we have two classes in the hierarchy: fruits and varieties of fruit. The model will first predict the coarse class (type of fruit) and then within that class of fruit, the variety. For example, if given an image of Apple Granny Smith, it would first predict 'Apple' (fruit) and then predict the 'Apple Granny Smith'.
 
-This deriative of the HD-CNN is designed to demonstrate both the methodology of heirarchical classification, as well as design improvements not available at the time (2014) when the model was first published Zhicheng Yan.
+This derivative of the HD-CNN is designed to demonstrate both the methodology of hierarchical classification, as well as design improvements not available at the time (2014) when the model was first published Zhicheng Yan.
 
 # General Approach
 
