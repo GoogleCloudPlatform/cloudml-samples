@@ -19,9 +19,8 @@
 # ******************************************************************************
 
 # Task type can be either 'classification', 'regression', or 'custom'.
-# This is based on the target feature in the dataset, and whether you use
-# a canned or a custom estimator.
-TASK_TYPE = ''  # classification | regression | custom
+# This is based on the target feature in the dataset.
+TASK_TYPE = ''  # classification | regression
 
 # List of all the columns (header) present in the input data file(s).
 # Used for parsing the input data.
@@ -35,21 +34,25 @@ SERVING_COLUMN_NAMES = []
 # This helps decoding the data types of the columns.
 DEFAULTS = []
 
-# List of the feature names of type int or float.
-INPUT_NUMERIC_FEATURE_NAMES = []
+# Dictionary of the feature names of type int or float. In the dictionary,
+# the key is the feature name, and the value is another dictionary includes
+# the mean and the variance of the numeric features.
+# E.g. {feature_1: {mean: 0, variance:1}, feature_2: {mean: 10, variance:3}}
+# The value can be set to None if you don't want to not normalize.
+NUMERIC_FEATURE_NAMES_WITH_STATS = {}
 
 # Dictionary of feature names with int values, but to be treated as
 # categorical features. In the dictionary, the key is the feature name,
 # and the value is the num_buckets (count of distinct values).
-INPUT_CATEGORICAL_FEATURE_NAMES_WITH_IDENTITY = {}
+CATEGORICAL_FEATURE_NAMES_WITH_IDENTITY = {}
 
 # Dictionary of categorical features with few nominal values. In the dictionary,
 # the key is the feature name, and the value is the list of feature vocabulary.
-INPUT_CATEGORICAL_FEATURE_NAMES_WITH_VOCABULARY = {}
+CATEGORICAL_FEATURE_NAMES_WITH_VOCABULARY = {}
 
 # Dictionary of categorical features with many values. In the dictionary,
 # the key is the feature name, and the value is the number of buckets.
-INPUT_CATEGORICAL_FEATURE_NAMES_WITH_HASH_BUCKET = {}
+CATEGORICAL_FEATURE_NAMES_WITH_HASH_BUCKET = {}
 
 # Column includes the relative weight of each record.
 WEIGHT_COLUMN_NAME = None

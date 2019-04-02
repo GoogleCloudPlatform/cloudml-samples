@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import json
 import multiprocessing
 import logging
 import tensorflow as tf
@@ -41,9 +39,9 @@ def get_feature_spec(is_serving=False):
   feature_spec = {}
 
   for feature_name in column_names:
-    if feature_name in metadata.INPUT_NUMERIC_FEATURE_NAMES:
+    if feature_name in metadata.NUMERIC_FEATURE_NAMES_WITH_STATS:
       feature_spec[feature_name] = tf.FixedLenFeature(shape=1, dtype=tf.float32)
-    elif feature_name in metadata.INPUT_CATEGORICAL_FEATURE_NAMES_WITH_IDENTITY:
+    elif feature_name in metadata.CATEGORICAL_FEATURE_NAMES_WITH_IDENTITY:
       feature_spec[feature_name] = tf.FixedLenFeature(shape=1, dtype=tf.int32)
     else:
       feature_spec[feature_name] = tf.FixedLenFeature(shape=1, dtype=tf.string)
@@ -54,15 +52,16 @@ def get_feature_spec(is_serving=False):
 def parse_csv(csv_row, is_serving=False):
   """Takes the string input tensor (csv) and returns a dict of rank-2 tensors.
 
-  Takes a rank-1 tensor and converts it into rank-2 tensor, with respect to its data type
-  (inferred from the metadata)
+  Takes a rank-1 tensor and converts it into rank-2 tensor, with respect to
+  its data type (inferred from the metadata).
 
   Args:
-    csv_row: rank-2 tensor of type string (csv)
-    is_serving: boolean to indicate whether this function is called during serving or training
-    since the serving csv_row input is different than the training input (i.e., no target column)
+    csv_row: rank-2 tensor of type string (csv).
+    is_serving: boolean to indicate whether this function is called during
+    serving or training, since the csv_row serving input is different than
+    the training input (i.e., no target column).
   Returns:
-    rank-2 tensor of the correct data type
+    rank-2 tensor of the correct data type.
   """
   if is_serving:
     column_names = metadata.SERVING_COLUMN_NAMES
@@ -80,13 +79,14 @@ def parse_csv(csv_row, is_serving=False):
 
   return features
 
+
 # ******************************************************************************
 # YOU MAY IMPLEMENT THIS FUNCTION FOR CUSTOM FEATURE ENGINEERING
 # ******************************************************************************
 
 
 def process_features(features):
-  """ Use to implement custom feature engineering logic, e.g. polynomial expansion, etc.
+  """ Use to implement custom feature engineering logic.
 
   Default behaviour is to return the original feature tensors dictionary as-is.
 
@@ -204,43 +204,6 @@ def make_input_fn(file_pattern,
 
 
 # ******************************************************************************
-# YOU MAY CHANGE THIS FUNCTION TO LOAD YOUR NUMERIC COLUMN STATS
-# ******************************************************************************
-
-
-def load_feature_stats(feature_stats_file):
-  """Load numeric column pre-computed statistics (mean, stdv, min, max, etc.)
-  in order to be used for scaling/stretching numeric columns.
-
-  In practice, the statistics of large datasets are computed prior to model training,
-  using dataflow (beam), dataproc (spark), BigQuery, etc.
-
-  The stats are then saved to gcs location. The location is passed to package
-  in the --feature-stats-file argument. However, it can be a local path as well.
-
-  Returns:
-      json object with the following schema: stats['feature_name']['state_name']
-  """
-
-  feature_stats = None
-  try:
-    if tf.gfile.Exists(feature_stats_file):
-      with tf.gfile.Open(feature_stats_file) as file:
-        content = file.read()
-      feature_stats = json.loads(content)
-      logging.info("Feature stats were successfully loaded from local file.")
-    else:
-      logging.warning(
-        "Feature stats file not found. "
-        "Numerical columns will not be normalised.")
-  except:
-    logging.warning(
-      "Couldn't load feature stats. Numerical columns will not be normalised.")
-
-  return feature_stats
-
-
-# ******************************************************************************
 # SERVING INPUT FUNCTIONS - YOU NEED NOT TO CHANGE THE FOLLOWING PART
 # ******************************************************************************
 
@@ -256,10 +219,10 @@ def json_serving_input_receiver_fn():
   receiver_tensors = {}
 
   for column_name in metadata.SERVING_COLUMN_NAMES:
-    if column_name in metadata.INPUT_CATEGORICAL_FEATURE_NAMES_WITH_IDENTITY:
+    if column_name in metadata.CATEGORICAL_FEATURE_NAMES_WITH_IDENTITY:
       receiver_tensors[column_name] = tf.placeholder(
         shape=[None], dtype=tf.int32)
-    elif column_name in metadata.INPUT_NUMERIC_FEATURE_NAMES:
+    elif column_name in metadata.NUMERIC_FEATURE_NAMES_WITH_STATS:
       receiver_tensors[column_name] = tf.placeholder(
         shape=[None], dtype=tf.float32)
     else:
@@ -318,7 +281,7 @@ def example_serving_input_receiver_fn():
   )
 
 
-SERVING_FUNCTIONS = {
+SERVING_INPUT_RECEIVER_FUNCTIONS = {
   'JSON': json_serving_input_receiver_fn,
   'EXAMPLE': example_serving_input_receiver_fn,
   'CSV': csv_serving_input_receiver_fn
@@ -370,7 +333,7 @@ def example_evaluating_input_receiver_fn():
     labels=features[metadata.TARGET_NAME])
 
 
-TFMA_SERVING_FUNCTIONS = {
+EVALUATING_INPUT_RECEIVER_FUNCTIONS = {
   'EXAMPLE': example_serving_input_receiver_fn,
   'CSV': csv_serving_input_receiver_fn
 }
