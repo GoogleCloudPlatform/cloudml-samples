@@ -27,13 +27,19 @@ from trainer import metadata
 
 def get_estimator(flags):
   # TODO: Allow pre-processing to be configurable through flags
-  classifier = ensemble.RandomForestClassifier(**flags)
+  classifier = ensemble.RandomForestClassifier(
+      n_estimators=flags.n_estimators,
+      max_depth=flags.max_depth,
+      min_samples_leaf=flags.min_samples_leaf,
+      criterion=flags.criterion,
+  )
 
   numeric_transformer = pipeline.Pipeline([
       ('imputer', impute.SimpleImputer(strategy='median')),
       ('scaler', preprocessing.StandardScaler()),
   ])
 
+  # Apply scale transformation to numerical attributes. Log transformation is used here.
   numeric_log_transformer = pipeline.Pipeline([
       ('imputer', impute.SimpleImputer(strategy='median')),
       ('log', preprocessing.FunctionTransformer(
@@ -41,6 +47,7 @@ def get_estimator(flags):
       ('scaler', preprocessing.StandardScaler()),
   ])
 
+  # Bucketing numerical attributes
   numeric_bin_transformer = pipeline.Pipeline([
       ('imputer', impute.SimpleImputer(strategy='median')),
       ('bin', preprocessing.KBinsDiscretizer(n_bins=5, encode='onehot-dense')),
@@ -54,8 +61,8 @@ def get_estimator(flags):
 
   preprocessor = compose.ColumnTransformer([
       ('numeric', numeric_transformer, metadata.NUMERIC_FEATURES),
-      ('numeric', numeric_log_transformer, metadata.NUMERIC_FEATURES),
-      ('numeric', numeric_bin_transformer, metadata.NUMERIC_FEATURES),
+      ('numeric_log', numeric_log_transformer, metadata.NUMERIC_FEATURES),
+      ('numeric_bin', numeric_bin_transformer, metadata.NUMERIC_FEATURES),
       ('categorical', categorical_transformer, metadata.CATEGORICAL_FEATURES),
   ])
 
