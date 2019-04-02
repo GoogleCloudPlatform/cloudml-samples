@@ -17,9 +17,7 @@
 
 """RF Model package setup."""
 
-
 import setuptools
-
 
 REQUIRED_PACKAGES = [
     'matplotlib>=2.2.3',
@@ -28,7 +26,7 @@ REQUIRED_PACKAGES = [
     'pandas-gbq>=0.8.0',
     'cloudml-hypertune',
     'scikit-plot',
-    "urllib"
+    "urllib",
 ]
 
 setuptools.setup(
@@ -39,4 +37,3 @@ setuptools.setup(
     include_package_data=True,
     description='',
 )
-

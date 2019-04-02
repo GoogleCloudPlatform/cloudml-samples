@@ -35,7 +35,7 @@ from trainer.input_util import read_from_bigquery
 from trainer.model import get_estimator
 from trainer.metadata import MODEL_FILE_NAME_PREFIX
 from trainer.metadata import METRIC_FILE_NAME_PREFIX
-from trainer.metadata import DUMP_FILE_NAME_SUFFIX
+from trainer.metadata import MODEL_FILE_NAME_SUFFIX
 
 
 def _upload_to_gcs(local_path, gcs_path):
@@ -109,23 +109,18 @@ def _train_and_evaluate(estimator, dataset, output_dir):
   # HyperparameterSpec object in your job request to match your chosen name.
   hpt = hypertune.HyperTune()
   hpt.report_hyperparameter_tuning_metric(
-    hyperparameter_metric_tag='my_metric_tag',
-    metric_value=np.mean(scores),
-    global_step=1000)
+      hyperparameter_metric_tag='my_metric_tag',
+      metric_value=np.mean(scores),
+      global_step=1000)
 
   timestamp = str(int(time.time()))
   trial_id = str(hpt.trial_id)
 
   # Export to the folder of output_dir/trial_id/FILE_NAME_PREFIX_timestampFILE_NAME_SUFFIX
-  model_output_path = os.path.join(output_dir, trial_id,
-                                   (MODEL_FILE_NAME_PREFIX
-                                    + '_' + timestamp
-                                    + DUMP_FILE_NAME_SUFFIX))
-
-  metric_output_path = os.path.join(output_dir, trial_id,
-                                    (METRIC_FILE_NAME_PREFIX
-                                     + '_' + timestamp
-                                     + DUMP_FILE_NAME_SUFFIX))
+  model_file_name = '{}_{}{}'.format(MODEL_FILE_NAME_PREFIX, timestamp, MODEL_FILE_NAME_SUFFIX)
+  model_output_path = os.path.join(output_dir, trial_id, model_file_name)
+  metric_file_name = '{}_{}{}'.format(METRIC_FILE_NAME_PREFIX, timestamp, MODEL_FILE_NAME_SUFFIX)
+  metric_output_path = os.path.join(output_dir, trial_id, metric_file_name)
 
   _dump_object(estimator, model_output_path)
   _dump_object(scores, metric_output_path)
@@ -150,59 +145,59 @@ def _parse_args(argv):
 
   # TODO(cezequiel): Change to read from BigQuery table instead.
   parser.add_argument(
-    '--bq_table',
-    help='Bigquery table containing input dataset.',
-    required=True,
+      '--bq_table',
+      help='Bigquery table containing input dataset.',
+      required=True,
   )
 
   parser.add_argument(
-    '--job-dir',
-    help='Output directory for exporting model and other metadata.',
-    required=True,
+      '--job-dir',
+      help='Output directory for exporting model and other metadata.',
+      required=True,
   )
 
   parser.add_argument(
-    '--log_level',
-    help='Logging level.',
-    choices=[
-      'DEBUG',
-      'ERROR',
-      'FATAL',
-      'INFO',
-      'WARN'
-    ],
-    default='INFO',
+      '--log_level',
+      help='Logging level.',
+      choices=[
+          'DEBUG',
+          'ERROR',
+          'FATAL',
+          'INFO',
+          'WARN',
+      ],
+      default='INFO',
   )
 
   parser.add_argument(
-    '--n_estimator',
-    help='Number of trees in the forest.',
-    default=10,
-    type=int
+      '--n_estimator',
+      help='Number of trees in the forest.',
+      default=10,
+      type=int,
   )
 
   parser.add_argument(
-    '--max_depth',
-    help='The maximum depth of the tree.',
-    type=int,
-    default=None
+      '--max_depth',
+      help='The maximum depth of the tree.',
+      type=int,
+      default=None,
   )
 
   parser.add_argument(
-    '--min_samples_leaf',
-    help='The minimum number of samples required to be at a leaf node.',
-    default=1,
-    type=int
+      '--min_samples_leaf',
+      help='The minimum number of samples required to be at a leaf node.',
+      default=1,
+      type=int,
   )
 
   parser.add_argument(
-    '--criterion',
-    help='The function to measure the quality of a split.',
-    choices=[
-      'gini',
-      'entropy',
-    ],
-    default='gini'
+      '--criterion',
+      help='The function to measure the quality of a split.',
+      choices=[
+          'gini',
+          'entropy',
+      ],
+      default='gini',
   )
 
   return parser.parse_args(argv)
