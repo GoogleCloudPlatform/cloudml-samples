@@ -39,8 +39,7 @@ from trainer.metadata import MODEL_FILE_NAME_SUFFIX
 
 
 def _upload_to_gcs(local_path, gcs_path):
-  """
-  Upload local file to Google Cloud Storage
+  """Upload local file to Google Cloud Storage
 
   Args:
     local_path: (string) Local file
@@ -66,8 +65,7 @@ def _upload_to_gcs(local_path, gcs_path):
 
 
 def _dump_object(object_to_dump, output_path):
-  """
-  Pickle the object and save to the output_path
+  """Pickle the object and save to the output_path
 
   Args:
     object_to_dump: Python object to be pickled
@@ -93,7 +91,17 @@ def _dump_object(object_to_dump, output_path):
 
 
 def _train_and_evaluate(estimator, dataset, output_dir):
-  """Runs model training and evalation."""
+  """Runs model training and evalation.
+
+  Args:
+    estimator: (pipeline.Pipeline), Pipeline instance assemble preprocessing steps and model training
+    dataset: (pandas.DataFrame, pandas.Series, pandas.DataFrame, pandas.Series), tuple of training
+          and evaluation data
+    output_dir: (string), directory that the trained model will be exported
+
+  Returns:
+    None
+  """
   x_train, y_train, x_val, y_val = dataset
 
   estimator.fit(x_train, y_train)
