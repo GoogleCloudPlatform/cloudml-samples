@@ -57,23 +57,21 @@ def _dump_object(object_to_dump, output_path):
     joblib.dump(object_to_dump, wf)
 
   if gcs_path:
-    input_util._upload_to_gcs(file_name, gcs_path)
+    input_util.upload_to_gcs(file_name, gcs_path)
 
 
 def _train_and_evaluate(estimator, dataset, output_dir):
-  """Runs model training and evalation.
+  """Runs model training and evaluation.
 
   Args:
-    estimator: (pipeline.Pipeline), Pipeline instance assemble preprocessing steps and model training
-    dataset: (pandas.DataFrame, pandas.Series, pandas.DataFrame, pandas.Series), tuple of training
-          and evaluation data
+    estimator: (pipeline.Pipeline), Pipeline instance assemble pre-processing steps and model training
+    dataset: (pandas.DataFrame), DataFrame containing training data
     output_dir: (string), directory that the trained model will be exported
 
   Returns:
     None
   """
-  x_train, y_train, x_val, y_val = dataset
-
+  x_train, y_train, x_val, y_val = input_util.data_train_test_split(dataset)
   estimator.fit(x_train, y_train)
 
   # Note: for now, use `cross_val_score` defaults (i.e. 3-fold)

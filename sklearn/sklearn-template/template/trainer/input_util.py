@@ -37,7 +37,7 @@ def _feature_label_split(data_df, label_column):
   return data_df.loc[:, data_df.columns != label_column], data_df[label_column]
 
 
-def _data_train_test_split(data_df):
+def data_train_test_split(data_df):
   """Split the DataFrame two subsets for training and testing
 
   Args:
@@ -64,7 +64,7 @@ def read_from_bigquery(full_table_path, project_id=None):
     project_id: (string, Optional) Google BigQuery Account project ID
 
   Returns:
-    A Tuple of (pandas.DataFrame, pandas.Series, pandas.DataFrame, pandas.Series)
+    pandas.DataFrame
   """
 
   query = metadata.BASE_QUERY.format(Table=full_table_path)
@@ -73,7 +73,7 @@ def read_from_bigquery(full_table_path, project_id=None):
   # Use SQL syntax dialect
   data_df = pd.read_gbq(query, project_id=project_id, dialect='standard')
 
-  return _data_train_test_split(data_df)
+  return data_df
 
 
 def read_from_gcs(file_pattern, bucket_name):
@@ -85,7 +85,7 @@ def read_from_gcs(file_pattern, bucket_name):
     bucket_name: (string) Google Cloud Storage Bucket Name
 
   Returns:
-    A Tuple of (pandas.DataFrame, pandas.Series, pandas.DataFrame, pandas.Series)
+    pandas.DataFrame
   """
 
   # TODO(luoshixin): Figure out a way to handle the header: metadata.py or data files themself ?
@@ -109,10 +109,10 @@ def read_from_gcs(file_pattern, bucket_name):
 
   data_df = pd.concat(df_list)
 
-  return _data_train_test_split(data_df)
+  return data_df
 
 
-def _upload_to_gcs(local_path, gcs_path):
+def upload_to_gcs(local_path, gcs_path):
   """Upload local file to Google Cloud Storage
 
   Args:
@@ -143,4 +143,4 @@ def read_from_bigquery_dump(table_name):
   import seaborn as sns
   data_df = sns.load_dataset('titanic')
 
-  return _data_train_test_split(data_df)
+  return data_df
