@@ -29,39 +29,9 @@ import numpy as np
 
 import hypertune
 
-from google.cloud import storage
-
-from trainer.input_util import read_from_bigquery_dump
-from trainer.model import get_estimator
-from trainer.metadata import MODEL_FILE_NAME_PREFIX
-from trainer.metadata import METRIC_FILE_NAME_PREFIX
-from trainer.metadata import MODEL_FILE_NAME_SUFFIX
-
-
-def _upload_to_gcs(local_path, gcs_path):
-  """Upload local file to Google Cloud Storage
-
-  Args:
-    local_path: (string) Local file
-    gcs_path: (string) Google Cloud Storage destination
-
-  Returns:
-    None
-  """
-  storage_client = storage.Client()
-  parse_result = urlparse(gcs_path)
-
-  # Parse bucket name
-  gcs_path = parse_result.path
-  bucket_name = parse_result.hostname
-  bucket = storage_client.get_bucket(bucket_name)
-
-  blob_path = gcs_path[1:] if gcs_path[0] == '/' else gcs_path
-  blob = bucket.blob(blob_path)
-
-  if blob.exists():
-    blob.delete()
-  blob.upload_from_filename(local_path)
+from trainer import metadata
+from trainer import model
+from trainer import input_util
 
 
 def _dump_object(object_to_dump, output_path):
@@ -87,7 +57,7 @@ def _dump_object(object_to_dump, output_path):
     joblib.dump(object_to_dump, wf)
 
   if gcs_path:
-    _upload_to_gcs(file_name, gcs_path)
+    input_util._upload_to_gcs(file_name, gcs_path)
 
 
 def _train_and_evaluate(estimator, dataset, output_dir):
@@ -125,9 +95,11 @@ def _train_and_evaluate(estimator, dataset, output_dir):
   trial_id = str(hpt.trial_id)
 
   # Export to the folder of output_dir/trial_id/FILE_NAME_PREFIX_timestampFILE_NAME_SUFFIX
-  model_file_name = '{}_{}{}'.format(MODEL_FILE_NAME_PREFIX, timestamp, MODEL_FILE_NAME_SUFFIX)
+  model_file_name = '{}_{}{}'.format(metadata.MODEL_FILE_NAME_PREFIX,
+                                     timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
   model_output_path = os.path.join(output_dir, trial_id, model_file_name)
-  metric_file_name = '{}_{}{}'.format(METRIC_FILE_NAME_PREFIX, timestamp, MODEL_FILE_NAME_SUFFIX)
+  metric_file_name = '{}_{}{}'.format(metadata.METRIC_FILE_NAME_PREFIX,
+                                      timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
   metric_output_path = os.path.join(output_dir, trial_id, metric_file_name)
 
   _dump_object(estimator, model_output_path)
@@ -138,10 +110,10 @@ def run_experiment(flags):
   """Testbed for running model training and evaluation."""
   # Get data for training and evaluation
 
-  dataset = read_from_bigquery_dump(flags.bq_table)
+  dataset = input_util.read_from_bigquery_dump(flags.bq_table)
 
   # Get model
-  estimator = get_estimator(flags)
+  estimator = model.get_estimator(flags)
 
   # Run training and evaluation
   _train_and_evaluate(estimator, dataset, flags.job_dir)

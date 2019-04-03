@@ -14,13 +14,13 @@
 # ==============================================================================
 
 """Data ingest operations."""
+from urllib.parse import urlparse
 
 import pandas as pd
 from sklearn import model_selection
 from google.cloud import storage
 
-from trainer.metadata import BASE_QUERY
-from trainer.metadata import LABEL
+from trainer import metadata
 
 
 def _feature_label_split(data_df, label_column):
@@ -47,7 +47,7 @@ def _data_train_test_split(data_df):
     A Tuple of (pandas.DataFrame, pandas.Series, pandas.DataFrame, pandas.Series)
   """
 
-  label_column = LABEL
+  label_column = metadata.LABEL
   train, val = model_selection.train_test_split(data_df)
   x_train, y_train = _feature_label_split(train, label_column)
   x_val, y_val = _feature_label_split(val, label_column)
@@ -67,7 +67,7 @@ def read_from_bigquery(full_table_path, project_id=None):
     A Tuple of (pandas.DataFrame, pandas.Series, pandas.DataFrame, pandas.Series)
   """
 
-  query = BASE_QUERY.format(Table=full_table_path)
+  query = metadata.BASE_QUERY.format(Table=full_table_path)
 
   # Use "application default credentials"
   # Use SQL syntax dialect
@@ -110,6 +110,32 @@ def read_from_gcs(file_pattern, bucket_name):
   data_df = pd.concat(df_list)
 
   return _data_train_test_split(data_df)
+
+
+def _upload_to_gcs(local_path, gcs_path):
+  """Upload local file to Google Cloud Storage
+
+  Args:
+    local_path: (string) Local file
+    gcs_path: (string) Google Cloud Storage destination
+
+  Returns:
+    None
+  """
+  storage_client = storage.Client()
+  parse_result = urlparse(gcs_path)
+
+  # Parse bucket name
+  gcs_path = parse_result.path
+  bucket_name = parse_result.hostname
+  bucket = storage_client.get_bucket(bucket_name)
+
+  blob_path = gcs_path[1:] if gcs_path[0] == '/' else gcs_path
+  blob = bucket.blob(blob_path)
+
+  if blob.exists():
+    blob.delete()
+  blob.upload_from_filename(local_path)
 
 
 def read_from_bigquery_dump(table_name):
