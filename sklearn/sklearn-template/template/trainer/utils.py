@@ -14,13 +14,12 @@
 # ==============================================================================
 
 """Hold utility functions."""
-from urllib.parse import urlparse
 
 import pandas as pd
 from sklearn import model_selection
-from google.cloud import storage
 
 from trainer import metadata
+from tensorflow import gfile
 
 
 def _feature_label_split(data_df, label_column):
@@ -89,28 +88,12 @@ def read_df_from_gcs(file_pattern):
 
   # TODO(luoshixin): Figure out a way to handle the header: metadata.py or data files themself ?
   # Download the files to local /tmp/ foler
-  temp_folder = '/tmp/'
   df_list = []
 
-  # Use "application default credentials"
-  storage_client = storage.Client()
-
-  # Parse bucket name and file pattern
-  parse_result = urlparse(file_pattern)
-  file_pattern = parse_result.path
-  bucket_name = parse_result.hostname
-
-  bucket = storage_client.get_bucket(bucket_name)
-
-  # Find all the files match the provided pattern
-  blobs = bucket.list_blobs(prefix=file_pattern)
-
-  for blob in blobs:
-    file_path = temp_folder + blob.name.split('/')[-1]
-    blob.download_to_filename(file_path)
-    # Assume there is no header
-    df_list.append(pd.read_csv(file_path, header=None))
-    # TODO: Can remove after download to save space
+  for file in gfile.Glob(file_pattern):
+    with gfile.Open(file, 'r') as f:
+      # Assume there is no header
+      df_list.append(pd.read_csv(f, header=None))
 
   data_df = pd.concat(df_list)
 
@@ -127,20 +110,7 @@ def upload_to_gcs(local_path, gcs_path):
   Returns:
     None
   """
-  storage_client = storage.Client()
-  parse_result = urlparse(gcs_path)
-
-  # Parse bucket name
-  gcs_path = parse_result.path
-  bucket_name = parse_result.hostname
-  bucket = storage_client.get_bucket(bucket_name)
-
-  blob_path = gcs_path[1:] if gcs_path[0] == '/' else gcs_path
-  blob = bucket.blob(blob_path)
-
-  if blob.exists():
-    blob.delete()
-  blob.upload_from_filename(local_path)
+  gfile.Copy(local_path, gcs_path)
 
 
 def read_from_bigquery_dump(table_name):

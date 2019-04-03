@@ -53,8 +53,7 @@ def _dump_object(object_to_dump, output_path):
   else:
     file_name = output_path
 
-  with open(file_name, 'wb') as wf:
-    joblib.dump(object_to_dump, wf)
+  joblib.dump(object_to_dump, file_name)
 
   if gcs_path:
     utils.upload_to_gcs(file_name, gcs_path)
