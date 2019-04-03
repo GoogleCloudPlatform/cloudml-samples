@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Data ingest operations."""
+"""Hold utility functions."""
 from urllib.parse import urlparse
 
 import pandas as pd
@@ -54,7 +54,7 @@ def data_train_test_split(data_df):
   return x_train, y_train, x_val, y_val
 
 
-def read_from_bigquery(full_table_path, project_id=None):
+def read_df_from_bigquery(full_table_path, project_id=None):
   """Read training data from BigQuery given full path of BigQuery table,
   and split into train and validation.
 
@@ -76,13 +76,12 @@ def read_from_bigquery(full_table_path, project_id=None):
   return data_df
 
 
-def read_from_gcs(file_pattern, bucket_name):
+def read_df_from_gcs(file_pattern):
   """Read training data from Google Cloud Storage given the path pattern, and split into train and validation.
 
   Args:
     file_pattern: (string) pattern of the files containing training data. For example:
-          [folder_name/prefix]
-    bucket_name: (string) Google Cloud Storage Bucket Name
+          [gs://bucket/folder_name/prefix]
 
   Returns:
     pandas.DataFrame
@@ -95,6 +94,12 @@ def read_from_gcs(file_pattern, bucket_name):
 
   # Use "application default credentials"
   storage_client = storage.Client()
+
+  # Parse bucket name and file pattern
+  parse_result = urlparse(file_pattern)
+  file_pattern = parse_result.path
+  bucket_name = parse_result.hostname
+
   bucket = storage_client.get_bucket(bucket_name)
 
   # Find all the files match the provided pattern

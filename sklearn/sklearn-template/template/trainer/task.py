@@ -31,7 +31,7 @@ import hypertune
 
 from trainer import metadata
 from trainer import model
-from trainer import input_util
+from trainer import utils
 
 
 def _dump_object(object_to_dump, output_path):
@@ -57,7 +57,7 @@ def _dump_object(object_to_dump, output_path):
     joblib.dump(object_to_dump, wf)
 
   if gcs_path:
-    input_util.upload_to_gcs(file_name, gcs_path)
+    utils.upload_to_gcs(file_name, gcs_path)
 
 
 def _train_and_evaluate(estimator, dataset, output_dir):
@@ -71,7 +71,7 @@ def _train_and_evaluate(estimator, dataset, output_dir):
   Returns:
     None
   """
-  x_train, y_train, x_val, y_val = input_util.data_train_test_split(dataset)
+  x_train, y_train, x_val, y_val = utils.data_train_test_split(dataset)
   estimator.fit(x_train, y_train)
 
   # Note: for now, use `cross_val_score` defaults (i.e. 3-fold)
@@ -108,7 +108,7 @@ def run_experiment(flags):
   """Testbed for running model training and evaluation."""
   # Get data for training and evaluation
 
-  dataset = input_util.read_from_bigquery_dump(flags.bq_table)
+  dataset = utils.read_from_bigquery_dump(flags.bq_table)
 
   # Get model
   estimator = model.get_estimator(flags)
