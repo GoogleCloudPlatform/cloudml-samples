@@ -46,4 +46,4 @@ The examples show how the template is adapted given a dataset. The datasets are 
 |[task.py](template/trainer/task.py) |Includes: 1) Initialise and parse task arguments (hyper parameters), and 2) Entry point to the trainer. | **No, unless** you want to add/remove parameters, or change parameter default values.
 
 
-### Suitable for TensorFlow v1.3.1+
+### Suitable for TensorFlow v1.13.1+
