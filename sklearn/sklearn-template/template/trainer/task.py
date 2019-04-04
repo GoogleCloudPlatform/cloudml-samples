@@ -15,30 +15,34 @@
 
 """Executes model training and evaluation."""
 
-
+import os
+import time
 import argparse
 import logging
 import sys
 
 from sklearn import model_selection
-from tensorflow import gfile
+import numpy as np
 
-from trainer import input_util
+import hypertune
+
+from trainer import metadata
 from trainer import model
-
-
-def _makedirs(dirname):
-  """Similar to `mkdir -p` that works locally and on GCS."""
-
-  if not gfile.Exists(dirname):
-    gfile.MakeDirs(dirname)
+from trainer import utils
 
 
 def _train_and_evaluate(estimator, dataset, output_dir):
-  """Runs model training and evalation."""
+  """Runs model training and evaluation.
 
-  x_train, y_train, x_val, y_val = dataset
+  Args:
+    estimator: (pipeline.Pipeline), Pipeline instance assemble pre-processing steps and model training
+    dataset: (pandas.DataFrame), DataFrame containing training data
+    output_dir: (string), directory that the trained model will be exported
 
+  Returns:
+    None
+  """
+  x_train, y_train, x_val, y_val = utils.data_train_test_split(dataset)
   estimator.fit(x_train, y_train)
 
   # Note: for now, use `cross_val_score` defaults (i.e. 3-fold)
@@ -46,15 +50,36 @@ def _train_and_evaluate(estimator, dataset, output_dir):
 
   logging.info(scores)
 
-  # TODO(cezequiel): Write model and eval metrics to `output_dir`.
-  _ = output_dir
+  # The default name of the metric is training/hptuning/metric.
+  # We recommend that you assign a custom name. The only functional difference is that
+  # if you use a custom name, you must set the hyperparameterMetricTag value in the
+  # HyperparameterSpec object in your job request to match your chosen name.
+  hpt = hypertune.HyperTune()
+  hpt.report_hyperparameter_tuning_metric(
+      hyperparameter_metric_tag='my_metric_tag',
+      metric_value=np.mean(scores),
+      global_step=1000)
+
+  timestamp = str(int(time.time()))
+  trial_id = str(hpt.trial_id)
+
+  # Export to the folder of output_dir/trial_id/FILE_NAME_PREFIX_timestampFILE_NAME_SUFFIX
+  model_file_name = '{}_{}{}'.format(metadata.MODEL_FILE_NAME_PREFIX,
+                                     timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
+  model_output_path = os.path.join(output_dir, trial_id, model_file_name)
+  metric_file_name = '{}_{}{}'.format(metadata.METRIC_FILE_NAME_PREFIX,
+                                      timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
+  metric_output_path = os.path.join(output_dir, trial_id, metric_file_name)
+
+  utils.dump_object(estimator, model_output_path)
+  utils.dump_object(scores, metric_output_path)
 
 
 def run_experiment(flags):
   """Testbed for running model training and evaluation."""
-
   # Get data for training and evaluation
-  dataset = input_util.read_from_bigquery(flags.bq_table)
+
+  dataset = utils.read_from_bigquery_dump(flags.bq_table)
 
   # Get model
   estimator = model.get_estimator(flags)
@@ -84,7 +109,45 @@ def _parse_args(argv):
   parser.add_argument(
       '--log_level',
       help='Logging level.',
+      choices=[
+          'DEBUG',
+          'ERROR',
+          'FATAL',
+          'INFO',
+          'WARN',
+      ],
       default='INFO',
+  )
+
+  parser.add_argument(
+      '--n_estimator',
+      help='Number of trees in the forest.',
+      default=10,
+      type=int,
+  )
+
+  parser.add_argument(
+      '--max_depth',
+      help='The maximum depth of the tree.',
+      type=int,
+      default=None,
+  )
+
+  parser.add_argument(
+      '--min_samples_leaf',
+      help='The minimum number of samples required to be at a leaf node.',
+      default=1,
+      type=int,
+  )
+
+  parser.add_argument(
+      '--criterion',
+      help='The function to measure the quality of a split.',
+      choices=[
+          'gini',
+          'entropy',
+      ],
+      default='gini',
   )
 
   return parser.parse_args(argv)
@@ -98,4 +161,3 @@ def main():
 
 if __name__ == '__main__':
   main()
-

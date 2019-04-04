@@ -17,9 +17,7 @@
 
 """RF Model package setup."""
 
-
 import setuptools
-
 
 REQUIRED_PACKAGES = [
     'matplotlib>=2.2.3',
@@ -38,4 +36,3 @@ setuptools.setup(
     include_package_data=True,
     description='',
 )
-
