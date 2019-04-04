@@ -20,11 +20,8 @@ import time
 import argparse
 import logging
 import sys
-from urllib.parse import urlparse
 
 from sklearn import model_selection
-from sklearn.externals import joblib
-
 import numpy as np
 
 import hypertune
@@ -32,31 +29,6 @@ import hypertune
 from trainer import metadata
 from trainer import model
 from trainer import utils
-
-
-def _dump_object(object_to_dump, output_path):
-  """Pickle the object and save to the output_path
-
-  Args:
-    object_to_dump: Python object to be pickled
-    output_path: (string) output path which can be Google Cloud Storage
-
-  Returns:
-    None
-  """
-  gcs_path = None
-  parse_result = urlparse(output_path)
-
-  if parse_result.scheme == 'gs':
-    file_name = os.path.basename(parse_result.path)
-    gcs_path = output_path
-  else:
-    file_name = output_path
-
-  joblib.dump(object_to_dump, file_name)
-
-  if gcs_path:
-    utils.upload_to_gcs(file_name, gcs_path)
 
 
 def _train_and_evaluate(estimator, dataset, output_dir):
@@ -99,8 +71,8 @@ def _train_and_evaluate(estimator, dataset, output_dir):
                                       timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
   metric_output_path = os.path.join(output_dir, trial_id, metric_file_name)
 
-  _dump_object(estimator, model_output_path)
-  _dump_object(scores, metric_output_path)
+  utils.dump_object(estimator, model_output_path)
+  utils.dump_object(scores, metric_output_path)
 
 
 def run_experiment(flags):

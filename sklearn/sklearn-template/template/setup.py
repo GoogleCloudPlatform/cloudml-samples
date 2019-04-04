@@ -26,7 +26,6 @@ REQUIRED_PACKAGES = [
     'pandas-gbq>=0.8.0',
     'cloudml-hypertune',
     'scikit-plot',
-    "urllib",
 ]
 
 setuptools.setup(

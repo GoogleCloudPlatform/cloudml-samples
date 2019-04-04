@@ -16,7 +16,7 @@
 """Dataset metadata."""
 
 # Usage: Modify below based on the dataset used.
-
+COLUMNS = None  # Schema of the data. Necessary for data stored in GCS
 
 NUMERIC_FEATURES = [
     'age',
@@ -30,8 +30,6 @@ CATEGORICAL_FEATURES = [
 ]
 
 LABEL = 'survived'
-
-DATASET_SPLIT_KEY = 'dataset_type'
 
 METRIC_FILE_NAME_PREFIX = 'metric'
 MODEL_FILE_NAME_PREFIX = 'model'

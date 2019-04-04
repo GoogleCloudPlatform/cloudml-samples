@@ -17,6 +17,7 @@
 
 import pandas as pd
 from sklearn import model_selection
+from sklearn.externals import joblib
 
 from trainer import metadata
 from tensorflow import gfile
@@ -77,6 +78,7 @@ def read_df_from_bigquery(full_table_path, project_id=None):
 
 def read_df_from_gcs(file_pattern):
   """Read training data from Google Cloud Storage given the path pattern, and split into train and validation.
+  Assume that the data on GCS is in csv format without header. The column names will be provided through metadata
 
   Args:
     file_pattern: (string) pattern of the files containing training data. For example:
@@ -86,14 +88,13 @@ def read_df_from_gcs(file_pattern):
     pandas.DataFrame
   """
 
-  # TODO(luoshixin): Figure out a way to handle the header: metadata.py or data files themself ?
-  # Download the files to local /tmp/ foler
+  # Download the files to local /tmp/ folder
   df_list = []
 
   for file in gfile.Glob(file_pattern):
     with gfile.Open(file, 'r') as f:
       # Assume there is no header
-      df_list.append(pd.read_csv(f, header=None))
+      df_list.append(pd.read_csv(f, names=metadata.COLUMNS))
 
   data_df = pd.concat(df_list)
 
@@ -111,6 +112,21 @@ def upload_to_gcs(local_path, gcs_path):
     None
   """
   gfile.Copy(local_path, gcs_path)
+
+
+def dump_object(object_to_dump, output_path):
+  """Pickle the object and save to the output_path
+
+  Args:
+    object_to_dump: Python object to be pickled
+    output_path: (string) output path which can be Google Cloud Storage
+
+  Returns:
+    None
+  """
+
+  with gfile.Open(output_path, 'w') as wf:
+    joblib.dump(object_to_dump, wf)
 
 
 def read_from_bigquery_dump(table_name):
