@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-"""RF Model package setup."""
+"""Scikit-learn trainer package setup."""
 
 import setuptools
+
 
 REQUIRED_PACKAGES = [
     'matplotlib>=2.2.3',
