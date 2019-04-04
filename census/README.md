@@ -209,7 +209,7 @@ export REGION=us-central1
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
@@ -300,7 +300,7 @@ you need to add the `--config` argument.
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --config $HPTUNING_CONFIG \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
@@ -341,7 +341,7 @@ export MODEL_BINARIES=$GCS_JOB_DIR/export/CSV/
 ```
 
 ```
-gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.10
+gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.13
 
 ```
 
@@ -381,7 +381,7 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --version v1 \
     --data-format TEXT \
     --region $REGION \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/census.json \
     --output-path $GCS_JOB_DIR/predictions
 ```
