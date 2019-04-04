@@ -48,7 +48,10 @@ def data_train_test_split(data_df):
   """
 
   label_column = metadata.LABEL
-  train, val = model_selection.train_test_split(data_df)
+  # Only use metadata.FEATURE_COLUMNS + metadata.LABEL
+  columns_to_use = metadata.FEATURE_COLUMNS + [label_column]
+
+  train, val = model_selection.train_test_split(data_df[columns_to_use])
   x_train, y_train = _feature_label_split(train, label_column)
   x_val, y_val = _feature_label_split(val, label_column)
   return x_train, y_train, x_val, y_val
@@ -129,8 +132,21 @@ def dump_object(object_to_dump, output_path):
     joblib.dump(object_to_dump, wf)
 
 
-def read_from_bigquery_dump(table_name):
-  # TODO(cezequiel): Remove when done using sns dataset
+def boolean_mask(columns, target_columns):
+  """Create a booleans mask to indicate the location of target_columns in columns
+
+  Args:
+    columns: (List[string]), schema of the data
+    target_columns: (List[string]), target columns that transformation will be performed
+
+  Returns:
+    List[bool]
+  """
+  columns_set = set(columns)
+  return [x in columns_set for x in target_columns]
+
+
+def read_from_bigquery_test():
   import seaborn as sns
   data_df = sns.load_dataset('titanic')
 

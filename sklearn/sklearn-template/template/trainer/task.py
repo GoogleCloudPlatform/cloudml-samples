@@ -79,7 +79,7 @@ def run_experiment(flags):
   """Testbed for running model training and evaluation."""
   # Get data for training and evaluation
 
-  dataset = utils.read_from_bigquery_dump(flags.bq_table)
+  dataset = utils.read_df_from_bigquery(flags.bq_table)
 
   # Get model
   estimator = model.get_estimator(flags)
