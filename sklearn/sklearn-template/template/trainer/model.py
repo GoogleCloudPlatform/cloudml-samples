@@ -23,6 +23,7 @@ from sklearn import preprocessing
 import numpy as np
 
 from trainer import metadata
+from trainer import utils
 
 
 def get_estimator(flags):
@@ -67,11 +68,12 @@ def get_estimator(flags):
       ('onehot', preprocessing.OneHotEncoder(handle_unknown='ignore', sparse=False)),
   ])
 
+  feature_columns = metadata.FEATURE_COLUMNS
   preprocessor = compose.ColumnTransformer([
-      ('numeric', numeric_transformer, metadata.NUMERIC_FEATURES),
-      ('numeric_log', numeric_log_transformer, metadata.NUMERIC_FEATURES),
-      ('numeric_bin', numeric_bin_transformer, metadata.NUMERIC_FEATURES),
-      ('categorical', categorical_transformer, metadata.CATEGORICAL_FEATURES),
+      ('numeric', numeric_transformer, utils.boolean_mask(feature_columns, metadata.NUMERIC_FEATURES)),
+      ('numeric_log', numeric_log_transformer, utils.boolean_mask(feature_columns, metadata.NUMERIC_FEATURES)),
+      ('numeric_bin', numeric_bin_transformer, utils.boolean_mask(feature_columns, metadata.NUMERIC_FEATURES)),
+      ('categorical', categorical_transformer, utils.boolean_mask(feature_columns, metadata.CATEGORICAL_FEATURES)),
   ])
 
   estimator = pipeline.Pipeline([
