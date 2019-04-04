@@ -1,4 +1,4 @@
 google-cloud-dataflow
 apache-beam[gcp]
-tensorflow>1.13,<2
-tensorboard>1.13,<2
+tensorflow>=1.13,<2
+tensorboard>=1.13,<2
