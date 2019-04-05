@@ -25,6 +25,7 @@ NUMERIC_FEATURES = [
     'petal_width',
 ]
 
+# TODO(cezequiel): Pick another BigQuery dataset for ML with cat. features
 CATEGORICAL_FEATURES = [
     # Intentionally left blank
 ]

@@ -15,16 +15,15 @@
 
 """Executes model training and evaluation."""
 
-import os
-import time
 import argparse
 import logging
+import os
 import sys
-
-from sklearn import model_selection
-import numpy as np
+import time
 
 import hypertune
+import numpy as np
+from sklearn import model_selection
 
 from trainer import metadata
 from trainer import model
@@ -35,7 +34,8 @@ def _train_and_evaluate(estimator, dataset, output_dir):
   """Runs model training and evaluation.
 
   Args:
-    estimator: (pipeline.Pipeline), Pipeline instance assemble pre-processing steps and model training
+    estimator: (pipeline.Pipeline), Pipeline instance, assemble pre-processing
+      steps and model training
     dataset: (pandas.DataFrame), DataFrame containing training data
     output_dir: (string), directory that the trained model will be exported
 
@@ -46,13 +46,14 @@ def _train_and_evaluate(estimator, dataset, output_dir):
   estimator.fit(x_train, y_train)
 
   # Note: for now, use `cross_val_score` defaults (i.e. 3-fold)
-  scores = model_selection.cross_val_score(estimator, x_val, y_val)
+  scores = model_selection.cross_val_score(estimator, x_val, y_val, cv=3)
 
   logging.info(scores)
 
   # The default name of the metric is training/hptuning/metric.
-  # We recommend that you assign a custom name. The only functional difference is that
-  # if you use a custom name, you must set the hyperparameterMetricTag value in the
+  # We recommend that you assign a custom name
+  # The only functional difference is that if you use a custom name,
+  # you must set the hyperparameterMetricTag value in the
   # HyperparameterSpec object in your job request to match your chosen name.
   hpt = hypertune.HyperTune()
   hpt.report_hyperparameter_tuning_metric(
@@ -63,12 +64,13 @@ def _train_and_evaluate(estimator, dataset, output_dir):
   timestamp = str(int(time.time()))
   trial_id = str(hpt.trial_id)
 
-  # Export to the folder of output_dir/trial_id/FILE_NAME_PREFIX_timestampFILE_NAME_SUFFIX
+  # Write model and eval metrics to `output_dir`
   model_file_name = '{}_{}{}'.format(metadata.MODEL_FILE_NAME_PREFIX,
                                      timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
   model_output_path = os.path.join(output_dir, trial_id, model_file_name)
-  metric_file_name = '{}_{}{}'.format(metadata.METRIC_FILE_NAME_PREFIX,
-                                      timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
+  metric_file_name = '{}_{}{}'.format(
+      metadata.METRIC_FILE_NAME_PREFIX,
+      timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
   metric_output_path = os.path.join(output_dir, trial_id, metric_file_name)
 
   utils.dump_object(estimator, model_output_path)
