@@ -79,7 +79,8 @@ def run_experiment(flags):
   """Testbed for running model training and evaluation."""
   # Get data for training and evaluation
 
-  dataset = utils.read_df_from_bigquery(flags.bq_table)
+  dataset = utils.read_df_from_bigquery(
+      flags.input, num_samples=flags.num_samples)
 
   # Get model
   estimator = model.get_estimator(flags)
@@ -93,10 +94,12 @@ def _parse_args(argv):
 
   parser = argparse.ArgumentParser()
 
-  # TODO(cezequiel): Change to read from BigQuery table instead.
   parser.add_argument(
-      '--bq_table',
-      help='Bigquery table containing input dataset.',
+      '--input',
+      help='''Dataset to use for training and evaluation.
+              Can be BigQuery table or a file (CSV).
+              BigQuery table should be specified as DATASET.TABLE_NAME.
+            ''',
       required=True,
   )
 
@@ -120,7 +123,13 @@ def _parse_args(argv):
   )
 
   parser.add_argument(
-      '--n_estimator',
+      '--num_samples',
+      help='Number of samples to read from `input`',
+      default=100,
+  )
+
+  parser.add_argument(
+      '--n_estimators',
       help='Number of trees in the forest.',
       default=10,
       type=int,

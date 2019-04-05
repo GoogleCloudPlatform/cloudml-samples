@@ -15,12 +15,14 @@
 
 """Hold utility functions."""
 
+import os
+
 import pandas as pd
 from sklearn import model_selection
 from sklearn.externals import joblib
+from tensorflow import gfile
 
 from trainer import metadata
-from tensorflow import gfile
 
 
 def _feature_label_split(data_df, label_column):
@@ -57,7 +59,7 @@ def data_train_test_split(data_df):
   return x_train, y_train, x_val, y_val
 
 
-def read_df_from_bigquery(full_table_path, project_id=None):
+def read_df_from_bigquery(full_table_path, project_id=None, num_samples=None):
   """Read training data from BigQuery given full path of BigQuery table,
   and split into train and validation.
 
@@ -70,7 +72,9 @@ def read_df_from_bigquery(full_table_path, project_id=None):
     pandas.DataFrame
   """
 
-  query = metadata.BASE_QUERY.format(Table=full_table_path)
+  query = metadata.BASE_QUERY.format(table=full_table_path)
+  limit = ' LIMIT {}'.format(num_samples) if num_samples else ''
+  query += limit
 
   # Use "application default credentials"
   # Use SQL syntax dialect
@@ -128,6 +132,8 @@ def dump_object(object_to_dump, output_path):
     None
   """
 
+  if not gfile.Exists(output_path):
+    gfile.MakeDirs(os.path.dirname(output_path))
   with gfile.Open(output_path, 'w') as wf:
     joblib.dump(object_to_dump, wf)
 
