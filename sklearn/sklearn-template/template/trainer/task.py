@@ -125,7 +125,7 @@ def _parse_args(argv):
   parser.add_argument(
       '--num_samples',
       help='Number of samples to read from `input`',
-      default=100,
+      default=None,
   )
 
   parser.add_argument(
