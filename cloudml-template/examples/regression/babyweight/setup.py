@@ -7,10 +7,10 @@ REQUIRED_PACKAGES = [
 ]
 
 setup(
-    name='',
-    version='',
+    name='trainer',
+    version='0.1',
     install_requires=REQUIRED_PACKAGES,
     packages=find_packages(),
     include_package_data=True,
-    description=''
+    description='babyweight trainer package.'
 )
