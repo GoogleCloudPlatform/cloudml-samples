@@ -1,33 +1,105 @@
 # Template for training a Scikit-learn Model on Cloud ML Engine
 
+
+This template is designed for building a scikit-learn-based machine learning trainer that can be run on 
+Cloud ML Engine (CMLE) at scale. Before you jump in, let’s cover some of the different tools you’ll be using to get 
+your job running on CMLE.
+
+- [Google Cloud Platform](https://cloud.google.com/) lets you build and host applications and websites, store data, 
+and analyze data on Google's scalable infrastructure.
+- [Cloud Machine Learning Engine](https://cloud.google.com/ml-engine/) is a managed service that enables you to easily build 
+machine learning models that work on any type of data, of any size.
+- [Google Cloud Storage](https://cloud.google.com/storage/) (GCS) is a unified object storage for developers and 
+enterprises, from live data serving to data analytics/ML to data archiving.
+- [Cloud SDK](https://cloud.google.com/sdk/) is a command line tool which allows you to interact with 
+Google Cloud products.
+- [Google BigQuery](https://cloud.google.com/bigquery/) A fast, highly scalable, cost-effective, and fully managed 
+cloud data warehouse for analytics, with even built-in machine learning.
+
+# Structure of the template
 ```
 Template              
-    |__ config.yaml  (file for CloudML configurations)
-    |__ setup.py 
-    |__ trainer  (trainer package)
-        |__ __init__.py
-        |__ launch_demo.py  (end-to-end script for running package)
-        |__ models.py  (tensorflow estimator functions)
-        |__ input_pipeline_dask.py  (handles input_pipeline)
-        |__ utils
-            |__ __init__.py
-            |__ custom_utils_fn.py
-            |__ optimizer_utils.py
-            |__ metric_utils.py
+    |__ scripts
+        |__ train.sh            # convenience script for running machine learning training jobs 
+    |__ trainer                 # trainer package
+        |__ metadata.py         # dataset metadata and feature columns definitions
+        |__ model.py            # pre-processing and machine learning model pipeline definition
+        |__ utils.py            # utility functions including e.g. loading data from bigquery and cloud storage
+        |__ task.py             # training job entry point, handling the parameters passed from command line 
+    |__ hptuning_config.yaml    # config file for running hyperparameter tunning 
+    |__ setup.py                # specify necessary dependency of the training job
+    |__ requirements.txt        # specify necessary dependency of the training job
+    |__ Dockerfile
 ```
 
-# Prerequisites
-Before you jump in, let’s cover some of the different tools you’ll be using to get your project running on ML Engine.
+# Steps to make use of the template
+## Step 0. Prerequisite
+Before you follow the instructions below to adapt the tempate to your machine learning job, 
+you need a Google cloud project if you don't have one. You can find detailed instructions 
+[here](https://cloud.google.com/dataproc/docs/guides/setup-project).
 
-[Google Cloud Platform](https://cloud.google.com/) lets you build and host applications and websites, store data, and analyze data on Google's scalable infrastructure.
+- Make sure the following API & Services are enabled.
+    * Cloud Storage
+    * Cloud Machine Learning Engine
+    * BigQuery API
+    * Cloud Build API (for CI/CD integration)
+    * Cloud Source Repositories API (for CI/CD integration)
 
-[Cloud ML Engine](https://cloud.google.com/ml-engine/) is a managed service that enables you to easily build machine learning models that work on any type of data, of any size.
+- Configure project id as environment variable
+  ```bash
+  $ export PROJECT_ID=[your-google-project-id]
+  ```
+  
+## Step 1. Modify metadata.py
+```python
+# Example for iris dataset
+COLUMNS = None  # Schema of the data. Necessary for data stored in GCS
 
-[Google Cloud Storage](https://cloud.google.com/storage/) (GCS) is a unified object storage for developers and enterprises, from live data serving to data analytics/ML to data archiving.
+NUMERIC_FEATURES = [
+    'sepal_length',
+    'sepal_width',
+    'petal_length',
+    'petal_width',
+]
 
-[Cloud SDK](https://cloud.google.com/sdk/) is a command line tool which allows you to interact with Google Cloud products. In order to run this notebook, make sure that Cloud SDK is [installed](https://cloud.google.com/sdk/downloads) in the same environment as your Jupyter kernel.
+CATEGORICAL_FEATURES = [
 
-# Steps to use
-1. Make sure service are enabled
-2. Modify metadata.py
-3. Submit training job
+]
+
+FEATURE_COLUMNS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+
+LABEL = 'species'
+
+METRIC_FILE_NAME_PREFIX = 'metric'
+MODEL_FILE_NAME_PREFIX = 'model'
+MODEL_FILE_NAME_SUFFIX = '.joblib'
+
+BASE_QUERY = '''
+    Select * From `{table}`
+  '''
+```
+
+metadata.py is where the dataset's metadata is defined. The code snippets above is an example configured 
+for iris dataset (can be found at `bigquery-public-data.ml_datasets.iris`). In most cases, only the following
+items need to be modified, in order to adapt to the target dataset. 
+- **COLUMNS**: the schema of ths data, only required for data stored in GCS
+- **NUMERIC_FEATURES**: columns those will be treated as numerical features
+- **CATEGORICAL_FEATURES**: columns those will be treated as categorical features
+- **LABEL**: column that will be treated as label
+
+## Step 2. Submit ML training job
+```shell
+bash scripts/train.sh [INPUT_PATH] [RUN_ENV] [BUCKET_NAME]
+```
+- INPUT_PATH: Dataset to use for training and evaluation. Can be BigQuery table or a file (CSV).
+              BigQuery table should be specified as `PROJECT_ID.DATASET.TABLE_NAME`.
+- RUN_ENV: Whether to run `local` (on-prem) or `remote` (GCP).
+- BUCKET_NAME: GSC bucket to be used for storing the trained model and evaluation result.
+
+## Step 3. Deploy the trained scikit-learn model
+After training finishes, the model will be exported to specified job directory in Google Cloud Storage. 
+The exported model can then be deployed to CMLE for online serving, the details of which can be 
+found [here](https://cloud.google.com/ml-engine/docs/scikit/using-pipelines#store-your-model)
+
+## Optional Step. Cloud Build and CI/CD
+TODO: @cezequiel
