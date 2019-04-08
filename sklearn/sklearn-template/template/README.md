@@ -26,9 +26,10 @@ Template
         |__ model.py            # pre-processing and machine learning model pipeline definition
         |__ utils.py            # utility functions including e.g. loading data from bigquery and cloud storage
         |__ task.py             # training job entry point, handling the parameters passed from command line 
-    |__ hptuning_config.yaml    # config file for running hyperparameter tunning 
-    |__ setup.py                # specify necessary dependency of the training job
-    |__ requirements.txt        # specify necessary dependency of the training job
+    |__ config.yaml             # for running normal training job on CMLE
+    |__ hptuning_config.yaml    # for running hyperparameter tunning job on CMLE
+    |__ setup.py                # specify necessary dependency for running job on CMLE
+    |__ requirements.txt        # specify necessary dependency, helper for setup environemnt for local development
     |__ Dockerfile
 ```
 
@@ -87,7 +88,23 @@ items need to be modified, in order to adapt to the target dataset.
 - **CATEGORICAL_FEATURES**: columns those will be treated as categorical features
 - **LABEL**: column that will be treated as label
 
-## Step 2. Submit ML training job
+## Step 3. Modify yaml file
+There are two yaml files, where
+- config.yaml: for running normal training job on CMLE
+- hptuning_config.yaml: for running hyperparameter tunning job on CMLE
+
+There is a common portion in both of the yaml file defining critical configurations for training ML model on CMLE. The 
+code snippets is an example. In particular, the runtimeVersion and scikit-learn version correspondence 
+can be check [here](https://cloud.google.com/ml-engine/docs/tensorflow/runtime-version-list).
+```yaml
+trainingInput:
+  scaleTier: STANDARD_1   # Machine type
+  region: "us-central1"   # GCP region
+  runtimeVersion: "1.13"  # Scikit-learn version
+  pythonVersion: "2.7"    # Note: Python 3 is also supported
+```
+
+## Step 3. Submit ML training job
 ```shell
 bash scripts/train.sh [INPUT_PATH] [RUN_ENV] [BUCKET_NAME]
 ```
