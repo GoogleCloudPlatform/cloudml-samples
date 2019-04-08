@@ -19,24 +19,28 @@
 COLUMNS = None  # Schema of the data. Necessary for data stored in GCS
 
 NUMERIC_FEATURES = [
-    'age',
-    'fare',
+    'sepal_length',
+    'sepal_width',
+    'petal_length',
+    'petal_width',
 ]
 
+# TODO(cezequiel): Pick another BigQuery dataset for ML with cat. features
 CATEGORICAL_FEATURES = [
-    'embarked',
-    'sex',
-    'pclass',
+    # Intentionally left blank
 ]
 
 FEATURE_COLUMNS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
-LABEL = 'survived'
+LABEL = 'species'
 
 METRIC_FILE_NAME_PREFIX = 'metric'
 MODEL_FILE_NAME_PREFIX = 'model'
 MODEL_FILE_NAME_SUFFIX = '.joblib'
 
 BASE_QUERY = '''
-    Select * From `{Table}`
+    SELECT
+      *
+    FROM
+      `{table}`
   '''

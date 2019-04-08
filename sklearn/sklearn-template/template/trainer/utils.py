@@ -15,16 +15,18 @@
 
 """Hold utility functions."""
 
+import os
+
 import pandas as pd
 from sklearn import model_selection
 from sklearn.externals import joblib
+from tensorflow import gfile
 
 from trainer import metadata
-from tensorflow import gfile
 
 
 def _feature_label_split(data_df, label_column):
-  """Split the DataFrame into two DataFrames including all the features, and label separately
+  """Split the DataFrame into features and label respectively.
 
   Args:
     data_df: (pandas.DataFrame) DataFrame the splitting to be performed on
@@ -38,13 +40,14 @@ def _feature_label_split(data_df, label_column):
 
 
 def data_train_test_split(data_df):
-  """Split the DataFrame two subsets for training and testing
+  """Split the DataFrame two subsets for training and testing.
 
   Args:
     data_df: (pandas.DataFrame) DataFrame the splitting to be performed on
 
   Returns:
-    A Tuple of (pandas.DataFrame, pandas.Series, pandas.DataFrame, pandas.Series)
+    A Tuple of (pandas.DataFrame, pandas.Series,
+                pandas.DataFrame, pandas.Series)
   """
 
   label_column = metadata.LABEL
@@ -57,20 +60,22 @@ def data_train_test_split(data_df):
   return x_train, y_train, x_val, y_val
 
 
-def read_df_from_bigquery(full_table_path, project_id=None):
-  """Read training data from BigQuery given full path of BigQuery table,
-  and split into train and validation.
+def read_df_from_bigquery(full_table_path, project_id=None, num_samples=None):
+  """Read data from BigQuery and split into train and validation sets.
 
   Args:
-    full_table_path: (string) full path of the table containing training data in the
-          format of [project_id.dataset_name.table_name]
-    project_id: (string, Optional) Google BigQuery Account project ID
+    full_table_path: (string) full path of the table containing training data
+      in the format of [project_id.dataset_name.table_name].
+    project_id: (string, Optional) Google BigQuery Account project ID.
+    num_samples: (int, Optional) Number of data samples to read.
 
   Returns:
     pandas.DataFrame
   """
 
-  query = metadata.BASE_QUERY.format(Table=full_table_path)
+  query = metadata.BASE_QUERY.format(table=full_table_path)
+  limit = ' LIMIT {}'.format(num_samples) if num_samples else ''
+  query += limit
 
   # Use "application default credentials"
   # Use SQL syntax dialect
@@ -80,12 +85,14 @@ def read_df_from_bigquery(full_table_path, project_id=None):
 
 
 def read_df_from_gcs(file_pattern):
-  """Read training data from Google Cloud Storage given the path pattern, and split into train and validation.
-  Assume that the data on GCS is in csv format without header. The column names will be provided through metadata
+  """Read data from Google Cloud Storage, split into train and validation sets.
+
+  Assume that the data on GCS is in csv format without header.
+  The column names will be provided through metadata
 
   Args:
-    file_pattern: (string) pattern of the files containing training data. For example:
-          [gs://bucket/folder_name/prefix]
+    file_pattern: (string) pattern of the files containing training data.
+    For example: [gs://bucket/folder_name/prefix]
 
   Returns:
     pandas.DataFrame
@@ -94,8 +101,8 @@ def read_df_from_gcs(file_pattern):
   # Download the files to local /tmp/ folder
   df_list = []
 
-  for file in gfile.Glob(file_pattern):
-    with gfile.Open(file, 'r') as f:
+  for filepath in gfile.Glob(file_pattern):
+    with gfile.Open(filepath, 'r') as f:
       # Assume there is no header
       df_list.append(pd.read_csv(f, names=metadata.COLUMNS))
 
@@ -105,7 +112,7 @@ def read_df_from_gcs(file_pattern):
 
 
 def upload_to_gcs(local_path, gcs_path):
-  """Upload local file to Google Cloud Storage
+  """Upload local file to Google Cloud Storage.
 
   Args:
     local_path: (string) Local file
@@ -118,7 +125,7 @@ def upload_to_gcs(local_path, gcs_path):
 
 
 def dump_object(object_to_dump, output_path):
-  """Pickle the object and save to the output_path
+  """Pickle the object and save to the output_path.
 
   Args:
     object_to_dump: Python object to be pickled
@@ -128,26 +135,22 @@ def dump_object(object_to_dump, output_path):
     None
   """
 
+  if not gfile.Exists(output_path):
+    gfile.MakeDirs(os.path.dirname(output_path))
   with gfile.Open(output_path, 'w') as wf:
     joblib.dump(object_to_dump, wf)
 
 
 def boolean_mask(columns, target_columns):
-  """Create a booleans mask to indicate the location of target_columns in columns
+  """Create a boolean mask indicating location of target_columns in columns.
 
   Args:
-    columns: (List[string]), schema of the data
-    target_columns: (List[string]), target columns that transformation will be performed
+    columns: (List[string]), list of all columns considered.
+    target_columns: (List[string]), columns whose position
+      should be masked as 1.
 
   Returns:
     List[bool]
   """
   columns_set = set(columns)
   return [x in columns_set for x in target_columns]
-
-
-def read_from_bigquery_test():
-  import seaborn as sns
-  data_df = sns.load_dataset('titanic')
-
-  return data_df
