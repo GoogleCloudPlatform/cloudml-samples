@@ -5,14 +5,14 @@ This template is designed for building a scikit-learn-based machine learning tra
 Cloud ML Engine (CMLE) at scale. Before you jump in, let’s cover some of the different tools you’ll be using to get 
 your job running on CMLE.
 
-- [Google Cloud Platform](https://cloud.google.com/) lets you build and host applications and websites, store data, 
+- [Google Cloud Platform](https://cloud.google.com/) (GCP) lets you build and host applications and websites, store data, 
 and analyze data on Google's scalable infrastructure.
-- [Cloud Machine Learning Engine](https://cloud.google.com/ml-engine/) is a managed service that enables you to easily build 
-machine learning models that work on any type of data, of any size.
+- [Cloud Machine Learning Engine](https://cloud.google.com/ml-engine/) (CMLE) is a managed service that enables you to 
+easily build machine learning models that work on any type of data, of any size.
 - [Google Cloud Storage](https://cloud.google.com/storage/) (GCS) is a unified object storage for developers and 
 enterprises, from live data serving to data analytics/ML to data archiving.
-- [Cloud SDK](https://cloud.google.com/sdk/) is a command line tool which allows you to interact with 
-Google Cloud products.
+- [Cloud SDK](https://cloud.google.com/sdk/) is a set of tools for Google Cloud Platform, which contains e.g. gcloud, 
+gsutil, and bq command-line tools to interact with Google Cloud products and services.
 - [Google BigQuery](https://cloud.google.com/bigquery/) A fast, highly scalable, cost-effective, and fully managed 
 cloud data warehouse for analytics, with even built-in machine learning.
 
@@ -63,9 +63,10 @@ NUMERIC_FEATURES = [
     'petal_width',
 ]
 
+# Fill this with any categorical features in the dataset
 CATEGORICAL_FEATURES = [
 
-]
+] # For iris dataset, there is no categorical feature
 
 FEATURE_COLUMNS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
@@ -88,7 +89,7 @@ items need to be modified, in order to adapt to the target dataset.
 - **CATEGORICAL_FEATURES**: columns those will be treated as categorical features
 - **LABEL**: column that will be treated as label
 
-## Step 3. Modify yaml file
+## Step 2. Modify yaml file
 There are two yaml files, where
 - config.yaml: for running normal training job on CMLE
 - hptuning_config.yaml: for running hyperparameter tunning job on CMLE
@@ -106,12 +107,12 @@ trainingInput:
 
 ## Step 3. Submit ML training job
 ```shell
-bash scripts/train.sh [INPUT_PATH] [RUN_ENV] [BUCKET_NAME]
+bash scripts/train.sh [INPUT_PATH] [RUN_ENV] [RUN_TYPE]
 ```
 - INPUT_PATH: Dataset to use for training and evaluation. Can be BigQuery table or a file (CSV).
               BigQuery table should be specified as `PROJECT_ID.DATASET.TABLE_NAME`.
-- RUN_ENV: Whether to run `local` (on-prem) or `remote` (GCP).
-- BUCKET_NAME: GSC bucket to be used for storing the trained model and evaluation result.
+- RUN_ENV: (Optional), whether to run `local` (on-prem) or `remote` (GCP). Default value is `local`.
+- RUN_TYPE: (Optional), whether to run `train` or `hptuning`. Default value is `train`.
 
 ## Step 3. Deploy the trained scikit-learn model
 After training finishes, the model will be exported to specified job directory in Google Cloud Storage. 
@@ -119,4 +120,3 @@ The exported model can then be deployed to CMLE for online serving, the details 
 found [here](https://cloud.google.com/ml-engine/docs/scikit/using-pipelines#store-your-model)
 
 ## Optional Step. Cloud Build and CI/CD
-TODO: @cezequiel
