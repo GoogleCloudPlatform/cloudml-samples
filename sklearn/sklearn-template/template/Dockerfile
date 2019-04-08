@@ -13,26 +13,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Dockerfile config for Cloud Build.
 
-"""Scikit-learn trainer package setup."""
+FROM google/cloud-sdk:latest
 
-import setuptools
+RUN apt-get -y install pylint
 
+WORKDIR /staging
 
-REQUIRED_PACKAGES = [
-    'matplotlib>=2.2.3',
-    'seaborn>=0.9.0',
-    'scikit-learn>=0.20.2',
-    'pandas-gbq>=0.8.0',
-    'cloudml-hypertune',
-    'scikit-plot',
-]
+ADD ./.pylintrc /staging/.pylintrc
+ADD ./trainer /staging/trainer
 
-setuptools.setup(
-    name='',
-    version='',
-    install_requires=REQUIRED_PACKAGES,
-    packages=setuptools.find_packages(),
-    include_package_data=True,
-    description='',
-)
+RUN pylint ./trainer/*
+
