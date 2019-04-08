@@ -100,7 +100,7 @@ def _parse_args(argv):
       '--input',
       help='''Dataset to use for training and evaluation.
               Can be BigQuery table or a file (CSV).
-              BigQuery table should be specified as DATASET.TABLE_NAME.
+              If BigQuery table, specify as as PROJECT_ID.DATASET.TABLE_NAME.
             ''',
       required=True,
   )
@@ -127,6 +127,7 @@ def _parse_args(argv):
   parser.add_argument(
       '--num_samples',
       help='Number of samples to read from `input`',
+      type=int,
       default=None,
   )
 
