@@ -18,18 +18,22 @@ cloud data warehouse for analytics, with even built-in machine learning.
 
 # Structure of the template
 ```
-Template              
+Template 
+    |__ configs
+        |__ config.yaml             # for running normal training job on CMLE
+        |__ hptuning_config.yaml    # for running hyperparameter tunning job on CMLE    
     |__ scripts
-        |__ train.sh            # convenience script for running machine learning training jobs 
-    |__ trainer                 # trainer package
-        |__ metadata.py         # dataset metadata and feature columns definitions
-        |__ model.py            # pre-processing and machine learning model pipeline definition
-        |__ utils.py            # utility functions including e.g. loading data from bigquery and cloud storage
-        |__ task.py             # training job entry point, handling the parameters passed from command line 
-    |__ config.yaml             # for running normal training job on CMLE
-    |__ hptuning_config.yaml    # for running hyperparameter tunning job on CMLE
-    |__ setup.py                # specify necessary dependency for running job on CMLE
-    |__ requirements.txt        # specify necessary dependency, helper for setup environemnt for local development
+        |__ train.sh                # convenience script for running machine learning training jobs
+        |__ deploy.sh               # convenience script for deploying trained scikit-learn model
+        |__ predict.sh              # convenience script for requesting online prediction
+        |__ predict.py              # helper function for requesting online prediction using python
+    |__ trainer                     # trainer package
+        |__ metadata.py             # dataset metadata and feature columns definitions
+        |__ model.py                # pre-processing and machine learning model pipeline definition
+        |__ utils.py                # utility functions including e.g. loading data from bigquery and cloud storage
+        |__ task.py                 # training job entry point, handling the parameters passed from command line 
+    |__ setup.py                    # specify necessary dependency for running job on CMLE
+    |__ requirements.txt            # specify necessary dependency, helper for setup environemnt for local development
     |__ Dockerfile
 ```
 
@@ -106,7 +110,7 @@ trainingInput:
   pythonVersion: "2.7"    # Note: Python 3 is also supported
 ```
 
-## Step 3. Submit ML training job
+## Step 3. Submit scikit-learn training job
 ```shell
 bash scripts/train.sh [INPUT_PATH] [RUN_ENV] [RUN_TYPE]
 ```
@@ -115,9 +119,35 @@ bash scripts/train.sh [INPUT_PATH] [RUN_ENV] [RUN_TYPE]
 - RUN_ENV: (Optional), whether to run `local` (on-prem) or `remote` (GCP). Default value is `local`.
 - RUN_TYPE: (Optional), whether to run `train` or `hptuning`. Default value is `train`.
 
-## Step 3. Deploy the trained scikit-learn model
+## Step 4. Deploy the exported scikit-learn model
 After training finishes, the model will be exported to specified job directory in Google Cloud Storage. 
-The exported model can then be deployed to CMLE for online serving, the details of which can be 
-found [here](https://cloud.google.com/ml-engine/docs/scikit/using-pipelines#store-your-model)
+The exported model can then be deployed to CMLE for online serving as follows
+```shell
+bash scripts/deploy.sh [MODEL_BINARIES] [MODEL_NAME] [VERSION_NAME]
+```
+- MODEL_BINARIES: Path to **directory** containing trained and exported scikit-learn model.
+- MODEL_NAME: Name of the model to be deployed.
+- VERSION_NAME: Version of the model to be deployed`.
 
-## Optional Step. Cloud Build and CI/CD
+**Note**: please make sure the following parameters are properly set in deploy.sh 
+```shell
+REGION=us-central1
+# The following two parameters should be aligned with those used during
+# training job, i.e., specified in the yaml files under configs/
+RUN_TIME=1.13
+PYTHON_VERSION=3.5 # only support python 2.7 and 3.5
+```
+
+## Step 5. Prediction with deployed model
+After the model is successfully deploy, we can send small batches of data to the service 
+and it returns your predictions in the response. We have provided two helper scripts: 
+predict.sh and predict.py, which use gcloud and python for requesting prediction respectively.
+
+```shell
+bash scripts/predict.sh [INPUT_DATA_FILE] [MODEL_NAME] [VERSION_NAME]
+```
+- MODEL_BINARIES: Path to file contained data for prediction in the format of: 
+a list of simple lists, each representing a data instance. For detail of the data format, please refer to 
+[here](https://cloud.google.com/ml-engine/docs/scikit/online-predict#formatting_instances_as_lists).
+- MODEL_NAME: Name of the deployed model.
+- VERSION_NAME: Version of the deployed model to be used.
