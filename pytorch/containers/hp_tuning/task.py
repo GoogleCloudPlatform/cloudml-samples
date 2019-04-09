@@ -111,7 +111,7 @@ def get_args():
         Dictionary of arguments.
     """
     parser = argparse.ArgumentParser(description='PyTorch Sonar Example')
-    parser.add_argument('--job-dir',  # handled automatically by ML Engine
+    parser.add_argument('--job-dir',  # handled automatically by AI Platform
                         help='GCS location to write checkpoints and export ' \
                              'models')
     parser.add_argument('--model-name',

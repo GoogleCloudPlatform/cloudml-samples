@@ -1,4 +1,4 @@
-# Getting started: Training and prediction with Keras in Cloud ML Engine
+# Getting started: Training and prediction with Keras in AI Platform
 
 This code uses [`tf.keras`](https://www.tensorflow.org/guide/keras) to train a
 classifier on the [Census Income Data
@@ -12,5 +12,5 @@ the Getting Started tutorial in one of the following formats:
 * View the [tutorial notebook in
   GitHub](../../notebooks/tensorflow/getting-started-keras.ipynb). You can
   download and run it in any Jupyter environment you would like.
-* Read the [tutorial in the Cloud ML Engine
+* Read the [tutorial in the AI Platform
   documentation](https://cloud.google.com/ml-engine/docs/tensorflow/getting-started-keras).

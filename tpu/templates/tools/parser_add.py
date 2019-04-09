@@ -6,7 +6,7 @@ help_dict = {
     '--model-dir': 'Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.',
     '--max-steps': 'The total number of steps to train the model.',
     '--use-tpu': 'Whether to use TPU.',
-    '--tpu': 'The name or GRPC URL of the TPU node.  Leave it as `None` when training on CMLE.',
+    '--tpu': 'The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.',
     '--train-batch-size': 'The training batch size.  The training batch is divided evenly across the TPU cores.',
     '--save-checkpoints-steps': 'The number of training steps before saving each checkpoint.',
     '--sequence-length': 'The sequence length for an LSTM model.',

@@ -2,7 +2,7 @@
  
 This is a TPU training template for {sample_name} expressed with {interface}.
 
-Cloud TPUs are available through Google Compute Engine, Google Kubernetes Engine, Cloud Machine Learning Engine, and Colab.
+Cloud TPUs are available through Google Compute Engine, Google Kubernetes Engine, AI Platform, and Colab.
 
  
 # Intended Use

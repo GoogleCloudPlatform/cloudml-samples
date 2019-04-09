@@ -277,7 +277,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--tpu',
         default=None,
-        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on CMLE.')
+        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.')
 
     parser.add_argument(
         '--gr-weight',

@@ -67,7 +67,7 @@ run python preprocess.py \
   --work-dir $WORK_DIR
 echo ''
 
-# Train and evaluate the model in Google Cloud ML Engine
+# Train and evaluate the model in AI Platform
 echo '>> Training'
 JOB="cloudml_samples_molecules_$(date +%Y%m%d_%H%M%S)"
 BUCKET=$(echo $WORK_DIR | egrep -o gs://[-_.a-zA-Z0-9]+)
