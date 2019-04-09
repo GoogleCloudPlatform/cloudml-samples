@@ -23,7 +23,7 @@
 #   PROJECT_ID: Google Cloud project to use.
 #
 # Arguments:
-#   $1: Path for the trained and exported scikit-learn model
+#   $1: Path to directory containing trained and exported scikit-learn model
 #   $2: Name of the model to be deployed
 #   $3: Version of the model to be deployed
 
