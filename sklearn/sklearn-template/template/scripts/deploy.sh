@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Convenience script for running ML training jobs.
+# Convenience script for deploying trained scikit-learn model.
 #
 # Prerequisites:
 #   - Google Cloud SDK
