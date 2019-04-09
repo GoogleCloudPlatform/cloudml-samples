@@ -65,13 +65,13 @@ def _train_and_evaluate(estimator, dataset, output_dir):
   trial_id = str(hpt.trial_id)
 
   # Write model and eval metrics to `output_dir`
-  model_file_name = '{}_{}{}'.format(metadata.MODEL_FILE_NAME_PREFIX,
-                                     timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
-  model_output_path = os.path.join(output_dir, trial_id, model_file_name)
-  metric_file_name = '{}_{}{}'.format(
-      metadata.METRIC_FILE_NAME_PREFIX,
-      timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
-  metric_output_path = os.path.join(output_dir, trial_id, metric_file_name)
+  trial_folder = os.path.join(output_dir, '{}_{}'.format(trial_id, timestamp))
+
+  model_output_path = os.path.join(
+      trial_folder, 'MODEL', metadata.MODEL_FILE_NAME)
+
+  metric_output_path = os.path.join(
+      trial_folder, 'METRIC', metadata.METRIC_FILE_NAME)
 
   utils.dump_object(estimator, model_output_path)
   utils.dump_object(scores, metric_output_path)
