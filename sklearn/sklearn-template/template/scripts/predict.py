@@ -15,6 +15,8 @@
 
 """Helper function for requesting an online prediction."""
 
+import os
+
 import googleapiclient.discovery
 
 
@@ -52,10 +54,10 @@ def predict_json(project, model, datas, version=None):
 
 
 if __name__ == '__main__':
-  project_id = 'YOUR_PROJECT_ID'
+  project_id = os.environ['PROJECT_ID']
   model_name = 'YOUR_MODEL_NAME'
-  data_list = [[]]
   version_name = 'YOUR_VERSION_NAME'
+  data_list = [[]]
   print(predict_json(project=project_id,
                      model=model_name,
                      datas=data_list,
