@@ -19,7 +19,6 @@ import argparse
 import logging
 import os
 import sys
-import time
 
 import hypertune
 import numpy as np
@@ -50,6 +49,16 @@ def _train_and_evaluate(estimator, dataset, output_dir):
 
   logging.info(scores)
 
+  # Write model and eval metrics to `output_dir`
+  model_output_path = os.path.join(
+      output_dir, 'models', metadata.MODEL_FILE_NAME)
+
+  metric_output_path = os.path.join(
+      output_dir, 'metrics', metadata.METRIC_FILE_NAME)
+
+  utils.dump_object(estimator, model_output_path)
+  utils.dump_object(scores, metric_output_path)
+
   # The default name of the metric is training/hptuning/metric.
   # We recommend that you assign a custom name
   # The only functional difference is that if you use a custom name,
@@ -60,21 +69,6 @@ def _train_and_evaluate(estimator, dataset, output_dir):
       hyperparameter_metric_tag='my_metric_tag',
       metric_value=np.mean(scores),
       global_step=1000)
-
-  timestamp = str(int(time.time()))
-  trial_id = str(hpt.trial_id)
-
-  # Write model and eval metrics to `output_dir`
-  model_file_name = '{}_{}{}'.format(metadata.MODEL_FILE_NAME_PREFIX,
-                                     timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
-  model_output_path = os.path.join(output_dir, trial_id, model_file_name)
-  metric_file_name = '{}_{}{}'.format(
-      metadata.METRIC_FILE_NAME_PREFIX,
-      timestamp, metadata.MODEL_FILE_NAME_SUFFIX)
-  metric_output_path = os.path.join(output_dir, trial_id, metric_file_name)
-
-  utils.dump_object(estimator, model_output_path)
-  utils.dump_object(scores, metric_output_path)
 
 
 def run_experiment(flags):
