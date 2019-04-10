@@ -19,7 +19,7 @@ cloud data warehouse for analytics, with even built-in machine learning.
 # Structure of the template
 ```
 Template 
-    |__ configs
+    |__ config
         |__ config.yaml             # for running normal training job on CMLE
         |__ hptuning_config.yaml    # for running hyperparameter tunning job on CMLE    
     |__ scripts
@@ -59,7 +59,7 @@ you need a Google cloud project if you don't have one. You can find detailed ins
 ## Step 1. Modify metadata.py
 ```python
 # Example for iris dataset
-COLUMNS = None  # Schema of the data. Necessary for data stored in GCS
+CSV_COLUMNS = None  # Schema of the data. Necessary for data stored in GCS
 
 NUMERIC_FEATURES = [
     'sepal_length',
@@ -123,9 +123,9 @@ bash scripts/train.sh [INPUT_PATH] [RUN_ENV] [RUN_TYPE]
 After training finishes, the model will be exported to specified job directory in Google Cloud Storage. 
 The exported model can then be deployed to CMLE for online serving as follows
 ```shell
-bash scripts/deploy.sh [MODEL_BINARIES] [MODEL_NAME] [VERSION_NAME]
+bash scripts/deploy.sh [MODEL_DIR] [MODEL_NAME] [VERSION_NAME]
 ```
-- MODEL_BINARIES: Path to **directory** containing trained and exported scikit-learn model.
+- MODEL_DIR: Path to **directory** containing trained and exported scikit-learn model.
 - MODEL_NAME: Name of the model to be deployed.
 - VERSION_NAME: Version of the model to be deployed`.
 
@@ -133,20 +133,20 @@ bash scripts/deploy.sh [MODEL_BINARIES] [MODEL_NAME] [VERSION_NAME]
 ```shell
 REGION=us-central1
 # The following two parameters should be aligned with those used during
-# training job, i.e., specified in the yaml files under configs/
+# training job, i.e., specified in the yaml files under config/
 RUN_TIME=1.13
-PYTHON_VERSION=3.5 # only support python 2.7 and 3.5
+PYTHON_VERSION=2.7 # only support python 2.7 and 3.5
 ```
 
 ## Step 5. Prediction with deployed model
-After the model is successfully deploy, we can send small batches of data to the service 
+After the model is successfully deployed, we can send small batches of data to the service 
 and it returns your predictions in the response. We have provided two helper scripts: 
 predict.sh and predict.py, which use gcloud and python for requesting prediction respectively.
 
 ```shell
 bash scripts/predict.sh [INPUT_DATA_FILE] [MODEL_NAME] [VERSION_NAME]
 ```
-- MODEL_BINARIES: Path to file contained data for prediction in the format of: 
+- INPUT_DATA_FILE: Path to file contained data for prediction in the format of: 
 a list of simple lists, each representing a data instance. For detail of the data format, please refer to 
 [here](https://cloud.google.com/ml-engine/docs/scikit/online-predict#formatting_instances_as_lists).
 - MODEL_NAME: Name of the deployed model.
