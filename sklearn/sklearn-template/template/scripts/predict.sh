@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Convenience script for requesting an online prediction.
+# Convenience script for requesting online prediction on Cloud ML Engine.
 #
 # Prerequisites:
 #   - Google Cloud SDK

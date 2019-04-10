@@ -43,10 +43,10 @@ if [[ ! "$RUN_TYPE" =~ ^(train|hptuning)$ ]]; then
 fi
 
 NOW="$(date +"%Y%m%d_%H%M%S")"
-PROJECT_NAME="sklearn_template"
+JOB_PREFIX="sklearn_template"
 
-JOB_NAME="${PROJECT_NAME}_${RUN_TYPE}_${NOW}"
-JOB_DIR="gs://$BUCKET_ID/$JOB_NAME"
+JOB_NAME="${JOB_PREFIX}_${RUN_TYPE}_${NOW}"
+JOB_DIR="gs://$BUCKET_ID/models/$JOB_NAME"
 PACKAGE_PATH=trainer
 MAIN_TRAINER_MODULE=$PACKAGE_PATH.task
 REGION=us-central1
@@ -61,6 +61,7 @@ fi
 echo "$RUN_ENV"
 if [ "$RUN_ENV" = 'remote' ]; then
   RUN_ENV_ARGS="jobs submit training $JOB_NAME \
+    --region $REGION \
     --config $CONFIG_FILE \
     "
 else  # assume `local`
@@ -70,15 +71,12 @@ fi
 # Specify arguments to pass to the trainer module
 TRAINER_ARGS="\
   --input $INPUT \
-  --log_level DEBUG \
-  --num_samples 100 \
   "
 
 CMD="gcloud ml-engine $RUN_ENV_ARGS \
   --job-dir $JOB_DIR \
   --package-path $PACKAGE_PATH \
   --module-name $MAIN_TRAINER_MODULE \
-  --region $REGION \
   -- \
   $TRAINER_ARGS \
   "
