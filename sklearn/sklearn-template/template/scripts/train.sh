@@ -49,6 +49,7 @@ JOB_NAME="${PROJECT_NAME}_${RUN_TYPE}_${NOW}"
 JOB_DIR="gs://$BUCKET_ID/$JOB_NAME"
 PACKAGE_PATH=trainer
 MAIN_TRAINER_MODULE=$PACKAGE_PATH.task
+REGION=us-central1
 
 if [ "$RUN_TYPE" = 'hptuning' ]; then
   CONFIG_FILE=config/hptuning_config.yaml
@@ -77,6 +78,7 @@ CMD="gcloud ml-engine $RUN_ENV_ARGS \
   --job-dir $JOB_DIR \
   --package-path $PACKAGE_PATH \
   --module-name $MAIN_TRAINER_MODULE \
+  --region $REGION \
   -- \
   $TRAINER_ARGS \
   "
