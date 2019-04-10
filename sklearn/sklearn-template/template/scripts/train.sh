@@ -51,9 +51,9 @@ PACKAGE_PATH=trainer
 MAIN_TRAINER_MODULE=$PACKAGE_PATH.task
 
 if [ "$RUN_TYPE" = 'hptuning' ]; then
-  CONFIG_FILE=configs/hptuning_config.yaml
+  CONFIG_FILE=config/hptuning_config.yaml
 else  # Assume `train`
-  CONFIG_FILE=configs/config.yaml
+  CONFIG_FILE=config/config.yaml
 fi
 
 # Specify arguments for remote or local execution
