@@ -105,9 +105,8 @@ can be check [here](https://cloud.google.com/ml-engine/docs/tensorflow/runtime-v
 ```yaml
 trainingInput:
   scaleTier: STANDARD_1   # Machine type
-  region: "us-central1"   # GCP region
   runtimeVersion: "1.13"  # Scikit-learn version
-  pythonVersion: "2.7"    # Note: Python 3 is also supported
+  pythonVersion: "2.7"    # only support python 2.7 and 3.5
 ```
 
 ## Step 3. Submit scikit-learn training job
@@ -118,6 +117,11 @@ bash scripts/train.sh [INPUT_PATH] [RUN_ENV] [RUN_TYPE]
               BigQuery table should be specified as `PROJECT_ID.DATASET.TABLE_NAME`.
 - RUN_ENV: (Optional), whether to run `local` (on-prem) or `remote` (GCP). Default value is `local`.
 - RUN_TYPE: (Optional), whether to run `train` or `hptuning`. Default value is `train`.
+
+**Note**: please make sure the following parameter is properly set in deploy.sh 
+```shell
+REGION=us-central1
+```
 
 ## Step 4. Deploy the exported scikit-learn model
 After training finishes, the model will be exported to specified job directory in Google Cloud Storage. 
