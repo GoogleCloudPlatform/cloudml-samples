@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# ==============================================================================
 #
 # Convenience script for running ML training jobs.
 #
@@ -57,7 +58,7 @@ else  # Assume `train`
   CONFIG_FILE=config/config.yaml
 fi
 
-# Specify arguments for remote or local execution
+# Specify arguments for remote (CMLE) or local (on-prem) execution
 echo "$RUN_ENV"
 if [ "$RUN_ENV" = 'remote' ]; then
   RUN_ENV_ARGS="jobs submit training $JOB_NAME \
@@ -68,7 +69,7 @@ else  # assume `local`
   RUN_ENV_ARGS="local train"
 fi
 
-# Specify arguments to pass to the trainer module
+# Specify arguments to pass to the trainer module (trainer/task.py)
 TRAINER_ARGS="\
   --input $INPUT \
   "
