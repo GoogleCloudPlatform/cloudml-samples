@@ -104,7 +104,7 @@ def read_df_from_gcs(file_pattern):
   for filepath in gfile.Glob(file_pattern):
     with gfile.Open(filepath, 'r') as f:
       # Assume there is no header
-      df_list.append(pd.read_csv(f, names=metadata.COLUMNS))
+      df_list.append(pd.read_csv(f, names=metadata.CSV_COLUMNS))
 
   data_df = pd.concat(df_list)
 

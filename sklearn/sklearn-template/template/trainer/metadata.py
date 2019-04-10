@@ -16,7 +16,7 @@
 """Dataset metadata."""
 
 # Usage: Modify below based on the dataset used.
-COLUMNS = None  # Schema of the data. Necessary for data stored in GCS
+CSV_COLUMNS = None  # Schema of the data. Necessary for data stored in GCS
 
 NUMERIC_FEATURES = [
     'sepal_length',
