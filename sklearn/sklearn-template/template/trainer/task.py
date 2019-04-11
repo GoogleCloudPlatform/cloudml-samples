@@ -51,10 +51,10 @@ def _train_and_evaluate(estimator, dataset, output_dir):
 
   # Write model and eval metrics to `output_dir`
   model_output_path = os.path.join(
-      output_dir, 'models', metadata.MODEL_FILE_NAME)
+      output_dir, metadata.MODEL_FILE_NAME)
 
   metric_output_path = os.path.join(
-      output_dir, 'metrics', metadata.METRIC_FILE_NAME)
+      output_dir, metadata.METRIC_FILE_NAME)
 
   utils.dump_object(estimator, model_output_path)
   utils.dump_object(scores, metric_output_path)
