@@ -1,13 +1,13 @@
-# Template for training a Scikit-learn Model on Cloud ML Engine
+# Scikit-learn trainer template for Cloud ML Engine
 
 
-This template is designed for building a scikit-learn-based machine learning trainer that can be run on 
-Cloud ML Engine (CMLE) at scale. Before you jump in, let’s cover some of the different tools you’ll be using to get 
-your job running on CMLE.
+This is a template for building a scikit-learn-based machine learning trainer that can be run on 
+Cloud ML Engine. 
 
-- [Google Cloud Platform](https://cloud.google.com/) (GCP) lets you build and host applications and websites, store data, 
-and analyze data on Google's scalable infrastructure.
-- [Cloud Machine Learning Engine](https://cloud.google.com/ml-engine/) (CMLE) is a managed service that enables you to 
+Google Cloud tools used:
+- [Google Cloud Platform](https://cloud.google.com/) (GCP) lets you build and host applications and websites, store 
+data, and analyze data on Google's scalable infrastructure.
+- [Cloud Machine Learning Engine](https://cloud.google.com/ml-engine/) is a managed service that enables you to 
 easily build machine learning models that work on any type of data, of any size.
 - [Google Cloud Storage](https://cloud.google.com/storage/) (GCS) is a unified object storage for developers and 
 enterprises, from live data serving to data analytics/ML to data archiving.
@@ -16,12 +16,12 @@ gsutil, and bq command-line tools to interact with Google Cloud products and ser
 - [Google BigQuery](https://cloud.google.com/bigquery/) A fast, highly scalable, cost-effective, and fully managed 
 cloud data warehouse for analytics, with even built-in machine learning.
 
-# Structure of the template
+## Template structure
 ```
 Template 
     |__ config
-        |__ config.yaml             # for running normal training job on CMLE
-        |__ hptuning_config.yaml    # for running hyperparameter tunning job on CMLE    
+        |__ config.yaml             # for running normal training job on ML Engine
+        |__ hptuning_config.yaml    # for running hyperparameter tunning job on ML Engine    
     |__ scripts
         |__ train.sh                # convenience script for running machine learning training jobs
         |__ deploy.sh               # convenience script for deploying trained scikit-learn model
@@ -32,13 +32,12 @@ Template
         |__ model.py                # pre-processing and machine learning model pipeline definition
         |__ utils.py                # utility functions including e.g. loading data from bigquery and cloud storage
         |__ task.py                 # training job entry point, handling the parameters passed from command line 
-    |__ setup.py                    # specify necessary dependency for running job on CMLE
+    |__ setup.py                    # specify necessary dependency for running job on ML Engine
     |__ requirements.txt            # specify necessary dependency, helper for setup environemnt for local development
-    |__ Dockerfile
 ```
 
-# Steps to make use of the template
-## Step 0. Prerequisite
+## Using the template
+### Step 0. Prerequisites
 Before you follow the instructions below to adapt the tempate to your machine learning job, 
 you need a Google cloud project if you don't have one. You can find detailed instructions 
 [here](https://cloud.google.com/dataproc/docs/guides/setup-project).
@@ -56,7 +55,12 @@ you need a Google cloud project if you don't have one. You can find detailed ins
   $ export BUCKET_ID=[your-google-cloud-storage-bucket-name]
   ```
   
-## Step 1. Modify metadata.py
+### Step 1. Tailor the scikit-learn trainer to your data
+
+`metadata.py` is where the dataset's metadata is defined. 
+By default, the file is configured to train on the Iris dataset, which can be found at 
+`bigquery-public-data.ml_datasets.iris`.
+
 ```python
 # Example for iris dataset
 CSV_COLUMNS = None  # Schema of the data. Necessary for data stored in GCS
@@ -86,22 +90,20 @@ BASE_QUERY = '''
   '''
 ```
 
-metadata.py is where the dataset's metadata is defined. The code snippets above is an example configured 
-for iris dataset (can be found at `bigquery-public-data.ml_datasets.iris`). In most cases, only the following
-items need to be modified, in order to adapt to the target dataset. 
+In most cases, only the following items need to be modified, in order to adapt to the target dataset. 
 - **COLUMNS**: the schema of ths data, only required for data stored in GCS
 - **NUMERIC_FEATURES**: columns those will be treated as numerical features
 - **CATEGORICAL_FEATURES**: columns those will be treated as categorical features
 - **LABEL**: column that will be treated as label
 
-## Step 2. Modify yaml file
-There are two yaml files, where
-- config.yaml: for running normal training job on CMLE
-- hptuning_config.yaml: for running hyperparameter tunning job on CMLE
+### Step 2. Modify YAML config files for training on ML Engine
+The files are located in `config`:
+- `config.yaml`: for running normal training job on ML Engine.
+- `hptuning_config.yaml`: for running hyperparameter tuning job on ML Engine.
 
-There is a common portion in both of the yaml file defining critical configurations for training ML model on CMLE. The 
-code snippets is an example. In particular, the runtimeVersion and scikit-learn version correspondence 
-can be check [here](https://cloud.google.com/ml-engine/docs/tensorflow/runtime-version-list).
+The YAML files share some configuration parameters. In particular, `runtimeVersion` and `pythonVersion` should
+correspond in both files.
+
 ```yaml
 trainingInput:
   scaleTier: STANDARD_1   # Machine type
@@ -109,49 +111,65 @@ trainingInput:
   pythonVersion: "2.7"    # only support python 2.7 and 3.5
 ```
 
-## Step 3. Submit scikit-learn training job
+More information on supported runtime version can be found 
+[here](https://cloud.google.com/ml-engine/docs/tensorflow/runtime-version-list).
+
+### Step 3. Submit scikit-learn training job
+
+You can run ML training jobs through the `train.sh` Bash script.
+
 ```shell
-bash scripts/train.sh [INPUT_PATH] [RUN_ENV] [RUN_TYPE]
+bash scripts/train.sh [INPUT] [RUN_ENV] [RUN_TYPE]
 ```
-- INPUT_PATH: Dataset to use for training and evaluation. Can be BigQuery table or a file (CSV).
-              BigQuery table should be specified as `PROJECT_ID.DATASET.TABLE_NAME`.
+- INPUT: Dataset to use for training and evaluation, which can be BigQuery table or a file (CSV).
+         BigQuery table should be specified as `PROJECT_ID.DATASET.TABLE_NAME`.
 - RUN_ENV: (Optional), whether to run `local` (on-prem) or `remote` (GCP). Default value is `local`.
 - RUN_TYPE: (Optional), whether to run `train` or `hptuning`. Default value is `train`.
 
-**Note**: please make sure the following parameter is properly set in deploy.sh 
+**Note**: Please make sure the REGION is set to a supported Cloud region for your project in `train.sh`
 ```shell
 REGION=us-central1
 ```
 
-## Step 4. Deploy the exported scikit-learn model
-After training finishes, the model will be exported to specified job directory in Google Cloud Storage. 
-The exported model can then be deployed to CMLE for online serving as follows
+### Step 4. Deploy the trained model
+
+The trained model can then be deployed to ML Engine for online serving using the `deploy.sh` script.
+
 ```shell
 bash scripts/deploy.sh [MODEL_DIR] [MODEL_NAME] [VERSION_NAME]
 ```
-- MODEL_DIR: Path to **directory** containing trained and exported scikit-learn model.
+
+where:
+
+- MODEL_DIR: Path to directory containing trained and exported scikit-learn model.
 - MODEL_NAME: Name of the model to be deployed.
 - VERSION_NAME: Version of the model to be deployed`.
 
-**Note**: please make sure the following parameters are properly set in deploy.sh 
+**Note**: Please make sure the following parameters are properly set in deploy.sh 
 ```shell
 REGION=us-central1
+
 # The following two parameters should be aligned with those used during
 # training job, i.e., specified in the yaml files under config/
 RUN_TIME=1.13
 PYTHON_VERSION=2.7 # only support python 2.7 and 3.5
 ```
 
-## Step 5. Prediction with deployed model
-After the model is successfully deployed, we can send small batches of data to the service 
-and it returns your predictions in the response. We have provided two helper scripts: 
-predict.sh and predict.py, which use gcloud and python for requesting prediction respectively.
+### Step 5. Run predictions using the deployed model
+
+After the model is successfully deployed, you can send small samples of new data to the API associated with the model,
+and it would return predictions in the response. 
+There are two helper scripts available, `predict.sh` and `predict.py`, which use gcloud and Python API for 
+requesting predictions respectively.
 
 ```shell
 bash scripts/predict.sh [INPUT_DATA_FILE] [MODEL_NAME] [VERSION_NAME]
 ```
-- INPUT_DATA_FILE: Path to file contained data for prediction in the format of: 
-a list of simple lists, each representing a data instance. For detail of the data format, please refer to 
-[here](https://cloud.google.com/ml-engine/docs/scikit/online-predict#formatting_instances_as_lists).
-- MODEL_NAME: Name of the deployed model.
-- VERSION_NAME: Version of the deployed model to be used.
+
+where:
+
+- INPUT_DATA_FILE: Path to sample file contained data in line-delimited JSON format. 
+  See `sample_data/sample.txt` for an example. More information can be found 
+  [here](https://cloud.google.com/ml-engine/docs/scikit/online-predict#formatting_instances_as_lists).
+- MODEL_NAME: Name of the deployed model to use.
+- VERSION_NAME: Version of the deployed model to use.
