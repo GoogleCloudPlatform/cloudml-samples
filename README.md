@@ -11,9 +11,9 @@ Overview
 
 The repository is organized by tasks: 
 
- - [Training](#model-training-with-cloud-ml-engine)
+ - [Training](#model-training-with-ai-platform)
  - [Serving](#model-serving-online-predictions)
- - [Training and Serving](#complete-guide-model-training-and-serving-on-ml-engine)
+ - [Training and Serving](#complete-guide-model-training-and-serving-on-ai-platform)
  
 Each task can be broken down to general usage `(CPU/GPU)` to specific features: 
 
