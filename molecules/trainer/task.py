@@ -173,7 +173,7 @@ def train_and_evaluate(
 
 
 if __name__ == '__main__':
-  """Main function called by Cloud ML Engine."""
+  """Main function called by AI Platform."""
   parser = argparse.ArgumentParser(
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 

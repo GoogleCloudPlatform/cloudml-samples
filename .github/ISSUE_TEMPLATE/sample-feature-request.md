@@ -12,7 +12,7 @@ A clear and concise description of what you want to happen.
 
 **Key technologies to include**
 * Workflow (Training, Serving, Complete Guide):
-* ML Engine specfic features (CPU, GPU, HP Tuning, TPU):
+* AI Platform specfic features (CPU, GPU, HP Tuning, TPU):
 * Framework (Tensorflow, Keras, scikit-learn, XGBoost, ...):
 * Model:
 * Dataset:

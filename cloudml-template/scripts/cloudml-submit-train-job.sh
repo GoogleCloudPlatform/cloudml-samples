@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Submitting a Cloud ML Engine job..."
+echo "Submitting an AI Platform job..."
 
 REGION="choose-gcp-region" # choose a gcp region from https://cloud.google.com/ml-engine/docs/tensorflow/regions
 TIER="BASIC" # BASIC | BASIC_GPU | STANDARD_1 | PREMIUM_1

@@ -1,6 +1,6 @@
 # TensorFlow Estimator - Trainer Package Template
 
-The purpose of this repository is to provide a template of how you can package a TensorFlow training model to submit it to Cloud ML Engine. The template makes it easier to organise your code, and to adapt it to your dataset. In more details, the template covers the following functionality:
+The purpose of this repository is to provide a template of how you can package a TensorFlow training model to submit it to AI Platform. The template makes it easier to organise your code, and to adapt it to your dataset. In more details, the template covers the following functionality:
 * Metadata to define your dataset, along with the problem type (classification vs regression).
 * Standard implementation of input, parsing, and serving functions.
 * Automatic feature columns creation based on the metadata (and normalisation stats).
@@ -16,12 +16,12 @@ Although the template provides standard implementation to different functionalit
 1. **[template](template)**: The directory includes: 
     1) trainer template with all the python modules to adapt to your data.
     2) ```setup.py```.
-    3) ```config.yaml``` file for hyper-parameter tuning and specifying the Cloud ML Engine scale-tier.
-    4) ```inference.py``` python (sample) script to perform prediction using a deployed model's API on Cloud ML Engine.
+    3) ```config.yaml``` file for hyper-parameter tuning and specifying the AI Platform scale-tier.
+    4) ```inference.py``` python (sample) script to perform prediction using a deployed model's API on AI Platform.
 
 2. **[scripts](scripts)**: The directory includes command-line scripts to:
     1) Train the model locally.
-    2) Train the model on Cloud ML Engine. 
+    2) Train the model on AI Platform. 
     3) Deploy the model on GCP as well as to make prediction (inference) using the deployed model.
 
 3. **[examples](examples)**: Four different examples are included:

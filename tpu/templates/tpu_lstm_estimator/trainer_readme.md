@@ -2,7 +2,7 @@
  
 This is a TPU training template for Long Short Term Memory expressed with TPUEstimator.
 
-Cloud TPUs are available through Google Compute Engine, Google Kubernetes Engine, Cloud Machine Learning Engine, and Colab.
+Cloud TPUs are available through Google Compute Engine, Google Kubernetes Engine, AI Platform, and Colab.
 
  
 # Intended Use

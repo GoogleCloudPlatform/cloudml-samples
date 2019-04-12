@@ -1,4 +1,4 @@
-# This file is for training on Cloud ML Engine with XGBoost.
+# This file is for training on AI Platform with XGBoost.
 
 
 # [START setup]

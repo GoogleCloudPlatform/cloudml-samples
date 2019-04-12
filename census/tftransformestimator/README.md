@@ -5,7 +5,7 @@ Predict a person's income level.
 - - -
 
 The example in this directory shows how to use [tf transform](https://github.com/tensorflow/transform)
-together with [Cloud Dataflow](https://cloud.google.com/dataflow) and [Cloud ML Engine](https://cloud.google.com/ml-engine/). As with the other Census example this code can be run locally or on cloud.
+together with [Cloud Dataflow](https://cloud.google.com/dataflow) and [AI Platform](https://cloud.google.com/ml-engine/). As with the other Census example this code can be run locally or on cloud.
 
 ## Preparing the data for training
 The [Census Income Data
@@ -104,7 +104,7 @@ python preprocess.py --train-data-file $TRAIN_FILE \
 
 # Single Node Training
 Single node training runs TensorFlow code on a single instance. You can run the exact
-same code locally and on Cloud ML Engine.
+same code locally and on AI Platform.
 
 ## How to run the code
 You can run the code either as a stand-alone python program or using `gcloud`.
@@ -157,8 +157,8 @@ gcloud ml-engine local train --module-name trainer.task \
 
 ```
 
-### Using Cloud ML Engine
-Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
+### Using AI Platform
+Run the code on AI Platform using `gcloud`. Note how `--job-dir` comes
 before `--` while training on the cloud and this is so that we can have
 different trial runs during Hyperparameter tuning. See more information about
 [training job arguments](https://cloud.google.com/ml-engine/docs/tensorflow/training-jobs#submitting_the_job).
@@ -230,7 +230,7 @@ gcloud ml-engine local train --module-name trainer.task \
 
 ```
 
-### Using Cloud ML Engine
+### Using AI Platform
 Run the distributed training code on cloud using `gcloud`.
 
 ```
@@ -261,7 +261,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 ```
 
 # Hyperparameter Tuning
-Cloud ML Engine allows you to perform Hyperparameter tuning to find out the
+AI Platform allows you to perform Hyperparameter tuning to find out the
 most optimal hyperparameters. See [Overview of Hyperparameter Tuning](https://cloud.google.com/ml-engine/docs/tensorflow/hyperparameter-tuning-overview)
 for more details.
 

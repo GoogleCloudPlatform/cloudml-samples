@@ -1,7 +1,7 @@
 ### Predicting income with the Census Income Dataset using Keras
 
 This is the Open Source Keras version of the Census sample. The sample runs both as a
-standalone Keras code and on Cloud ML Engine.
+standalone Keras code and on AI Platform.
 
 ## Download the data
 The [Census Income Data
@@ -87,9 +87,9 @@ gcloud ml-engine local predict --model-dir=$JOB_DIR/export \
                                --json-instances sample.json
 ```
 
-## Training using Cloud ML Engine
+## Training using AI Platform
 
-You can train the model on Cloud ML Engine
+You can train the model on AI Platform
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
@@ -105,10 +105,10 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --train-steps $TRAIN_STEPS
 ```
 
-## Prediction using Cloud ML Engine
+## Prediction using AI Platform
 
-You can perform prediction on Cloud ML Engine by following the steps below.
-Create a model on Cloud ML Engine
+You can perform prediction on AI Platform by following the steps below.
+Create a model on AI Platform
 
 ```
 gcloud ml-engine models create keras_model --regions us-central1

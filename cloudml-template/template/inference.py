@@ -2,13 +2,13 @@ from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
 
-GCP_PROJECT = ''  # Change to GCP project where the Cloud ML Engine model is deployed
-CMLE_MODEL_NAME = ''  # Change to the deployed Cloud ML Engine model
+GCP_PROJECT = ''  # Change to GCP project where the AI Platform model is deployed
+CMLE_MODEL_NAME = ''  # Change to the deployed AI Platform model
 CMLE_MODEL_VERSION = None  # If None, the default version will be used
 
 
 def predict_cmle(instances):
-    """ Use a deployed model to Cloud ML Engine to perform prediction
+    """ Use a deployed model to AI Platform to perform prediction
 
     Args:
         instances: list of json, csv, or tf.example objects, based on the serving function called

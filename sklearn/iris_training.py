@@ -1,4 +1,4 @@
-# This file is for training on Cloud ML Engine with scikit-learn.
+# This file is for training on AI Platform with scikit-learn.
 
 
 # [START setup]

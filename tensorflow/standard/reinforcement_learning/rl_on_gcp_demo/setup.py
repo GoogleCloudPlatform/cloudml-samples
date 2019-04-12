@@ -18,7 +18,7 @@ from setuptools import setup
 
 #####
 # We need to install some additional packages in order to compile
-# OpenAI Gym on CMLE.
+# OpenAI Gym on AI Platform.
 # Reference:
 # https://github.com/apache/beam/blob/master/sdks/python/apache_beam/examples/complete/juliaset/setup.py
 import subprocess

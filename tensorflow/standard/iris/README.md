@@ -43,7 +43,7 @@ Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
 #
 
-* **How to satisfy Cloud ML Engine project structure requirements**
+* **How to satisfy AI Platform project structure requirements**
 
 Follow [this](https://cloud.google.com/ml-engine/docs/tensorflow/packaging-trainer#project-structure) guide to structure your training application.
 
@@ -63,7 +63,7 @@ gsutil cp gs://cloud-samples-data/ml-engine/iris/iris_test.csv $IRIS_DATA
 
 * **Upload the data to a Google Cloud Storage bucket**
 
-Cloud ML Engine works by using resources available in the cloud, so the training
+AI Platform works by using resources available in the cloud, so the training
 data needs to be placed in such a resource. For this example, we'll use [Google
 Cloud Storage], but it's possible to use other resources like [BigQuery]. Make a
 bucket (names must be globally unique) and place the data in there:
@@ -96,7 +96,7 @@ python -m trainer.task \
  --job-dir=$JOB_DIR
 ```
 
-* **Google Cloud ML Engine**
+* **AI Platform**
 
 * **GCloud configuration:**
 
@@ -111,7 +111,7 @@ export TRAIN_STEPS=1000
 export EVAL_STEPS=100
 ```
 
-* **Run locally via the gcloud command for Google Cloud ML Engine:**
+* **Run locally via the gcloud command for AI Platform:**
 
 ```
 gcloud ml-engine local train --package-path trainer \
@@ -124,15 +124,15 @@ gcloud ml-engine local train --package-path trainer \
     --eval-steps $EVAL_STEPS
 ```
 
-* **Run in Google Cloud ML Engine**
+* **Run in AI Platform**
 
-You can train the model on Cloud ML Engine:
+You can train the model on AI Platform:
 
 *NOTE:* If you downloaded the training files to your local filesystem, be sure
 to reset the `TRAIN_FILE` and `EVAL_FILE` environment variables to refer to a GCS location.
 Data must be in GCS for cloud-based training.
 
-Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
+Run the code on AI Platform using `gcloud`. Note how `--job-dir` comes
 before `--` while training on the cloud and this is so that we can have
 different trial runs during Hyperparameter tuning.
 
@@ -150,7 +150,7 @@ export EVAL_STEPS=100
 export REGION=us-central1
 ```
 
-* **Run in Google Cloud ML Engine:**
+* **Run in AI Platform:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
@@ -167,7 +167,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --eval-steps $EVAL_STEPS
 ```
 
-* **Distributed Node Training in Google Cloud ML Engine:**
+* **Distributed Node Training in AI Platform:**
 
 Distributed node training uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed).
 The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml/reference/configuration-data-structures#tf_config_environment_variable)
@@ -189,7 +189,7 @@ gcloud ml-engine local train --package-path trainer \
 
 ```
                         
-* **Run in Google Cloud ML Engine:**
+* **Run in AI Platform:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
