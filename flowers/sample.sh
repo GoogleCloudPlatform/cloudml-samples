@@ -63,11 +63,6 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --eval_data_paths "${GCS_PATH}/preproc/eval*" \
   --train_data_paths "${GCS_PATH}/preproc/train*"
 
-# Remove the model and its version
-# Make sure no error is reported if model does not exist
-gcloud ml-engine versions delete $VERSION_NAME --model=$MODEL_NAME -q --verbosity none
-gcloud ml-engine models delete $MODEL_NAME -q --verbosity none
-
 # Tell CloudML about a new type of model coming.  Think of a "model" here as
 # a namespace for deployed Tensorflow graphs.
 gcloud ml-engine models create "$MODEL_NAME" \
@@ -100,3 +95,8 @@ python -c 'import base64, sys, json; img = base64.b64encode(open(sys.argv[1], "r
 # We wait for 10 minutes here, but often see the service start up sooner.
 sleep 10m
 gcloud ml-engine predict --model ${MODEL_NAME} --json-instances request.json
+
+# Remove the model and its version
+# Make sure no error is reported if model does not exist
+gcloud ml-engine versions delete $VERSION_NAME --model=$MODEL_NAME -q --verbosity none
+gcloud ml-engine models delete $MODEL_NAME -q --verbosity none
