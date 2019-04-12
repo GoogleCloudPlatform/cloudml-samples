@@ -37,7 +37,7 @@ def get_estimator(flags):
   Returns:
     sklearn.pipeline.Pipeline
   """
-  # TODO: Allow pre-processing to be configurable through flags
+
   classifier = ensemble.RandomForestClassifier(
       n_estimators=flags.n_estimators,
       max_depth=flags.max_depth,
