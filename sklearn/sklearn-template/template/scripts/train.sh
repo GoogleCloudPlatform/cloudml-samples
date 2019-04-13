@@ -29,11 +29,13 @@
 #       specified as PROJECT_ID.DATASET.TABLE_NAME.
 #   $2: (Optional) Whether to run `local` (on-prem) or `remote` (GCP).
 #   $3: (Optional) Whether to run `train` or `hptuning`.
+#   $4: (Optional) additional arguments to pass to the trainer.
 
 
 INPUT=$1
 RUN_ENV=$2
 RUN_TYPE=$3
+EXTRA_TRAINER_ARGS=$4
 
 if [[ ! "$RUN_ENV" =~ ^(local|remote)$ ]]; then
   RUN_ENV=local;
@@ -80,6 +82,7 @@ CMD="gcloud ml-engine $RUN_ENV_ARGS \
   --module-name $MAIN_TRAINER_MODULE \
   -- \
   $TRAINER_ARGS \
+  $EXTRA_TRAINER_ARGS \
   "
 
 echo "Running command: $CMD"
