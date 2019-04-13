@@ -33,7 +33,7 @@ FEATURE_COLUMNS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
 LABEL = 'species'
 
-METRIC_FILE_NAME = 'metric.joblib'
+METRIC_FILE_NAME = 'eval_metrics.joblib'
 MODEL_FILE_NAME = 'model.joblib'
 
 BASE_QUERY = '''
