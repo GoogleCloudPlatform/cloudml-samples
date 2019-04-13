@@ -135,7 +135,7 @@ bash scripts/train.sh [INPUT] [RUN_ENV] [RUN_TYPE] [EXTRA_TRAINER_ARGS]
          BigQuery table should be specified as `PROJECT_ID.DATASET.TABLE_NAME`.
 - RUN_ENV: (Optional), whether to run `local` (on-prem) or `remote` (GCP). Default value is `local`.
 - RUN_TYPE: (Optional), whether to run `train` or `hptuning`. Default value is `train`.
-- EXTRA_TRAINER_ARGS: (Optional), additional arguments to pass to the trainer
+- EXTRA_TRAINER_ARGS: (Optional), additional arguments to pass to the trainer.
 
 **Note**: Please make sure the REGION is set to a supported Cloud region for your project in `train.sh`
 ```shell
