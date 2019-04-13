@@ -1,4 +1,4 @@
-# Scikit-learn trainer template AI Platform
+# Scikit-learn trainer template for AI Platform
 
 ## Overview
 
