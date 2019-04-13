@@ -1,8 +1,9 @@
-# Scikit-learn trainer template for Cloud ML Engine
+# Scikit-learn trainer template AI Platform
 
 ## Overview
 
-TODO
+This contains a code template for implementing a scikit-learn model trainer on AI Platform.
+Usage examples are also included.
 
 ## Directories
 
