@@ -35,11 +35,6 @@ def predict(project, model, data, version=None):
     Mapping[str: any]: dictionary of prediction results defined by the model.
   """
 
-  # TODO: move to README file as prereq.
-  # Create the ML Engine service object.
-  # To authenticate, set the environment variable
-  # GOOGLE_APPLICATION_CREDENTIALS=<path_to_service_account_file>
-
   service = googleapiclient.discovery.build('ml', 'v1')
   name = 'projects/{}/models/{}'.format(project, model)
 

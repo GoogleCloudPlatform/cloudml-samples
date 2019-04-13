@@ -1,27 +1,33 @@
-# Scikit-learn trainer template for Cloud ML Engine
+# Scikit-learn trainer template for AI Platform
 
 
-This is a template for building a scikit-learn-based machine learning trainer that can be run on 
-Cloud ML Engine. 
+This is a template for building a scikit-learn-based machine learning trainer 
+that can be run on AI Platform. 
 
 Google Cloud tools used:
-- [Google Cloud Platform](https://cloud.google.com/) (GCP) lets you build and host applications and websites, store 
-data, and analyze data on Google's scalable infrastructure.
-- [Cloud Machine Learning Engine](https://cloud.google.com/ml-engine/) is a managed service that enables you to 
-easily build machine learning models that work on any type of data, of any size.
-- [Google Cloud Storage](https://cloud.google.com/storage/) (GCS) is a unified object storage for developers and 
-enterprises, from live data serving to data analytics/ML to data archiving.
-- [Cloud SDK](https://cloud.google.com/sdk/) is a set of tools for Google Cloud Platform, which contains e.g. gcloud, 
-gsutil, and bq command-line tools to interact with Google Cloud products and services.
-- [Google BigQuery](https://cloud.google.com/bigquery/) A fast, highly scalable, cost-effective, and fully managed 
-cloud data warehouse for analytics, with even built-in machine learning.
+- [Google Cloud Platform](https://cloud.google.com/) (GCP) lets you build and 
+host applications and websites, store data, and analyze data on Google's 
+scalable infrastructure.
+- [Cloud ML Engine](https://cloud.google.com/ml-engine/) is a managed service 
+that enables you to easily build machine learning models that work on any type 
+of data, of any size. This is now part of 
+[AI Platform](https://cloud.google.com/ai-platform/).
+- [Google Cloud Storage](https://cloud.google.com/storage/) (GCS) is a unified 
+object storage for developers and enterprises, from live data serving to data 
+analytics/ML to data archiving.
+- [Cloud SDK](https://cloud.google.com/sdk/) is a set of tools for Google Cloud 
+Platform, which contains e.g. gcloud, gsutil, and bq command-line tools to 
+interact with Google Cloud products and services.
+- [Google BigQuery](https://cloud.google.com/bigquery/) A fast, highly scalable, 
+cost-effective, and fully managed cloud data warehouse for analytics, with even 
+built-in machine learning.
 
 ## Template structure
 ```
-Template 
+template 
     |__ config
-        |__ config.yaml             # for running normal training job on ML Engine
-        |__ hptuning_config.yaml    # for running hyperparameter tunning job on ML Engine    
+        |__ config.yaml             # for running normal training job on AI Platform
+        |__ hptuning_config.yaml    # for running hyperparameter tunning job on AI Platform    
     |__ scripts
         |__ train.sh                # convenience script for running machine learning training jobs
         |__ deploy.sh               # convenience script for deploying trained scikit-learn model
@@ -32,7 +38,7 @@ Template
         |__ model.py                # pre-processing and machine learning model pipeline definition
         |__ utils.py                # utility functions including e.g. loading data from bigquery and cloud storage
         |__ task.py                 # training job entry point, handling the parameters passed from command line 
-    |__ setup.py                    # specify necessary dependency for running job on ML Engine
+    |__ setup.py                    # specify necessary dependency for running job on AI Platform
     |__ requirements.txt            # specify necessary dependency, helper for setup environemnt for local development
 ```
 
@@ -49,11 +55,15 @@ you need a Google cloud project if you don't have one. You can find detailed ins
     * Cloud Build API (for CI/CD integration)
     * Cloud Source Repositories API (for CI/CD integration)
 
-- Configure project id and bucket id as environment variable
+- Configure project id and bucket id as environment variable.
   ```bash
   $ export PROJECT_ID=[your-google-project-id]
   $ export BUCKET_ID=[your-google-cloud-storage-bucket-name]
   ```
+  
+- Set up a service account for calls to GCP APIs.  
+  More information on setting up a service account can be found 
+  [here](https://cloud.google.com/docs/authentication/getting-started).
   
 ### Step 1. Tailor the scikit-learn trainer to your data
 
@@ -96,10 +106,10 @@ In most cases, only the following items need to be modified, in order to adapt t
 - **CATEGORICAL_FEATURES**: columns those will be treated as categorical features
 - **LABEL**: column that will be treated as label
 
-### Step 2. Modify YAML config files for training on ML Engine
+### Step 2. Modify YAML config files for training on AI Platform
 The files are located in `config`:
-- `config.yaml`: for running normal training job on ML Engine.
-- `hptuning_config.yaml`: for running hyperparameter tuning job on ML Engine.
+- `config.yaml`: for running normal training job on AI Platform.
+- `hptuning_config.yaml`: for running hyperparameter tuning job on AI Platform.
 
 The YAML files share some configuration parameters. In particular, `runtimeVersion` and `pythonVersion` should
 correspond in both files.
@@ -133,7 +143,7 @@ REGION=us-central1
 
 ### Step 4. Deploy the trained model
 
-The trained model can then be deployed to ML Engine for online serving using the `deploy.sh` script.
+The trained model can then be deployed to AI Platform for online serving using the `deploy.sh` script.
 
 ```shell
 bash scripts/deploy.sh [MODEL_DIR] [MODEL_NAME] [VERSION_NAME]

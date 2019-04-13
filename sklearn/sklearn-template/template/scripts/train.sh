@@ -58,7 +58,7 @@ else  # Assume `train`
   CONFIG_FILE=config/config.yaml
 fi
 
-# Specify arguments for remote (CMLE) or local (on-prem) execution
+# Specify arguments for remote (AI Platform) or local (on-premise) execution
 echo "$RUN_ENV"
 if [ "$RUN_ENV" = 'remote' ]; then
   RUN_ENV_ARGS="jobs submit training $JOB_NAME \
