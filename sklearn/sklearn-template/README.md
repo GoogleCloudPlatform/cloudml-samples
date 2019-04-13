@@ -7,6 +7,6 @@ Usage examples are also included.
 
 ## Directories
 
-1. `examples`: Template usage examples
-2. `template`: ML pipeline template using scikit-learn
+1. [examples](examples): Examples using template 
+2. [template](template): Machine Learning pipeline template using scikit-learn
 
