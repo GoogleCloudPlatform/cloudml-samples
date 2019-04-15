@@ -11,9 +11,9 @@ Overview
 
 The repository is organized by tasks: 
 
- - [Training](#model-training-with-ai-platform)
- - [Serving](#model-serving-online-predictions)
- - [Training and Serving](#complete-guide-model-training-and-serving-on-ai-platform)
+ - [Training](#ai-platform-training)
+ - [Prediction](#ai-platform-prediction-online-predictions)
+ - [Training and Prediction](#complete-guide-model-training-and-prediction-on-ai-platform)
  
 Each task can be broken down to general usage `(CPU/GPU)` to specific features: 
 
@@ -32,7 +32,7 @@ Getting Started
 ---------------
 If this is your first time using [AI Platform](https://cloud.google.com/ml-engine/docs/), we suggest you take a look at the [Introduction to AI Platform](https://cloud.google.com/ml-engine/docs/technical-overview) docs to get started.
 
-## Model Training with AI Platform
+## AI Platform Training
 
 #### Notebook Tutorial:
 * [scikit-learn: Random Forest Classifier](notebooks/scikit-learn/Training%20with%20scikit-learn%20in%20CMLE.ipynb) - How to train a Random Forest Classifier in scikit-learn using a text based dataset, Census, to predict a person’s income level.
@@ -64,13 +64,13 @@ Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to acc
 * [PyTorch: Sequential](pytorch/containers/custom_container) - How to train a PyTorch model on AI Platform using a custom container with a structured dataset, sonar signals, to predict whether the given sonar signals are bouncing off a metal cylinder or off a cylindrical rock.
 * [PyTorch: Sequential / HP Tuning](pytorch/containers/hp_tuning) - How to train a PyTorch model on AI Platform using a custom container and Hyperparameter Tuning with a structured dataset, sonar signals, to predict whether the given sonar signals are bouncing off a metal cylinder or off a cylindrical rock.
 
-## Model Serving (Online Predictions)
+## AI Platform Prediction (Online Predictions)
 
 #### Notebook Tutorial:
 * [scikit-learn: Model Serving](notebooks/scikit-learn/Online%20Prediction%20with%20scikit-learn%20in%20CMLE.ipynb) - How to train a Random Forest Classifier in scikit-learn on your local machine using a text based dataset, Census, to predict a person’s income level and deploy it on AI Platform to create predictions.
 * [XGBoost: Model Serving](notebooks/xgboost/Online%20Prediction%20with%20XGBoost%20in%20CMLE.ipynb) -  How to train an XGBoost model on your local machine using a text based dataset, Census, to predict a person’s income level and deploy it on AI Platform to create predictions.
 
-## Complete Guide: Model Training and Serving on AI Platform
+## Complete Guide: Model Training and Prediction on AI Platform
 
 #### Code Guide:
 * [Tensorflow: Deep Neural Network Regressor](molecules) - How to train a DNN on a text based molecular dataset from Kaggle to predict the molecular energy.
