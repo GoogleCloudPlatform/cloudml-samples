@@ -25,6 +25,7 @@ NUMERIC_FEATURES = [
     'petal_width',
 ]
 
+# TODO(cfezequiel): Use an example dataset with categorical features.
 CATEGORICAL_FEATURES = [
     # Intentionally left blank
 ]
