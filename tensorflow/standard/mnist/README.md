@@ -130,7 +130,7 @@ gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -
     --train-file=$TRAIN_FILE \
     --train-labels=$TRAIN_LABELS_FILE \
     --test-file=$TEST_FILE \
-    --test-labels_file=$TEST_LABELS_FILE \
+    --test-labels-file=$TEST_LABELS_FILE \
     --job-dir=$JOB_DIR
 ```
 
