@@ -1,4 +1,4 @@
-"""Cloud ML Engine package configuration."""
+"""AI Platform package configuration."""
 from setuptools import find_packages
 from setuptools import setup
 
@@ -10,5 +10,5 @@ setup(
   install_requires=REQUIRED_PACKAGES,
   packages=find_packages(),
   include_package_data=True,
-  description='CMLE Boston samples'
+  description='AI Platform Boston samples'
 )

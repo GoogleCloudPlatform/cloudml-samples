@@ -1,6 +1,6 @@
-# Train a PyTorch Model on Cloud ML Engine using a Custom Container
+# Train a PyTorch Model on AI Platform using a Custom Container
 This tutorial covers how to create a Custom Container (docker image) to train a PyTorch model on
-Cloud ML Engine. The PyTorch model predicts whether the given sonar signals are bouncing off a
+AI Platform. The PyTorch model predicts whether the given sonar signals are bouncing off a
 metal cylinder or off a cylindrical rock from
 [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Connectionist+Bench+%28Sonar%2C+Mines+vs.+Rocks%29).
 
@@ -17,11 +17,11 @@ Computer Science.
 1. Submit your training job
 
 # Prerequisites
-Before you jump in, let’s cover some of the different tools you’ll be using to get your container up and running on ML Engine.
+Before you jump in, let’s cover some of the different tools you’ll be using to get your container up and running on AI Platform.
 
 [Google Cloud Platform](https://cloud.google.com/) lets you build and host applications and websites, store data, and analyze data on Google's scalable infrastructure.
 
-[Cloud ML Engine](https://cloud.google.com/ml-engine/) is a managed service that enables you to easily build machine learning models that work on any type of data, of any size.
+[AI Platform](https://cloud.google.com/ml-engine/) is a managed service that enables you to easily build machine learning models that work on any type of data, of any size.
 
 [Cloud Container Registry](https://cloud.google.com/container-registry/) is a single place for your team to manage Docker images, perform vulnerability analysis, and decide who can access what with fine-grained access control.
 
@@ -34,7 +34,7 @@ Before you jump in, let’s cover some of the different tools you’ll be using 
 # Part 0: Setup
 * [Create a project on GCP](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
 * [Create a Google Cloud Storage Bucket](https://cloud.google.com/storage/docs/quickstart-console)
-* [Enable Cloud Machine Learning Engine, Container Registry, and Compute Engine APIs](https://console.cloud.google.com/flows/enableapi?apiid=ml.googleapis.com,compute_component,containerregistry.googleapis.com)
+* [Enable AI Platform Training and Prediction, Container Registry, and Compute Engine APIs](https://console.cloud.google.com/flows/enableapi?apiid=ml.googleapis.com,compute_component,containerregistry.googleapis.com)
 * [Install Cloud SDK](https://cloud.google.com/sdk/downloads)
 * [Install docker](https://docs.docker.com/install/)
 * [Configure docker for Cloud Container Registry](https://cloud.google.com/container-registry/docs/pushing-and-pulling)
@@ -65,7 +65,7 @@ export IMAGE_URI=gcr.io/$PROJECT_ID/$IMAGE_REPO_NAME:$IMAGE_TAG
 # or use the default '`us-central1`'. The region is where the model will be deployed.
 export REGION=us-central1
 
-# JOB_NAME: the name of your job running on Cloud ML Engine.
+# JOB_NAME: the name of your job running on AI Platform.
 export JOB_NAME=custom_container_job_$(date +%Y%m%d_%H%M%S)
 ```
 
@@ -86,7 +86,7 @@ for use with this sample.
 
 # Part 2: Create the docker Image
 Open the [Dockerfile](Dockerfile) to see how the Docker image is created that will run on Cloud
-ML Engine.
+AI Platform.
 
 # Part 3: Build the docker Image
 ```
@@ -122,7 +122,7 @@ docker push $IMAGE_URI
 ```
 
 # Part 6: Submit your training job
-Submit the training job to Cloud ML Engine using `gcloud`.
+Submit the training job to AI Platform using `gcloud`.
 
 Note: You may need to install gcloud beta to submit the training job.
 ```

@@ -19,7 +19,7 @@ BUCKET_NAME = 'YOUR_BUCKET_NAME'
 
 # ---------------------------------------
 # 1. Add code to download the data from GCS (in this case, using the publicly hosted data).
-# ML Engine will then be able to use the data when training your model.
+# AI Platform will then be able to use the data when training your model.
 # ---------------------------------------
 # [START download-data]
 # Public bucket holding the census data

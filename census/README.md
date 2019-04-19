@@ -5,31 +5,36 @@ It includes code to process data, train a tensorflow model with hyperparameter t
 #
 *  **Examples**
  
-There are five samples provided in this directory. They allow you to move from
+There are six samples provided in this directory. They allow you to move from
 single-worker training to distributed training without any code changes, and
 make it easy to export model binaries for prediction, but with the following
 distiction:
   
-   - The sample provided in [TensorFlow Core](./tensorflowcore) uses the low level
-    bindings to build a model. This example is great for understanding the
-    underlying workings of TensorFlow, best practices when using the low-level
-    APIs.
+* The sample provided in [TensorFlow Core](./tensorflowcore) uses the low level
+bindings to build a model. This example is great for understanding the
+underlying workings of TensorFlow, best practices when using the low-level
+APIs.
 
-   - The sample provided in [Custom Estimator](./customestimator) uses the custom
-    Tensorflow `tf.estimator.EstimatorSpec` to create a High level custom Estimator.
-    This example is a great combination of both low level configuration and fast iteration.
-  
-  - The sample provided in [Estimator](./estimator) uses the high level
-    `tf.estimator.DNNLinearCombinedClassifier` API. This API is great for fast iteration, and
-    quickly adapting models to your own datasets without major code overhauls.
+* The sample provided in [Custom Estimator](./customestimator) uses the custom
+  Tensorflow `tf.estimator.EstimatorSpec` to create a High level custom Estimator.
+  This example is a great combination of both low level configuration and fast iteration.
 
-   - The sample provided in [Keras](./keras) uses the native Keras library.
-    This API is great for fast iteration, and quickly adapting models to your own datasets 
-    without major code overhauls.
-  
-* The sample provided in [TFT Transform Estimator](./tftransformestimator) shows how to use [tf transform](https://github.com/tensorflow/transform) together with [Cloud Dataflow](https://cloud.google.com/dataflow) and [Cloud ML Engine](https://cloud.google.com/ml-engine/).
+* The sample provided in [Estimator](./estimator) uses the high level
+  `tf.estimator.DNNLinearCombinedClassifier` API. This API is great for fast iteration, and
+  quickly adapting models to your own datasets without major code overhauls.
 
-All the models provided in this directory can be run on the Cloud Machine Learning Engine.
+* The sample provided in [Keras](./keras) uses the native Keras library.
+  This API is great for fast iteration, and quickly adapting models to your own datasets 
+  without major code overhauls.
+
+* The sample provided in [TensorFlow Keras](./tf-keras) uses `tf.keras`,
+  TensorFlow's implementation of the Keras API specification. This provides the
+  benefits of Keras and also first-class support for TensorFlow-specific
+  functionality.
+
+* The sample provided in [TFT Transform Estimator](./tftransformestimator) shows how to use [tf transform](https://github.com/tensorflow/transform) together with [Cloud Dataflow](https://cloud.google.com/dataflow) and [AI Platform](https://cloud.google.com/ml-engine/).
+
+All the models provided in this directory can be run on AI Platform.
 
 #
 * **Notebooks**
@@ -39,6 +44,8 @@ All the models provided in this directory can be run on the Cloud Machine Learni
     - [Custom Estimator](customestimator/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/customestimator/trainer/task.ipynb))
 
     - [Keras](keras/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/keras/trainer/task.ipynb))
+
+    - [TensorFlow Keras](../notebooks/tensorflow/getting-started-keras.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/notebooks/tensorflow/getting-started-keras.ipynb))
 
     - [TensorFlow Core](tensorflowcore/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/tensorflowcore/trainer/task.ipynb))
 
@@ -89,7 +96,7 @@ Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
 #
 
-* **How to satisfy Cloud ML Engine project structure requirements**
+* **How to satisfy AI Platform project structure requirements**
 
 Follow [this](https://cloud.google.com/ml-engine/docs/tensorflow/packaging-trainer#project-structure) guide to structure your training application.
 
@@ -101,7 +108,7 @@ We host the Census files required for you to run this sample. Files are hosted i
 
 If you want to use local files directly, you can use the following commands:
 
-TensorFlow - not the Cloud ML Engine - handles reading from GCS, you can run all commands below using these environment variables. However, if your network is slow or unreliable, you may want to download the files for local training.
+TensorFlow - not AI Platform - handles reading from GCS, you can run all commands below using these environment variables. However, if your network is slow or unreliable, you may want to download the files for local training.
 
 ```
 CENSUS_DATA=census_data
@@ -112,7 +119,7 @@ gsutil cp gs://cloud-samples-data/ml-engine/census/data/adult.test.csv $CENSUS_D
 
 * **Upload the data to a Google Cloud Storage bucket**
 
-Cloud ML Engine works by using resources available in the cloud, so the training
+AI Platform works by using resources available in the cloud, so the training
 data needs to be placed in such a resource. For this example, we'll use [Google
 Cloud Storage], but it's possible to use other resources like [BigQuery]. Make a
 bucket (names must be globally unique) and place the data in there:
@@ -146,7 +153,7 @@ python -m trainer.task --train-files $TRAIN_FILE \
     --eval-steps 100
 ```
 
-* **Google Cloud ML Engine**
+* **AI Platform**
 
 * **GCloud configuration:**
 
@@ -159,7 +166,7 @@ export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 export TRAIN_STEPS=1000
 ```
 
-* **Run locally via the gcloud command for Google Cloud ML Engine:**
+* **Run locally via the gcloud command for AI Platform:**
 
 ```
 gcloud ml-engine local train --package-path trainer \
@@ -172,15 +179,15 @@ gcloud ml-engine local train --package-path trainer \
     --eval-steps 100
 ```
 
-* **Run in Google Cloud ML Engine**
+* **Run in AI Platform**
 
-You can train the model on Cloud ML Engine:
+You can train the model on AI Platform:
 
 *NOTE:* If you downloaded the training files to your local filesystem, be sure
 to reset the `TRAIN_FILE` and `EVAL_FILE` environment variables to refer to a GCS location.
 Data must be in GCS for cloud-based training.
 
-Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
+Run the code on AI Platform using `gcloud`. Note how `--job-dir` comes
 before `--` while training on the cloud and this is so that we can have
 different trial runs during Hyperparameter tuning.
 
@@ -197,12 +204,12 @@ export TRAIN_STEPS=5000
 export REGION=us-central1
 ```
 
-* **Run in Google Cloud ML Engine:**
+* **Run in AI Platform:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
@@ -224,7 +231,7 @@ tensorboard --logdir=$GCS_JOB_DIR
 
 You should see the output for default number of training steps and approx accuracy close to `80%`.
 
-* **Distributed Node Training in Google Cloud ML Engine:**
+* **Distributed Node Training in AI Platform:**
 
 Distributed node training uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed).
 The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml/reference/configuration-data-structures#tf_config_environment_variable)
@@ -258,7 +265,7 @@ gcloud ml-engine local train --package-path trainer \
     --eval-steps 100
 ```
                         
-* **Run in Google Cloud ML Engine:**
+* **Run in AI Platform:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
@@ -278,7 +285,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 
 # Hyperparameter Tuning
 
-Cloud ML Engine allows you to perform Hyperparameter tuning to find out the
+AI Platform allows you to perform Hyperparameter tuning to find out the
 most optimal hyperparameters. See [Overview of Hyperparameter Tuning]
 (https://cloud.google.com/ml/docs/concepts/hyperparameter-tuning-overview) for more details.
 
@@ -293,7 +300,7 @@ you need to add the `--config` argument.
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --config $HPTUNING_CONFIG \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
@@ -334,7 +341,7 @@ export MODEL_BINARIES=$GCS_JOB_DIR/export/CSV/
 ```
 
 ```
-gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.10
+gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.13
 
 ```
 
@@ -374,7 +381,7 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --version v1 \
     --data-format TEXT \
     --region $REGION \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/census.json \
     --output-path $GCS_JOB_DIR/predictions
 ```

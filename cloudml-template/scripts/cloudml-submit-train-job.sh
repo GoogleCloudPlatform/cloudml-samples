@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo "Submitting a Cloud ML Engine job..."
+echo "Submitting an AI Platform job..."
 
-REGION="europe-west1"
+REGION="choose-gcp-region" # choose a gcp region from https://cloud.google.com/ml-engine/docs/tensorflow/regions
 TIER="BASIC" # BASIC | BASIC_GPU | STANDARD_1 | PREMIUM_1
 BUCKET="you-bucket-name" # change to your bucket name
 
@@ -15,11 +15,10 @@ MODEL_DIR=gs://${BUCKET}/path/to/models/${MODEL_NAME}
 
 CURRENT_DATE=`date +%Y%m%d_%H%M%S`
 JOB_NAME=train_${MODEL_NAME}_${TIER}_${CURRENT_DATE}
-#JOB_NAME=tune_${MODEL_NAME}_${CURRENT_DATE} # for hyper-parameter tuning jobs
 
 gcloud ml-engine jobs submit training ${JOB_NAME} \
         --job-dir=${MODEL_DIR} \
-        --runtime-version=1.12 \
+        --runtime-version=1.13 \
         --region=${REGION} \
         --scale-tier=${TIER} \
         --module-name=trainer.task \
@@ -28,7 +27,7 @@ gcloud ml-engine jobs submit training ${JOB_NAME} \
         -- \
         --train-files=${TRAIN_FILES} \
         --eval-files=${EVAL_FILES} \
-	--train-steps=10000
+	    --train-steps=10000
 
 
 # notes:

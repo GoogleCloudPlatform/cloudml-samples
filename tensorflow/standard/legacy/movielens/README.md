@@ -271,7 +271,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
 
 ## Prediction step
 
-Once the model finishes training we can deploy it into CloudML Engine for prediction.
+Once the model finishes training we can deploy it into AI Platform for prediction.
 
 First select a model from the export directory.
 
@@ -284,7 +284,7 @@ MODEL_SOURCE=gs://path/to/my/model...
 ```
 
 ```
-# Deploy a model to CloudML Engine.
+# Deploy a model to AI Platform.
 gcloud ml-engine models create "movielens" --regions us-central1
 gcloud ml-engine versions create "v1" --model "movielens" --origin "${MODEL_SOURCE}"
 ```

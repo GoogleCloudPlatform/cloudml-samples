@@ -1,4 +1,4 @@
-"""Cloud ML Engine package configuration."""
+"""AI Platform package configuration."""
 from setuptools import find_packages
 from setuptools import setup
 
@@ -9,5 +9,5 @@ setup(name='imdb',
       install_requires=REQUIRED_PACKAGES,
       include_package_data=True,
       packages=find_packages(),
-      description='IMDB CMLE samples'
+      description='IMDB AI Platform samples'
 )

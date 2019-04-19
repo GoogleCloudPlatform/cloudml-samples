@@ -1,6 +1,6 @@
-# Contributing to Cloud ML Engine Samples
+# Contributing to AI Platform Samples
 
-You want to contribute to Cloud ML Engine samples? That's awesome! Please refer to the short guide below.
+You want to contribute to AI Platform samples? That's awesome! Please refer to the short guide below.
 
 # Contributing Guide
 
@@ -33,7 +33,7 @@ We are happy to see your enthusiasm. This table lists the criteria and how impor
 
 ## Contributor License Agreements
 
-We'd love to accept your CMLE samples and patches! Before we can take them, we
+We'd love to accept your AI Platform samples and patches! Before we can take them, we
 have to jump a couple of legal hurdles.
 
 Please fill out either the individual or corporate Contributor License Agreement
