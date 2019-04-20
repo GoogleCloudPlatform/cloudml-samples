@@ -69,7 +69,7 @@ Cloud Storage], but it's possible to use other resources like [BigQuery]. Make a
 bucket (names must be globally unique) and place the data in there:
 
 ```shell
-gsutil mb gs://your-bucket-name
+gsutil mb gs://your-bucket-name  # Change your BUCKET
 gsutil cp -r data/iris_training.csv gs://your-bucket-name/iris_training.csv
 gsutil cp -r data/iris_test.csv gs://your-bucket-name/iris_test.csv
 ```
@@ -82,9 +82,9 @@ gsutil cp -r data/iris_test.csv gs://your-bucket-name/iris_test.csv
 mkdir data
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=iris_$DATE
-rm -rf $JOB_DIR
 export TRAIN_FILE=$DATA/iris_training.csv
 export EVAL_FILE=$DATA/iris_test.csv
+rm -rf $JOB_DIR
 ```
 
 * **Test locally:**
@@ -139,12 +139,13 @@ different trial runs during Hyperparameter tuning.
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=iris_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME  # Change your BUCKET
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
 export TRAIN_STEPS=1000
 export EVAL_STEPS=100
 export REGION=us-central1
+export SCALE_TIER=STANDARD_1
 ```
 
 * **Run in AI Platform:**
