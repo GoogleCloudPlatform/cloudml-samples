@@ -135,12 +135,12 @@ gsutil cp -r data/adult.test.csv gs://your-bucket-name/adult.test.csv
 * **GCloud configuration:**
 
 ```
-export TRAIN_STEPS=1000
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=census_$DATE
-rm -rf $JOB_DIR
 export TRAIN_FILE=census_data/adult.data.csv
 export EVAL_FILE=census_data/adult.test.csv
+export TRAIN_STEPS=1000
+rm -rf $JOB_DIR
 ```
 
 * **Test locally:**
@@ -155,15 +155,15 @@ python -m trainer.task --train-files $TRAIN_FILE \
 
 * **AI Platform**
 
-* **GCloud configuration:**
+* **GCloud local configuration:**
 
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=census_$DATE
-rm -rf $JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 export TRAIN_STEPS=1000
+rm -rf $JOB_DIR
 ```
 
 * **Run locally via the gcloud command for AI Platform:**
@@ -196,8 +196,7 @@ different trial runs during Hyperparameter tuning.
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=census_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
-echo $GCS_JOB_DIR
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME  # Change your BUCKET
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 export TRAIN_STEPS=5000
@@ -241,14 +240,14 @@ environment variable. The environment variable is generated using `gcloud` and p
 * **GCloud configuration:**
 
 ```
-export SCALE_TIER=STANDARD_1
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=census_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME   # Change your BUCKET
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 export TRAIN_STEPS=5000
 export REGION=us-central1
+export SCALE_TIER=STANDARD_1
 ```
 
 * **Run locally:**
@@ -271,7 +270,7 @@ gcloud ml-engine local train --package-path trainer \
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
