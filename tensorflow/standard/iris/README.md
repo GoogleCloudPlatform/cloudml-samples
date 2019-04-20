@@ -79,8 +79,7 @@ gsutil cp -r data/iris_test.csv gs://your-bucket-name/iris_test.csv
 * **GCloud configuration:**
 
 ```
-DATA=data
-mkdir $DATA
+mkdir data
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=iris_$DATE
 rm -rf $JOB_DIR
@@ -98,17 +97,16 @@ python -m trainer.task \
 
 * **AI Platform**
 
-* **GCloud configuration:**
+* **GCloud local configuration:**
 
 ```
-export SCALE_TIER=STANDARD_1
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=iris_$DATE
-rm -rf $JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
 export TRAIN_STEPS=1000
 export EVAL_STEPS=100
+rm -rf $JOB_DIR
 ```
 
 * **Run locally via the gcloud command for AI Platform:**
@@ -142,7 +140,6 @@ different trial runs during Hyperparameter tuning.
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=iris_$DATE
 export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
-echo $GCS_JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
 export TRAIN_STEPS=1000
@@ -155,7 +152,7 @@ export REGION=us-central1
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
@@ -195,7 +192,7 @@ gcloud ml-engine local train --package-path trainer \
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
@@ -217,7 +214,7 @@ export HPTUNING_CONFIG=hptuning_config.yaml
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --config $HPTUNING_CONFIG \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
@@ -261,7 +258,7 @@ export MODEL_BINARIES=$GCS_JOB_DIR/export/CSV/
 gcloud ml-engine versions create v1 \
     --model iris \
     --origin $MODEL_BINARIES \
-    --runtime-version 1.10
+    --runtime-version 1.13
 ```
 
 (Optional) Inspect the model binaries with the SavedModel CLI
@@ -300,7 +297,7 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --version v1 \
     --data-format TEXT \
     --region $REGION \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/iris.json \
     --output-path $GCS_JOB_DIR/predictions
 ```
