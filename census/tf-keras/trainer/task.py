@@ -99,9 +99,14 @@ def train_and_evaluate(args):
       batch_size=num_eval_examples)
 
   # Setup Learning Rate decay.
-  lr_decay = tf.keras.callbacks.LearningRateScheduler(
+  lr_decay_cb = tf.keras.callbacks.LearningRateScheduler(
       lambda epoch: args.learning_rate + 0.02 * (0.5 ** (1 + epoch)),
       verbose=True)
+
+  # Setup TensorBoard callback.
+  tensorboard_cb = tf.keras.callbacks.TensorBoard(
+      os.path.join(args.job_dir, 'keras_tensorboard'),
+      histogram_freq=1)
 
   # Train model
   keras_model.fit(
@@ -111,7 +116,7 @@ def train_and_evaluate(args):
       validation_data=validation_dataset,
       validation_steps=1,
       verbose=1,
-      callbacks=[lr_decay]
+      callbacks=[lr_decay_cb, tensorboard_cb]
   )
 
   export_path = tf.contrib.saved_model.save_keras_model(
