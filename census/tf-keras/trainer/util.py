@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Utilities to download and preprocess the Census data.
-"""
+"""Utilities to download and preprocess the Census data."""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -29,7 +29,8 @@ import tensorflow as tf
 DATA_DIR = os.path.join(tempfile.gettempdir(), 'census_data')
 
 # Download options.
-DATA_URL = 'https://storage.googleapis.com/cloud-samples-data/ml-engine/census/data'
+DATA_URL = ('https://storage.googleapis.com/cloud-samples-data/ml-engine/census'
+            '/data')
 TRAINING_FILE = 'adult.data.csv'
 EVAL_FILE = 'adult.test.csv'
 TRAINING_URL = '%s/%s' % (DATA_URL, TRAINING_FILE)
@@ -52,7 +53,7 @@ _LABEL_COLUMN = 'income_bracket'
 # values are noisy or inconsistent, or perhaps they encode bias that we do not
 # want our model to learn. For a deep dive into the features of this Census
 # dataset and the challenges they pose, see the Introduction to ML Fairness
-# notebook: https://colab.research.google.com/github/google/eng-edu/blob/master/ml/cc/exercises/intro_to_fairness.ipynb
+# Notebook: https://colab.research.google.com/github/google/eng-edu/blob/master/ml/cc/exercises/intro_to_fairness.ipynb
 UNUSED_COLUMNS = ['fnlwgt', 'education', 'gender']
 
 _CATEGORICAL_TYPES = {
@@ -83,7 +84,7 @@ _CATEGORICAL_TYPES = {
     'Guatemala', 'Haiti', 'Holand-Netherlands', 'Honduras', 'Hong', 'Hungary',
     'India', 'Iran', 'Ireland', 'Italy', 'Jamaica', 'Japan', 'Laos', 'Mexico',
     'Nicaragua', 'Outlying-US(Guam-USVI-etc)', 'Peru', 'Philippines', 'Poland',
-    'Portugal', 'Puerto-Rico', 'Scotland', 'South', 'Taiwan', 'Thailand', 
+    'Portugal', 'Puerto-Rico', 'Scotland', 'South', 'Taiwan', 'Thailand',
     'Trinadad&Tobago', 'United-States', 'Vietnam', 'Yugoslavia'
   ]),
   'income_bracket': pd.api.types.CategoricalDtype(categories=[
@@ -133,7 +134,7 @@ def download(data_dir):
   eval_file_path = os.path.join(data_dir, EVAL_FILE)
   if not tf.gfile.Exists(eval_file_path):
     _download_and_clean_file(eval_file_path, EVAL_URL)
-  
+
   return training_file_path, eval_file_path
 
 
@@ -159,6 +160,7 @@ def preprocess(dataframe):
   dataframe[cat_columns] = dataframe[cat_columns].apply(lambda x: x.cat.codes)
   return dataframe
 
+
 def standardize(dataframe):
   """Scales numerical columns using their means and standard deviation to get
   z-scores: the mean of each numerical column becomes 0, and the standard
@@ -166,7 +168,7 @@ def standardize(dataframe):
 
   Args:
     dataframe: Pandas dataframe
-  
+
   Returns:
     Input dataframe with the numerical columns scaled to z-scores
   """
@@ -177,6 +179,7 @@ def standardize(dataframe):
           dataframe[column] -= dataframe[column].mean()
           dataframe[column] /= dataframe[column].std()
   return dataframe
+
 
 def load_data():
   """Loads data into preprocessed (train_x, train_y, eval_y, eval_y) dataframes.

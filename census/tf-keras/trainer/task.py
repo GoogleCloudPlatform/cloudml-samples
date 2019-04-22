@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Trains a Keras model to predict income bracket from other Census data.
-"""
+"""Trains a Keras model to predict income bracket from other Census data."""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -24,7 +24,6 @@ from . import model
 from . import util
 
 import tensorflow as tf
-from tensorflow.contrib.training.python.training import hparam
 
 
 def get_args():
@@ -58,10 +57,11 @@ def get_args():
       '--verbosity',
       choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARN'],
       default='INFO')
-  return parser.parse_args()
+  args, _ = parser.parse_known_args()
+  return args
 
 
-def train_and_evaluate(hparams):
+def train_and_evaluate(args):
   """Trains and evaluates the Keras model.
 
   Uses the Keras model defined in model.py and trains on data loaded and
@@ -69,7 +69,7 @@ def train_and_evaluate(hparams):
   format to the path defined in part by the --job-dir argument.
 
   Args:
-    hparams: dictionary of hyperparameters - see get_args() for details
+    args: dictionary of arguments - see get_args() for details
   """
 
   train_x, train_y, eval_x, eval_y = util.load_data()
@@ -80,41 +80,42 @@ def train_and_evaluate(hparams):
 
   # Create the Keras Model
   keras_model = model.create_keras_model(
-      input_dim=input_dim, learning_rate=hparams.learning_rate)
+      input_dim=input_dim, learning_rate=args.learning_rate)
 
   # Pass a numpy array by passing DataFrame.values
   training_dataset = model.input_fn(
       features=train_x.values,
       labels=train_y,
       shuffle=True,
-      num_epochs=hparams.num_epochs,
-      batch_size=hparams.batch_size)
+      num_epochs=args.num_epochs,
+      batch_size=args.batch_size)
 
   # Pass a numpy array by passing DataFrame.values
   validation_dataset = model.input_fn(
       features=eval_x.values,
       labels=eval_y,
       shuffle=False,
-      num_epochs=hparams.num_epochs,
+      num_epochs=args.num_epochs,
       batch_size=num_eval_examples)
 
   # Setup Learning Rate decay.
   lr_decay = tf.keras.callbacks.LearningRateScheduler(
-      lambda epoch: hparams.learning_rate + 0.02 * (0.5 ** (1 + epoch)),
+      lambda epoch: args.learning_rate + 0.02 * (0.5 ** (1 + epoch)),
       verbose=True)
 
   # Train model
   keras_model.fit(
       training_dataset,
-      steps_per_epoch=int(num_train_examples / hparams.batch_size),
-      epochs=hparams.num_epochs,
+      steps_per_epoch=int(num_train_examples / args.batch_size),
+      epochs=args.num_epochs,
       validation_data=validation_dataset,
       validation_steps=1,
       verbose=1,
-      callbacks=[lr_decay])
+      callbacks=[lr_decay]
+  )
 
   export_path = tf.contrib.saved_model.save_keras_model(
-      keras_model, os.path.join(hparams.job_dir, 'keras_export'))
+      keras_model, os.path.join(args.job_dir, 'keras_export'))
   export_path = export_path.decode('utf-8')
   print('Model exported to: ', export_path)
 
@@ -122,5 +123,4 @@ def train_and_evaluate(hparams):
 if __name__ == '__main__':
   args = get_args()
   tf.logging.set_verbosity(args.verbosity)
-  hyperparams = hparam.HParams(**args.__dict__)
-  train_and_evaluate(hyperparams)
+  train_and_evaluate(args)
