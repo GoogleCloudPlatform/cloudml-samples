@@ -116,8 +116,7 @@ def train_and_evaluate(args):
       validation_data=validation_dataset,
       validation_steps=1,
       verbose=1,
-      callbacks=[lr_decay_cb, tensorboard_cb]
-  )
+      callbacks=[lr_decay_cb, tensorboard_cb])
 
   export_path = tf.contrib.saved_model.save_keras_model(
       keras_model, os.path.join(args.job_dir, 'keras_export'))

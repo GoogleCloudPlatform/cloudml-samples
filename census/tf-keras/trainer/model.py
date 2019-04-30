@@ -63,15 +63,15 @@ def create_keras_model(input_dim, learning_rate):
   Returns:
     The compiled Keras model (still needs to be trained)
   """
-  l = tf.keras.layers
+  Dense = tf.keras.layers.Dense
   model = tf.keras.Sequential(
       [
-          l.Dense(100, activation=tf.nn.relu, kernel_initializer='uniform',
+          Dense(100, activation=tf.nn.relu, kernel_initializer='uniform',
                   input_shape=(input_dim,)),
-          l.Dense(75, activation=tf.nn.relu),
-          l.Dense(50, activation=tf.nn.relu),
-          l.Dense(25, activation=tf.nn.relu),
-          l.Dense(1, activation=tf.nn.sigmoid)
+          Dense(75, activation=tf.nn.relu),
+          Dense(50, activation=tf.nn.relu),
+          Dense(25, activation=tf.nn.relu),
+          Dense(1, activation=tf.nn.sigmoid)
       ])
 
   # Custom Optimizer:
