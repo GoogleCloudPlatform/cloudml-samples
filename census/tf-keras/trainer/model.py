@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Defines a Keras model and input function for training.
-"""
+"""Defines a Keras model and input function for training."""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -54,6 +54,8 @@ def input_fn(features, labels, shuffle, num_epochs, batch_size):
 def create_keras_model(input_dim, learning_rate):
   """Creates Keras Model for Binary Classification.
 
+  The single output node + Sigmoid activation makes this a Logistic Regression.
+
   Args:
     input_dim: How many features the input has
     learning_rate: Learning rate for training
@@ -61,24 +63,20 @@ def create_keras_model(input_dim, learning_rate):
   Returns:
     The compiled Keras model (still needs to be trained)
   """
-  model = tf.keras.Sequential()
-  model.add(
-      tf.keras.layers.Dense(
-          100,
-          activation=tf.nn.relu,
-          kernel_initializer='uniform',
-          input_shape=(input_dim,)))
-  model.add(tf.keras.layers.Dense(75, activation=tf.nn.relu))
-  model.add(tf.keras.layers.Dense(50, activation=tf.nn.relu))
-  model.add(tf.keras.layers.Dense(25, activation=tf.nn.relu))
-  # The single output node and Sigmoid activation makes this a Logistic
-  # Regression.
-  model.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid))
+  Dense = tf.keras.layers.Dense
+  model = tf.keras.Sequential(
+      [
+          Dense(100, activation=tf.nn.relu, kernel_initializer='uniform',
+                  input_shape=(input_dim,)),
+          Dense(75, activation=tf.nn.relu),
+          Dense(50, activation=tf.nn.relu),
+          Dense(25, activation=tf.nn.relu),
+          Dense(1, activation=tf.nn.sigmoid)
+      ])
 
   # Custom Optimizer:
   # https://www.tensorflow.org/api_docs/python/tf/train/RMSPropOptimizer
-  optimizer = tf.keras.optimizers.RMSprop(
-      lr=learning_rate, rho=0.9, epsilon=1e-08, decay=0.0)
+  optimizer = tf.keras.optimizers.RMSprop(lr=learning_rate)
 
   # Compile Keras model
   model.compile(
