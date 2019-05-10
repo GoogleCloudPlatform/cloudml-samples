@@ -7,7 +7,7 @@ model deployment, and prediction request steps. All parts will be completed in t
 * **Data description**
 
 This tutorial uses the Flowers [dataset](https://storage.cloud.google.com/cloud-ml-data/img/flower_photos/all_data.csv) to build a customized image classification model via transfer learning and the existent [Inception-v3 model](https://www.tensorflow.org/tutorials/image_recognition) 
-in order to correctly label different types of flowers using Cloud Machine Learning Engine.
+in order to correctly label different types of flowers using AI Platform.
 
 * **Disclaimer**
 
@@ -42,7 +42,7 @@ Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
 #
 
-* **How to satisfy Cloud ML Engine project structure requirements**
+* **How to satisfy AI Platform project structure requirements**
 
 Follow [this](https://cloud.google.com/ml-engine/docs/tensorflow/packaging-trainer#project-structure) guide to structure your training application.
 
@@ -50,7 +50,7 @@ Follow [this](https://cloud.google.com/ml-engine/docs/tensorflow/packaging-train
 
 # Data processing
 
-You will run sample code in order to preprocess data with Cloud Dataflow and then use that transformed data to train a model with Cloud ML Engine. You will then deploy the trained model to Cloud ML Engine and test the model by sending a prediction request to it.
+You will run sample code in order to preprocess data with Cloud Dataflow and then use that transformed data to train a model with AI Platform. You will then deploy the trained model to AI Platform and test the model by sending a prediction request to it.
 
 In this sample dataset you only have a small set of images (~3,600). Without more data it isn’t possible to use machine learning techniques to adequately train an accurate classification model from scratch. Instead, you’ll use an approach called transfer learning. In transfer learning you use a pre-trained model to extract image features that you will use to train a new classifier. In this tutorial in particular you’ll use a pre-trained model called Inception.
 
@@ -98,16 +98,16 @@ python trainer/preprocess.py \
 
 # Training
 
-* **Google Cloud ML Engine**
+* **AI Platform**
 
 
-* **Run in Google Cloud ML Engine**
+* **Run in AI Platform**
 
 Training on CloudML is quick after preprocessing.  If you ran the above
 commands asynchronously, make sure they have completed before calling this one.
 
 
-* **Run in Google Cloud ML Engine:**
+* **Run in AI Platform:**
 
 ```
 gcloud ml-engine jobs submit training "$JOB_ID" \

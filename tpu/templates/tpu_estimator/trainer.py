@@ -166,7 +166,7 @@ def main(args):
 # Depending on where the training job is run, the `TPUClusterResolver`
 # needs different input to access the TPU workers:
 #
-# * On Cloud Machine Learning Engine: the input should be `None` 
+# * On AI Platform: the input should be `None` 
 #   and the service will handle it.
 #
 # * On Compute Engine: the input should be the name of TPU you create
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--tpu',
         default=None,
-        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on CMLE.')
+        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.')
 
     args, _ = parser.parse_known_args()
 

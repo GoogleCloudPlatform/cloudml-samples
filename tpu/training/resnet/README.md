@@ -1,14 +1,14 @@
 
 ## Introduction
 
-This sample shows how to run training jobs on Cloud Machine Learning Engine with Cloud TPUs using TensorFlow's `tf.metrics`.
+This sample shows how to run training jobs on AI Platform with Cloud TPUs using TensorFlow's `tf.metrics`.
 
-This sample is adapted from [the official samples for training ResNet-50 with Cloud TPUs](https://github.com/tensorflow/tpu/tree/master/models/official/resnet) to run on Cloud Machine Learning Engine.
+This sample is adapted from [the official samples for training ResNet-50 with Cloud TPUs](https://github.com/tensorflow/tpu/tree/master/models/official/resnet) to run on AI Platform.
 
 
 ## Requirements
 
-- Install [Google Cloud Platform SDK](https://cloud.google.com/sdk/).  The SDK includes the commandline tools `gcloud` for submitting training jobs to [Cloud Machine Learning Engine](https://cloud.google.com/ml-engine/).
+- Install [Google Cloud Platform SDK](https://cloud.google.com/sdk/).  The SDK includes the commandline tools `gcloud` for submitting training jobs to [AI Platform](https://cloud.google.com/ml-engine/).
 
 - Enable [Cloud Storage](https://cloud.google.com/storage).
 

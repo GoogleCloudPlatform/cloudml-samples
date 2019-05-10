@@ -43,7 +43,7 @@ Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
 #
 
-* **How to satisfy Cloud ML Engine project structure requirements**
+* **How to satisfy AI Platform project structure requirements**
 
 Follow [this](https://cloud.google.com/ml-engine/docs/tensorflow/packaging-trainer#project-structure) guide to structure your training application.
 
@@ -63,13 +63,13 @@ gsutil cp gs://cloud-samples-data/ml-engine/iris/iris_test.csv $IRIS_DATA
 
 * **Upload the data to a Google Cloud Storage bucket**
 
-Cloud ML Engine works by using resources available in the cloud, so the training
+AI Platform works by using resources available in the cloud, so the training
 data needs to be placed in such a resource. For this example, we'll use [Google
 Cloud Storage], but it's possible to use other resources like [BigQuery]. Make a
 bucket (names must be globally unique) and place the data in there:
 
 ```shell
-gsutil mb gs://your-bucket-name
+gsutil mb gs://your-bucket-name  # Change your BUCKET
 gsutil cp -r data/iris_training.csv gs://your-bucket-name/iris_training.csv
 gsutil cp -r data/iris_test.csv gs://your-bucket-name/iris_test.csv
 ```
@@ -79,13 +79,12 @@ gsutil cp -r data/iris_test.csv gs://your-bucket-name/iris_test.csv
 * **GCloud configuration:**
 
 ```
-DATA=data
-mkdir $DATA
+mkdir data
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=iris_$DATE
-rm -rf $JOB_DIR
 export TRAIN_FILE=$DATA/iris_training.csv
 export EVAL_FILE=$DATA/iris_test.csv
+rm -rf $JOB_DIR
 ```
 
 * **Test locally:**
@@ -96,22 +95,21 @@ python -m trainer.task \
  --job-dir=$JOB_DIR
 ```
 
-* **Google Cloud ML Engine**
+* **AI Platform**
 
-* **GCloud configuration:**
+* **GCloud local configuration:**
 
 ```
-export SCALE_TIER=STANDARD_1
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_DIR=iris_$DATE
-rm -rf $JOB_DIR
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
 export TRAIN_STEPS=1000
 export EVAL_STEPS=100
+rm -rf $JOB_DIR
 ```
 
-* **Run locally via the gcloud command for Google Cloud ML Engine:**
+* **Run locally via the gcloud command for AI Platform:**
 
 ```
 gcloud ml-engine local train --package-path trainer \
@@ -124,15 +122,15 @@ gcloud ml-engine local train --package-path trainer \
     --eval-steps $EVAL_STEPS
 ```
 
-* **Run in Google Cloud ML Engine**
+* **Run in AI Platform**
 
-You can train the model on Cloud ML Engine:
+You can train the model on AI Platform:
 
 *NOTE:* If you downloaded the training files to your local filesystem, be sure
 to reset the `TRAIN_FILE` and `EVAL_FILE` environment variables to refer to a GCS location.
 Data must be in GCS for cloud-based training.
 
-Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
+Run the code on AI Platform using `gcloud`. Note how `--job-dir` comes
 before `--` while training on the cloud and this is so that we can have
 different trial runs during Hyperparameter tuning.
 
@@ -141,21 +139,21 @@ different trial runs during Hyperparameter tuning.
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=iris_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME
-echo $GCS_JOB_DIR
+export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME  # Change your BUCKET
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/iris/iris_training.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/iris/iris_test.csv
 export TRAIN_STEPS=1000
 export EVAL_STEPS=100
 export REGION=us-central1
+export SCALE_TIER=STANDARD_1
 ```
 
-* **Run in Google Cloud ML Engine:**
+* **Run in AI Platform:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
@@ -167,7 +165,7 @@ gcloud ml-engine jobs submit training $JOB_NAME \
     --eval-steps $EVAL_STEPS
 ```
 
-* **Distributed Node Training in Google Cloud ML Engine:**
+* **Distributed Node Training in AI Platform:**
 
 Distributed node training uses [Distributed TensorFlow](https://www.tensorflow.org/deploy/distributed).
 The main change to make the distributed version work is usage of [TF_CONFIG](https://cloud.google.com/ml/reference/configuration-data-structures#tf_config_environment_variable)
@@ -189,13 +187,13 @@ gcloud ml-engine local train --package-path trainer \
 
 ```
                         
-* **Run in Google Cloud ML Engine:**
+* **Run in AI Platform:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
@@ -217,7 +215,7 @@ export HPTUNING_CONFIG=hptuning_config.yaml
 gcloud ml-engine jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --config $HPTUNING_CONFIG \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
@@ -261,7 +259,7 @@ export MODEL_BINARIES=$GCS_JOB_DIR/export/CSV/
 gcloud ml-engine versions create v1 \
     --model iris \
     --origin $MODEL_BINARIES \
-    --runtime-version 1.10
+    --runtime-version 1.13
 ```
 
 (Optional) Inspect the model binaries with the SavedModel CLI
@@ -300,7 +298,7 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
     --version v1 \
     --data-format TEXT \
     --region $REGION \
-    --runtime-version 1.10 \
+    --runtime-version 1.13 \
     --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/iris.json \
     --output-path $GCS_JOB_DIR/predictions
 ```

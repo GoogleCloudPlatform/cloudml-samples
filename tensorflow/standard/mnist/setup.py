@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Cloud ML Engine package configuration."""
+"""AI Platform package configuration."""
 from setuptools import find_packages
 from setuptools import setup
 
@@ -23,5 +23,5 @@ setup(name='mnist',
       install_requires=REQUIRED_PACKAGES,
       include_package_data=True,
       packages=find_packages(),
-      description='MNIST Fashion Keras model on Cloud ML Engine'
+      description='MNIST Fashion Keras model on AI Platform'
 )

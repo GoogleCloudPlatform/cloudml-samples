@@ -17,12 +17,12 @@ Note: The notebooks and the table above are generated with scripts in [tools](to
 
 ## TPUEstimator
 
-Below we show how to run the basic [`tpu_estimator`](tpu_estimator) sample in three different ways to access TPUs: Cloud ML Engine, GCE, and Colab.
+Below we show how to run the basic [`tpu_estimator`](tpu_estimator) sample in three different ways to access TPUs: AI Platform, GCE, and Colab.
 
 To run other samples replace `tpu_estimator` with their corresponding directory names.
 
 
-### Train on Cloud ML Engine
+### Train on AI Platform
 
 Run from the `templates` directory.
 

@@ -44,7 +44,7 @@ There are two options for the virtual environments:
 Install the python dependencies. `pip install --upgrade -r requirements.txt`
 
 # 
-* **How to satisfy Cloud ML Engine project structure requirements**
+* **How to satisfy AI Platform project structure requirements**
 
 Follow [this](https://cloud.google.com/ml-engine/docs/tensorflow/packaging-trainer#project-structure) guide to structure your training application.
 
@@ -70,7 +70,7 @@ curl -O https://storage.googleapis.com/tensorflow/tf-keras-datasets/t10k-labels-
 
 * **Upload the data to a Google Cloud Storage bucket**
 
-Cloud ML Engine works by using resources available in the cloud, so the training
+AI Platform works by using resources available in the cloud, so the training
 data needs to be placed in such a resource. For this example, we'll use [Google
 Cloud Storage], but it's possible to use other resources like [BigQuery]. Make a
 bucket (names must be globally unique) and place the data in there:
@@ -110,7 +110,7 @@ python -m trainer.task \
     --job-dir=$JOB_DIR
 ```
 
-* **Google Cloud ML Engine**
+* **AI Platform**
 
 * **GCloud configuration:**
 
@@ -123,26 +123,26 @@ export TEST_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-images-idx3-ubyte.
 export TEST_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-labels-idx1-ubyte.gz
 ```
 
-* **Run locally via the gcloud command for Google Cloud ML Engine:**
+* **Run locally via the gcloud command for AI Platform:**
 
 ```
 gcloud ml-engine local train --module-name=trainer.task --package-path=trainer -- \
     --train-file=$TRAIN_FILE \
     --train-labels=$TRAIN_LABELS_FILE \
     --test-file=$TEST_FILE \
-    --test-labels_file=$TEST_LABELS_FILE \
+    --test-labels-file=$TEST_LABELS_FILE \
     --job-dir=$JOB_DIR
 ```
 
-* **Run in Google Cloud ML Engine**
+* **Run in AI Platform**
 
-You can train the model on Cloud ML Engine:
+You can train the model on AI Platform:
 
 *NOTE:* If you downloaded the training files to your local filesystem, be sure
 to reset the `TRAIN_FILE`, `TRAIN_LABELS_FILE`, `TEST_FILE` and `TEST_LABELS_FILE` environment variables to refer to a GCS location.
 Data must be in GCS for cloud-based training.
 
-Run the code on Cloud ML Engine using `gcloud`. Note how `--job-dir` comes
+Run the code on AI Platform using `gcloud`. Note how `--job-dir` comes
 before `--` while training on the cloud and this is so that we can have
 different trial runs during Hyperparameter tuning.
 
@@ -160,7 +160,7 @@ export TEST_LABELS_FILE=gs://cloud-samples-data/ml-engine/mnist/t10k-labels-idx1
 export REGION=us-central1
 ```
 
-* **Run in Google Cloud ML Engine:**
+* **Run in AI Platform:**
 
 ```
 gcloud ml-engine jobs submit training $JOB_NAME --stream-logs --runtime-version 1.10 \

@@ -1,15 +1,15 @@
-# Reinforcement Learning using Cloud ML Engine
+# Reinforcement Learning using AI Platform
 
-Reinforcement learning (RL) using Clould ML Engine gives you two key benefits:  
+Reinforcement learning (RL) using Clould AI Platform gives you two key benefits:  
 * You can train many models in parallel, this allows you to quickly iterate your
   concept and you only pay for the compute/storage resources you use in each
   job.
 * You benefit from the managed hyper-parameter tuning service, which typically
   results in quicker convergence than a naive grid search.  
 
-We present examples of running RL algorithms on Cloud ML Engine. Specifically, we provide implementations of [DDPG](https://arxiv.org/abs/1509.02971), [TD3](https://arxiv.org/abs/1802.09477) and C2A2 (a modification based on TD3), train and tune their hyper-parameters in the [BipedalWalker](https://gym.openai.com/envs/BipedalWalker-v2) environment.
+We present examples of running RL algorithms on AI Platform. Specifically, we provide implementations of [DDPG](https://arxiv.org/abs/1509.02971), [TD3](https://arxiv.org/abs/1802.09477) and C2A2 (a modification based on TD3), train and tune their hyper-parameters in the [BipedalWalker](https://gym.openai.com/envs/BipedalWalker-v2) environment.
 
-Read more about running RL on Cloud ML Engine
+Read more about running RL on AI Platform
 [here](https://cloud.google.com/blog/products/ai-machine-learning/deep-reinforcement-learning-on-gcp-using-hyperparameters-and-cloud-ml-engine-to-best-openai-gym-games?fbclid=IwAR1i2Q-J_FXs8cZifkt7K8u5xWXzwM_U6Ls6KpMA0utVifhvsDTpLKkPGo4).  
 
 ## Run the code on GCP

@@ -1,7 +1,7 @@
 # Molecules
 For more details, see [Machine Learning with Apache Beam and TensorFlow](https://cloud.google.com/dataflow/examples/molecules-walkthrough) in the docs.
 
-This sample shows how to create, train, evaluate, and make predictions on a machine learning model, using [Apache Beam](https://beam.apache.org/), [Google Cloud Dataflow](https://cloud.google.com/dataflow/), [TensorFlow](https://www.tensorflow.org/), and [Google Cloud ML Engine](https://cloud.google.com/ml-engine/).
+This sample shows how to create, train, evaluate, and make predictions on a machine learning model, using [Apache Beam](https://beam.apache.org/), [Google Cloud Dataflow](https://cloud.google.com/dataflow/), [TensorFlow](https://www.tensorflow.org/), and [AI Platform](https://cloud.google.com/ai-platform/).
 
 The dataset for this sample is extracted from the [National Center for Biotechnology Information](https://www.ncbi.nlm.nih.gov/) ([FTP source](ftp://ftp.ncbi.nlm.nih.gov/pubchem/Compound_3D/01_conf_per_cmpd/SDF)). The file format is [`SDF`](https://en.wikipedia.org/wiki/Chemical_table_file#SDF). Here's a more detailed description of the [MDL/SDF file format](http://c4.cabrillo.edu/404/ctfile.pdf).
 
@@ -154,8 +154,8 @@ EXPORT_DIR=/tmp/cloudml-samples/molecules/model/export/final
 MODEL_DIR=$(ls -d -1 $EXPORT_DIR/* | sort -r | head -n 1)
 ```
 
-If the training dataset is too large, it will scale better to train on [Cloud Machine Learning Engine](https://cloud.google.com/ml-engine/).
-> NOTE: this will incur charges on your Google Cloud Platform project. See [ML Engine pricing](https://cloud.google.com/ml-engine/docs/pricing).
+If the training dataset is too large, it will scale better to train on [AI Platform](https://cloud.google.com/ml-engine/).
+> NOTE: this will incur charges on your Google Cloud Platform project. See [AI Platform pricing](https://cloud.google.com/ml-engine/docs/pricing).
 ```bash
 JOB="cloudml_samples_molecules_$(date +%Y%m%d_%H%M%S)"
 BUCKET=gs://<your bucket name>
@@ -283,8 +283,8 @@ python publisher.py \
 
 Once the publisher starts parsing and publishing molecules, we'll start seeing predictions from the subscriber.
 
-### Option 3: Cloud ML Engine Predictions
-If you have a different way to extract the features (in this case the atom counts) that is not through our existing preprocessing pipeline for SDF files, it might be easier to build a JSON file with one request per line and make the predictions on Cloud ML Engine.
+### Option 3: AI Platform Predictions
+If you have a different way to extract the features (in this case the atom counts) that is not through our existing preprocessing pipeline for SDF files, it might be easier to build a JSON file with one request per line and make the predictions on AI Platform.
 
 We've included the [`sample-requests.json`](sample-requests.json) file with an example of how these requests look like. Here are the contents of the file:
 ```json
@@ -294,7 +294,7 @@ We've included the [`sample-requests.json`](sample-requests.json) file with an e
 {"TotalC": 3, "TotalH": 9, "TotalO": 1, "TotalN": 1}
 ```
 
-Before creating the model in Cloud ML Engine, it is a good idea to test our model's predictions locally:
+Before creating the model in AI Platform, it is a good idea to test our model's predictions locally:
 ```bash
 # First we have to get the exported model's directory
 EXPORT_DIR=$WORK_DIR/model/export/final
@@ -321,7 +321,7 @@ PREDICTIONS
 [-0.1086]
 ```
 
-Once we are happy with our results, we can now upload our model into Cloud ML Engine for online predictions.
+Once we are happy with our results, we can now upload our model into AI Platform for online predictions.
 ```bash
 # We want the model to reside on GCS and get its path
 EXPORT_DIR=$WORK_DIR/model/export/final
@@ -335,7 +335,7 @@ else
   gsutil -m cp -r $LOCAL_MODEL_DIR $MODEL_DIR
 fi
 
-# Now create the model and a version in Cloud ML Engine and set it as default
+# Now create the model and a version in AI Platform and set it as default
 MODEL=molecules
 REGION=$(gcloud config get-value compute/region)
 gcloud ml-engine models create $MODEL \

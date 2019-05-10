@@ -15,7 +15,7 @@ BUCKET_ID = 'torryyang-xgb-models'
 
 # ---------------------------------------
 # 1. Add code to download the data from GCS (in this case, using the publicly hosted data).
-# ML Engine will then be able to use the data when training your model.
+# AI Platform will then be able to use the data when training your model.
 # ---------------------------------------
 # [START download-data]
 census_data_filename = 'adult.data.csv'

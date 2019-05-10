@@ -5,7 +5,7 @@ about: For problems running the sample code please provide the following informa
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is. Be sure to convey here whether it occurred locally or on the server (CloudML Engine, Google Dataflow)
+A clear and concise description of what the bug is. Be sure to convey here whether it occurred locally or on the server (AI Platform, Google Dataflow)
 
 **What sample is this bug related to?**
 
