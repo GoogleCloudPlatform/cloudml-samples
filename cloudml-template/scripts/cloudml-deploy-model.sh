@@ -11,16 +11,16 @@ MODEL_BINARIES=$(gsutil ls gs://${BUCKET}/models/${MODEL_NAME}/export/estimator 
 gsutil ls ${MODEL_BINARIES}
 
 # delete model version
-gcloud ml-engine versions delete ${MODEL_VERSION} --model=${MODEL_NAME}
+gcloud ai-platform versions delete ${MODEL_VERSION} --model=${MODEL_NAME}
 
 # delete model
-gcloud ml-engine models delete ${MODEL_NAME}
+gcloud ai-platform models delete ${MODEL_NAME}
 
 # deploy model to GCP
-gcloud ml-engine models create ${MODEL_NAME} --regions=${REGION}
+gcloud ai-platform models create ${MODEL_NAME} --regions=${REGION}
 
 # deploy model version
-gcloud ml-engine versions create ${MODEL_VERSION} --model=${MODEL_NAME} --origin=${MODEL_BINARIES} --runtime-version=1.13
+gcloud ai-platform versions create ${MODEL_VERSION} --model=${MODEL_NAME} --origin=${MODEL_BINARIES} --runtime-version=1.13
 
 # invoke deployed model to make prediction given new data instances
-gcloud ml-engine predict --model=${MODEL_NAME} --version=${MODEL_VERSION} --json-instances=data/new-data.json
+gcloud ai-platform predict --model=${MODEL_NAME} --version=${MODEL_VERSION} --json-instances=data/new-data.json

@@ -10,7 +10,7 @@ EVAL_FILES=data/eval-data-*.csv
 MODEL_DIR=trained_models/${MODEL_NAME}
 
 
-gcloud ml-engine local train \
+gcloud ai-platform local train \
         --module-name=trainer.task \
         --package-path=${PACKAGE_PATH} \
         -- \
@@ -32,4 +32,4 @@ ls ${MODEL_LOCATION}
 
 
 # Invoke trained model to make prediction given new data instances
-gcloud ml-engine local predict --model-dir=${MODEL_LOCATION} --json-instances=data/new-data.json
+gcloud ai-platform local predict --model-dir=${MODEL_LOCATION} --json-instances=data/new-data.json
