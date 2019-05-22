@@ -73,18 +73,29 @@ def get_estimator(flags):
   ])
 
   feature_columns = metadata.FEATURE_COLUMNS
+  numerical_names = metadata.NUMERIC_FEATURES
+  categorical_names = metadata.CATEGORICAL_FEATURES
 
   boolean_mask = functools.partial(utils.boolean_mask, feature_columns)
-  preprocessor = compose.ColumnTransformer([
-      ('numeric', numeric_transformer,
-       boolean_mask(metadata.NUMERIC_FEATURES)),
-      ('numeric_log', numeric_log_transformer,
-       boolean_mask(metadata.NUMERIC_FEATURES)),
-      ('numeric_bin', numeric_bin_transformer,
-       boolean_mask(metadata.NUMERIC_FEATURES)),
-      ('categorical', categorical_transformer,
-       boolean_mask(metadata.CATEGORICAL_FEATURES)),
-  ])
+  numerical_boolean = boolean_mask(numerical_names)
+  categorical_boolean = boolean_mask(categorical_names)
+
+  transform_list = []
+  # If there exist numerical columns
+  if any(numerical_boolean):
+    transform_list.extend([
+        ('numeric', numeric_transformer, numerical_boolean),
+        ('numeric_log', numeric_log_transformer, numerical_boolean),
+        ('numeric_bin', numeric_bin_transformer, numerical_boolean),
+    ])
+
+  # If there exist categorical columns
+  if any(categorical_boolean):
+    transform_list.extend([
+        ('categorical', categorical_transformer, categorical_boolean),
+    ])
+
+  preprocessor = compose.ColumnTransformer(transform_list)
 
   estimator = pipeline.Pipeline([
       ('preprocessor', preprocessor),
