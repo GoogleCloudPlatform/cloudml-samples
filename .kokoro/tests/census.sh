@@ -19,8 +19,8 @@ project_setup() {
     gcloud components update --version "${GCLOUD_SDK_VERSION}" --quiet
     export GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_GFILE_DIR}/${CENSUS_TEST_BASE_DIR}"
     gcloud auth activate-service-account --key-file "${KOKORO_GFILE_DIR}/${CMLE_KEYFILE}"
-    gcloud config set project $CMLE_PROJECT_ID
-    gcloud config set compute/region $CMLE_REGION
+    gcloud config set project "${GCP_PROJECT}"
+    gcloud config set compute/region "${CMLE_REGION}"
     gcloud config list
 }
 
@@ -35,10 +35,10 @@ download_files() {
 
 run_script_local() {
     # Run estimator tests.
-	cd github/cloudml-samples/$1
-	echo "Running '$1' code tests."
-	# Install dependencies.
-	pip install --upgrade -r requirements.txt
+    cd github/cloudml-samples/$1
+    echo "Running '$1' code tests."
+    # Install dependencies.
+    pip install --upgrade -r requirements.txt
     download_files # Download training and evaluation files
     PACKAGE_PATH=trainer
     TRAIN_FILES=census_data/adult.data.csv
