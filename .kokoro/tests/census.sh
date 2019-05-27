@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2019 Google Inc.
+# Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,31 +15,23 @@
 set -eo pipefail
 
 
-project_setup() {
-    gcloud components update --version "${GCLOUD_SDK_VERSION}" --quiet
-    export GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_GFILE_DIR}/${CENSUS_TEST_BASE_DIR}"
-    gcloud auth activate-service-account --key-file "${KOKORO_GFILE_DIR}/${CMLE_KEYFILE}"
-    gcloud config set project "${GCP_PROJECT}"
-    gcloud config set compute/region "${CMLE_REGION}"
-    gcloud config list
-}
-
-
 download_files() {
     echo "Downloading files"
     # Copy files locally.
-	gsutil cp gs://cloud-samples-data/ml-engine/census/data/adult.data.csv census_data/adult.data.csv
-	gsutil cp gs://cloud-samples-data/ml-engine/census/data/adult.test.csv census_data/adult.test.csv
+    CENSUS_DATA=gs://cloud-samples-data/ml-engine/census/data/
+    gsutil cp "${CENSUS_DATA}"/adult.data.csv census_data/adult.data.csv
+    gsutil cp "${CENSUS_DATA}"/adult.test.csv census_data/adult.test.csv
 }
 
 
-run_script_local() {
+run_tests() {
     # Run estimator tests.
-    cd github/cloudml-samples/$1
-    echo "Running '$1' code tests."
-    # Install dependencies.
-    pip install --upgrade -r requirements.txt
-    download_files # Download training and evaluation files
+    echo "Running '$1' code tests in $pwd."
+    # Change to directory
+    cd $1
+    # Download training and evaluation files
+    download_files
+    # Define AI Platform training
     PACKAGE_PATH=trainer
     TRAIN_FILES=census_data/adult.data.csv
     EVAL_FILES=census_data/adult.test.csv
@@ -60,19 +52,8 @@ run_script_local() {
 
 
 main(){
-    # Ignore this test if there are no relevant changes
-    cd ${CMLE_REPO_DIR}/${CENSUS_TEST_BASE_DIR}
-    DIFF=`git diff master $KOKORO_GITHUB_PULL_REQUEST_COMMIT $PWD`
-    echo "DIFF:\n $DIFF"
-    if [ -z  $DIFF ]
-    then
-        echo "TEST IGNORED; directory not modified in pull request $KOKORO_GITHUB_PULL_REQUEST_NUMBER"
-        exit 0
-    fi
-    project_setup
-    run_script_local estimator
+    run_tests estimator
+    echo 'Test was successful'
 }
-
-
 
 main
