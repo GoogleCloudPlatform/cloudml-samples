@@ -84,7 +84,7 @@ class EvaluationRunHook(tf.train.SessionRunHook):
       self._gs = tf.train.get_or_create_global_step()
 
       self._final_ops_dict = value_dict
-      self._eval_ops = update_dict.values()
+      self._eval_ops = list(update_dict.values())
 
     # MonitoredTrainingSession runs hooks in background threads
     # and it doesn't wait for the thread from the last session.run()
