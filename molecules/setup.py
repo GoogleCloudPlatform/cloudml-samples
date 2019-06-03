@@ -1,4 +1,4 @@
-# Copyright 2018 Google Inc. All Rights Reserved. Licensed under the Apache
+# Copyright 2019 Google Inc. All Rights Reserved. Licensed under the Apache
 # License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.apache.org/licenses/LICENSE-2.0
@@ -16,9 +16,9 @@ import setuptools
 #       cloud runs.
 
 REQUIRED_PACKAGES = [
-    'apache-beam[gcp]==2.5',
-    'tensorflow-transform==0.8',
-    'tensorflow==1.8',
+    'apache-beam[gcp]==2.11.*',
+    'tensorflow-transform==0.13.*',
+    'tensorflow==1.13.*',
 ]
 
 setuptools.setup(
