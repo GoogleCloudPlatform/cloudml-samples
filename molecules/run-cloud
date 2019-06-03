@@ -86,22 +86,21 @@ echo ''
 # Train and evaluate the model in AI Platform
 echo '>> Training'
 JOB="cloudml_samples_molecules_$(date +%Y%m%d_%H%M%S)"
-BUCKET=$(echo $WORK_DIR | egrep -o gs://[-_.a-zA-Z0-9]+)
-RUNTIME=1.8
-run gcloud ml-engine jobs submit training $JOB \
+BUCKET=$(echo $WORK_DIR | egrep -o gs://[^/]+)
+run gcloud ai-platform jobs submit training $JOB \
   --module-name trainer.task \
   --package-path trainer \
   --staging-bucket $BUCKET \
-  --runtime-version $RUNTIME \
-  --stream-logs \
+  --runtime-version 1.13 \
   --region $REGION \
+  --stream-logs \
   -- \
   --work-dir $WORK_DIR
 echo ''
 
 # Get the model path
 EXPORT_DIR=$WORK_DIR/model/export/final
-MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
+MODEL_DIR=$(gsutil ls -d "$EXPORT_DIR/*" | sort -r | head -n 1)
 echo "Model: $MODEL_DIR"
 echo ''
 

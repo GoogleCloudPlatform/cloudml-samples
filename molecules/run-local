@@ -62,7 +62,7 @@ echo ''
 # Get the model path
 EXPORT_DIR=$WORK_DIR/model/export/final
 if [[ $EXPORT_DIR == gs://* ]]; then
-  MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
+  MODEL_DIR=$(gsutil ls -d "$EXPORT_DIR/*" | sort -r | head -n 1)
 else
   MODEL_DIR=$(ls -d -1 $EXPORT_DIR/* | sort -r | head -n 1)
 fi

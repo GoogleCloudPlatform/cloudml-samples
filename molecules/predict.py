@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-#
-# Copyright 2018 Google Inc. All Rights Reserved. Licensed under the Apache
+
+# Copyright 2019 Google Inc. All Rights Reserved. Licensed under the Apache
 # License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.apache.org/licenses/LICENSE-2.0
@@ -13,6 +13,7 @@
 
 # This tool does either batch or streaming predictions on a trained model.
 
+from __future__ import absolute_import
 from __future__ import print_function
 
 import argparse
@@ -31,7 +32,6 @@ from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
 from apache_beam.options.pipeline_options import StandardOptions
 from tensorflow.python.framework import ops
-from tensorflow.python.saved_model import loader
 
 
 class Predict(beam.DoFn):
@@ -59,7 +59,7 @@ class Predict(beam.DoFn):
       self.graph = ops.Graph()
       with self.graph.as_default():
         self.session = tf.Session()
-        metagraph_def = loader.load(
+        metagraph_def = tf.compat.v1.saved_model.load(
             self.session, {self.meta_tag}, self.model_dir)
       signature_def = metagraph_def.signature_def[self.meta_signature]
 
@@ -91,6 +91,7 @@ class Predict(beam.DoFn):
 
 # [START dataflow_molecules_run_definition]
 def run(model_dir, feature_extraction, sink, beam_options=None):
+  print('Listening...')
   with beam.Pipeline(options=beam_options) as p:
     _ = (p
         | 'Feature extraction' >> feature_extraction
@@ -107,15 +108,12 @@ if __name__ == '__main__':
 
   parser.add_argument(
       '--work-dir',
-      type=str,
-      default=os.path.join(
-        tempfile.gettempdir(), 'cloudml-samples', 'molecules'),
+      required=True,
       help='Directory for temporary files and preprocessed datasets to. '
            'This can be a Google Cloud Storage path.')
 
   parser.add_argument(
       '--model-dir',
-      type=str,
       required=True,
       help='Path to the exported TensorFlow model. '
            'This can be a Google Cloud Storage path.')
@@ -124,13 +122,11 @@ if __name__ == '__main__':
   batch_verb = verbs.add_parser('batch', help='Batch prediction')
   batch_verb.add_argument(
       '--inputs-dir',
-      type=str,
       required=True,
       help='Input directory where SDF data files are read from. '
            'This can be a Google Cloud Storage path.')
   batch_verb.add_argument(
       '--outputs-dir',
-      type=str,
       required=True,
       help='Directory to store prediction results. '
            'This can be a Google Cloud Storage path.')
@@ -138,13 +134,11 @@ if __name__ == '__main__':
   stream_verb = verbs.add_parser('stream', help='Streaming prediction')
   stream_verb.add_argument(
       '--inputs-topic',
-      type=str,
       default='molecules-inputs',
       help='PubSub topic to subscribe for molecules.')
 
   stream_verb.add_argument(
       '--outputs-topic',
-      type=str,
       default='molecules-predictions',
       help='PubSub topic to publish predictions.')
 
@@ -159,7 +153,7 @@ if __name__ == '__main__':
   if args.verb == 'batch':
     data_files_pattern = os.path.join(args.inputs_dir, '*.sdf')
     results_prefix = os.path.join(args.outputs_dir, 'part')
-    source = beam.io.Read(pubchem.ParseSDF(data_files_pattern))
+    source = pubchem.ParseSDF(data_files_pattern)
     sink = beam.io.WriteToText(results_prefix)
 
   elif args.verb == 'stream':
@@ -171,7 +165,7 @@ if __name__ == '__main__':
     beam_options.view_as(StandardOptions).streaming = True
     source = beam.io.ReadFromPubSub(topic='projects/{}/topics/{}'.format(
         project, args.inputs_topic))
-    sink = beam.io.WriteStringsToPubSub(topic='projects/{}/topics/{}'.format(
+    sink = beam.io.WriteToPubSub(topic='projects/{}/topics/{}'.format(
         project, args.outputs_topic))
     # [END dataflow_molecules_batch_or_stream]
 
