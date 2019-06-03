@@ -72,10 +72,12 @@ To run use the [`run-cloud`](run-cloud) command.
 > NOTE: this will incur charges on your Google Cloud Platform project.
 ```bash
 # This will use only 5 data files by default
-./run-cloud --work-dir gs://<your bucket name>/cloudml-samples/molecules
+./run-cloud --work-dir gs://<your-gcs-bucket>/cloudml-samples/molecules
 ```
 
-## Data Extraction
+## Manual run
+
+### Data Extraction
 > Source code: [`data-extractor.py`](data-extractor.py)
 
 This is a data extraction tool to download SDF files from the specified FTP source.
@@ -83,18 +85,18 @@ The data files will be stored within a `data` subdirectory inside the working di
 
 To store data files locally:
 ```bash
-# The default --work-dir is /tmp/cloudml-samples/molecules
-python data-extractor.py --max-data-files 5
+WORK_DIR=/tmp/cloudml-samples/molecules
+python data-extractor.py --work-dir $WORK_DIR --max-data-files 5
 ```
 
 To store data files to a Google Cloud Storage location:
 > NOTE: this will incur charges on your Google Cloud Platform project. See [Storage pricing](https://cloud.google.com/storage/pricing).
 ```bash
-WORK_DIR=gs://<your bucket name>/cloudml-samples/molecules
+WORK_DIR=gs://<your-gcs-bucket>/cloudml-samples/molecules
 python data-extractor.py --work-dir $WORK_DIR --max-data-files 5
 ```
 
-## Preprocessing
+### Preprocessing
 > Source code: [`preprocess.py`](preprocess.py)
 
 This is an [Apache Beam](https://beam.apache.org/) pipeline that will do all the preprocessing necessary to train a Machine Learning model.
@@ -127,15 +129,15 @@ The `preprocess.py` script will preprocess all the data files it finds under `$W
 
 If your training data is small enough, it will be faster to run locally.
 ```bash
-# The default --work-dir is /tmp/cloudml-samples/molecules
-python preprocess.py
+WORK_DIR=/tmp/cloudml-samples/molecules
+python preprocess.py --work-dir $WORK_DIR
 ```
 
 As you want to preprocess a larger amount of data files, it will scale better using [Cloud Dataflow](https://cloud.google.com/dataflow/).
 > NOTE: this will incur charges on your Google Cloud Platform project. See [Dataflow pricing](https://cloud.google.com/dataflow/pricing).
 ```bash
 PROJECT=$(gcloud config get-value project)
-WORK_DIR=gs://<your bucket name>/cloudml-samples/molecules
+WORK_DIR=gs://<your-gcs-bucket>/cloudml-samples/molecules
 python preprocess.py \
   --project $PROJECT \
   --runner DataflowRunner \
@@ -144,7 +146,7 @@ python preprocess.py \
   --work-dir $WORK_DIR
 ```
 
-## Training the Model
+### Training the Model
 > Source code: [`trainer/task.py`](trainer/task.py)
 
 We'll train a [Deep Neural Network Regressor](https://www.tensorflow.org/api_docs/python/tf/estimator/DNNRegressor) in [TensorFlow](https://www.tensorflow.org/).
@@ -155,32 +157,33 @@ The TensorFlow model actually takes the unnormalized inputs (counts of elements)
 
 For small datasets it will be faster to run locally.
 ```bash
-# The default --work-dir is /tmp/cloudml-samples/molecules
-python trainer/task.py
+WORK_DIR=/tmp/cloudml-samples/molecules
+python trainer/task.py --work-dir $WORK_DIR
 
 # To get the path of the trained model
-EXPORT_DIR=/tmp/cloudml-samples/molecules/model/export/final
+EXPORT_DIR=$WORK_DIR/model/export/final
 MODEL_DIR=$(ls -d -1 $EXPORT_DIR/* | sort -r | head -n 1)
 ```
 
-If the training dataset is too large, it will scale better to train on [AI Platform](https://cloud.google.com/ml-engine/).
+If the training dataset is too large, it will scale better to train on [AI Platform](https://cloud.google.com/ai-platform/).
 > NOTE: this will incur charges on your Google Cloud Platform project. See [AI Platform pricing](https://cloud.google.com/ml-engine/docs/pricing).
 ```bash
 JOB="cloudml_samples_molecules_$(date +%Y%m%d_%H%M%S)"
-BUCKET=gs://<your bucket name>
-WORK_DIR=$BUCKET/cloudml-samples/molecules
-gcloud ml-engine jobs submit training $JOB \
+BUCKET=gs://<your-gcs-bucket>
+WORK_DIR=gs://<your-gcs-bucket>/cloudml-samples/molecules
+gcloud ai-platform jobs submit training $JOB \
   --module-name trainer.task \
   --package-path trainer \
   --staging-bucket $BUCKET \
-  --runtime-version 1.8 \
+  --runtime-version 1.13 \
+  --region us-central1 \
   --stream-logs \
   -- \
   --work-dir $WORK_DIR
 
 # To get the path of the trained model
 EXPORT_DIR=$WORK_DIR/model/export/final
-MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
+MODEL_DIR=$(gsutil ls -d "$EXPORT_DIR/*" | sort -r | head -n 1)
 ```
 
 To visualize the training job, we can use [TensorBoard](https://www.tensorflow.org/guide/summaries_and_tensorboard).
@@ -188,11 +191,11 @@ To visualize the training job, we can use [TensorBoard](https://www.tensorflow.o
 tensorboard --logdir $WORK_DIR/model
 ```
 
-You can access the results at `localhost:6006`.
+You can access the results at [`localhost:6006`](localhost:6006).
 
-## Predictions
+### Predictions
 
-### Option 1: Batch Predictions
+#### Option 1: Batch Predictions
 > Source code: [`predict.py`](predict.py)
 
 Batch predictions are optimized for throughput rather than latency.
@@ -201,18 +204,23 @@ These work best if there's a large amount of predictions to make and you can wai
 For batches with a small number of data files, it will be faster to run locally.
 ```bash
 # For simplicity, we'll use the same files we used for training
+WORK_DIR=/tmp/cloudml-samples/molecules
 python predict.py \
+  --work-dir $WORK_DIR \
   --model-dir $MODEL_DIR \
   batch \
-  --inputs-dir /tmp/cloudml-samples/molecules/data \
-  --outputs-dir /tmp/cloudml-samples/molecules/predictions
+  --inputs-dir $WORK_DIR/data \
+  --outputs-dir $WORK_DIR/predictions
+
+# To check the outputs
+head -n 10 $WORK_DIR/predictions/*
 ```
 
 For batches with a large number of data files, it will scale better using [Cloud Dataflow](https://cloud.google.com/dataflow/).
 ```bash
 # For simplicity, we'll use the same files we used for training
 PROJECT=$(gcloud config get-value project)
-WORK_DIR=gs://<your bucket name>/cloudml-samples/molecules
+WORK_DIR=gs://<your-gcs-bucket>/cloudml-samples/molecules
 python predict.py \
   --work-dir $WORK_DIR \
   --model-dir $MODEL_DIR \
@@ -223,9 +231,12 @@ python predict.py \
   --setup_file ./setup.py \
   --inputs-dir $WORK_DIR/data \
   --outputs-dir $WORK_DIR/predictions
+
+# To check the outputs
+gsutil cat "$WORK_DIR/predictions/*" | head -n 10
 ```
 
-### Option 2: Streaming Predictions
+#### Option 2: Streaming Predictions
 > Source code: [`predict.py`](predict.py)
 
 Streaming predictions are optimized for latency rather than throughput.
@@ -245,19 +256,20 @@ For testing purposes, we can start the online streaming prediction service local
 ```bash
 # Run on terminal 1
 PROJECT=$(gcloud config get-value project)
+WORK_DIR=/tmp/cloudml-samples/molecules
 python predict.py \
+  --work-dir $WORK_DIR \
   --model-dir $MODEL_DIR \
   stream \
-  --project $PROJECT
+  --project $PROJECT \
   --inputs-topic molecules-inputs \
   --outputs-topic molecules-predictions
 ```
 
 For a highly available and scalable service, it will scale better using [Cloud Dataflow](https://cloud.google.com/dataflow/).
 ```bash
-# Run on terminal 1
 PROJECT=$(gcloud config get-value project)
-WORK_DIR=gs://<your bucket name>/cloudml-samples/molecules
+WORK_DIR=gs://<your-gcs-bucket>/cloudml-samples/molecules
 python predict.py \
   --work-dir $WORK_DIR \
   --model-dir $MODEL_DIR \
@@ -298,7 +310,7 @@ python publisher.py \
 
 Once the publisher starts parsing and publishing molecules, we'll start seeing predictions from the subscriber.
 
-### Option 3: AI Platform Predictions
+#### Option 3: AI Platform Predictions
 
 If you have a different way to extract the features (in this case the atom counts) that is not through our existing preprocessing pipeline for SDF files, it might be easier to build a JSON file with one request per line and make the predictions on AI Platform.
 
@@ -316,14 +328,14 @@ Before creating the model in AI Platform, it is a good idea to test our model's 
 EXPORT_DIR=$WORK_DIR/model/export/final
 if [[ $EXPORT_DIR == gs://* ]]; then
   # If it's a GCS path, use gsutil
-  MODEL_DIR=$(gsutil ls -d $EXPORT_DIR/* | sort -r | head -n 1)
+  MODEL_DIR=$(gsutil ls -d "$EXPORT_DIR/*" | sort -r | head -n 1)
 else
   # If it's a local path, use ls
   MODEL_DIR=$(ls -d -1 $EXPORT_DIR/* | sort -r | head -n 1)
 fi
 
 # To do the local predictions
-gcloud ml-engine local predict \
+gcloud ai-platform local predict \
   --model-dir $MODEL_DIR \
   --json-instances sample-requests.json
 ```
@@ -353,22 +365,39 @@ fi
 
 # Now create the model and a version in AI Platform and set it as default
 MODEL=molecules
-REGION=$(gcloud config get-value compute/region)
-gcloud ml-engine models create $MODEL \
-  --regions $REGION
+REGION=us-central1
+gcloud ai-platform models create $MODEL --regions $REGION
 
 VERSION="${MODEL}_$(date +%Y%m%d_%H%M%S)"
-gcloud ml-engine versions create $VERSION \
+gcloud ai-platform versions create $VERSION \
   --model $MODEL \
   --origin $MODEL_DIR \
-  --runtime-version 1.8
+  --runtime-version 1.13
 
-gcloud ml-engine versions set-default $VERSION \
-  --model $MODEL
+gcloud ai-platform versions set-default $VERSION --model $MODEL
 
-# Finally, we can request predictions via gcloud ml-engine
-gcloud ml-engine predict \
+# Finally, we can request predictions via `gcloud ai-platform`
+gcloud ai-platform predict \
   --model $MODEL \
   --version $VERSION \
   --json-instances sample-requests.json
+```
+
+## Cleanup
+
+Finally, let's clean up all the Google Cloud resources used, if any.
+
+```sh
+# To delete the model and version
+gcloud ai-platform versions delete $VERSION --model $MODEL
+gcloud ai-platform models delete $MODEL
+
+# To delete the inputs topic
+gcloud pubsub topics delete molecules-inputs
+
+# To delete the outputs topic
+gcloud pubsub topics delete molecules-predictions
+
+# To delete the working directory
+gsutil -m rm -rf $WORK_DIR
 ```
