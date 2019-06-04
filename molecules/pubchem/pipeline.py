@@ -1,4 +1,4 @@
-# Copyright 2018 Google Inc. All Rights Reserved. Licensed under the Apache
+# Copyright 2019 Google Inc. All Rights Reserved. Licensed under the Apache
 # License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.apache.org/licenses/LICENSE-2.0
@@ -11,7 +11,7 @@
 
 # This file contains the shared functionality for preprocess.py and predict.py
 
-import sdf
+from __future__ import absolute_import
 
 import json
 import logging
@@ -24,51 +24,42 @@ import tensorflow_transform as tft
 from apache_beam.io import filebasedsource
 from tensorflow_transform.tf_metadata import dataset_schema
 
+from pubchem import sdf
 
-INPUT_SCHEMA = {
+
+FEATURE_SPEC = {
     # Features (inputs)
-    'TotalC': dataset_schema.ColumnSchema(
-        tf.int64, [], dataset_schema.FixedColumnRepresentation()),
-    'TotalH': dataset_schema.ColumnSchema(
-        tf.int64, [], dataset_schema.FixedColumnRepresentation()),
-    'TotalO': dataset_schema.ColumnSchema(
-        tf.int64, [], dataset_schema.FixedColumnRepresentation()),
-    'TotalN': dataset_schema.ColumnSchema(
-        tf.int64, [], dataset_schema.FixedColumnRepresentation()),
+    'TotalC': tf.io.FixedLenFeature([], tf.int64),
+    'TotalH': tf.io.FixedLenFeature([], tf.int64),
+    'TotalO': tf.io.FixedLenFeature([], tf.int64),
+    'TotalN': tf.io.FixedLenFeature([], tf.int64),
 
     # Labels (outputs/predictions)
-    'Energy': dataset_schema.ColumnSchema(
-        tf.float32, [], dataset_schema.FixedColumnRepresentation()),
+    'Energy': tf.io.FixedLenFeature([], tf.float32),
 }
 
 LABELS = ['Energy']
 
 
-class ParseSDF(filebasedsource.FileBasedSource):
-  def __init__(self, file_pattern):
-    super(ParseSDF, self).__init__(file_pattern, splittable=False)
+class ParseSDF(beam.PTransform):
+  def __init__(self, file_patterns):
+    super(ParseSDF, self).__init__()
+    if isinstance(file_patterns, str):
+      file_patterns = [file_patterns]
+    self.file_patterns = file_patterns
 
-  def in_range(self, range_tracker, position):
-    """This helper method tries to set the position to where the file left off.
-    Since this is a non-splittable source, we have to call
-    `set_current_position`, but if it tries to set the position to a split
-    point, we still have to call `try_claim`, otherwise an error will be raised.
-    """
-    try:
-      return range_tracker.set_current_position(position)
-    except ValueError:
-      return range_tracker.try_claim(position)
-
-  def read_records(self, filename, range_tracker):
-    """This yields a dictionary with the sections of the file that we're
-    interested in. The `range_tracker` allows us to mark the position where
-    possibly another worker left, so we make sure to start from there.
-    """
-    with self.open_file(filename) as f:
-      f.seek(range_tracker.start_position() or 0)
-      while self.in_range(range_tracker, f.tell()):
+  def expand(self, pcollection):
+    def parse_molecules(filename):
+      with tf.gfile.Open(filename) as f:
         for json_molecule in sdf.parse_molecules(f):
           yield json_molecule
+
+    return (
+        pcollection
+        | 'Create file patterns' >> beam.Create(self.file_patterns)
+        | 'Expand file patterns' >> beam.FlatMap(tf.gfile.Glob)
+        | 'Parse molecules' >> beam.ParDo(parse_molecules)
+    )
 
 
 class FormatMolecule(beam.DoFn):
@@ -148,17 +139,20 @@ class CountAtoms(beam.DoFn):
         for atom in molecule['atoms'])
 
   def process(self, molecule):
-    uid = int(molecule['<PUBCHEM_COMPOUND_CID>'][0])
-    label = float(molecule['<PUBCHEM_MMFF94_ENERGY>'][0])
-    result = {
-      'ID': uid,
-      'TotalC': self.count_by_atom_symbol(molecule, 'C'),
-      'TotalH': self.count_by_atom_symbol(molecule, 'H'),
-      'TotalO': self.count_by_atom_symbol(molecule, 'O'),
-      'TotalN': self.count_by_atom_symbol(molecule, 'N'),
-      'Energy': label,
-    }
-    yield result
+    try:
+      uid = int(molecule['<PUBCHEM_COMPOUND_CID>'][0])
+      label = float(molecule['<PUBCHEM_MMFF94_ENERGY>'][0])
+      result = {
+        'ID': uid,
+        'TotalC': self.count_by_atom_symbol(molecule, 'C'),
+        'TotalH': self.count_by_atom_symbol(molecule, 'H'),
+        'TotalO': self.count_by_atom_symbol(molecule, 'O'),
+        'TotalN': self.count_by_atom_symbol(molecule, 'N'),
+        'Energy': label,
+      }
+      yield result
+    except Exception as e:
+      logging.info('Invalid molecule, skipping: {}'.format(molecule), exc_info=True)
 
 
 # [START dataflow_molecules_simple_feature_extraction]
