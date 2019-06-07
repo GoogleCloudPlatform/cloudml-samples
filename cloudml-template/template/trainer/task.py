@@ -211,7 +211,7 @@ def get_args():
   )
   args_parser.add_argument(
     '--eval-export-format',
-    help='The input format of the exported evluating SavedModel.',
+    help='The input format of the exported evaluating SavedModel.',
     choices=['CSV', 'EXAMPLE'],
     default='CSV'
   )
