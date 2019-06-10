@@ -6,7 +6,7 @@ BUCKET="your-bucket-name" # change to your bucket name
 MODEL_NAME="you_model_name" # change to your estimator name
 MODEL_VERSION="your.model.version" # change to your model version
 
-MODEL_BINARIES=$(gsutil ls gs://${BUCKET}/models/${MODEL_NAME}/export/estimator | tail -1)
+MODEL_BINARIES=$(gsutil ls gs://${BUCKET}/models/${MODEL_NAME}/export/estimate | tail -1)
 
 gsutil ls ${MODEL_BINARIES}
 
