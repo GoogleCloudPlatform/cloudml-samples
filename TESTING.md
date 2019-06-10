@@ -35,6 +35,6 @@ In this repository, in `.kokoro/`, add a Kokoro folder and build config file. At
 
 You can see [`.kokoro/census/common.cfg`](.kokoro/census/common.cfg) for an example of such a file.
 
-In Google3 you must add a corresponding job config in `//depot/google3/devtools/kokoro/config/prod/cloudml_engine/samples/` with the subdirectory *and* name matching your build config.
+In Google3 you must add a corresponding job config in `//google3/devtools/kokoro/config/prod/cloud-devrel/cloudml-samples/` with the subdirectory *and* name matching your build config.
 
 You can use `//google3/devtools/kokoro/config/prod/cloud-devrel/cloudml-samples/samples/census/common.cfg` as a template, and should only need to modify `build_config_dir` which will determine how your test is named in the Github UI.
