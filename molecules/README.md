@@ -44,6 +44,14 @@ You can use the `requirements.txt` to install the dependencies.
 pip install -U -r requirements.txt
 ```
 
+### Cloud SDK Setup (Optional)
+
+If you have never created application default credentials (ADC), you can create it by `gcloud` command. Following steps are required to `./run-cloud`. 
+
+```bash
+gcloud auth application-default login
+```
+
 ## Quickstart
 We'll start by running the end-to-end script locally. To run simply run the [`run-local`](run-local) comand:
 ```bash
