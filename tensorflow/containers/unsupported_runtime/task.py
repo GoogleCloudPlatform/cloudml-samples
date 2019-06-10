@@ -40,7 +40,7 @@ def train_model(args):
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description='PyTorch Sonar Example')
+    parser = argparse.ArgumentParser(description='Keras Sonar Example')
     parser.add_argument('--model-dir',
                         type=str,
                         help='Where to save the model')
