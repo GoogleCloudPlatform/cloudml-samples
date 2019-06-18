@@ -60,6 +60,8 @@ main(){
     project_setup
     create_virtualenv
     # Run specific test.
+    echo `pwd`
+    ls -al
     bash "${CMLE_TEST_SCRIPT}"
 }
 
