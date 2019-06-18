@@ -28,8 +28,7 @@ check_if_changed(){
     # Check if a change happened to directory.
     DIFF=`git diff master $KOKORO_GITHUB_PULL_REQUEST_COMMIT $PWD`
     echo "GIT DIFF:\n $DIFF"
-    if [ -z $DIFF ]
-    then
+    if [[ -z $DIFF ]]; then
         echo "TEST IGNORED; directory not modified in pull request $KOKORO_GITHUB_PULL_REQUEST_NUMBER"
         exit 0
     fi
