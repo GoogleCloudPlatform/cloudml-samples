@@ -19,8 +19,8 @@ download_files() {
     echo "Downloading files"
     # Copy files locally.
     CENSUS_DATA=gs://cloud-samples-data/ml-engine/census/data
-    gsutil cp "${CENSUS_DATA}"adult.data.csv census_data/adult.data.csv
-    gsutil cp "${CENSUS_DATA}"adult.test.csv census_data/adult.test.csv
+    gsutil cp "${CENSUS_DATA}"/adult.data.csv census_data/adult.data.csv
+    gsutil cp "${CENSUS_DATA}"/adult.test.csv census_data/adult.test.csv
 }
 
 
@@ -32,7 +32,7 @@ run_tests() {
     # Download training and evaluation files
     download_files
     # Define AI Platform training
-    MODEL_NAME="estimator"
+    MODEL_NAME="tensorflow_estimator"
     MODEL_DIR=trained_models/${MODEL_NAME}
     PACKAGE_PATH=trainer
     # Datasets
