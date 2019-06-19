@@ -18,9 +18,9 @@ set -eo pipefail
 download_files() {
     echo "Downloading files"
     # Copy files locally.
-    CENSUS_DATA=gs://cloud-samples-data/ml-engine/census/data/
-    gsutil cp "${CENSUS_DATA}"/adult.data.csv census_data/adult.data.csv
-    gsutil cp "${CENSUS_DATA}"/adult.test.csv census_data/adult.test.csv
+    CENSUS_DATA=gs://cloud-samples-data/ml-engine/census/data
+    gsutil cp "${CENSUS_DATA}"adult.data.csv census_data/adult.data.csv
+    gsutil cp "${CENSUS_DATA}"adult.test.csv census_data/adult.test.csv
 }
 
 
