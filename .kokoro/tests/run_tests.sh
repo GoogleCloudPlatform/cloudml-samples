@@ -59,6 +59,7 @@ main(){
     check_if_changed
     project_setup
     create_virtualenv
+    cd ${KOKORO_ARTIFACTS_DIR}
     # Run specific test.
     bash "${CMLE_TEST_SCRIPT}"
 }
