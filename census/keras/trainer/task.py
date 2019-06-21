@@ -145,12 +145,12 @@ if __name__ == '__main__':
       '--train-files',
       nargs='+',
       help='Training file local or GCS',
-      default='gs://cloud-samples-data/ml-engine/census/data/adult.data.csv')
+      default=['gs://cloud-samples-data/ml-engine/census/data/adult.data.csv'])
   parser.add_argument(
       '--eval-files',
       nargs='+',
       help='Evaluation file local or GCS',
-      default='gs://cloud-samples-data/ml-engine/census/data/adult.test.csv')
+      default=['gs://cloud-samples-data/ml-engine/census/data/adult.test.csv'])
   parser.add_argument(
       '--job-dir',
       type=str,
