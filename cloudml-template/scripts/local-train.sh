@@ -25,8 +25,8 @@ gcloud ai-platform local train \
         --job-dir=${MODEL_DIR}
 
 
-ls ${MODEL_DIR}/export/estimator
-MODEL_LOCATION=${MODEL_DIR}/export/estimator/$(ls ${MODEL_DIR}/export/estimator | tail -1)
+ls ${MODEL_DIR}/export/estimate
+MODEL_LOCATION=${MODEL_DIR}/export/estimate/$(ls ${MODEL_DIR}/export/estimate | tail -1)
 echo ${MODEL_LOCATION}
 ls ${MODEL_LOCATION}
 
