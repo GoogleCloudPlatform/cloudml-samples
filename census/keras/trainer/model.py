@@ -89,8 +89,8 @@ def model_fn(input_dim,
 
 def compile_model(model, learning_rate):
   model.compile(
-      loss='categorical_crossentropy',
-      optimizer=keras.optimizers.RMSprop(lr=learning_rate),
+      loss='binary_crossentropy',
+      optimizer=keras.optimizers.Adam(lr=learning_rate),
       metrics=['accuracy'])
   return model
 

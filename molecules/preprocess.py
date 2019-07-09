@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-#
-# Copyright 2018 Google Inc. All Rights Reserved. Licensed under the Apache
+
+# Copyright 2019 Google Inc. All Rights Reserved. Licensed under the Apache
 # License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.apache.org/licenses/LICENSE-2.0
@@ -13,8 +13,11 @@
 
 # This tool preprocesses and extracts features from SDF files.
 
+from __future__ import absolute_import
+
 import argparse
 import dill as pickle
+import logging
 import os
 import random
 import tempfile
@@ -27,7 +30,6 @@ import tensorflow_transform.beam.impl as beam_impl
 
 from apache_beam.io import tfrecordio
 from apache_beam.options.pipeline_options import PipelineOptions
-from apache_beam.options.pipeline_options import SetupOptions
 from tensorflow_transform.beam.tft_beam_io import transform_fn_io
 from tensorflow_transform.coders import example_proto_coder
 from tensorflow_transform.tf_metadata import dataset_metadata
@@ -62,26 +64,26 @@ def load(filename):
 
 class ValidateInputData(beam.DoFn):
   """This DoFn validates that every element matches the metadata given."""
-  def __init__(self, input_metadata):
+  def __init__(self, feature_spec):
     super(ValidateInputData, self).__init__()
-    self.schema_keys = set(input_metadata.schema.column_schemas.keys())
+    self.feature_names = set(feature_spec.keys())
 
   def process(self, elem):
     if not isinstance(elem, dict):
       raise ValueError(
           'Element must be a dict(str, value). '
           'Given: {} {}'.format(elem, type(elem)))
-    elem_keys = set(elem.keys())
-    if not self.schema_keys.issubset(elem_keys):
+    elem_features = set(elem.keys())
+    if not self.feature_names.issubset(elem_features):
       raise ValueError(
-          "Element keys are missing from schema keys. "
-          'Given: {}; Schema: {}'.format(
-              list(elem_keys), list(self.schema_keys)))
+          "Element features are missing from feature_spec keys. "
+          'Given: {}; Features: {}'.format(
+              list(elem_features), list(self.feature_names)))
     yield elem
 
 
 def run(
-    input_schema,
+    input_feature_spec,
     labels,
     feature_extraction,
     feature_scaling=None,
@@ -134,9 +136,6 @@ def run(
   if tf.gfile.Exists(transform_fn_dir):
     tf.gfile.DeleteRecursively(transform_fn_dir)
 
-  input_metadata = dataset_metadata.DatasetMetadata(
-      dataset_schema.Schema(input_schema))
-
   # [START dataflow_molecules_create_pipeline]
   # Build and run a Beam Pipeline
   with beam.Pipeline(options=beam_options) as p, \
@@ -150,11 +149,15 @@ def run(
         | 'Feature extraction' >> feature_extraction
         # [END dataflow_molecules_feature_extraction]
         # [START dataflow_molecules_validate_inputs]
-        | 'Validate inputs' >> beam.ParDo(ValidateInputData(input_metadata)))
+        | 'Validate inputs' >> beam.ParDo(ValidateInputData(
+            input_feature_spec)))
     # [END dataflow_molecules_validate_inputs]
 
     # [START dataflow_molecules_analyze_and_transform_dataset]
     # Apply the tf.Transform preprocessing_fn
+    input_metadata = dataset_metadata.DatasetMetadata(
+        dataset_schema.from_feature_spec(input_feature_spec))
+
     dataset_and_metadata, transform_fn = (
         (dataset, input_metadata)
         | 'Feature scaling' >> beam_impl.AnalyzeAndTransformDataset(
@@ -194,7 +197,7 @@ def run(
     # [END dataflow_molecules_write_tfrecords]
 
   return PreprocessData(
-      input_metadata.schema.as_feature_spec(),
+      input_feature_spec,
       labels,
       train_dataset_prefix + '*',
       eval_dataset_prefix + '*')
@@ -204,27 +207,20 @@ if __name__ == '__main__':
   """Main function"""
   parser = argparse.ArgumentParser(
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
   parser.add_argument(
       '--work-dir',
-      type=str,
-      default=os.path.join(
-        tempfile.gettempdir(), 'cloudml-samples', 'molecules'),
+      required=True,
       help='Directory for staging and working files. '
            'This can be a Google Cloud Storage path.')
-
   args, pipeline_args = parser.parse_known_args()
 
-  beam_options = PipelineOptions(pipeline_args)
-  beam_options.view_as(SetupOptions).save_main_session = True
-
   data_files_pattern = os.path.join(args.work_dir, 'data', '*.sdf')
+  beam_options = PipelineOptions(pipeline_args, save_main_session=True)
   preprocess_data = run(
-      pubchem.INPUT_SCHEMA,
+      pubchem.FEATURE_SPEC,
       pubchem.LABELS,
       # [START dataflow_molecules_feature_extraction_transform]
-      pubchem.SimpleFeatureExtraction(
-          beam.io.Read(pubchem.ParseSDF(data_files_pattern))),
+      pubchem.SimpleFeatureExtraction(pubchem.ParseSDF(data_files_pattern)),
       # [END dataflow_molecules_feature_extraction_transform]
       feature_scaling=pubchem.normalize_inputs,
       beam_options=beam_options,

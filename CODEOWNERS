@@ -1,0 +1,18 @@
+# These owners will be the default owners for everything in
+# the repo. Unless a later match takes precedence,
+# @global-owner1 and @global-owner2 will be requested for
+# review when someone opens a pull request.
+# Our Global Owners: @happyhuman @dizcology @nnegrey @sirtorry @andrewferlitsch @gogasca
+*       @GoogleCloudPlatform/cloudml-samples-owners
+
+/notebooks/keras @gogasca
+/notebooks/pytorch @nnegrey
+/notebooks/scikit-learn @happyhuman
+/notebooks/tensorflow @gogasca
+/notebooks/xgboost @happyhuman
+/pytorch @nnegrey
+/sklearn @happyhuman
+/tools @dizcology
+/tpu @dizcology
+/xgboost @happyhuman
+*.md @nnegrey

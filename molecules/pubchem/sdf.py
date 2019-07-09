@@ -1,4 +1,4 @@
-# Copyright 2018 Google Inc. All Rights Reserved. Licensed under the Apache
+# Copyright 2019 Google Inc. All Rights Reserved. Licensed under the Apache
 # License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.apache.org/licenses/LICENSE-2.0
@@ -10,6 +10,8 @@
 # the License.
 
 # This contains a simple parser for SDF files.
+
+from __future__ import absolute_import
 
 import json
 
@@ -23,6 +25,8 @@ def parse_molecules(raw_lines):
   molecule = None
   section = None
   for raw_line in raw_lines:
+    if isinstance(raw_line, bytes):
+      raw_line = raw_line.decode('utf-8')
     line = raw_line.lstrip('>').strip()
     if not line:
       continue

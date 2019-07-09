@@ -152,5 +152,6 @@ def boolean_mask(columns, target_columns):
   Returns:
     List[bool]
   """
-  columns_set = set(columns)
-  return [x in columns_set for x in target_columns]
+  target_set = set(target_columns)
+  return [x in target_set for x in columns]
+

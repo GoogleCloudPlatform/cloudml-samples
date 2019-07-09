@@ -45,7 +45,7 @@ LABELS = [' <=50K', ' >50K']
 LABEL_COLUMN = 'income_bracket'
 
 UNUSED_COLUMNS = set(CSV_COLUMNS) - set(
-    zip(*CATEGORICAL_COLS)[0] + CONTINUOUS_COLS + (LABEL_COLUMN,))
+    list(zip(*CATEGORICAL_COLS))[0] + CONTINUOUS_COLS + (LABEL_COLUMN,))
 
 TRAIN, EVAL, PREDICT = 'TRAIN', 'EVAL', 'PREDICT'
 CSV, EXAMPLE, JSON = 'CSV', 'EXAMPLE', 'JSON'
@@ -99,7 +99,7 @@ def model_fn(mode,
   # Concatenate the (now all dense) features.
   # We need to sort the tensors so that they end up in the same order for
   # prediction, evaluation, and training
-  sorted_feature_tensors = zip(*sorted(features.iteritems()))[1]
+  sorted_feature_tensors = list(zip(*sorted(features.items())))[1]
   inputs = tf.concat(sorted_feature_tensors, 1)
 
   # Build the DNN

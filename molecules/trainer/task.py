@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-#
-# Copyright 2018 Google Inc. All Rights Reserved. Licensed under the Apache
+
+# Copyright 2019 Google Inc. All Rights Reserved. Licensed under the Apache
 # License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.apache.org/licenses/LICENSE-2.0
@@ -12,6 +12,8 @@
 # the License.
 
 # This tool trains an ML model on preprocessed data.
+
+from __future__ import absolute_import
 
 import argparse
 import dill as pickle
@@ -37,13 +39,13 @@ def _make_train_or_eval_input_fn(
     # For more information, check:
     # https://www.tensorflow.org/performance/datasets_performance
     files = tf.data.Dataset.list_files(file_pattern)
-    dataset = files.apply(tf.contrib.data.parallel_interleave(
+    dataset = files.apply(tf.data.experimental.parallel_interleave(
         tf.data.TFRecordDataset, cycle_length=mp.cpu_count()))
     dataset = dataset.map(decode, num_parallel_calls=mp.cpu_count())
     dataset = dataset.take(-1)
     if mode == tf.estimator.ModeKeys.TRAIN:
       if shuffle:
-        dataset = dataset.apply(tf.contrib.data.shuffle_and_repeat(
+        dataset = dataset.apply(tf.data.experimental.shuffle_and_repeat(
             batch_size * 8))
       else:
         dataset = dataset.cache()
@@ -179,9 +181,7 @@ if __name__ == '__main__':
 
   parser.add_argument(
       '--work-dir',
-      type=str,
-      default=os.path.join(
-        tempfile.gettempdir(), 'cloudml-samples', 'molecules'),
+      required=True,
       help='Directory for staging and working files. '
            'This can be a Google Cloud Storage path.')
 

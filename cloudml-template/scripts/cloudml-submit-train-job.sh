@@ -16,7 +16,7 @@ MODEL_DIR=gs://${BUCKET}/path/to/models/${MODEL_NAME}
 CURRENT_DATE=`date +%Y%m%d_%H%M%S`
 JOB_NAME=train_${MODEL_NAME}_${TIER}_${CURRENT_DATE}
 
-gcloud ml-engine jobs submit training ${JOB_NAME} \
+gcloud ai-platform jobs submit training ${JOB_NAME} \
         --job-dir=${MODEL_DIR} \
         --runtime-version=1.13 \
         --region=${REGION} \

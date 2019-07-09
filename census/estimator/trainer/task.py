@@ -187,9 +187,8 @@ if __name__ == '__main__':
 
     # Set python level verbosity
     tf.logging.set_verbosity(ARGUMENTS.verbosity)
-    # Set C++ Graph Execution level verbosity
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = str(
-        tf.logging.__dict__[ARGUMENTS.verbosity] / 10)
+    # Suppress C++ level warnings.
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
     # Run the training job
     train_and_evaluate(ARGUMENTS)
