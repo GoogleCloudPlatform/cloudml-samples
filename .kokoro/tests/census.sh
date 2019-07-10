@@ -18,7 +18,7 @@ set -eo pipefail
 download_files() {
     echo "Downloading files"
     # Copy files locally.
-    CENSUS_DATA=gs://cloud-samples-data/ml-engine/census/data/
+    CENSUS_DATA=gs://cloud-samples-data/ml-engine/census/data
     gsutil cp "${CENSUS_DATA}"/adult.data.csv census_data/adult.data.csv
     gsutil cp "${CENSUS_DATA}"/adult.test.csv census_data/adult.test.csv
 }
@@ -26,17 +26,19 @@ download_files() {
 
 run_tests() {
     # Run estimator tests.
-    echo "Running '$1' code tests in $pwd."
+    echo "Running '$1' code tests in `pwd`."
     # Change to directory
     cd $1
     # Download training and evaluation files
     download_files
     # Define AI Platform training
+    MODEL_NAME="tensorflow_estimator"
+    MODEL_DIR=trained_models/${MODEL_NAME}
     PACKAGE_PATH=trainer
+    # Datasets
     TRAIN_FILES=census_data/adult.data.csv
     EVAL_FILES=census_data/adult.test.csv
-    MODEL_NAME="estimator"
-    MODEL_DIR=trained_models/${MODEL_NAME}
+    
 
     echo "Training local ML model"
     gcloud ai-platform local train \
@@ -52,6 +54,7 @@ run_tests() {
 
 
 main(){
+    cd ${KOKORO_ARTIFACTS_DIR}/github/cloudml-samples/${CMLE_TEST_DIR}
     run_tests estimator
     echo 'Test was successful'
 }

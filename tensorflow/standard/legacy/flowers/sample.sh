@@ -57,7 +57,7 @@ gcloud ml-engine jobs submit training "$JOB_ID" \
   --package-path trainer \
   --staging-bucket "$BUCKET" \
   --region us-central1 \
-  --runtime-version=1.13 \
+  --runtime-version=1.12 \
   -- \
   --output_path "${GCS_PATH}/training" \
   --eval_data_paths "${GCS_PATH}/preproc/eval*" \
@@ -74,7 +74,7 @@ gcloud ml-engine models create "$MODEL_NAME" \
 gcloud ml-engine versions create "$VERSION_NAME" \
   --model "$MODEL_NAME" \
   --origin "${GCS_PATH}/training/model" \
-  --runtime-version=1.13
+  --runtime-version=1.12
 
 # Models do not need a default version, but its a great way move your production
 # service from one version to another with a single gcloud command.
