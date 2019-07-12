@@ -4,17 +4,17 @@ REGION="choose-gcp-region" # choose a gcp region from https://cloud.google.com/m
 BUCKET="your-bucket-name" # change to your bucket name
 
 MODEL_NAME="you_model_name" # change to your estimator name
-MODEL_VERSION="your.model.version" # change to your model version
+MODEL_VERSION="your_model_version" # change to your model version
 
 MODEL_BINARIES=$(gsutil ls gs://${BUCKET}/models/${MODEL_NAME}/export/estimate | tail -1)
 
 gsutil ls ${MODEL_BINARIES}
 
 # delete model version
-gcloud ai-platform versions delete ${MODEL_VERSION} --model=${MODEL_NAME}
+gcloud ai-platform versions delete ${MODEL_VERSION} --model=${MODEL_NAME} || true
 
 # delete model
-gcloud ai-platform models delete ${MODEL_NAME}
+gcloud ai-platform models delete ${MODEL_NAME} || true
 
 # deploy model to GCP
 gcloud ai-platform models create ${MODEL_NAME} --regions=${REGION}
