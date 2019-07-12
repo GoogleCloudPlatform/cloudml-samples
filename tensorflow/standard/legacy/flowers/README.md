@@ -188,8 +188,3 @@ gcloud ml-engine predict --model ${MODEL_NAME} --json-instances request.json
 ```
 
 You should see a response with the predicted labels of the examples!
-
-
-## References
-
-[Flowers tutorial](https://cloud.google.com/ml-engine/docs/tensorflow/flowers-tutorial)
