@@ -34,7 +34,7 @@ git clone https://github.com/GoogleCloudPlatform/cloudml-samples.git
 ``` bash
 cd cloudml-samples/notebooks/R 
 gcloud config set project [YOUR-PROJECT-ID]
- gcloud auth list 
+gcloud auth list 
 ```
 10. Copy the service account listed, and run the following command by replacing SERVICE-ACCOUNT with the service account you copied from the list: 
 
