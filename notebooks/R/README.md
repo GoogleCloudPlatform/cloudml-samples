@@ -4,9 +4,9 @@ R is one of the most widely used programming languages for statistical modeling,
 
 
 This multi-part R on GCP tutorial series covers the following topics, each in a separate notebook
-1. [Exploratory data analysis](01_EDA-with-R-and-BigQuery.ipynb).
-2. [Training and serving Tensorflow models](02-Training-Serving-TF-Models.ipynb).
-3. [Training and serving CARET models](03-Training-Serving-CARET-Models.ipynb).
+1. [Exploratory data analysis](01_EDA-with-R-and-BigQuery.ipynb). - using R and [BigQuery](https://cloud.google.com/bigquery/docs)
+2. [Training and serving Tensorflow models](02-Training-Serving-TF-Models.ipynb) - using [AI Platform](https://cloud.google.com/ml-engine/docs/tensorflow/)
+3. [Training and serving CARET models](03-Training-Serving-CARET-Models.ipynb) - using AI Platform [Training with Custom Containers](https://cloud.google.com/ml-engine/docs/custom-containers-training), and [Cloud Run](https://cloud.google.com/run/docs/) for serving.
 
 In addition to the notebooks, the supporting R source code and Dockerfiles are includes in the [src](src) directory, which includes:
 1. [src/tensorflow](src/tensorflow): for training the TensorFlow model on AI Platform Training.
