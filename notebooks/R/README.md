@@ -39,6 +39,6 @@ gcloud auth list
 10. Copy the service account listed, and run the following command by replacing SERVICE-ACCOUNT with the service account you copied from the list: 
 
 ``` bash
-cloud iam service-accounts keys create service-account-key.json --iam-account=[SERVICE-ACCOUNT] by replacing [SERVICE-ACCOUNT]
+cloud iam service-accounts keys create service-account-key.json --iam-account=[SERVICE-ACCOUNT]
 ```
 
