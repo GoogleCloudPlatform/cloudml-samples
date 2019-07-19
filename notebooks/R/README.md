@@ -4,9 +4,9 @@ R is one of the most widely used programming languages for statistical modeling,
 
 
 This multi-part R on GCP tutorial series covers the following topics, each in a separate notebook
-1. [Exploratory data analysis](01_EDA-with-R-and-BigQuery).
-2. [Training and serving Tensorflow models](02-Training-Serving-TF-Models).
-3. [Training and serving CARET models](03-Training-Serving-CARET-Models).
+1. [Exploratory data analysis](01_EDA-with-R-and-BigQuery.ipynb). - using R and [BigQuery](https://cloud.google.com/bigquery/docs)
+2. [Training and serving Tensorflow models](02-Training-Serving-TF-Models.ipynb) - using [AI Platform](https://cloud.google.com/ml-engine/docs/tensorflow/)
+3. [Training and serving CARET models](03-Training-Serving-CARET-Models.ipynb) - using AI Platform [Training with Custom Containers](https://cloud.google.com/ml-engine/docs/custom-containers-training), and [Cloud Run](https://cloud.google.com/run/docs/) for serving.
 
 In addition to the notebooks, the supporting R source code and Dockerfiles are includes in the [src](src) directory, which includes:
 1. [src/tensorflow](src/tensorflow): for training the TensorFlow model on AI Platform Training.
@@ -34,11 +34,11 @@ git clone https://github.com/GoogleCloudPlatform/cloudml-samples.git
 ``` bash
 cd cloudml-samples/notebooks/R 
 gcloud config set project [YOUR-PROJECT-ID]
- gcloud auth list 
+gcloud auth list 
 ```
 10. Copy the service account listed, and run the following command by replacing SERVICE-ACCOUNT with the service account you copied from the list: 
 
 ``` bash
-cloud iam service-accounts keys create service-account-key.json --iam-account=[SERVICE-ACCOUNT] by replacing [SERVICE-ACCOUNT]
+cloud iam service-accounts keys create service-account-key.json --iam-account=[SERVICE-ACCOUNT]
 ```
 
