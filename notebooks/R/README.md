@@ -12,7 +12,7 @@ In addition to the notebooks, the supporting R source code and Dockerfiles are i
 1. [src/tensorflow](src/tensorflow): for training the TensorFlow model on AI Platform Training.
 2. [src/caret](src/caret): for training a CARET model on AI Platform with custom container, and serving the CARET model as a Web API on Cloud Run. 
 
-The notebooks use the R 3.5.3 kernel. You can run these noetbooks in [AI Platform Notebooks](https://cloud.google.com/ai-platform-notebooks), using the following steps:
+The notebooks use the R 3.5.3 kernel. You can run these notebooks in [AI Platform Notebooks](https://cloud.google.com/ai-platform-notebooks), using the following steps:
 
 1. [Create an AI Platform Notebook Instance](https://console.google.com/mlengine/notebooks/create-instance)
 2. Fill the form shown below, by providing you Insance name, region, Zone, Machine Type, and Boot disk options
