@@ -1,10 +1,10 @@
 library(caret)
 print("Libraries are imported.")
 
-# Set the project id
+# Set your GCP project id
 project_id <- "r-on-gcp"
-# Set yout GCS bucket
-bucket <- "r_on_gcp" 
+# Set your GCS bucket
+bucket <- "r-on-gcp"
 
 model_name <- 'caret_babyweight_estimator'
 model_dir <- paste0('models/', model_name)
@@ -95,25 +95,7 @@ main <-function(args){
     print(model)
     export_model(model)
     print("Trained finished.")
-    
-#   if (length(args)!=3) {
-#     stop("You need to specify projectid, bucket, and where to save the model in gcs.\n", 
-#          call.=FALSE)
-#     return(NULL)
-#   }
-  
-#  projectid = args[1]
-#   bucket = args[2]
-#   gcs_model_location = args[3]
-  
-#   print(projectid)
-#   print(bucket)
-#   print(gcs_model_location)
-    
-  
-
 
 }
 
-#args = commandArgs(trailingOnly=TRUE)
 main()
