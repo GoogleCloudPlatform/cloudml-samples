@@ -118,10 +118,9 @@ def train_and_evaluate(args):
       verbose=1,
       callbacks=[lr_decay_cb, tensorboard_cb])
 
-  export_path = tf.contrib.saved_model.save_keras_model(
-      keras_model, os.path.join(args.job_dir, 'keras_export'))
-  export_path = export_path.decode('utf-8')
-  print('Model exported to: ', export_path)
+  export_path = os.path.join(args.job_dir, 'keras_export')
+  tf.contrib.saved_model.save_keras_model(keras_model, export_path)
+  print('Model exported to: {}'.format(export_path))
 
 
 if __name__ == '__main__':
