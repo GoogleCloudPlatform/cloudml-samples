@@ -12,7 +12,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelBinarizer
 
 
-# TODO: REPLACE 'YOUR_BUCKET_NAME' with your GCS Bucket name. 
+# TODO: REPLACE 'YOUR_BUCKET_NAME' with your GCS Bucket name.
 BUCKET_NAME = 'YOUR_BUCKET_NAME'
 # [END setup]
 
@@ -26,7 +26,7 @@ BUCKET_NAME = 'YOUR_BUCKET_NAME'
 bucket = storage.Client().bucket('cloud-samples-data')
 
 # Path to the data inside the public bucket
-blob = bucket.blob('ml-engine/sklearn/census_data/adult.data')
+blob = bucket.blob('ai-platform/sklearn/census_data/adult.data')
 # Download the data
 blob.download_to_filename('adult.data')
 # [END download-data]
@@ -96,15 +96,15 @@ for i, col in enumerate(COLUMNS[:-1]):
     if col in CATEGORICAL_COLUMNS:
         # Create a scores array to get the individual categorical column.
         # Example:
-        #  data = [39, 'State-gov', 77516, 'Bachelors', 13, 'Never-married', 'Adm-clerical', 
+        #  data = [39, 'State-gov', 77516, 'Bachelors', 13, 'Never-married', 'Adm-clerical',
         #         'Not-in-family', 'White', 'Male', 2174, 0, 40, 'United-States']
         #  scores = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         #
-        # Returns: [['State-gov']]      
+        # Returns: [['State-gov']]
         # Build the scores array.
-        scores = [0] * len(COLUMNS[:-1]) 
+        scores = [0] * len(COLUMNS[:-1])
         # This column is the categorical column we want to extract.
-        scores[i] = 1  
+        scores[i] = 1
         skb = SelectKBest(k=1)
         skb.scores_ = scores
         # Convert the categorical column to a numerical value
