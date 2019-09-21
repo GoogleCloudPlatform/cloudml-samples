@@ -23,6 +23,29 @@ from nbformat.v4 import new_notebook
 import yaml
 
 
+STYLES = {
+    'colab': {
+        # code template to be added right after the license.
+        'precells': ['templates/colab_pre.p'],
+        # TPU specific code template to be added right before running main.
+        'tpu_precells': ['templates/colab_tpu.p'],
+        # TPU specific code template to be added at the end.
+        'tpu_postcells': None,
+        # additional path segment.
+        'prefix': ''
+    },
+    'notebooks': {
+        'precells': ['templates/notebooks_pre.p'],
+        'tpu_precells': [
+            'templates/notebooks_tpu_args.p',
+            'templates/notebooks_tpu_create.p'
+        ],
+        'tpu_postcells': ['templates/notebooks_tpu_post.p'],
+        'prefix': 'notebooks'
+    }
+}
+
+
 # Only samples registered and configured in samples.yaml will be converted.
 with open('samples.yaml', 'r') as f:
     samples = yaml.load(f.read())
@@ -114,7 +137,27 @@ def markdown_cell(group):
     return new_markdown_cell(source)
 
 
-def py_to_ipynb(root, path, py_filename, remove=None):
+def add_cell(cells, filename, insert=None, **kwargs):
+    """Modifies cells in place by adding the content of filename as a new cell in position `insert`.
+    When `insert` is None, the new cell is appended to cells.
+    Allows optional formatting arguments as kwargs."""
+    with open(filename, 'r') as f:
+        code_source = f.read()
+
+    if kwargs:
+        code_source = code_source.format(**kwargs)
+
+    new_cell = new_code_cell(code_source)
+
+    if insert is None:
+        cells.append(new_cell)
+    else:
+        cells.insert(insert, new_cell)
+
+    return cells
+
+
+def py_to_ipynb(root, path, py_filename, style, remove=None):
     """This function converts the .py file at <root>/<path>/<py_filename> into a .ipynb of the same name in <root>/<path>.
 
     - Consecutive comments are grouped into the same cell.
@@ -122,16 +165,20 @@ def py_to_ipynb(root, path, py_filename, remove=None):
     - The last part of the .py file is expected to be an `if __name__ == '__main__':` block.
 
     Args:
+    style: 'colab' or 'notebooks'.
     remove: (None or dict) A Dict describing what code to be removed according to specified node type.
 
     Returns
     None
     """
+    style_dict = STYLES[style]
+    prefix = style_dict['prefix']
+
     py_filepath = os.path.join(root, path, py_filename)
     print('Converting {}'.format(py_filepath))
 
     ipynb_filename = py_filename.split('.')[0] + '.ipynb'
-    ipynb_filepath = os.path.join(root, path, ipynb_filename)
+    ipynb_filepath = os.path.join(root, prefix, path, ipynb_filename)
 
     with open(py_filepath, 'r') as py_file:
         source = py_file.read()
@@ -191,14 +238,19 @@ def py_to_ipynb(root, path, py_filename, remove=None):
     indent = node.body[0].col_offset
     cell_source = [line[indent:] for line in cell_source][1:]
 
-    if 'tpu' in py_filepath:
-        # special handling for tpu samples.
+    # Add precell
+    if style_dict['precells'] is not None:
+        # we might be inserting multiple cells at the same position, so reversing the ordering to keep the correct order.
+        for filename in reversed(style_dict['precells']):
+            add_cell(cells, filename, insert=1, path=path)
+
+    # special handling for tpu samples.
+    if 'tpu' in py_filepath and style_dict['tpu_precells'] is not None:
         cs0 = [line for line in cell_source if 'main(args)' not in line]
         cells.append(code_cell(cs0))
 
-        with open('colab_tpu.p') as colab_tpu:
-            cs1 = colab_tpu.read()
-        cells.append(new_code_cell(cs1))
+        for filename in style_dict['tpu_precells']:
+            add_cell(cells, filename)
 
         cs2 = 'main(args)'
         cells.append(new_code_cell(cs2))
@@ -206,20 +258,17 @@ def py_to_ipynb(root, path, py_filename, remove=None):
     else:
         cells.append(code_cell(cell_source))
 
-
-    # Add git clone code and user auth
-    with open('colab.p', 'r') as template_file:
-        template = template_file.read()
-
-    content = template.format(path=path)
-    cell = new_code_cell(content)
-
-    # The 0-th cell should be the license.
-    cells.insert(1, cell)
+    # Add tpu postcell
+    if 'tpu' in py_filepath and style_dict['tpu_postcells'] is not None:
+        for filename in style_dict['tpu_postcells']:
+            add_cell(cells, filename)
 
     notebook = new_notebook(cells=cells)
 
     # output
+    outpath, _ = os.path.split(ipynb_filepath)
+    if not os.path.exists(outpath):
+        os.makedirs(outpath)
     with open(ipynb_filepath, 'w') as ipynb_file:
         nbformat.write(notebook, ipynb_file)
 
@@ -230,7 +279,8 @@ if __name__ == '__main__':
         filename = info['filename']
         remove = info.get('remove', None)
 
-        py_to_ipynb(root, path, filename, remove=remove)
+        for style in ['colab', 'notebooks']:
+            py_to_ipynb(root, path, filename, style, remove=remove)
 
 
     # Testing, make sure sample.py has the same output.
