@@ -105,8 +105,8 @@ def _download_and_clean_file(filename, url):
     url: URL of resource to download
   """
   temp_file, _ = urllib.request.urlretrieve(url)
-  with tf.gfile.Open(temp_file, 'r') as temp_file_object:
-    with tf.gfile.Open(filename, 'w') as file_object:
+  with tf.io.gfile.GFile(temp_file, 'r') as temp_file_object:
+    with tf.io.gfile.GFile(filename, 'w') as file_object:
       for line in temp_file_object:
         line = line.strip()
         line = line.replace(', ', ',')
@@ -116,7 +116,7 @@ def _download_and_clean_file(filename, url):
           line = line[:-1]
         line += '\n'
         file_object.write(line)
-  tf.gfile.Remove(temp_file)
+  tf.io.gfile.remove(temp_file)
 
 
 def download(data_dir):
@@ -125,14 +125,14 @@ def download(data_dir):
   Args:
     data_dir: directory where we will access/save the census data
   """
-  tf.gfile.MakeDirs(data_dir)
+  tf.io.gfile.makedirs(data_dir)
 
   training_file_path = os.path.join(data_dir, TRAINING_FILE)
-  if not tf.gfile.Exists(training_file_path):
+  if not tf.io.gfile.exists(training_file_path):
     _download_and_clean_file(training_file_path, TRAINING_URL)
 
   eval_file_path = os.path.join(data_dir, EVAL_FILE)
-  if not tf.gfile.Exists(eval_file_path):
+  if not tf.io.gfile.exists(eval_file_path):
     _download_and_clean_file(eval_file_path, EVAL_URL)
 
   return training_file_path, eval_file_path

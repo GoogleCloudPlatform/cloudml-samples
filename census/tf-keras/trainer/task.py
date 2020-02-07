@@ -119,11 +119,11 @@ def train_and_evaluate(args):
       callbacks=[lr_decay_cb, tensorboard_cb])
 
   export_path = os.path.join(args.job_dir, 'keras_export')
-  tf.contrib.saved_model.save_keras_model(keras_model, export_path)
+  tf.keras.experimental.export_saved_model(keras_model, export_path)
   print('Model exported to: {}'.format(export_path))
 
 
 if __name__ == '__main__':
   args = get_args()
-  tf.logging.set_verbosity(args.verbosity)
+  tf.compat.v1.logging.set_verbosity(args.verbosity)
   train_and_evaluate(args)
