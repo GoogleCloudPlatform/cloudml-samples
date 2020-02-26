@@ -93,7 +93,7 @@ def main(args):
     saver = tf.train.Saver()
 
     # get the TPU resource's grpc url
-    # Note: when running on CMLE, args.tpu should be left as None
+    # Note: when running on AI Platform, args.tpu should be left as None
     tpu_grpc_url = TPUClusterResolver(tpu=args.tpu).get_master()
     sess = tf.Session(tpu_grpc_url)
 
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--tpu',
         default=None,
-        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on CMLE.')
+        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.')
 
     args, _ = parser.parse_known_args()
 

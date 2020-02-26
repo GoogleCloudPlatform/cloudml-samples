@@ -16,7 +16,7 @@ pip freeze | grep apache-beam
 
 ### Describe the problem
 Describe the problem clearly here. Be sure to convey here why it's a bug in
-the sample code, and whether it occurred locally or on the server (CloudML Engine,
+the sample code, and whether it occurred locally or on the server (AI Platform,
 Google Dataflow)
 
 ### Source code / logs

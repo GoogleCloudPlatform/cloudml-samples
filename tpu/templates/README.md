@@ -11,17 +11,18 @@ Templates for training TensorFlow models with Cloud TPUs.  They are minimal mode
  gan | [trainer_single.py](tpu_gan_estimator/trainer_single.py)<br>[trainer.py](tpu_gan_estimator/trainer.py)<br>[trainer_single.ipynb](tpu_gan_estimator/trainer_single.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/tpu/templates/tpu_gan_estimator/trainer_single.ipynb)<br>[trainer.ipynb](tpu_gan_estimator/trainer.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/tpu/templates/tpu_gan_estimator/trainer.ipynb)<br> |  | 
  grl | [trainer.py](tpu_grl_estimator/trainer.py)<br>[trainer.ipynb](tpu_grl_estimator/trainer.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/tpu/templates/tpu_grl_estimator/trainer.ipynb)<br> |  | 
  lstm | [trainer.py](tpu_lstm_estimator/trainer.py)<br>[trainer.ipynb](tpu_lstm_estimator/trainer.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/tpu/templates/tpu_lstm_estimator/trainer.ipynb)<br> | [trainer.py](tpu_lstm_keras/trainer.py)<br>[trainer.ipynb](tpu_lstm_keras/trainer.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/tpu/templates/tpu_lstm_keras/trainer.ipynb)<br> | 
+ triplet-loss | [trainer.py](tpu_triplet_loss_estimator/trainer.py)<br>[trainer.ipynb](tpu_triplet_loss_estimator/trainer.ipynb) [[Colab]](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/tpu/templates/tpu_triplet_loss_estimator/trainer.ipynb)<br> |  | 
 
 Note: The notebooks and the table above are generated with scripts in [tools](tools).
 
 ## TPUEstimator
 
-Below we show how to run the basic [`tpu_estimator`](tpu_estimator) sample in three different ways to access TPUs: Cloud ML Engine, GCE, and Colab.
+Below we show how to run the basic [`tpu_estimator`](tpu_estimator) sample in three different ways to access TPUs: AI Platform, GCE, and Colab.
 
 To run other samples replace `tpu_estimator` with their corresponding directory names.
 
 
-### Train on Cloud ML Engine
+### Train on AI Platform
 
 Run from the `templates` directory.
 

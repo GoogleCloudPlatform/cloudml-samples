@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-#
-# Copyright 2018 Google Inc. All Rights Reserved. Licensed under the Apache
+
+# Copyright 2019 Google Inc. All Rights Reserved. Licensed under the Apache
 # License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.apache.org/licenses/LICENSE-2.0
@@ -13,6 +13,8 @@
 
 # This is a sample subscriber for the streaming predictions service.
 
+from __future__ import absolute_import
+
 import argparse
 import json
 import logging
@@ -22,8 +24,6 @@ import apache_beam as beam
 
 from apache_beam.options.pipeline_options import GoogleCloudOptions
 from apache_beam.options.pipeline_options import PipelineOptions
-from apache_beam.options.pipeline_options import SetupOptions
-from apache_beam.options.pipeline_options import StandardOptions
 
 
 if __name__ == '__main__':
@@ -33,15 +33,16 @@ if __name__ == '__main__':
 
   parser.add_argument(
       '--topic',
-      type=str,
       default='molecules-predictions',
       help='PubSub topic to subscribe for predictions.')
 
   args, pipeline_args = parser.parse_known_args()
 
-  beam_options = PipelineOptions(pipeline_args)
-  beam_options.view_as(SetupOptions).save_main_session = True
-  beam_options.view_as(StandardOptions).streaming = True
+  beam_options = PipelineOptions(
+      pipeline_args,
+      save_main_session=True,
+      streaming=True,
+  )
 
   project = beam_options.view_as(GoogleCloudOptions).project
   if not project:
@@ -51,6 +52,7 @@ if __name__ == '__main__':
 
   # We'll just log the results
   logging.basicConfig(level=logging.INFO)
+  logging.info('Listening...')
   topic_path = 'projects/{}/topics/{}'.format(project, args.topic)
   with beam.Pipeline(options=beam_options) as p:
     _ = (p

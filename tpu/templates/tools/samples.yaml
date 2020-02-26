@@ -25,3 +25,8 @@ film:
 grl:
   estimator:
     tpu_grl_estimator
+
+triplet-loss:
+  estimator:
+    tpu_triplet_loss_estimator
+

@@ -15,7 +15,7 @@ BUCKET_ID = 'torryyang-xgb-models'
 
 # ---------------------------------------
 # 1. Add code to download the data from GCS (in this case, using the publicly hosted data).
-# ML Engine will then be able to use the data when training your model.
+# AI Platform will then be able to use the data when training your model.
 # ---------------------------------------
 # [START download-data]
 census_data_filename = 'adult.data.csv'
@@ -24,7 +24,7 @@ census_data_filename = 'adult.data.csv'
 bucket = storage.Client().bucket('cloud-samples-data')
 
 # Path to the data inside the public bucket
-data_dir = 'ml-engine/census/data/'
+data_dir = 'ai-platform/census/data/'
 
 # Download the data
 blob = bucket.blob(''.join([data_dir, census_data_filename]))
@@ -79,7 +79,7 @@ train_labels = (raw_training_data['income-level'] == ' >50K')
 
 # [START categorical-feature-conversion]
 # Since the census data set has categorical features, we need to convert
-# them to numerical values. 
+# them to numerical values.
 # convert data in categorical columns to numerical values
 encoders = {col:LabelEncoder() for col in CATEGORICAL_COLUMNS}
 for col in CATEGORICAL_COLUMNS:

@@ -1,4 +1,6 @@
-# Copyright 2018 Google Inc. All Rights Reserved. Licensed under the Apache
+#!/usr/bin/env python
+
+# Copyright 2019 Google Inc. All Rights Reserved. Licensed under the Apache
 # License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.apache.org/licenses/LICENSE-2.0
@@ -11,7 +13,8 @@
 
 # This tool downloads SDF files from an FTP source.
 
-import StringIO
+from __future__ import absolute_import
+
 import argparse
 import ftplib
 import multiprocessing as mp
@@ -21,6 +24,7 @@ import signal
 import tempfile
 import tensorflow as tf
 import zlib
+from io import BytesIO
 
 
 # Regular expressions to parse an FTP URI.
@@ -71,7 +75,7 @@ def extract_data_file(ftp_file, data_dir):
   if not tf.gfile.Exists(sdf_file):
     # The `ftp` object cannot be pickled for multithreading, so we open a
     # new connection here
-    memfile = StringIO.StringIO()
+    memfile = BytesIO()
     ftp = ftplib.FTP(server, user, password)
     ftp.retrbinary('RETR ' + path, memfile.write)
     ftp.quit()
@@ -132,15 +136,12 @@ if __name__ == '__main__':
 
   parser.add_argument(
       '--work-dir',
-      type=str,
-      default=os.path.join(
-        tempfile.gettempdir(), 'cloudml-samples', 'molecules'),
+      required=True,
       help='Directory for staging and working files. '
            'This can be a Google Cloud Storage path.')
 
   parser.add_argument(
       '--data-sources',
-      type=str,
       nargs='+',
       default=['ftp://anonymous:guest@ftp.ncbi.nlm.nih.gov/'
                'pubchem/Compound_3D/01_conf_per_cmpd/SDF'],
@@ -152,7 +153,6 @@ if __name__ == '__main__':
 
   parser.add_argument(
       '--filter-regex',
-      type=str,
       default=r'\.sdf',
       help='Regular expression to filter which files to use. '
            'The regular expression will be searched on the full absolute path. '

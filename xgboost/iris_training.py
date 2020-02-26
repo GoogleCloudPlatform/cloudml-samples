@@ -1,4 +1,4 @@
-# This file is for training on Cloud ML Engine with XGBoost.
+# This file is for training on AI Platform with XGBoost.
 
 
 # [START setup]
@@ -16,7 +16,7 @@ BUCKET_NAME = '<YOUR_BUCKET_NAME>'
 # [START download-data]
 iris_data_filename = 'iris_data.csv'
 iris_target_filename = 'iris_target.csv'
-data_dir = 'gs://cloud-samples-data/ml-engine/iris'
+data_dir = 'gs://cloud-samples-data/ai-platform/iris'
 
 # gsutil outputs everything to stderr so we need to divert it to stdout.
 subprocess.check_call(['gsutil', 'cp', os.path.join(data_dir,

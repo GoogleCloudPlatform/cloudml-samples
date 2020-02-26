@@ -1,7 +1,7 @@
 ### Predicting income with the Census Income Dataset using Keras
 
 This is the Open Source Keras version of the Census sample. The sample runs both as a
-standalone Keras code and on Cloud ML Engine.
+standalone Keras code and on AI Platform.
 
 ## Download the data
 The [Census Income Data
@@ -65,7 +65,7 @@ You can run Keras training using gcloud locally
 ```
 JOB_DIR=census_keras
 TRAIN_STEPS=200
-gcloud ml-engine local train --package-path trainer \
+gcloud ai-platform local train --package-path trainer \
                              --module-name trainer.task \
                              -- \
                              --train-files $TRAIN_FILE \
@@ -83,16 +83,16 @@ python preprocess.py sample.json
 ```
 
 ```
-gcloud ml-engine local predict --model-dir=$JOB_DIR/export \
+gcloud ai-platform local predict --model-dir=$JOB_DIR/export \
                                --json-instances sample.json
 ```
 
-## Training using Cloud ML Engine
+## Training using AI Platform
 
-You can train the model on Cloud ML Engine
+You can train the model on AI Platform
 
 ```
-gcloud ml-engine jobs submit training $JOB_NAME \
+gcloud ai-platform jobs submit training $JOB_NAME \
                                     --stream-logs \
                                     --runtime-version 1.4 \
                                     --job-dir $JOB_DIR \
@@ -105,13 +105,13 @@ gcloud ml-engine jobs submit training $JOB_NAME \
                                     --train-steps $TRAIN_STEPS
 ```
 
-## Prediction using Cloud ML Engine
+## Prediction using AI Platform
 
-You can perform prediction on Cloud ML Engine by following the steps below.
-Create a model on Cloud ML Engine
+You can perform prediction on AI Platform by following the steps below.
+Create a model on AI Platform
 
 ```
-gcloud ml-engine models create keras_model --regions us-central1
+gcloud ai-platform models create keras_model --regions us-central1
 ```
 
 Export the model binaries
@@ -123,7 +123,7 @@ MODEL_BINARIES=$JOB_DIR/export
 Deploy the model to the prediction service
 
 ```
-gcloud ml-engine versions create v1 --model keras_model --origin $MODEL_BINARIES --runtime-version 1.2
+gcloud ai-platform versions create v1 --model keras_model --origin $MODEL_BINARIES --runtime-version 1.2
 ```
 
 Create a processed sample from the data
@@ -136,5 +136,5 @@ python preprocess.py sample.json
 Run the online prediction
 
 ```
-gcloud ml-engine predict --model keras_model --version v1 --json-instances sample.json
+gcloud ai-platform predict --model keras_model --version v1 --json-instances sample.json
 ```
