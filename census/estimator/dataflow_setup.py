@@ -14,16 +14,14 @@
 '''Dependencies for Dataflow workers.'''
 
 from setuptools import setup, find_packages
-import os
 
 NAME = 'preprocessing'
 VERSION = '1.0'
 REQUIRED_PACKAGES = ['tensorflow-transform==0.11.0']
 
-
 setup(
     name=NAME,
     version=VERSION,
     packages=find_packages(),
-    install_requires=REQUIRED_PACKAGES,    
-    )
+    install_requires=REQUIRED_PACKAGES,
+)
