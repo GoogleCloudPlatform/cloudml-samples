@@ -38,11 +38,7 @@ gcloud ai-platform local train \
         --job-dir="${MODEL_DIR}"
 
 
-ls ${MODEL_DIR}/export/census
-MODEL_LOCATION=${MODEL_DIR}/export/census/$(ls ${MODEL_DIR}/export/census | tail -1)
+ls ${MODEL_DIR}/export/
+MODEL_LOCATION=${MODEL_DIR}/export
 echo ${MODEL_LOCATION}
 ls ${MODEL_LOCATION}
-
-# Open issue: https://stackoverflow.com/questions/48824381/gcloud-ml-engine-local-predict-runtimeerror-bad-magic-number-in-pyc-file
-# Verify local prediction
-gcloud ai-platform local predict --model-dir=${MODEL_LOCATION} --json-instances=${CENSUS_PREDICTION_JSON} --verbosity debug

@@ -40,7 +40,7 @@ project_setup(){
 
 create_virtualenv(){
     virtualenv -p $(which "${CMLE_PYTHON_VERSION}") "${KOKORO_ARTIFACTS_DIR}"/envs/"${CMLE_PYTHON_VERSION}"/venv
-    source "${KOKORO_ARTIFACTS_DIR}"/envs/"${CAIP_PYTHON_VERSION}"/venv/bin/activate
+    source "${KOKORO_ARTIFACTS_DIR}"/envs/"${CMLE_PYTHON_VERSION}"/venv/bin/activate
 }
 
 

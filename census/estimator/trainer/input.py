@@ -33,9 +33,9 @@ def _decode_csv(line):
     features = dict(zip(constants.CSV_COLUMNS, columns))
 
     # Remove unused columns
-    unused_columns = set(constants.CSV_COLUMNS) - \
-        {col.name for col in featurizer.INPUT_COLUMNS} - \
-        {constants.LABEL_COLUMN}
+    unused_columns = set(constants.CSV_COLUMNS) - {col.name for col in
+                                                   featurizer.INPUT_COLUMNS} - {
+                         constants.LABEL_COLUMN}
     for col in unused_columns:
         features.pop(col)
     return features
@@ -79,9 +79,10 @@ def input_fn(filenames,
           loop through data indefinitely
         shuffle: (bool) whether or not to randomize the order of data. Controls
           randomization of both file order and line order within files.
-        skip_header_lines: (int) set to non-zero in order to skip header lines in
-          CSV files.
-        batch_size: (int) First dimension size of the Tensors returned by input_fn
+        skip_header_lines: (int) set to non-zero in order to skip header
+        lines in CSV files.
+        batch_size: (int) First dimension size of the Tensors returned by
+        input_fn
 
     Returns:
         A (features, indices) tuple where features is a dictionary of
