@@ -39,15 +39,7 @@ All the models provided in this directory can be run on AI Platform.
 #
 * **Notebooks**
 
-    - [Estimator](estimator/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/estimator/task.ipynb))
-
-    - [Custom Estimator](customestimator/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/customestimator/trainer/task.ipynb))
-
-    - [Keras](keras/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/keras/trainer/task.ipynb))
-
     - [TensorFlow Keras](../notebooks/tensorflow/getting-started-keras.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/notebooks/tensorflow/getting-started-keras.ipynb))
-
-    - [TensorFlow Core](tensorflowcore/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/tensorflowcore/trainer/task.ipynb))
 
 #
 * **Data description**
@@ -209,7 +201,7 @@ export REGION=us-central1
 ```
 gcloud ai-platform jobs submit training $JOB_NAME \
     --stream-logs \
-    --runtime-version 1.13 \
+    --runtime-version 1.15 \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
@@ -272,7 +264,7 @@ gcloud ai-platform local train --package-path trainer \
 gcloud ai-platform jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
-    --runtime-version 1.13 \
+    --runtime-version 1.15 \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
@@ -301,7 +293,7 @@ you need to add the `--config` argument.
 gcloud ai-platform jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
-    --runtime-version 1.13 \
+    --runtime-version 1.15 \
     --config $HPTUNING_CONFIG \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
@@ -383,7 +375,7 @@ gcloud ai-platform jobs submit prediction $JOB_NAME \
     --version v1 \
     --data-format TEXT \
     --region $REGION \
-    --runtime-version 1.13 \
+    --runtime-version 1.15 \
     --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/census.json \
     --output-path $GCS_JOB_DIR/predictions
 ```
