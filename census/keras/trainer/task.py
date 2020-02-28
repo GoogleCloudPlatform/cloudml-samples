@@ -86,11 +86,7 @@ class ContinuousEval(Callback):
 
 def train_and_evaluate(args):
     census_model = model.model_fn(INPUT_SIZE, CLASS_SIZE)
-    try:
-        os.makedirs(args.job_dir)
-    except:
-        pass
-
+    os.makedirs(args.job_dir)
     # Unhappy hack to workaround h5py not being able to write to GCS.
     # Force snapshots and saves to local filesystem, then copy them over to GCS.
     checkpoint_path = CHECKPOINT_FILE_PATH
@@ -139,9 +135,8 @@ def train_and_evaluate(args):
 # h5py workaround: copy local models over to GCS if the job_dir is GCS.
 def copy_file_to_gcs(job_dir, file_path):
     with file_io.FileIO(file_path, mode='rb') as input_f:
-        with file_io.FileIO(
-            os.path.join(job_dir, file_path), mode='w+') as output_f:
-            output_f.write(input_f.read())
+        with file_io.FileIO(os.path.join(job_dir, file_path), mode='w+') as fp:
+            fp.write(input_f.read())
 
 
 if __name__ == '__main__':

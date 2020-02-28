@@ -29,7 +29,8 @@ import tensorflow as tf
 from tensorflow.python.saved_model import builder as saved_model_builder
 from tensorflow.python.saved_model import signature_constants
 from tensorflow.python.saved_model import tag_constants
-from tensorflow.python.saved_model.signature_def_utils_impl import predict_signature_def
+from tensorflow.python.saved_model.signature_def_utils_impl import \
+    predict_signature_def
 
 # CSV columns in the input file.
 CSV_COLUMNS = ('age', 'workclass', 'fnlwgt', 'education', 'education_num',
@@ -60,113 +61,115 @@ def model_fn(input_dim,
              labels_dim,
              hidden_units=[100, 70, 50, 20],
              learning_rate=0.1):
-  """Create a Keras Sequential model with layers.
+    """Create a Keras Sequential model with layers.
 
-  Args:
-    input_dim: (int) Input dimensions for input layer.
-    labels_dim: (int) Label dimensions for input layer.
-    hidden_units: [int] the layer sizes of the DNN (input layer first)
-    learning_rate: (float) the learning rate for the optimizer.
+    Args:
+      input_dim: (int) Input dimensions for input layer.
+      labels_dim: (int) Label dimensions for input layer.
+      hidden_units: [int] the layer sizes of the DNN (input layer first)
+      learning_rate: (float) the learning rate for the optimizer.
 
-  Returns:
-    A Keras model.
-  """
+    Returns:
+      A Keras model.
+    """
 
-  # "set_learning_phase" to False to avoid:
-  # AbortionError(code=StatusCode.INVALID_ARGUMENT during online prediction.
-  K.set_learning_phase(False)
-  model = models.Sequential()
+    # "set_learning_phase" to False to avoid:
+    # AbortionError(code=StatusCode.INVALID_ARGUMENT during online prediction.
+    K.set_learning_phase(False)
+    model = models.Sequential()
 
-  for units in hidden_units:
-    model.add(layers.Dense(units=units, input_dim=input_dim, activation=relu))
-    input_dim = units
+    for units in hidden_units:
+        model.add(
+            layers.Dense(units=units, input_dim=input_dim, activation=relu))
+        input_dim = units
 
-  # Add a dense final layer with sigmoid function.
-  model.add(layers.Dense(labels_dim, activation='sigmoid'))
-  compile_model(model, learning_rate)
-  return model
+    # Add a dense final layer with sigmoid function.
+    model.add(layers.Dense(labels_dim, activation='sigmoid'))
+    compile_model(model, learning_rate)
+    return model
 
 
 def compile_model(model, learning_rate):
-  model.compile(
-      loss='binary_crossentropy',
-      optimizer=keras.optimizers.Adam(lr=learning_rate),
-      metrics=['accuracy'])
-  return model
+    model.compile(
+        loss='binary_crossentropy',
+        optimizer=keras.optimizers.Adam(lr=learning_rate),
+        metrics=['accuracy'])
+    return model
 
 
 def to_savedmodel(model, export_path):
-  """Convert the Keras HDF5 model into TensorFlow SavedModel."""
+    """Convert the Keras HDF5 model into TensorFlow SavedModel."""
 
-  builder = saved_model_builder.SavedModelBuilder(export_path)
+    builder = saved_model_builder.SavedModelBuilder(export_path)
 
-  signature = predict_signature_def(
-      inputs={'input': model.inputs[0]}, outputs={'income': model.outputs[0]})
+    signature = predict_signature_def(
+        inputs={'input': model.inputs[0]}, outputs={'income': model.outputs[0]})
 
-  with K.get_session() as sess:
-    builder.add_meta_graph_and_variables(
-        sess=sess,
-        tags=[tag_constants.SERVING],
-        signature_def_map={
-            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature
-        })
-    builder.save()
+    with K.get_session() as sess:
+        builder.add_meta_graph_and_variables(
+            sess=sess,
+            tags=[tag_constants.SERVING],
+            signature_def_map={
+                signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature
+            })
+        builder.save()
 
 
 def to_numeric_features(features, feature_cols=None):
-  """Converts the pandas input features to numeric values.
+    """Converts the pandas input features to numeric values.
 
-  Args:
-    features: Input features in the data age (continuous) workclass
-      (categorical) fnlwgt (continuous) education (categorical) education_num
-      (continuous) marital_status (categorical) occupation (categorical)
-      relationship (categorical) race (categorical) gender (categorical)
-      capital_gain (continuous) capital_loss (continuous) hours_per_week
-      (continuous) native_country (categorical)
-    feature_cols: Column list of converted features to be returned. Optional,
-      may be used to ensure schema consistency over multiple executions.
+    Args:
+      features: Input features in the data age (continuous) workclass
+        (categorical) fnlwgt (continuous) education (categorical) education_num
+        (continuous) marital_status (categorical) occupation (categorical)
+        relationship (categorical) race (categorical) gender (categorical)
+        capital_gain (continuous) capital_loss (continuous) hours_per_week
+        (continuous) native_country (categorical)
+      feature_cols: Column list of converted features to be returned. Optional,
+        may be used to ensure schema consistency over multiple executions.
 
-  Returns:
-    A pandas dataframe.
-  """
+    Returns:
+      A pandas dataframe.
+    """
 
-  for col in CATEGORICAL_COLS:
-    features = pd.concat(
-        [features, pd.get_dummies(features[col[0]], drop_first=True)], axis=1)
-    features.drop(col[0], axis=1, inplace=True)
+    for col in CATEGORICAL_COLS:
+        features = pd.concat(
+            [features, pd.get_dummies(features[col[0]], drop_first=True)],
+            axis=1)
+        features.drop(col[0], axis=1, inplace=True)
 
-  # Remove the unused columns from the dataframe.
-  for col in UNUSED_COLUMNS:
-    features.pop(col)
+    # Remove the unused columns from the dataframe.
+    for col in UNUSED_COLUMNS:
+        features.pop(col)
 
-  # Re-index dataframe (if categories list changed from the previous dataset)
-  if feature_cols is not None:
-    features = features.T.reindex(feature_cols).T.fillna(0)
-  return features
+    # Re-index dataframe (if categories list changed from the previous dataset)
+    if feature_cols is not None:
+        features = features.T.reindex(feature_cols).T.fillna(0)
+    return features
 
 
 def generator_input(filenames, chunk_size, batch_size=64):
-  """Produce features and labels needed by keras fit_generator."""
+    """Produce features and labels needed by keras fit_generator."""
 
-  feature_cols = None
-  while True:
-    input_reader = pd.read_csv(
-        tf.gfile.Open(filenames[0]),
-        names=CSV_COLUMNS,
-        chunksize=chunk_size,
-        na_values=' ?')
+    feature_cols = None
+    while True:
+        input_reader = pd.read_csv(
+            tf.gfile.Open(filenames[0]),
+            names=CSV_COLUMNS,
+            chunksize=chunk_size,
+            na_values=' ?')
 
-    for input_data in input_reader:
-      input_data = input_data.dropna()
-      label = pd.get_dummies(input_data.pop(LABEL_COLUMN))
+        for input_data in input_reader:
+            input_data = input_data.dropna()
+            label = pd.get_dummies(input_data.pop(LABEL_COLUMN))
 
-      input_data = to_numeric_features(input_data, feature_cols)
+            input_data = to_numeric_features(input_data, feature_cols)
 
-      # Retains schema for next chunk processing.
-      if feature_cols is None:
-        feature_cols = input_data.columns
+            # Retains schema for next chunk processing.
+            if feature_cols is None:
+                feature_cols = input_data.columns
 
-      idx_len = input_data.shape[0]
-      for index in range(0, idx_len, batch_size):
-        yield (input_data.iloc[index:min(idx_len, index + batch_size)],
-               label.iloc[index:min(idx_len, index + batch_size)])
+            idx_len = input_data.shape[0]
+            for index in range(0, idx_len, batch_size):
+                yield (input_data.iloc[index:min(idx_len, index + batch_size)],
+                       label.iloc[index:min(idx_len, index + batch_size)])
