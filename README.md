@@ -4,7 +4,8 @@
 
 Welcome to the [AI Platform Training and Prediction](https://cloud.google.com/ml-engine/docs/) sample code repository. This repository contains samples for how to use AI Platform for model training and serving.
 
-**Visit our new Unified repo [AI Platform samples](https://github.com/GoogleCloudPlatform/ai-platform-samples)**
+## Attention: **Visit our new Unified repo [AI Platform samples](https://github.com/GoogleCloudPlatform/ai-platform-samples)**
+
 
 ## Google Machine Learning Repositories
 
