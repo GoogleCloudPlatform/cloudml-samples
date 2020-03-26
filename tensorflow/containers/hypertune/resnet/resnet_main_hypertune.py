@@ -96,9 +96,7 @@ flags.DEFINE_bool(
     'skip_host_call', default=False,
     help=('Skip the host_call which is executed every training step. This is'
           ' generally used for generating training summaries (train loss,'
-          ' learning rate, etc...). When --skip_host_call=false, there could'
-          ' be a performance drop if host_call function is slow and cannot'
-          ' keep up with the TPU-side computation.'))
+          ' learning rate, etc...). '))
 
 flags.DEFINE_string(
     'data_format', default='channels_last',
@@ -169,18 +167,18 @@ def learning_rate_schedule(current_epoch):
 
 
 def resnet_model_fn(features, labels, mode, params):
-  """The model_fn for ResNet to be used with TPUEstimator.
+  """The model_fn for ResNet to be used with Estimator.
 
   Args:
     features: `Tensor` of batched images.
     labels: `Tensor` of labels for the data samples
     mode: one of `tf.estimator.ModeKeys.{TRAIN,EVAL,PREDICT}`
-    params: `dict` of parameters passed to the model from the TPUEstimator,
+    params: `dict` of parameters passed to the model from the Estimator,
         `params['batch_size']` is always provided and should be used as the
         effective batch size.
 
   Returns:
-    A `TPUEstimatorSpec` for the model
+    A `EstimatorSpec` for the model
   """
   if isinstance(features, dict):
     features = features['feature']
@@ -262,9 +260,7 @@ def resnet_model_fn(features, labels, mode, params):
 
         This function is executed on the CPU and should not directly reference
         any Tensors in the rest of the `model_fn`. To pass Tensors from the
-        model to the `metric_fn`, provide as part of the `host_call`. See
-        https://www.tensorflow.org/api_docs/python/tf/contrib/tpu/TPUEstimatorSpec
-        for more information.
+        model to the `metric_fn`, provide as part of the `host_call`.
 
         Arguments should match the list of `Tensor` objects passed as the second
         element in the tuple passed to `host_call`.
@@ -372,10 +368,6 @@ def main(unused_argv):
           break
 
       except tf.errors.NotFoundError:
-        # Since the coordinator is on a different job than the TPU worker,
-        # sometimes the TPU worker does not finish initializing until long after
-        # the CPU job tells it to start evaluating. In this case, the checkpoint
-        # file could have been deleted already.
         tf.logging.info(
             'Checkpoint %s no longer exists, skipping checkpoint' % ckpt)
 
