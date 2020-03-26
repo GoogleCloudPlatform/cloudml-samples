@@ -3,7 +3,7 @@ now=$(date +"%Y%m%d_%H%M%S")
 GCS_BUCKET=gs://tpu-exp-02272020
 BUCKET=$GCS_BUCKET
 
-JOB_NAME="tpu_hypertune_$now"
+JOB_NAME="resnet_hypertune_$now"
 JOB_DIR=$BUCKET"/"$JOB_NAME
 
 STAGING_BUCKET=$BUCKET
@@ -11,7 +11,7 @@ REGION=us-central1
 DATA_DIR=gs://cloud-tpu-test-datasets/fake_imagenet
 OUTPUT_PATH=$JOB_DIR
 
-gcloud ml-engine jobs submit training $JOB_NAME \
+gcloud ai-platform jobs submit training $JOB_NAME \
   --scale-tier CUSTOM \
   --master-machine-type n1-highmem-8 \
   --master-accelerator count=1,type=nvidia-tesla-v100 \
