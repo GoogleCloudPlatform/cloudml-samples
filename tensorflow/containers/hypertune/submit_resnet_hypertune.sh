@@ -1,6 +1,6 @@
 IMAGE_URI=gcr.io/gcp-ml-demo-233523/estimator-hypertune:latest
 now=$(date +"%Y%m%d_%H%M%S")
-GCS_BUCKET=gs://tpu-exp-02272020
+#GCS_BUCKET=gs://tpu-exp-02272020
 BUCKET=$GCS_BUCKET
 
 JOB_NAME="resnet_hypertune_$now"
