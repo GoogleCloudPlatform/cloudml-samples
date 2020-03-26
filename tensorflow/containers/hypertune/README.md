@@ -30,6 +30,6 @@ This sample is adapted from [the official samples for tuning ResNet-50 with Clou
 1. Run the sample.  The included script will train ResNet-50 for 1024 steps using a fake dataset.
 
     ```
-    cd /home/jupyter/cloudml-samples/tensorflow/containers/hypertune
+    cd cloudml-samples/tensorflow/containers/hypertune
     bash submit_resnet_hypertune.sh
     ```
