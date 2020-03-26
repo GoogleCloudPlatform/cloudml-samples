@@ -8,7 +8,7 @@ class HypertuneHook(tf.train.SessionRunHook):
         self.hypertune = hypertune.HyperTune()
         self.hp_metric_tag = os.environ.get('CLOUD_ML_HP_METRIC_TAG', '')
         self.trial_id = os.environ.get('CLOUD_ML_TRIAL_ID', 0)
-        self.tensor_name = os.environ.get('CLOUD_ML_TRIAL_ID', 0)
+        self.tensor_name = metric_tensor_name
 
     def end(self, session):
         step_variable = session.graph.get_collection('global_step')
