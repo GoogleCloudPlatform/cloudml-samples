@@ -4,10 +4,11 @@ import hypertune
 import tensorflow as tf
 
 class HypertuneHook(tf.train.SessionRunHook):
-    def __init__(self):
+    def __init__(self, metric_tensor_name):
         self.hypertune = hypertune.HyperTune()
         self.hp_metric_tag = os.environ.get('CLOUD_ML_HP_METRIC_TAG', '')
         self.trial_id = os.environ.get('CLOUD_ML_TRIAL_ID', 0)
+        self.tensor_name = os.environ.get('CLOUD_ML_TRIAL_ID', 0)
 
     def end(self, session):
         step_variable = session.graph.get_collection('global_step')
@@ -16,7 +17,7 @@ class HypertuneHook(tf.train.SessionRunHook):
         tf.logging.info('HypertuneHook called, tag: {}, trial_id: {}, global_step: {}'.format(self.hp_metric_tag, self.trial_id, global_step))
 
         # The name of the tensor is given in metric_fn in resnet_main_hypertune.py.
-        metric_tensor = session.graph.get_tensor_by_name('top_5_accuracy/value:0')
+        metric_tensor = session.graph.get_tensor_by_name(self.tensor_name+'/value:0')
 
         metric_value = session.run(metric_tensor)
 

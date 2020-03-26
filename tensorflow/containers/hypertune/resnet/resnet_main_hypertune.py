@@ -403,7 +403,7 @@ def main(unused_argv):
         tf.logging.info('Starting to evaluate.')
         tf.logging.info('Evaluating for trial_{}'.format(trial_id))
 
-        evaluation_hooks = [hypertune_hook.HypertuneHook()]
+        evaluation_hooks = [hypertune_hook.HypertuneHook('top_5_accuracy')]
         eval_results = resnet_classifier.evaluate(
             input_fn=imagenet_eval.input_fn,
             steps=NUM_EVAL_IMAGES // FLAGS.eval_batch_size,
