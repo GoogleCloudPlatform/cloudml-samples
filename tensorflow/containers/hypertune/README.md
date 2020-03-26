@@ -1,9 +1,9 @@
 
 ## Introduction
 
-This sample shows how to run hyperparameter tuning jobs on AI Platform with Cloud TPUs using the [cloudml-hypertune package](https://pypi.org/project/cloudml-hypertune/).
+This sample shows how to run hyperparameter tuning jobs on AI Platform with tf estimators inside custom containers [cloudml-hypertune package](https://pypi.org/project/cloudml-hypertune/).
 
-This sample is adapted from [the official samples for training ResNet-50 with Cloud TPUs](https://github.com/tensorflow/tpu/tree/master/models/official/resnet) to run on AI Platform.
+This sample is adapted from [the official samples for tuning ResNet-50 with Cloud TPUs on AI Platform](https://github.com/ultrons/cloudml-samples/tree/master/tpu/hptuning/resnet-hypertune)
 
 
 ## Requirements
