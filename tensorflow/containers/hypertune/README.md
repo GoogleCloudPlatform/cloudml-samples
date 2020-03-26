@@ -12,9 +12,6 @@ This sample is adapted from [the official samples for tuning ResNet-50 with Clou
 
 - Enable [Cloud Storage](https://cloud.google.com/storage).
 
-- Follow the steps [here](https://cloud.google.com/ml-engine/docs/tensorflow/using-tpus#authorize_your_tpu_name_short_to_access_your_project) to authorize Cloud TPU to access your project.
-
-
 ## Steps
 
 1. Clone the repository.
