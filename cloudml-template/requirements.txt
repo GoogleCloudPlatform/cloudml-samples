@@ -1,2 +1,2 @@
-tensorflow==1.13.1
+tensorflow==1.15.2
 tensorflow-model-analysis==0.13.0
