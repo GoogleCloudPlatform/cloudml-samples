@@ -62,8 +62,8 @@ Tensor Processing Units (TPUs) are Google’s custom-developed ASICs used to acc
 ### Hyperparameter Tuning (HP Tuning)
 
 #### Notebook Tutorial:
-* [scikit-learn: Lasso Regressor](notebooks/scikit-learn/Hyperparameter%20Tuning%20with%20scikit-learn%20in%20CMLE.ipynb) - How to train a Lasso Regressor in scikit-learn using a text based dataset, auto mpg, to predict a car's miles per gallon.
-* [XGBoost: XGBRegressor](notebooks/xgboost/Hyperparameter%20Tuning%20with%20XGBoost%20in%20CMLE.ipynb) - How to train a Regressor in XGBoost using a text based dataset, auto mpg, to predict a car's miles per gallon.
+* [scikit-learn: Lasso Regressor](notebooks/scikit-learn/HyperparameterTuningWithScikitLearnInCMLE.ipynb) - How to train a Lasso Regressor in scikit-learn using a text based dataset, auto mpg, to predict a car's miles per gallon.
+* [XGBoost: XGBRegressor](notebooks/xgboost/TrainingWithXGBoostInCMLE.ipynb) - How to train a Regressor in XGBoost using a text based dataset, auto mpg, to predict a car's miles per gallon.
 
 ### Containers
 * [Keras: Sequential / Dense](tensorflow/containers/unsupported_runtime) - How to train a Keras model using the Nightly Build of TensorFlow on AI Platform using a structured dataset, sonar signals, to predict whether the given sonar signals are bouncing off a metal cylinder or off a cylindrical rock.
