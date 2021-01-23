@@ -32,7 +32,8 @@ def build_estimator(config, embedding_size=8, hidden_units=None):
     speed that is effective on many structured data problems.
 
     You can read more about wide and deep models here:
-    https://research.googleblog.com/2016/06/wide-deep-learning-better-together-with.html
+    https://research.googleblog.com/2016/06/wide-deep-learning-better
+    -together-with.html
 
     To define model we can use the prebuilt DNNCombinedLinearClassifier class,
     and need only define the data transformations particular to our dataset, and
@@ -51,7 +52,8 @@ def build_estimator(config, embedding_size=8, hidden_units=None):
       A DNNCombinedLinearClassifier
     """
 
-    (deep_columns, wide_columns) = featurizer.get_deep_and_wide_columns(embedding_size)
+    (deep_columns, wide_columns) = featurizer.get_deep_and_wide_columns(
+        embedding_size)
 
     return tf.estimator.DNNLinearCombinedClassifier(
         config=config,

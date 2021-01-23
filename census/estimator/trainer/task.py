@@ -31,9 +31,9 @@ def _get_session_config_from_env_var():
 
     tf_config = json.loads(os.environ.get('TF_CONFIG', '{}'))
 
-    if (tf_config and 'task' in tf_config and 'type' in tf_config['task'] and
-            'index' in tf_config['task']):
-        # Master should only communicate with itself and ps
+    # Master should only communicate with itself and ps
+    if (tf_config and 'task' in tf_config and 'type' in tf_config[
+            'task'] and 'index' in tf_config['task']):
         if tf_config['task']['type'] == 'master':
             return tf.ConfigProto(device_filters=['/job:ps', '/job:master'])
         # Worker should only communicate with itself and ps
@@ -89,7 +89,7 @@ def train_and_evaluate(args):
         embedding_size=args.embedding_size,
         # Construct layers sizes with exponential decay
         hidden_units=[
-            max(2, int(args.first_layer_size * args.scale_factor**i))
+            max(2, int(args.first_layer_size * args.scale_factor ** i))
             for i in range(args.num_layers)
         ],
         config=run_config)
@@ -116,11 +116,13 @@ if __name__ == '__main__':
         default='/tmp/census-estimator')
     PARSER.add_argument(
         '--num-parallel-calls',
-        help='Number of threads used to read in parallel the training and evaluation',
+        help='Number of threads used to read in parallel the training and '
+             'evaluation',
         type=int)
     PARSER.add_argument(
         '--prefetch_buffer_size',
-        help='Naximum number of input elements that will be buffered when prefetching',
+        help='Naximum number of input elements that will be buffered when '
+             'prefetching',
         type=int)
     PARSER.add_argument(
         '--num-epochs',

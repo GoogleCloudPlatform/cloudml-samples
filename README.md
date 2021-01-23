@@ -4,7 +4,14 @@
 
 Welcome to the [AI Platform Training and Prediction](https://cloud.google.com/ml-engine/docs/) sample code repository. This repository contains samples for how to use AI Platform for model training and serving.
 
-Note: If you’re looking for our guides on how to do Machine Learning on Google Cloud Platform (GCP) using other services, please checkout our other repository: [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp), which has guides on how to bring your code from various ML frameworks to [Google Cloud Platform](https://cloud.google.com/) using things like [Google Compute Engine](https://cloud.google.com/compute/) or [Kubernetes](https://kubernetes.io/).
+## Attention: **Visit our new Unified repo [AI Platform samples](https://github.com/GoogleCloudPlatform/ai-platform-samples)**
+
+
+## Google Machine Learning Repositories
+
+- [ML on GCP](https://github.com/GoogleCloudPlatform/ml-on-gcp), which has guides on how to bring your code from various ML frameworks to [Google Cloud Platform](https://cloud.google.com/) using things like [Google Compute Engine](https://cloud.google.com/compute/) or [Kubernetes](https://kubernetes.io/).
+- [Keras Idiomatic Programmer](https://github.com/GoogleCloudPlatform/keras-idiomatic-programmer) This repository contains content produced by Google Cloud AI Developer Relations for machine learning and artificial intelligence. The content covers a wide spectrum from educational, training, and research, covering from novices, junior/intermediate to advanced.
+- [Professional Services](https://github.com/GoogleCloudPlatform/professional-services), common solutions and tools developed by Google Cloud's Professional Services team.
 
 Overview
 ----------

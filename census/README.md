@@ -39,15 +39,7 @@ All the models provided in this directory can be run on AI Platform.
 #
 * **Notebooks**
 
-    - [Estimator](estimator/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/estimator/task.ipynb))
-
-    - [Custom Estimator](customestimator/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/customestimator/trainer/task.ipynb))
-
-    - [Keras](keras/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/keras/trainer/task.ipynb))
-
     - [TensorFlow Keras](../notebooks/tensorflow/getting-started-keras.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/notebooks/tensorflow/getting-started-keras.ipynb))
-
-    - [TensorFlow Core](tensorflowcore/trainer/task.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/census/tensorflowcore/trainer/task.ipynb))
 
 #
 * **Data description**
@@ -169,7 +161,7 @@ rm -rf $JOB_DIR
 * **Run locally via the gcloud command for AI Platform:**
 
 ```
-gcloud ml-engine local train --package-path trainer \
+gcloud ai-platform local train --package-path trainer \
     --module-name trainer.task \
     -- \
     --train-files $TRAIN_FILE \
@@ -196,7 +188,8 @@ different trial runs during Hyperparameter tuning.
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=census_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME  # Change your BUCKET
+export BUCKET_NAME=your-bucket-name  # TODO: Change your BUCKET
+export GCS_JOB_DIR=gs://$BUCKET_NAME/path/to/my/jobs/$JOB_NAME  
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 export TRAIN_STEPS=5000
@@ -206,9 +199,9 @@ export REGION=us-central1
 * **Run in AI Platform:**
 
 ```
-gcloud ml-engine jobs submit training $JOB_NAME \
+gcloud ai-platform jobs submit training $JOB_NAME \
     --stream-logs \
-    --runtime-version 1.13 \
+    --runtime-version 1.15 \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
@@ -242,7 +235,8 @@ environment variable. The environment variable is generated using `gcloud` and p
 ```
 DATE=`date '+%Y%m%d_%H%M%S'`
 export JOB_NAME=census_$DATE
-export GCS_JOB_DIR=gs://your-bucket-name/path/to/my/jobs/$JOB_NAME   # Change your BUCKET
+export BUCKET_NAME=your-bucket-name  # TODO: Change your BUCKET
+export GCS_JOB_DIR=gs://$BUCKET_NAME/path/to/my/jobs/$JOB_NAME
 export TRAIN_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.data.csv
 export EVAL_FILE=gs://cloud-samples-data/ml-engine/census/data/adult.test.csv
 export TRAIN_STEPS=5000
@@ -253,7 +247,7 @@ export SCALE_TIER=STANDARD_1
 * **Run locally:**
 
 ```
-gcloud ml-engine local train --package-path trainer \
+gcloud ai-platform local train --package-path trainer \
     --module-name trainer.task \
     --distributed \
     -- \
@@ -267,10 +261,10 @@ gcloud ml-engine local train --package-path trainer \
 * **Run in AI Platform:**
 
 ```
-gcloud ml-engine jobs submit training $JOB_NAME \
+gcloud ai-platform jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
-    --runtime-version 1.13 \
+    --runtime-version 1.15 \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
     --package-path trainer/ \
@@ -296,10 +290,10 @@ Running Hyperparameter job is almost exactly same as Training job except that
 you need to add the `--config` argument.
 
 ```
-gcloud ml-engine jobs submit training $JOB_NAME \
+gcloud ai-platform jobs submit training $JOB_NAME \
     --stream-logs \
     --scale-tier $SCALE_TIER \
-    --runtime-version 1.13 \
+    --runtime-version 1.15 \
     --config $HPTUNING_CONFIG \
     --job-dir $GCS_JOB_DIR \
     --module-name trainer.task \
@@ -317,10 +311,11 @@ gcloud ml-engine jobs submit training $JOB_NAME \
 Once your training job has finished, you can use the exported model to create a prediction server. To do this you first create a model:
 
 ```
-gcloud ml-engine models create census --regions us-central1
+gcloud ai-platform models create census --regions us-central1
 ```
 
-Then we'll look up the exact path that your exported trained model binaries live in:
+Then we'll look up the exact path that your exported trained model
+binaries live in:
 
 ```
 gsutil ls -r $GCS_JOB_DIR/export
@@ -340,7 +335,7 @@ export MODEL_BINARIES=$GCS_JOB_DIR/export/CSV/
 ```
 
 ```
-gcloud ml-engine versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.13
+gcloud ai-platform versions create v1 --model census --origin $MODEL_BINARIES --runtime-version 1.13
 
 ```
 
@@ -357,13 +352,13 @@ saved_model_cli show --dir $MODEL_BINARIES --tag serve --signature_def $SIGNATUR
 You can now send prediction requests to the API. To test this out you can use the `gcloud ml-engine predict` tool:
 
 ```
-gcloud ml-engine predict --model census --version v1 --json-instances test.json
+gcloud ai-platform predict --model census --version v1 --json-instances test.json
 ```
 
 Using CSV:
 
 ```
-gcloud ml-engine predict --model census --version v1 --text-instances test.csv
+gcloud ai-platform predict --model census --version v1 --text-instances test.csv
 ```
 
 You should see a response with the predicted labels of the examples!
@@ -375,12 +370,12 @@ export JOB_NAME=census_prediction
 ```
 
 ```
-gcloud ml-engine jobs submit prediction $JOB_NAME \
+gcloud ai-platform jobs submit prediction $JOB_NAME \
     --model census \
     --version v1 \
     --data-format TEXT \
     --region $REGION \
-    --runtime-version 1.13 \
+    --runtime-version 1.15 \
     --input-paths gs://cloud-samples-data/ml-engine/testdata/prediction/census.json \
     --output-path $GCS_JOB_DIR/predictions
 ```
@@ -388,7 +383,7 @@ gcloud ml-engine jobs submit prediction $JOB_NAME \
 Check the status of your prediction job:
 
 ```
-gcloud ml-engine jobs describe $JOB_NAME
+gcloud ai-platform jobs describe $JOB_NAME
 ```
 
 Once the job is `SUCCEEDED` you can check the results in `--output-path`.

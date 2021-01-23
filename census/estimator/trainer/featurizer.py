@@ -9,13 +9,10 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 """Defines a Wide + Deep model for classification on structured data.
-
 Tutorial on wide and deep: https://www.tensorflow.org/tutorials/wide_and_deep/
 """
 
-
 import tensorflow as tf
-
 
 # Define the initial ingestion of each feature used by your model.
 # Additionally, provide metadata about the feature.
@@ -73,13 +70,15 @@ INPUT_COLUMNS = [
 def get_deep_and_wide_columns(embedding_size=8):
     """Creates deep and wide feature_column lists.
     Args:
-            embedding_size: (int), the number of dimensions used to represent categorical
-                                   features when providing them as inputs to the DNN.
+        embedding_size: (int), the number of dimensions used to represent
+        categorical features when providing them as inputs to the DNN.
     Returns:
-            [tf.feature_column],[tf.feature_column]: deep and wide feature_column lists.
+        [tf.feature_column],[tf.feature_column]: deep and wide feature_column
+            lists.
     """
 
-    (gender, race, education, marital_status, relationship, workclass, occupation,
+    (gender, race, education, marital_status, relationship, workclass,
+     occupation,
      native_country, age, education_num, capital_gain, capital_loss,
      hours_per_week) = INPUT_COLUMNS
 

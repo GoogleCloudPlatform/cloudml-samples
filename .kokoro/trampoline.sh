@@ -12,15 +12,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 set -eo pipefail
 
 # Always run the cleanup script, regardless of the success of bouncing into
 # the container.
 
 function cleanup() {
-    chmod +x ${KOKORO_GFILE_DIR}/trampoline_cleanup.sh
-    ${KOKORO_GFILE_DIR}/trampoline_cleanup.sh
-    echo "cleanup";
+    chmod +x "${KOKORO_GFILE_DIR}"/trampoline_cleanup.sh
+    "${KOKORO_GFILE_DIR}"/trampoline_cleanup.sh
+    echo -e "Trampoline cleanup";
 }
 trap cleanup EXIT
 
