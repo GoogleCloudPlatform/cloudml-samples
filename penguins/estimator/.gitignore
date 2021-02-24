@@ -1,0 +1,5 @@
+env/
+census_data/
+dataflow_dir/
+model_dir/
+*.pyc

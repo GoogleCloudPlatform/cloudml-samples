@@ -1,0 +1,4 @@
+apache-beam[gcp]
+tensorflow>=1.15,<2
+tensorboard>=1.15,<2
+tensorflow-model-analysis>=0.21.3,<1
