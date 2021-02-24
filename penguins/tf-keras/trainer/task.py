@@ -34,30 +34,34 @@ def get_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--job-dir',
+        "--job-dir",
         type=str,
         required=True,
-        help='local or GCS location for writing checkpoints and exporting '
-             'models')
+        help="local or GCS location for writing checkpoints and exporting " "models",
+    )
     parser.add_argument(
-        '--num-epochs',
+        "--num-epochs",
         type=int,
         default=20,
-        help='number of times to go through the data, default=20')
+        help="number of times to go through the data, default=20",
+    )
     parser.add_argument(
-        '--batch-size',
+        "--batch-size",
         default=128,
         type=int,
-        help='number of records to read during each training step, default=128')
+        help="number of records to read during each training step, default=128",
+    )
     parser.add_argument(
-        '--learning-rate',
-        default=.01,
+        "--learning-rate",
+        default=0.01,
         type=float,
-        help='learning rate for gradient descent, default=.01')
+        help="learning rate for gradient descent, default=.01",
+    )
     parser.add_argument(
-        '--verbosity',
-        choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARN'],
-        default='INFO')
+        "--verbosity",
+        choices=["DEBUG", "ERROR", "FATAL", "INFO", "WARN"],
+        default="INFO",
+    )
     args, _ = parser.parse_known_args()
     return args
 
@@ -81,7 +85,8 @@ def train_and_evaluate(args):
 
     # Create the Keras Model
     keras_model = model.create_keras_model(
-        input_dim=input_dim, learning_rate=args.learning_rate)
+        input_dim=input_dim, learning_rate=args.learning_rate
+    )
 
     # Pass a numpy array by passing DataFrame.values
     training_dataset = model.input_fn(
@@ -89,7 +94,8 @@ def train_and_evaluate(args):
         labels=train_y,
         shuffle=True,
         num_epochs=args.num_epochs,
-        batch_size=args.batch_size)
+        batch_size=args.batch_size,
+    )
 
     # Pass a numpy array by passing DataFrame.values
     validation_dataset = model.input_fn(
@@ -97,17 +103,18 @@ def train_and_evaluate(args):
         labels=eval_y,
         shuffle=False,
         num_epochs=args.num_epochs,
-        batch_size=num_eval_examples)
+        batch_size=num_eval_examples,
+    )
 
     # Setup Learning Rate decay.
     lr_decay_cb = tf.keras.callbacks.LearningRateScheduler(
-        lambda epoch: args.learning_rate + 0.02 * (0.5 ** (1 + epoch)),
-        verbose=True)
+        lambda epoch: args.learning_rate + 0.02 * (0.5 ** (1 + epoch)), verbose=True
+    )
 
     # Setup TensorBoard callback.
     tensorboard_cb = tf.keras.callbacks.TensorBoard(
-        os.path.join(args.job_dir, 'keras_tensorboard'),
-        histogram_freq=1)
+        os.path.join(args.job_dir, "keras_tensorboard"), histogram_freq=1
+    )
 
     # Train model
     keras_model.fit(
@@ -117,14 +124,15 @@ def train_and_evaluate(args):
         validation_data=validation_dataset,
         validation_steps=1,
         verbose=1,
-        callbacks=[lr_decay_cb, tensorboard_cb])
+        callbacks=[lr_decay_cb, tensorboard_cb],
+    )
 
-    export_path = os.path.join(args.job_dir, 'keras_export')
-    tf.keras.experimental.export_saved_model(keras_model, export_path)
-    print('Model exported to: {}'.format(export_path))
+    export_path = os.path.join(args.job_dir, "keras_export")
+    tf.compat.v1.keras.experimental.export_saved_model(keras_model, export_path)
+    print("Model exported to: {}".format(export_path))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = get_args()
     tf.compat.v1.logging.set_verbosity(args.verbosity)
     train_and_evaluate(args)
