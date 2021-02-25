@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Trains a Keras model to predict income bracket from other Census data."""
+"""Trains a Keras model to predict penguin species from other penguin measurement data."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -24,6 +24,7 @@ from . import model
 from . import util
 
 import tensorflow as tf
+import numpy as np
 
 
 def get_args():
@@ -85,7 +86,9 @@ def train_and_evaluate(args):
 
     # Create the Keras Model
     keras_model = model.create_keras_model(
-        input_dim=input_dim, learning_rate=args.learning_rate
+        num_classes=train_y.shape[1],
+        input_dim=input_dim,
+        learning_rate=args.learning_rate,
     )
 
     # Pass a numpy array by passing DataFrame.values

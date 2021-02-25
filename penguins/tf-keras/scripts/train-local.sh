@@ -22,7 +22,7 @@ echo "Training local ML model"
 
 
 DATE=$(date '+%Y%m%d_%H%M%S')
-MODEL_DIR=/tmp/trained_models/census_$DATE
+MODEL_DIR=/tmp/trained_models/penguins_$DATE
 PACKAGE_PATH=./trainer
 
 export TRAIN_STEPS=1000
@@ -32,8 +32,8 @@ gcloud ai-platform local train \
         --module-name=trainer.task \
         --package-path=${PACKAGE_PATH} \
         -- \
-        --train-files="$CENSUS_TRAIN" \
-        --eval-files="$CENSUS_EVAL" \
+        --train-files="$DATA_TRAIN" \
+        --eval-files="$DATA_EVAL" \
         --train-steps=$TRAIN_STEPS \
         --eval-steps=$EVAL_STEPS \
         --job-dir="${MODEL_DIR}"
