@@ -131,7 +131,7 @@ def train_and_evaluate(args):
     )
 
     export_path = os.path.join(args.job_dir, "keras_export")
-    tf.compat.v1.keras.experimental.export_saved_model(keras_model, export_path)
+    tf.keras.models.save_model(keras_model, export_path, save_format="tf")
     print("Model exported to: {}".format(export_path))
 
 
