@@ -1,11 +1,11 @@
 # [START setup]
 import datetime
 import pandas as pd
+import joblib
 
 from google.cloud import storage
 
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.externals import joblib
 from sklearn.feature_selection import SelectKBest
 from sklearn.pipeline import FeatureUnion
 from sklearn.pipeline import Pipeline
