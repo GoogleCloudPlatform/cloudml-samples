@@ -29,17 +29,17 @@ import tensorflow as tf
 from tensorflow.keras.utils import to_categorical
 
 # Storage directory
-DATA_DIR = os.path.join(tempfile.gettempdir(), "census_data")
+DATA_DIR = os.path.join(tempfile.gettempdir(), "penguins_data")
 
 # Download options.
 DATA_URL = "https://storage.googleapis.com/cloud-samples-data/ai-platform/penguins"
-TRAINING_FILE = "penguins.csv"
-EVAL_FILE = "penguins.csv"
+TRAINING_FILE = "penguins.data.csv"
+EVAL_FILE = "penguins.test.csv"
 TRAINING_URL = "%s/%s" % (DATA_URL, TRAINING_FILE)
 EVAL_URL = "%s/%s" % (DATA_URL, EVAL_FILE)
 
 # These are the features in the dataset.
-# Dataset information: https://archive.ics.uci.edu/ml/datasets/census+income
+# Dataset information: https://www.kaggle.com/parulpandey/palmer-archipelago-antarctica-penguin-data
 _CSV_COLUMNS = [
     "species",
     "island",
@@ -53,13 +53,6 @@ _CSV_COLUMNS = [
 # This is the label (target) we want to predict.
 _LABEL_COLUMN = "species"
 
-# These are columns we will not use as features for training. There are many
-# reasons not to use certain attributes of data for training. Perhaps their
-# values are noisy or inconsistent, or perhaps they encode bias that we do not
-# want our model to learn. For a deep dive into the features of this Census
-# dataset and the challenges they pose, see the Introduction to ML Fairness
-# Notebook: https://colab.research.google.com/github/google/eng-edu/blob
-# /master/ml/cc/exercises/intro_to_fairness.ipynb
 UNUSED_COLUMNS = []
 
 _CATEGORICAL_TYPES = {
