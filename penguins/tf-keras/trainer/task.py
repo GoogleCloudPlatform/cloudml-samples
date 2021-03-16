@@ -24,8 +24,6 @@ from . import model
 from . import util
 
 import tensorflow as tf
-import numpy as np
-
 
 def get_args():
     """Argument parser.
