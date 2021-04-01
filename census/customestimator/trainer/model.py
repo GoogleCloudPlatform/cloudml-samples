@@ -73,7 +73,12 @@ INPUT_COLUMNS = [
     ),
     tf.feature_column.categorical_column_with_vocabulary_list(
         "race",
-        [" Amer-Indian-Eskimo", " Asian-Pac-Islander", " Black", " Other", " White"],
+        [" Amer-Indian-Eskimo",
+            " Asian-Pac-Islander",
+            " Black",
+            " Other",
+            " White"
+        ],
     ),
     tf.feature_column.categorical_column_with_vocabulary_list(
         "education",
@@ -149,7 +154,9 @@ INPUT_COLUMNS = [
     tf.feature_column.numeric_column("hours_per_week"),
 ]
 
-UNUSED_COLUMNS = set(CSV_COLUMNS) - {col.name for col in INPUT_COLUMNS} - {LABEL_COLUMN}
+UNUSED_COLUMNS = set(CSV_COLUMNS) - {col.name for col in INPUT_COLUMNS} - {
+    LABEL_COLUMN
+    }
 
 
 def generate_model_fn(
@@ -218,7 +225,10 @@ def generate_model_fn(
             tf.feature_column.embedding_column(
                 native_country, dimension=embedding_size
             ),
-            tf.feature_column.embedding_column(occupation, dimension=embedding_size),
+            tf.feature_column.embedding_column(
+                occupation,
+                dimension=embedding_size
+            ),
             age,
             education_num,
             capital_gain,
@@ -296,7 +306,11 @@ def generate_model_fn(
                 l1_regularization_strength=3.0,
                 l2_regularization_strength=10.0,
             ).minimize(loss, global_step=global_step)
-            return tf.estimator.EstimatorSpec(mode, loss=loss, train_op=train_op)
+            return tf.estimator.EstimatorSpec(
+                mode,
+                loss=loss,
+                train_op=train_op
+            )
 
         if mode == Modes.EVAL:
             # Return accuracy and area under ROC curve metrics
@@ -311,7 +325,10 @@ def generate_model_fn(
                 dtype=tf.bool,
             )
             eval_metric_ops = {
-                "accuracy": tf.metrics.accuracy(label_indices, predicted_indices),
+                "accuracy": tf.metrics.accuracy(
+                    label_indices,
+                    predicted_indices
+                ),
                 "auroc": tf.metrics.auc(labels_one_hot, probabilities),
             }
             return tf.estimator.EstimatorSpec(
@@ -327,7 +344,9 @@ def csv_serving_input_fn():
     features = _decode_csv(csv_row)
     # Ignore label column.
     features.pop(LABEL_COLUMN)
-    return tf.estimator.export.ServingInputReceiver(features, {"csv_row": csv_row})
+    return tf.estimator.export.ServingInputReceiver(
+        features, {"csv_row": csv_row}
+        )
 
 
 def example_serving_input_fn():
@@ -337,7 +356,8 @@ def example_serving_input_fn():
         dtype=tf.string,
     )
     features = tf.parse_example(
-        example_bytestring, tf.feature_column.make_parse_example_spec(INPUT_COLUMNS)
+        example_bytestring,
+        tf.feature_column.make_parse_example_spec(INPUT_COLUMNS)
     )
     return tf.estimator.export.ServingInputReceiver(
         features, {"example_proto": example_bytestring}
@@ -374,7 +394,11 @@ def _decode_csv(line):
 
 
 def input_fn(
-    filenames, num_epochs=None, shuffle=True, skip_header_lines=0, batch_size=200
+    filenames,
+    num_epochs=None,
+    shuffle=True,
+    skip_header_lines=0,
+    batch_size=200
 ):
     """Generates features and labels for training or evaluation.
 
@@ -385,8 +409,8 @@ def input_fn(
         filenames: [str] A List of CSV file(s) to read data from.
         num_epochs: (int) How many times through to read the data. If None will
           loop through data indefinitely
-        shuffle: (bool), whether or not to randomize the order of data. Controls
-          randomization of both file order and line order within files.
+        shuffle: (bool), whether or not to randomize the order of data.
+        Controls randomization of both file order and line order within files.
         skip_header_lines: (int) set to non-zero in order to skip header lines
           in CSV files.
         batch_size: (int) First dimension size of the Tensors returned by
@@ -397,11 +421,17 @@ def input_fn(
           Tensors, and indices is a single Tensor of label indices.
     """
     dataset = (
-        tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(_decode_csv)
+        tf.data.TextLineDataset(filenames)
+        .skip(skip_header_lines)
+        .map(_decode_csv)
     )
 
     if shuffle:
         dataset = dataset.shuffle(buffer_size=batch_size * 10)
-    iterator = dataset.repeat(num_epochs).batch(batch_size).make_one_shot_iterator()
+    iterator = (
+        dataset.repeat(num_epochs)
+        .batch(batch_size)
+        .make_one_shot_iterator()
+    )
     features = iterator.get_next()
     return features, features.pop(LABEL_COLUMN)

@@ -41,13 +41,20 @@ def train_and_evaluate(args):
             args.eval_files, batch_size=args.eval_batch_size, shuffle=False
         )
 
-    train_spec = tf.estimator.TrainSpec(train_input, max_steps=args.train_steps)
+    train_spec = tf.estimator.TrainSpec(
+        train_input,
+        max_steps=args.train_steps
+    )
 
     exporter = tf.estimator.FinalExporter(
         "census", model.SERVING_FUNCTIONS[args.export_format]
     )
+
     eval_spec = tf.estimator.EvalSpec(
-        eval_input, steps=args.eval_steps, exporters=[exporter], name="census-eval"
+        eval_input,
+        steps=args.eval_steps,
+        exporters=[exporter],
+        name="census-eval"
     )
 
     model_fn = model.generate_model_fn(
@@ -60,7 +67,11 @@ def train_and_evaluate(args):
         learning_rate=args.learning_rate,
     )
 
-    estimator = tf.estimator.Estimator(model_fn=model_fn, model_dir=args.job_dir)
+    estimator = tf.estimator.Estimator(
+        model_fn=model_fn,
+        model_dir=args.job_dir
+    )
+
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
 
@@ -95,7 +106,9 @@ if __name__ == "__main__":
         type=int,
     )
     parser.add_argument(
-        "--train-batch-size", help="Batch size for training steps", type=int, default=40
+        "--train-batch-size",
+        help="Batch size for training steps",
+        type=int, default=40
     )
     parser.add_argument(
         "--eval-batch-size",
@@ -165,7 +178,9 @@ if __name__ == "__main__":
     # Set python level verbosity.
     tf.logging.set_verbosity(args.verbosity)
     # Set C++ Graph Execution level verbosity.
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(tf.logging.__dict__[args.verbosity] / 10)
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(
+        tf.logging.__dict__[args.verbosity] / 10
+    )
 
     # Run the training job.
     train_and_evaluate(args)
