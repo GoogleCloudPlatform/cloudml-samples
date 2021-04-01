@@ -22,51 +22,45 @@ import googleapiclient.discovery
 
 
 def predict(project, model, data, version=None):
-  """Run predictions on a list of instances.
+    """Run predictions on a list of instances.
 
-  Args:
-    project: (str), project where the Cloud ML Engine Model is deployed.
-    model: (str), model name.
-    data: ([[any]]), list of input instances, where each input instance is a
-      list of attributes.
-    version: str, version of the model to target.
+    Args:
+      project: (str), project where the Cloud ML Engine Model is deployed.
+      model: (str), model name.
+      data: ([[any]]), list of input instances, where each input instance is a
+        list of attributes.
+      version: str, version of the model to target.
 
-  Returns:
-    Mapping[str: any]: dictionary of prediction results defined by the model.
-  """
+    Returns:
+      Mapping[str: any]: dictionary of prediction results defined by the model.
+    """
 
-  service = googleapiclient.discovery.build('ml', 'v1')
-  name = 'projects/{}/models/{}'.format(project, model)
+    service = googleapiclient.discovery.build("ml", "v1")
+    name = "projects/{}/models/{}".format(project, model)
 
-  if version is not None:
-    name += '/versions/{}'.format(version)
+    if version is not None:
+        name += "/versions/{}".format(version)
 
-  response = service.projects().predict(
-      name=name, body={
-          'instances': data
-      }).execute()
+    response = service.projects().predict(name=name, body={"instances": data}).execute()
 
-  if 'error' in response:
-    raise RuntimeError(response['error'])
+    if "error" in response:
+        raise RuntimeError(response["error"])
 
-  return response['predictions']
+    return response["predictions"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-  # Example call to `predict`
+    # Example call to `predict`
 
-  project_id = os.environ['PROJECT_ID']
-  model_name = 'sklearn_template'
-  version_name = 'v1'
-  data = []
-  with open('sample_data/sample.txt') as f:
-    for line in f:
-      data.append(json.loads(line))
+    project_id = os.environ["PROJECT_ID"]
+    model_name = "sklearn_template"
+    version_name = "v1"
+    data = []
+    with open("sample_data/sample.txt") as f:
+        for line in f:
+            data.append(json.loads(line))
 
-  print(
-      predict(
-        project=project_id,
-        model=model_name,
-        data=data,
-        version=version_name))
+    print(
+        predict(project=project_id, model=model_name, data=data, version=version_name)
+    )

@@ -41,23 +41,26 @@ class DDPG(agent.Agent):
         self.gamma = config.gamma
         self.sigma = config.sigma
         self.noise_cap = config.c
-        self.actor = ActorNetwork(sess=sess,
-                                  state_dim=state_dim,
-                                  action_dim=self.action_dim,
-                                  action_high=self.action_high,
-                                  action_low=self.action_low,
-                                  learning_rate=config.actor_lr,
-                                  grad_norm_clip=config.grad_norm_clip,
-                                  tau=config.tau,
-                                  batch_size=config.batch_size)
-        self.critic = CriticNetwork(sess=sess,
-                                    state_dim=state_dim,
-                                    action_dim=self.action_dim,
-                                    learning_rate=config.critic_lr,
-                                    tau=config.tau,
-                                    gamma=config.gamma)
-        self.replay_buffer = replay_buffer.ReplayBuffer(
-            buffer_size=config.buffer_size)
+        self.actor = ActorNetwork(
+            sess=sess,
+            state_dim=state_dim,
+            action_dim=self.action_dim,
+            action_high=self.action_high,
+            action_low=self.action_low,
+            learning_rate=config.actor_lr,
+            grad_norm_clip=config.grad_norm_clip,
+            tau=config.tau,
+            batch_size=config.batch_size,
+        )
+        self.critic = CriticNetwork(
+            sess=sess,
+            state_dim=state_dim,
+            action_dim=self.action_dim,
+            learning_rate=config.critic_lr,
+            tau=config.tau,
+            gamma=config.gamma,
+        )
+        self.replay_buffer = replay_buffer.ReplayBuffer(buffer_size=config.buffer_size)
 
     def random_action(self, observation):
         """Return a random action."""
@@ -73,11 +76,17 @@ class DDPG(agent.Agent):
             action = self.action(observation)
         else:
             action = self.random_action(observation)
-        noise = np.clip(np.random.randn(self.action_dim) * self.sigma,
-                        -self.noise_cap, self.noise_cap)
+        noise = np.clip(
+            np.random.randn(self.action_dim) * self.sigma,
+            -self.noise_cap,
+            self.noise_cap,
+        )
         action_with_noise = action + noise
-        return (np.clip(action_with_noise, self.action_low, self.action_high),
-                action, noise)
+        return (
+            np.clip(action_with_noise, self.action_low, self.action_high),
+            action,
+            noise,
+        )
 
     def store_experience(self, s, a, r, t, s2):
         """Save experience to replay buffer."""

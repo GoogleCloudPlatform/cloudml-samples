@@ -28,40 +28,44 @@ from apache_beam.options.pipeline_options import GoogleCloudOptions
 from apache_beam.options.pipeline_options import PipelineOptions
 
 
-if __name__ == '__main__':
-  """Main function"""
-  parser = argparse.ArgumentParser(
-      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+if __name__ == "__main__":
+    """Main function"""
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
 
-  parser.add_argument(
-      '--topic',
-      default='molecules-inputs',
-      help='PubSub topic to publish molecules.')
+    parser.add_argument(
+        "--topic", default="molecules-inputs", help="PubSub topic to publish molecules."
+    )
 
-  parser.add_argument(
-      '--inputs-dir',
-      required=True,
-      help='Input directory where SDF data files are read from. '
-           'This can be a Google Cloud Storage path.')
+    parser.add_argument(
+        "--inputs-dir",
+        required=True,
+        help="Input directory where SDF data files are read from. "
+        "This can be a Google Cloud Storage path.",
+    )
 
-  args, pipeline_args = parser.parse_known_args()
+    args, pipeline_args = parser.parse_known_args()
 
-  beam_options = PipelineOptions(
-      pipeline_args,
-      save_main_session=True,
-      streaming=True,
-  )
+    beam_options = PipelineOptions(
+        pipeline_args,
+        save_main_session=True,
+        streaming=True,
+    )
 
-  project = beam_options.view_as(GoogleCloudOptions).project
-  if not project:
-    parser.print_usage()
-    print('error: argument --project is required')
-    sys.exit(1)
+    project = beam_options.view_as(GoogleCloudOptions).project
+    if not project:
+        parser.print_usage()
+        print("error: argument --project is required")
+        sys.exit(1)
 
-  data_files_pattern = os.path.join(args.inputs_dir, '*.sdf')
-  topic_path = 'projects/{}/topics/{}'.format(project, args.topic)
-  with beam.Pipeline(options=beam_options) as p:
-    _ = (p
-        | 'Read SDF files' >> pubchem.ParseSDF(data_files_pattern)
-        | 'Print element' >> beam.Map(lambda elem: print(str(elem)[:70] + '...') or elem)
-        | 'Publish molecules' >> beam.io.WriteToPubSub(topic=topic_path))
+    data_files_pattern = os.path.join(args.inputs_dir, "*.sdf")
+    topic_path = "projects/{}/topics/{}".format(project, args.topic)
+    with beam.Pipeline(options=beam_options) as p:
+        _ = (
+            p
+            | "Read SDF files" >> pubchem.ParseSDF(data_files_pattern)
+            | "Print element"
+            >> beam.Map(lambda elem: print(str(elem)[:70] + "...") or elem)
+            | "Publish molecules" >> beam.io.WriteToPubSub(topic=topic_path)
+        )

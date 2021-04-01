@@ -47,42 +47,49 @@ class C2A2(agent.Agent):
         self.sigma_tilda = config.sigma_tilda
         self.noise_cap = config.c
         self.train_interval = config.d
-        self.actor1 = ActorNetwork(sess=sess,
-                                   state_dim=state_dim,
-                                   action_dim=self.action_dim,
-                                   action_high=self.action_high,
-                                   action_low=self.action_low,
-                                   learning_rate=config.actor_lr,
-                                   grad_norm_clip=config.grad_norm_clip,
-                                   tau=config.tau,
-                                   batch_size=config.batch_size,
-                                   name='actor1')
-        self.actor2 = ActorNetwork(sess=sess,
-                                   state_dim=state_dim,
-                                   action_dim=self.action_dim,
-                                   action_high=self.action_high,
-                                   action_low=self.action_low,
-                                   learning_rate=config.actor_lr,
-                                   grad_norm_clip=config.grad_norm_clip,
-                                   tau=config.tau,
-                                   batch_size=config.batch_size,
-                                   name='actor2')
-        self.critic1 = CriticNetwork(sess=sess,
-                                     state_dim=state_dim,
-                                     action_dim=self.action_dim,
-                                     learning_rate=config.critic_lr,
-                                     tau=config.tau,
-                                     gamma=config.gamma,
-                                     name='critic1')
-        self.critic2 = CriticNetwork(sess=sess,
-                                     state_dim=state_dim,
-                                     action_dim=self.action_dim,
-                                     learning_rate=config.critic_lr,
-                                     tau=config.tau,
-                                     gamma=config.gamma,
-                                     name='critic2')
-        self.replay_buffer = replay_buffer.ReplayBuffer(
-            buffer_size=config.buffer_size)
+        self.actor1 = ActorNetwork(
+            sess=sess,
+            state_dim=state_dim,
+            action_dim=self.action_dim,
+            action_high=self.action_high,
+            action_low=self.action_low,
+            learning_rate=config.actor_lr,
+            grad_norm_clip=config.grad_norm_clip,
+            tau=config.tau,
+            batch_size=config.batch_size,
+            name="actor1",
+        )
+        self.actor2 = ActorNetwork(
+            sess=sess,
+            state_dim=state_dim,
+            action_dim=self.action_dim,
+            action_high=self.action_high,
+            action_low=self.action_low,
+            learning_rate=config.actor_lr,
+            grad_norm_clip=config.grad_norm_clip,
+            tau=config.tau,
+            batch_size=config.batch_size,
+            name="actor2",
+        )
+        self.critic1 = CriticNetwork(
+            sess=sess,
+            state_dim=state_dim,
+            action_dim=self.action_dim,
+            learning_rate=config.critic_lr,
+            tau=config.tau,
+            gamma=config.gamma,
+            name="critic1",
+        )
+        self.critic2 = CriticNetwork(
+            sess=sess,
+            state_dim=state_dim,
+            action_dim=self.action_dim,
+            learning_rate=config.critic_lr,
+            tau=config.tau,
+            gamma=config.gamma,
+            name="critic2",
+        )
+        self.replay_buffer = replay_buffer.ReplayBuffer(buffer_size=config.buffer_size)
 
     def initialize(self):
         """Initialization before playing."""
@@ -110,9 +117,7 @@ class C2A2(agent.Agent):
         target_q_val2 = self.get_target_qval(observation, target_action2)
         target_q_val1 = np.expand_dims(target_q_val1, axis=-1)
         target_q_val2 = np.expand_dims(target_q_val2, axis=-1)
-        return np.where(target_q_val1 > target_q_val2,
-                        target_action1,
-                        target_action2)
+        return np.where(target_q_val1 > target_q_val2, target_action1, target_action2)
 
     def action_with_noise(self, observation):
         """Return a noisy action."""
@@ -120,11 +125,17 @@ class C2A2(agent.Agent):
             action = self.action(observation)
         else:
             action = self.random_action(observation)
-        noise = np.clip(np.random.randn(self.action_dim) * self.sigma,
-                        -self.noise_cap, self.noise_cap)
+        noise = np.clip(
+            np.random.randn(self.action_dim) * self.sigma,
+            -self.noise_cap,
+            self.noise_cap,
+        )
         action_with_noise = action + noise
-        return (np.clip(action_with_noise, self.action_low, self.action_high),
-                action, noise)
+        return (
+            np.clip(action_with_noise, self.action_low, self.action_high),
+            action,
+            noise,
+        )
 
     def store_experience(self, s, a, r, t, s2):
         """Save experience to replay buffer."""
@@ -134,12 +145,13 @@ class C2A2(agent.Agent):
         """Train the agent's policy for 1 iteration."""
         if self.replay_buffer.size > self.warmup_size:
             s0, a, r, t, s1 = self.replay_buffer.sample_batch(self.batch_size)
-            epsilon = np.clip(np.random.randn(self.batch_size, self.action_dim),
-                              -self.noise_cap, self.noise_cap)
+            epsilon = np.clip(
+                np.random.randn(self.batch_size, self.action_dim),
+                -self.noise_cap,
+                self.noise_cap,
+            )
             target_actions = self.target_action(s1) + epsilon
-            target_actions = np.clip(target_actions,
-                                     self.action_low,
-                                     self.action_high)
+            target_actions = np.clip(target_actions, self.action_low, self.action_high)
             target_qval = self.get_target_qval(s1, target_actions)
             t = t.astype(dtype=int)
             y = r + self.gamma * target_qval * (1 - t)

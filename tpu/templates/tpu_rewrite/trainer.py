@@ -19,6 +19,7 @@ import os
 import tensorflow as tf
 from tensorflow.contrib.cluster_resolver import TPUClusterResolver
 
+
 def tpu_computation(features, labels):
     # Similar to the role of model_fn, the TPU function builds the part of the graph to be run on TPUs
 
@@ -33,7 +34,7 @@ def tpu_computation(features, labels):
     optimizer = tf.contrib.tpu.CrossShardOptimizer(optimizer)
 
     global_step = tf.train.get_or_create_global_step()
-    train_op = optimizer.minimize(loss, global_step=global_step) 
+    train_op = optimizer.minimize(loss, global_step=global_step)
 
     # TPU functions must return zero-or more Tensor values followed by zero or more Operations.
     return global_step, loss, train_op
@@ -57,7 +58,7 @@ def train_input_fn():
     # TPUs need to know all dimensions including batch size
     batch_size = 16
 
-    dataset = dataset.repeat().shuffle(32).batch(batch_size)#, drop_remainder=True)
+    dataset = dataset.repeat().shuffle(32).batch(batch_size)  # , drop_remainder=True)
 
     # TPUs need to know all dimensions when the graph is built
     # Datasets know the batch size only when the graph is run
@@ -83,7 +84,9 @@ def main(args):
     features, labels = iterator.get_next()
 
     # mark part of the graph to be run on the TPUs
-    global_step_tensor, loss_tensor = tf.contrib.tpu.rewrite(tpu_computation, [features, labels])
+    global_step_tensor, loss_tensor = tf.contrib.tpu.rewrite(
+        tpu_computation, [features, labels]
+    )
 
     # utility ops
     tpu_init = tf.contrib.tpu.initialize_system()
@@ -105,35 +108,43 @@ def main(args):
         global_step, loss = sess.run([global_step_tensor, loss_tensor])
 
         if i % args.save_checkpoints_steps == 0:
-            saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=global_step)
+            saver.save(
+                sess,
+                os.path.join(args.model_dir, "model.ckpt"),
+                global_step=global_step,
+            )
 
-            tf.logging.info('global_step: {}, loss: {}'.format(global_step, loss))
+            tf.logging.info("global_step: {}, loss: {}".format(global_step, loss))
 
     sess.run(tpu_shutdown)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '--model-dir',
+        "--model-dir",
         type=str,
-        default='/tmp/tpu-template',
-        help='Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.')
+        default="/tmp/tpu-template",
+        help="Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.",
+    )
     parser.add_argument(
-        '--max-steps',
+        "--max-steps",
         type=int,
         default=1000,
-        help='The total number of steps to train the model.')
+        help="The total number of steps to train the model.",
+    )
     parser.add_argument(
-        '--save-checkpoints-steps',
+        "--save-checkpoints-steps",
         type=int,
         default=100,
-        help='The number of training steps before saving each checkpoint.')
+        help="The number of training steps before saving each checkpoint.",
+    )
     parser.add_argument(
-        '--tpu',
+        "--tpu",
         default=None,
-        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.')
+        help="The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.",
+    )
 
     args, _ = parser.parse_known_args()
 

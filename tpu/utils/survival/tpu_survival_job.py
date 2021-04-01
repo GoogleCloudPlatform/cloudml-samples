@@ -17,8 +17,8 @@ from time import sleep
 
 from tpu_survival import TPUSurvival
 
-project = 'PROJECT_ID'
-location = 'LOCATION'
+project = "PROJECT_ID"
+location = "LOCATION"
 max_attempt = 10
 
 ts = TPUSurvival(project=project, location=location)
@@ -29,13 +29,13 @@ while ts.current_index <= max_attempt:
     ts.create()
 
     # wait until it is ready
-    while ts.state != 'READY':
+    while ts.state != "READY":
         sleep(10)
         ts.update_state()
 
     ts.run_task()
 
-    while ts.state == 'READY':
+    while ts.state == "READY":
         sleep(10)
         ts.update_state()
 
@@ -45,8 +45,7 @@ while ts.current_index <= max_attempt:
 
         # training finished
         if returncode is not None:
-            print('Training process terminated with code: {}.'.format(
-                returncode))
+            print("Training process terminated with code: {}.".format(returncode))
 
             # clean up
             ts.delete()

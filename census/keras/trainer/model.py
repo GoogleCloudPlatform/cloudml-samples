@@ -29,38 +29,74 @@ import tensorflow as tf
 from tensorflow.python.saved_model import builder as saved_model_builder
 from tensorflow.python.saved_model import signature_constants
 from tensorflow.python.saved_model import tag_constants
-from tensorflow.python.saved_model.signature_def_utils_impl import \
-    predict_signature_def
+from tensorflow.python.saved_model.signature_def_utils_impl import predict_signature_def
 
 # CSV columns in the input file.
-CSV_COLUMNS = ('age', 'workclass', 'fnlwgt', 'education', 'education_num',
-               'marital_status', 'occupation', 'relationship', 'race', 'gender',
-               'capital_gain', 'capital_loss', 'hours_per_week',
-               'native_country', 'income_bracket')
+CSV_COLUMNS = (
+    "age",
+    "workclass",
+    "fnlwgt",
+    "education",
+    "education_num",
+    "marital_status",
+    "occupation",
+    "relationship",
+    "race",
+    "gender",
+    "capital_gain",
+    "capital_loss",
+    "hours_per_week",
+    "native_country",
+    "income_bracket",
+)
 
-CSV_COLUMN_DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''], [''],
-                       [0], [0], [0], [''], ['']]
+CSV_COLUMN_DEFAULTS = [
+    [0],
+    [""],
+    [0],
+    [""],
+    [0],
+    [""],
+    [""],
+    [""],
+    [""],
+    [""],
+    [0],
+    [0],
+    [0],
+    [""],
+    [""],
+]
 
 # Categorical columns with vocab size
 # native_country and fnlwgt are ignored
-CATEGORICAL_COLS = (('education', 16), ('marital_status', 7),
-                    ('relationship', 6), ('workclass', 9), ('occupation', 15),
-                    ('gender', [' Male', ' Female']), ('race', 5))
+CATEGORICAL_COLS = (
+    ("education", 16),
+    ("marital_status", 7),
+    ("relationship", 6),
+    ("workclass", 9),
+    ("occupation", 15),
+    ("gender", [" Male", " Female"]),
+    ("race", 5),
+)
 
-CONTINUOUS_COLS = ('age', 'education_num', 'capital_gain', 'capital_loss',
-                   'hours_per_week')
+CONTINUOUS_COLS = (
+    "age",
+    "education_num",
+    "capital_gain",
+    "capital_loss",
+    "hours_per_week",
+)
 
-LABELS = [' <=50K', ' >50K']
-LABEL_COLUMN = 'income_bracket'
+LABELS = [" <=50K", " >50K"]
+LABEL_COLUMN = "income_bracket"
 
 UNUSED_COLUMNS = set(CSV_COLUMNS) - set(
-    list(zip(*CATEGORICAL_COLS))[0] + CONTINUOUS_COLS + (LABEL_COLUMN,))
+    list(zip(*CATEGORICAL_COLS))[0] + CONTINUOUS_COLS + (LABEL_COLUMN,)
+)
 
 
-def model_fn(input_dim,
-             labels_dim,
-             hidden_units=[100, 70, 50, 20],
-             learning_rate=0.1):
+def model_fn(input_dim, labels_dim, hidden_units=[100, 70, 50, 20], learning_rate=0.1):
     """Create a Keras Sequential model with layers.
 
     Args:
@@ -79,21 +115,21 @@ def model_fn(input_dim,
     model = models.Sequential()
 
     for units in hidden_units:
-        model.add(
-            layers.Dense(units=units, input_dim=input_dim, activation=relu))
+        model.add(layers.Dense(units=units, input_dim=input_dim, activation=relu))
         input_dim = units
 
     # Add a dense final layer with sigmoid function.
-    model.add(layers.Dense(labels_dim, activation='sigmoid'))
+    model.add(layers.Dense(labels_dim, activation="sigmoid"))
     compile_model(model, learning_rate)
     return model
 
 
 def compile_model(model, learning_rate):
     model.compile(
-        loss='binary_crossentropy',
+        loss="binary_crossentropy",
         optimizer=keras.optimizers.Adam(lr=learning_rate),
-        metrics=['accuracy'])
+        metrics=["accuracy"],
+    )
     return model
 
 
@@ -103,7 +139,8 @@ def to_savedmodel(model, export_path):
     builder = saved_model_builder.SavedModelBuilder(export_path)
 
     signature = predict_signature_def(
-        inputs={'input': model.inputs[0]}, outputs={'income': model.outputs[0]})
+        inputs={"input": model.inputs[0]}, outputs={"income": model.outputs[0]}
+    )
 
     with K.get_session() as sess:
         builder.add_meta_graph_and_variables(
@@ -111,7 +148,8 @@ def to_savedmodel(model, export_path):
             tags=[tag_constants.SERVING],
             signature_def_map={
                 signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature
-            })
+            },
+        )
         builder.save()
 
 
@@ -134,8 +172,8 @@ def to_numeric_features(features, feature_cols=None):
 
     for col in CATEGORICAL_COLS:
         features = pd.concat(
-            [features, pd.get_dummies(features[col[0]], drop_first=True)],
-            axis=1)
+            [features, pd.get_dummies(features[col[0]], drop_first=True)], axis=1
+        )
         features.drop(col[0], axis=1, inplace=True)
 
     # Remove the unused columns from the dataframe.
@@ -157,7 +195,8 @@ def generator_input(filenames, chunk_size, batch_size=64):
             tf.gfile.Open(filenames[0]),
             names=CSV_COLUMNS,
             chunksize=chunk_size,
-            na_values=' ?')
+            na_values=" ?",
+        )
 
         for input_data in input_reader:
             input_data = input_data.dropna()
@@ -171,5 +210,7 @@ def generator_input(filenames, chunk_size, batch_size=64):
 
             idx_len = input_data.shape[0]
             for index in range(0, idx_len, batch_size):
-                yield (input_data.iloc[index:min(idx_len, index + batch_size)],
-                       label.iloc[index:min(idx_len, index + batch_size)])
+                yield (
+                    input_data.iloc[index : min(idx_len, index + batch_size)],
+                    label.iloc[index : min(idx_len, index + batch_size)],
+                )

@@ -24,30 +24,30 @@ import yaml
 
 
 STYLES = {
-    'colab': {
+    "colab": {
         # code template to be added right after the license.
-        'precells': ['templates/colab_pre.p'],
+        "precells": ["templates/colab_pre.p"],
         # TPU specific code template to be added right before running main.
-        'tpu_precells': ['templates/colab_tpu.p'],
+        "tpu_precells": ["templates/colab_tpu.p"],
         # TPU specific code template to be added at the end.
-        'tpu_postcells': None,
+        "tpu_postcells": None,
         # additional path segment.
-        'prefix': ''
+        "prefix": "",
     },
-    'notebooks': {
-        'precells': ['templates/notebooks_pre.p'],
-        'tpu_precells': [
-            'templates/notebooks_tpu_args.p',
-            'templates/notebooks_tpu_create.p'
+    "notebooks": {
+        "precells": ["templates/notebooks_pre.p"],
+        "tpu_precells": [
+            "templates/notebooks_tpu_args.p",
+            "templates/notebooks_tpu_create.p",
         ],
-        'tpu_postcells': ['templates/notebooks_tpu_post.p'],
-        'prefix': 'notebooks'
-    }
+        "tpu_postcells": ["templates/notebooks_tpu_post.p"],
+        "prefix": "notebooks",
+    },
 }
 
 
 # Only samples registered and configured in samples.yaml will be converted.
-with open('samples.yaml', 'r') as f:
+with open("samples.yaml", "r") as f:
     samples = yaml.load(f.read())
 
 
@@ -61,8 +61,8 @@ def should_concat(prev_type, cur_type):
     Returns
     A Boolean
     """
-    concat_types = ['Import', 'ImportFrom', 'Assign']
-    import_types = ['Import', 'ImportFrom']
+    concat_types = ["Import", "ImportFrom", "Assign"]
+    import_types = ["Import", "ImportFrom"]
 
     if prev_type == cur_type and cur_type in concat_types:
         return True
@@ -78,7 +78,7 @@ class BoundaryVisitor(ast.NodeVisitor):
         self.boundary = 0
 
     def generic_visit(self, node):
-        lineno = getattr(node, 'lineno', 0)
+        lineno = getattr(node, "lineno", 0)
         self.boundary = max(self.boundary, lineno)
 
         ast.NodeVisitor.generic_visit(self, node)
@@ -87,7 +87,7 @@ class BoundaryVisitor(ast.NodeVisitor):
 def get_boundary(node):
     """Get the boundaries of code representing node."""
     # lineno starts from 1
-    lineno = getattr(node, 'lineno', 0)
+    lineno = getattr(node, "lineno", 0)
     top = lineno - 1
 
     bv = BoundaryVisitor()
@@ -101,10 +101,10 @@ def process_between(group):
     """Process lines between nodes, that is, comments."""
 
     # Keep only comments
-    group = [line for line in group if line.strip().startswith('#')]
-    group = [re.sub(r'^#', '', line) for line in group]
+    group = [line for line in group if line.strip().startswith("#")]
+    group = [re.sub(r"^#", "", line) for line in group]
     # Markdown could interpret this as header.
-    group = [re.sub(r'={3,}', '', line) for line in group]
+    group = [re.sub(r"={3,}", "", line) for line in group]
 
     return group
 
@@ -119,7 +119,7 @@ def process_node(group, cur_type, remove=None):
 
     for line in group:
         for remove_str in remove_strs:
-            line = re.sub(remove_str, '', line).strip()
+            line = re.sub(remove_str, "", line).strip()
             if line:
                 result.append(line)
 
@@ -127,13 +127,13 @@ def process_node(group, cur_type, remove=None):
 
 
 def code_cell(group, remove=None):
-    source = '\n'.join(group).strip()
+    source = "\n".join(group).strip()
     return new_code_cell(source)
 
 
 def markdown_cell(group):
     # Two spaces for markdown line break
-    source = '  \n'.join(group).strip()
+    source = "  \n".join(group).strip()
     return new_markdown_cell(source)
 
 
@@ -141,7 +141,7 @@ def add_cell(cells, filename, insert=None, **kwargs):
     """Modifies cells in place by adding the content of filename as a new cell in position `insert`.
     When `insert` is None, the new cell is appended to cells.
     Allows optional formatting arguments as kwargs."""
-    with open(filename, 'r') as f:
+    with open(filename, "r") as f:
         code_source = f.read()
 
     if kwargs:
@@ -172,22 +172,22 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
     None
     """
     style_dict = STYLES[style]
-    prefix = style_dict['prefix']
+    prefix = style_dict["prefix"]
 
     py_filepath = os.path.join(root, path, py_filename)
-    print('Converting {}'.format(py_filepath))
+    print("Converting {}".format(py_filepath))
 
-    ipynb_filename = py_filename.split('.')[0] + '.ipynb'
+    ipynb_filename = py_filename.split(".")[0] + ".ipynb"
     ipynb_filepath = os.path.join(root, prefix, path, ipynb_filename)
 
-    with open(py_filepath, 'r') as py_file:
+    with open(py_filepath, "r") as py_file:
         source = py_file.read()
 
     module = ast.parse(source, filename=py_filepath)
-    lines = source.split('\n')
+    lines = source.split("\n")
 
     cells = []
-    cell_source = []            
+    cell_source = []
     prev_type = None
     start = 0
 
@@ -197,9 +197,9 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
         top, bottom = get_boundary(node)
 
         # special handling for dangling lines
-        if cur_type in ['Import', 'ImportFrom', 'Expr']:
+        if cur_type in ["Import", "ImportFrom", "Expr"]:
             # print(astor.to_source(node))
-            code_lines = astor.to_source(node).strip().split('\n')
+            code_lines = astor.to_source(node).strip().split("\n")
             cur_group = process_node(code_lines, cur_type, remove)
         else:
             code_lines = lines[top:bottom]
@@ -207,7 +207,7 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
 
         # group of lines between ast nodes
         between = process_between(lines[start:top])
-        
+
         if between:
             # flush cell_source
             if cell_source:
@@ -218,7 +218,7 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
             # get current node source, check later if need to concatenate
             cell_source = cur_group
 
-        else: # no between lines, check if need to concatenate
+        else:  # no between lines, check if need to concatenate
             # handle first node
             if prev_type is None:
                 # prev_type = cur_type
@@ -226,7 +226,7 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
             elif should_concat(prev_type, cur_type):
                 cell_source.extend(cur_group)
 
-            else: # flush
+            else:  # flush
                 cells.append(code_cell(cell_source))
                 cell_source = cur_group
 
@@ -239,28 +239,28 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
     cell_source = [line[indent:] for line in cell_source][1:]
 
     # Add precell
-    if style_dict['precells'] is not None:
+    if style_dict["precells"] is not None:
         # we might be inserting multiple cells at the same position, so reversing the ordering to keep the correct order.
-        for filename in reversed(style_dict['precells']):
+        for filename in reversed(style_dict["precells"]):
             add_cell(cells, filename, insert=1, path=path)
 
     # special handling for tpu samples.
-    if 'tpu' in py_filepath and style_dict['tpu_precells'] is not None:
-        cs0 = [line for line in cell_source if 'main(args)' not in line]
+    if "tpu" in py_filepath and style_dict["tpu_precells"] is not None:
+        cs0 = [line for line in cell_source if "main(args)" not in line]
         cells.append(code_cell(cs0))
 
-        for filename in style_dict['tpu_precells']:
+        for filename in style_dict["tpu_precells"]:
             add_cell(cells, filename)
 
-        cs2 = 'main(args)'
+        cs2 = "main(args)"
         cells.append(new_code_cell(cs2))
 
     else:
         cells.append(code_cell(cell_source))
 
     # Add tpu postcell
-    if 'tpu' in py_filepath and style_dict['tpu_postcells'] is not None:
-        for filename in style_dict['tpu_postcells']:
+    if "tpu" in py_filepath and style_dict["tpu_postcells"] is not None:
+        for filename in style_dict["tpu_postcells"]:
             add_cell(cells, filename)
 
     notebook = new_notebook(cells=cells)
@@ -269,25 +269,25 @@ def py_to_ipynb(root, path, py_filename, style, remove=None):
     outpath, _ = os.path.split(ipynb_filepath)
     if not os.path.exists(outpath):
         os.makedirs(outpath)
-    with open(ipynb_filepath, 'w') as ipynb_file:
+    with open(ipynb_filepath, "w") as ipynb_file:
         nbformat.write(notebook, ipynb_file)
 
-if __name__ == '__main__':
-    for sample, info in samples.iteritems():
-        root = '..'
-        path = info['path']
-        filename = info['filename']
-        remove = info.get('remove', None)
 
-        for style in ['colab', 'notebooks']:
+if __name__ == "__main__":
+    for sample, info in samples.iteritems():
+        root = ".."
+        path = info["path"]
+        filename = info["filename"]
+        remove = info.get("remove", None)
+
+        for style in ["colab", "notebooks"]:
             py_to_ipynb(root, path, filename, style, remove=remove)
 
-
     # Testing, make sure sample.py has the same output.
-    with open('sample.ipynb', 'r') as f:
+    with open("sample.ipynb", "r") as f:
         sample_ipynb = f.read()
 
-    with open('frozen_sample.ipynb', 'r') as f:
+    with open("frozen_sample.ipynb", "r") as f:
         frozen_sample_ipynb = f.read()
 
     assert sample_ipynb == frozen_sample_ipynb, "The sample.ipynb is different."

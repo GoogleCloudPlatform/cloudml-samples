@@ -71,8 +71,7 @@ def main(args):
         # Note: This requires TensorFlow 1.11
         tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(args.tpu)
         strategy = tf.contrib.tpu.TPUDistributionStrategy(tpu_cluster_resolver)
-        model = tf.contrib.tpu.keras_to_tpu_model(
-            model, strategy=strategy)
+        model = tf.contrib.tpu.keras_to_tpu_model(model, strategy=strategy)
 
     optimizer = tf.train.RMSPropOptimizer(learning_rate=0.05)
     loss_fn = tf.losses.log_loss
@@ -82,25 +81,24 @@ def main(args):
 
     if not os.path.exists(args.model_dir):
         os.makedirs(args.model_dir)
-    model.save(os.path.join(args.model_dir, 'model.hd5'))
+    model.save(os.path.join(args.model_dir, "model.hd5"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '--model-dir',
+        "--model-dir",
         type=str,
-        default='/tmp/tpu-template',
-        help='Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.')
+        default="/tmp/tpu-template",
+        help="Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.",
+    )
+    parser.add_argument("--use-tpu", action="store_true", help="Whether to use TPU.")
     parser.add_argument(
-        '--use-tpu',
-        action='store_true',
-        help='Whether to use TPU.')
-    parser.add_argument(
-        '--tpu',
+        "--tpu",
         default=None,
-        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.')
+        help="The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.",
+    )
 
     args, _ = parser.parse_known_args()
 

@@ -67,19 +67,23 @@ def create_keras_model(input_dim, learning_rate):
     Dense = tf.keras.layers.Dense
     model = tf.keras.Sequential(
         [
-            Dense(100, activation=tf.nn.relu, kernel_initializer='uniform',
-                  input_shape=(input_dim,)),
+            Dense(
+                100,
+                activation=tf.nn.relu,
+                kernel_initializer="uniform",
+                input_shape=(input_dim,),
+            ),
             Dense(75, activation=tf.nn.relu),
             Dense(50, activation=tf.nn.relu),
             Dense(25, activation=tf.nn.relu),
-            Dense(1, activation=tf.nn.sigmoid)
-        ])
+            Dense(1, activation=tf.nn.sigmoid),
+        ]
+    )
 
     # Custom Optimizer:
     # https://www.tensorflow.org/api_docs/python/tf/train/RMSPropOptimizer
     optimizer = tf.keras.optimizers.RMSprop(lr=learning_rate)
 
     # Compile Keras model
-    model.compile(
-        loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    model.compile(loss="binary_crossentropy", optimizer=optimizer, metrics=["accuracy"])
     return model

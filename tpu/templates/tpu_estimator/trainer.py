@@ -20,7 +20,7 @@ import tensorflow as tf
 
 # ## The model function
 # There are two differences in the model function when using TPUs:
-# 
+#
 # * The optimizer needs to be wrapped in a `tf.contrib.tpu.CrossShardOptimizer`.
 #
 # * The model function should return a `tf.contrib.tpu.TPUEstimatorSpec`.
@@ -45,24 +45,20 @@ def model_fn(features, labels, mode, params):
         optimizer = tf.train.RMSPropOptimizer(learning_rate=0.05)
 
         # wrapper to make the optimizer work with TPUs
-        if params['use_tpu']:
+        if params["use_tpu"]:
             optimizer = tf.contrib.tpu.CrossShardOptimizer(optimizer)
 
         train_op = optimizer.minimize(loss, global_step=global_step)
 
-    if params['use_tpu']:
+    if params["use_tpu"]:
         # TPU version of EstimatorSpec
         return tf.contrib.tpu.TPUEstimatorSpec(
-            mode=mode,
-            predictions=predictions,
-            loss=loss,
-            train_op=train_op)
+            mode=mode, predictions=predictions, loss=loss, train_op=train_op
+        )
     else:
         return tf.estimator.EstimatorSpec(
-            mode=mode,
-            predictions=predictions,
-            loss=loss,
-            train_op=train_op)
+            mode=mode, predictions=predictions, loss=loss, train_op=train_op
+        )
 
 
 # ## The input function
@@ -91,7 +87,7 @@ def train_input_fn(params={}):
     dataset = tf.data.Dataset.from_tensor_slices((x_tensor, y_tensor))
 
     # TPUEstimator passes params when calling input_fn
-    batch_size = params.get('batch_size', 16)
+    batch_size = params.get("batch_size", 16)
 
     dataset = dataset.repeat().shuffle(32).batch(batch_size, drop_remainder=True)
 
@@ -132,8 +128,9 @@ def main(args):
         # additional configs required for using TPUs
         tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(args.tpu)
         tpu_config = tf.contrib.tpu.TPUConfig(
-            num_shards=8, # using Cloud TPU v2-8
-            iterations_per_loop=args.save_checkpoints_steps)
+            num_shards=8,  # using Cloud TPU v2-8
+            iterations_per_loop=args.save_checkpoints_steps,
+        )
 
         # use the TPU version of RunConfig
         config = tf.contrib.tpu.RunConfig(
@@ -141,7 +138,8 @@ def main(args):
             model_dir=args.model_dir,
             tpu_config=tpu_config,
             save_checkpoints_steps=args.save_checkpoints_steps,
-            save_summary_steps=100)
+            save_summary_steps=100,
+        )
 
         # TPUEstimator
         estimator = tf.contrib.tpu.TPUEstimator(
@@ -150,14 +148,12 @@ def main(args):
             params=params,
             train_batch_size=args.train_batch_size,
             eval_batch_size=32,
-            export_to_tpu=False)
+            export_to_tpu=False,
+        )
     else:
         config = tf.estimator.RunConfig(model_dir=args.model_dir)
 
-        estimator = tf.estimator.Estimator(
-            model_fn,
-            config=config,
-            params=params)
+        estimator = tf.estimator.Estimator(model_fn, config=config, params=params)
 
     estimator.train(train_input_fn, max_steps=args.max_steps)
 
@@ -166,7 +162,7 @@ def main(args):
 # Depending on where the training job is run, the `TPUClusterResolver`
 # needs different input to access the TPU workers:
 #
-# * On AI Platform: the input should be `None` 
+# * On AI Platform: the input should be `None`
 #   and the service will handle it.
 #
 # * On Compute Engine: the input should be the name of TPU you create
@@ -175,40 +171,42 @@ def main(args):
 # * On Colab: the input should be the grpc URI from the environment
 # variable `COLAB_TPU_ADDR`; the Colab runtime type should be set to
 # TPU for this environment variable to be automatically set.
-#  
+#
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '--model-dir',
+        "--model-dir",
         type=str,
-        default='/tmp/tpu-template',
-        help='Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.')
+        default="/tmp/tpu-template",
+        help="Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.",
+    )
     parser.add_argument(
-        '--max-steps',
+        "--max-steps",
         type=int,
         default=1000,
-        help='The total number of steps to train the model.')
+        help="The total number of steps to train the model.",
+    )
     parser.add_argument(
-        '--train-batch-size',
+        "--train-batch-size",
         type=int,
         default=16,
-        help='The training batch size.  The training batch is divided evenly across the TPU cores.')
+        help="The training batch size.  The training batch is divided evenly across the TPU cores.",
+    )
     parser.add_argument(
-        '--save-checkpoints-steps',
+        "--save-checkpoints-steps",
         type=int,
         default=100,
-        help='The number of training steps before saving each checkpoint.')
+        help="The number of training steps before saving each checkpoint.",
+    )
+    parser.add_argument("--use-tpu", action="store_true", help="Whether to use TPU.")
     parser.add_argument(
-        '--use-tpu',
-        action='store_true',
-        help='Whether to use TPU.')
-    parser.add_argument(
-        '--tpu',
+        "--tpu",
         default=None,
-        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.')
+        help="The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.",
+    )
 
     args, _ = parser.parse_known_args()
 

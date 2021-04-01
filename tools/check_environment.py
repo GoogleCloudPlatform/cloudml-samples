@@ -21,74 +21,99 @@ import re
 import subprocess
 import sys
 
-MIN_CLOUD_ML_SDK_VERSION = '0.1.8a0'
-MIN_CLOUD_SDK_VERSION = '136.0.0'
-MIN_TENSORFLOW_VERSION = '0.11.0rc0'
+MIN_CLOUD_ML_SDK_VERSION = "0.1.8a0"
+MIN_CLOUD_SDK_VERSION = "136.0.0"
+MIN_TENSORFLOW_VERSION = "0.11.0rc0"
+
 
 def get_version_from_pip(package_name):
-  """Returns the version of an installed pip package."""
-  try:
-    package_info = subprocess.check_output(['pip', 'show', package_name])
-  except subprocess.CalledProcessError:
-    print('ERROR: Package %s has not been installed with pip.' % package_name,
-          file=sys.stderr)
+    """Returns the version of an installed pip package."""
+    try:
+        package_info = subprocess.check_output(["pip", "show", package_name])
+    except subprocess.CalledProcessError:
+        print(
+            "ERROR: Package %s has not been installed with pip." % package_name,
+            file=sys.stderr,
+        )
+        exit(1)
+    for line in package_info.split("\n"):
+        m = re.match(r"Version: (.+)", line)
+        if m:
+            return m.group(1)
+    print(
+        'ERROR: Unable to parse "pip show" output: %s' % package_info, file=sys.stderr
+    )
     exit(1)
-  for line in package_info.split('\n'):
-    m = re.match(r'Version: (.+)', line)
-    if m:
-      return m.group(1)
-  print('ERROR: Unable to parse "pip show" output: %s' % package_info,
-        file=sys.stderr)
-  exit(1)
+
 
 def get_cloud_sdk_version():
-  """Returns the version of the Cloud SDK that is installed."""
-  gcloud_info = subprocess.check_output(['gcloud', 'version'])
-  for line in gcloud_info.split('\n'):
-    m = re.match(r'Google Cloud SDK (.+)', line)
-    if m:
-      return m.group(1)
-  print('ERROR: Unable to parse "gcloud version" output: %s' % gcloud_info,
-        file=sys.stderr)
-  exit(1)
-
-def check_version_is_supported(name, version, min_version, help=''):
-  """Checks whether a particular version of a package is new enough."""
-  if (pkg_resources.parse_version(version) <
-      pkg_resources.parse_version(min_version)):
-    # Version is too old.
-    print('ERROR: Unsupported %s version: %s (minimum %s).%s' %
-              (name, version, min_version, (' %s' % help) if help else ''),
-          file=sys.stderr)
+    """Returns the version of the Cloud SDK that is installed."""
+    gcloud_info = subprocess.check_output(["gcloud", "version"])
+    for line in gcloud_info.split("\n"):
+        m = re.match(r"Google Cloud SDK (.+)", line)
+        if m:
+            return m.group(1)
+    print(
+        'ERROR: Unable to parse "gcloud version" output: %s' % gcloud_info,
+        file=sys.stderr,
+    )
     exit(1)
+
+
+def check_version_is_supported(name, version, min_version, help=""):
+    """Checks whether a particular version of a package is new enough."""
+    if pkg_resources.parse_version(version) < pkg_resources.parse_version(min_version):
+        # Version is too old.
+        print(
+            "ERROR: Unsupported %s version: %s (minimum %s).%s"
+            % (name, version, min_version, (" %s" % help) if help else ""),
+            file=sys.stderr,
+        )
+        exit(1)
+
 
 # Check that TensorFlow is installed.
 import tensorflow as tf
-check_version_is_supported('TensorFlow', tf.__version__, MIN_TENSORFLOW_VERSION)
+
+check_version_is_supported("TensorFlow", tf.__version__, MIN_TENSORFLOW_VERSION)
 
 # Check that the Cloud ML SDK is installed.
 import google.cloud.ml
+
 check_version_is_supported(
-    'Cloud ML SDK', get_version_from_pip('cloudml'), MIN_CLOUD_ML_SDK_VERSION)
+    "Cloud ML SDK", get_version_from_pip("cloudml"), MIN_CLOUD_ML_SDK_VERSION
+)
 
 # Check that the Cloud SDK is installed, initialized, and logged in.
 check_version_is_supported(
-    'Cloud SDK', get_cloud_sdk_version(), MIN_CLOUD_SDK_VERSION,
-    help='To update the Cloud SDK, run "gcloud components update".')
+    "Cloud SDK",
+    get_cloud_sdk_version(),
+    MIN_CLOUD_SDK_VERSION,
+    help='To update the Cloud SDK, run "gcloud components update".',
+)
 project_id = subprocess.check_output(
-    ['gcloud', 'config', 'list', 'project',
-     '--format', 'value(core.project)']).rstrip()
-auth_token = subprocess.check_output(
-    ['gcloud', 'auth', 'print-access-token']).rstrip()
+    ["gcloud", "config", "list", "project", "--format", "value(core.project)"]
+).rstrip()
+auth_token = subprocess.check_output(["gcloud", "auth", "print-access-token"]).rstrip()
 
 # Check that the Cloud ML API is enabled.
-models = subprocess.check_output([
-    'curl', '-s', '-S', '-X', 'GET', '-H', 'Content-Type: application/json',
-    '-H', 'Authorization: Bearer %s' % auth_token,
-    'https://ml.googleapis.com/v1beta1/projects/%s/models' % project_id])
+models = subprocess.check_output(
+    [
+        "curl",
+        "-s",
+        "-S",
+        "-X",
+        "GET",
+        "-H",
+        "Content-Type: application/json",
+        "-H",
+        "Authorization: Bearer %s" % auth_token,
+        "https://ml.googleapis.com/v1beta1/projects/%s/models" % project_id,
+    ]
+)
 if '"error"' in models:
-  print('ERROR: Unable to list Cloud ML models: %s' % models, file=sys.stderr)
-  exit(1)
+    print("ERROR: Unable to list Cloud ML models: %s" % models, file=sys.stderr)
+    exit(1)
 
 # Everything completed successfully.
-print('Success! Your environment is configured correctly.')
+print("Success! Your environment is configured correctly.")

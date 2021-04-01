@@ -20,7 +20,7 @@
 
 # Task type can be either 'classification' or 'regression'
 # This is based on the target feature in the dataset.
-TASK_TYPE = ''  # classification | regression
+TASK_TYPE = ""  # classification | regression
 
 # List of all the columns (header) present in the input data file(s).
 # Used for parsing the input data.
@@ -58,8 +58,7 @@ CATEGORICAL_FEATURE_NAMES_WITH_HASH_BUCKET = {}
 WEIGHT_COLUMN_NAME = None
 
 # Target feature name (response or class variable).
-TARGET_NAME = ''
+TARGET_NAME = ""
 
 # List of the class values (labels) in a classification dataset.
 TARGET_LABELS = []
-

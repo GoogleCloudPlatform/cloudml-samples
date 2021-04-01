@@ -13,7 +13,7 @@ from sklearn.preprocessing import LabelBinarizer
 
 
 # TODO: REPLACE 'YOUR_BUCKET_NAME' with your GCS Bucket name.
-BUCKET_NAME = 'YOUR_BUCKET_NAME'
+BUCKET_NAME = "YOUR_BUCKET_NAME"
 # [END setup]
 
 
@@ -23,12 +23,12 @@ BUCKET_NAME = 'YOUR_BUCKET_NAME'
 # ---------------------------------------
 # [START download-data]
 # Public bucket holding the census data
-bucket = storage.Client().bucket('cloud-samples-data')
+bucket = storage.Client().bucket("cloud-samples-data")
 
 # Path to the data inside the public bucket
-blob = bucket.blob('ai-platform/sklearn/census_data/adult.data')
+blob = bucket.blob("ai-platform/sklearn/census_data/adult.data")
 # Download the data
-blob.download_to_filename('adult.data')
+blob.download_to_filename("adult.data")
 # [END download-data]
 
 
@@ -38,45 +38,45 @@ blob.download_to_filename('adult.data')
 # [START define-and-load-data]
 # Define the format of your input data including unused columns (These are the columns from the census data files)
 COLUMNS = (
-    'age',
-    'workclass',
-    'fnlwgt',
-    'education',
-    'education-num',
-    'marital-status',
-    'occupation',
-    'relationship',
-    'race',
-    'sex',
-    'capital-gain',
-    'capital-loss',
-    'hours-per-week',
-    'native-country',
-    'income-level'
+    "age",
+    "workclass",
+    "fnlwgt",
+    "education",
+    "education-num",
+    "marital-status",
+    "occupation",
+    "relationship",
+    "race",
+    "sex",
+    "capital-gain",
+    "capital-loss",
+    "hours-per-week",
+    "native-country",
+    "income-level",
 )
 
 # Categorical columns are columns that need to be turned into a numerical value to be used by scikit-learn
 CATEGORICAL_COLUMNS = (
-    'workclass',
-    'education',
-    'marital-status',
-    'occupation',
-    'relationship',
-    'race',
-    'sex',
-    'native-country'
+    "workclass",
+    "education",
+    "marital-status",
+    "occupation",
+    "relationship",
+    "race",
+    "sex",
+    "native-country",
 )
 
 
 # Load the training census dataset
-with open('./adult.data', 'r') as train_data:
+with open("./adult.data", "r") as train_data:
     raw_training_data = pd.read_csv(train_data, header=None, names=COLUMNS)
 
 # Remove the column we are trying to predict ('income-level') from our features list
 # Convert the Dataframe to a lists of lists
-train_features = raw_training_data.drop('income-level', axis=1).values.tolist()
+train_features = raw_training_data.drop("income-level", axis=1).values.tolist()
 # Create our training labels list, convert the Dataframe to a lists of lists
-train_labels = (raw_training_data['income-level'] == ' >50K').values.tolist()
+train_labels = (raw_training_data["income-level"] == " >50K").values.tolist()
 # [END define-and-load-data]
 
 
@@ -113,9 +113,11 @@ for i, col in enumerate(COLUMNS[:-1]):
         lbn.fit(r)
         # Create the pipeline to extract the categorical feature
         categorical_pipelines.append(
-            ('categorical-{}'.format(i), Pipeline([
-                ('SKB-{}'.format(i), skb),
-                ('LBN-{}'.format(i), lbn)])))
+            (
+                "categorical-{}".format(i),
+                Pipeline([("SKB-{}".format(i), skb), ("LBN-{}".format(i), lbn)]),
+            )
+        )
 # [END categorical-feature-conversion]
 
 # [START create-pipeline]
@@ -123,7 +125,7 @@ for i, col in enumerate(COLUMNS[:-1]):
 skb = SelectKBest(k=6)
 # From COLUMNS use the features that are numerical
 skb.scores_ = [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0]
-categorical_pipelines.append(('numerical', skb))
+categorical_pipelines.append(("numerical", skb))
 
 # Combine all the features using FeatureUnion
 preprocess = FeatureUnion(categorical_pipelines)
@@ -135,10 +137,7 @@ classifier = RandomForestClassifier()
 classifier.fit(preprocess.transform(train_features), train_labels)
 
 # Create the overall model as a single pipeline
-pipeline = Pipeline([
-    ('union', preprocess),
-    ('classifier', classifier)
-])
+pipeline = Pipeline([("union", preprocess), ("classifier", classifier)])
 # [END create-pipeline]
 
 
@@ -147,13 +146,13 @@ pipeline = Pipeline([
 # ---------------------------------------
 # [START export-to-gcs]
 # Export the model to a file
-model = 'model.joblib'
+model = "model.joblib"
 joblib.dump(pipeline, model)
 
 # Upload the model to GCS
 bucket = storage.Client().bucket(BUCKET_NAME)
-blob = bucket.blob('{}/{}'.format(
-    datetime.datetime.now().strftime('census_%Y%m%d_%H%M%S'),
-    model))
+blob = bucket.blob(
+    "{}/{}".format(datetime.datetime.now().strftime("census_%Y%m%d_%H%M%S"), model)
+)
 blob.upload_from_filename(model)
 # [END export-to-gcs]

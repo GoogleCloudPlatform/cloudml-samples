@@ -30,134 +30,141 @@ from official.utils.logs import hooks
 from official.utils.logs import logger
 from official.utils.logs import metric_hook
 
-_TENSORS_TO_LOG = dict((x, x) for x in ['learning_rate',
-                                        'cross_entropy',
-                                        'train_accuracy'])
+_TENSORS_TO_LOG = dict(
+    (x, x) for x in ["learning_rate", "cross_entropy", "train_accuracy"]
+)
 
 
 def get_train_hooks(name_list, use_tpu=False, **kwargs):
-  """Factory for getting a list of TensorFlow hooks for training by name.
+    """Factory for getting a list of TensorFlow hooks for training by name.
 
-  Args:
-    name_list: a list of strings to name desired hook classes. Allowed:
-      LoggingTensorHook, ProfilerHook, ExamplesPerSecondHook, which are defined
-      as keys in HOOKS
-    use_tpu: Boolean of whether computation occurs on a TPU. This will disable
-      hooks altogether.
-    **kwargs: a dictionary of arguments to the hooks.
+    Args:
+      name_list: a list of strings to name desired hook classes. Allowed:
+        LoggingTensorHook, ProfilerHook, ExamplesPerSecondHook, which are defined
+        as keys in HOOKS
+      use_tpu: Boolean of whether computation occurs on a TPU. This will disable
+        hooks altogether.
+      **kwargs: a dictionary of arguments to the hooks.
 
-  Returns:
-    list of instantiated hooks, ready to be used in a classifier.train call.
+    Returns:
+      list of instantiated hooks, ready to be used in a classifier.train call.
 
-  Raises:
-    ValueError: if an unrecognized name is passed.
-  """
+    Raises:
+      ValueError: if an unrecognized name is passed.
+    """
 
-  if not name_list:
-    return []
+    if not name_list:
+        return []
 
-  if use_tpu:
-    tf.logging.warning("hooks_helper received name_list `{}`, but a TPU is "
-                       "specified. No hooks will be used.".format(name_list))
-    return []
+    if use_tpu:
+        tf.logging.warning(
+            "hooks_helper received name_list `{}`, but a TPU is "
+            "specified. No hooks will be used.".format(name_list)
+        )
+        return []
 
-  train_hooks = []
-  for name in name_list:
-    hook_name = HOOKS.get(name.strip().lower())
-    if hook_name is None:
-      raise ValueError('Unrecognized training hook requested: {}'.format(name))
-    else:
-      train_hooks.append(hook_name(**kwargs))
+    train_hooks = []
+    for name in name_list:
+        hook_name = HOOKS.get(name.strip().lower())
+        if hook_name is None:
+            raise ValueError("Unrecognized training hook requested: {}".format(name))
+        else:
+            train_hooks.append(hook_name(**kwargs))
 
-  return train_hooks
-
-
-def get_logging_tensor_hook(every_n_iter=100, tensors_to_log=None, **kwargs):  # pylint: disable=unused-argument
-  """Function to get LoggingTensorHook.
-
-  Args:
-    every_n_iter: `int`, print the values of `tensors` once every N local
-      steps taken on the current worker.
-    tensors_to_log: List of tensor names or dictionary mapping labels to tensor
-      names. If not set, log _TENSORS_TO_LOG by default.
-    **kwargs: a dictionary of arguments to LoggingTensorHook.
-
-  Returns:
-    Returns a LoggingTensorHook with a standard set of tensors that will be
-    printed to stdout.
-  """
-  if tensors_to_log is None:
-    tensors_to_log = _TENSORS_TO_LOG
-
-  return tf.train.LoggingTensorHook(
-      tensors=tensors_to_log,
-      every_n_iter=every_n_iter)
+    return train_hooks
 
 
-def get_profiler_hook(model_dir, save_steps=1000, **kwargs):  # pylint: disable=unused-argument
-  """Function to get ProfilerHook.
+def get_logging_tensor_hook(
+    every_n_iter=100, tensors_to_log=None, **kwargs
+):  # pylint: disable=unused-argument
+    """Function to get LoggingTensorHook.
 
-  Args:
-    model_dir: The directory to save the profile traces to.
-    save_steps: `int`, print profile traces every N steps.
-    **kwargs: a dictionary of arguments to ProfilerHook.
+    Args:
+      every_n_iter: `int`, print the values of `tensors` once every N local
+        steps taken on the current worker.
+      tensors_to_log: List of tensor names or dictionary mapping labels to tensor
+        names. If not set, log _TENSORS_TO_LOG by default.
+      **kwargs: a dictionary of arguments to LoggingTensorHook.
 
-  Returns:
-    Returns a ProfilerHook that writes out timelines that can be loaded into
-    profiling tools like chrome://tracing.
-  """
-  return tf.train.ProfilerHook(save_steps=save_steps, output_dir=model_dir)
+    Returns:
+      Returns a LoggingTensorHook with a standard set of tensors that will be
+      printed to stdout.
+    """
+    if tensors_to_log is None:
+        tensors_to_log = _TENSORS_TO_LOG
 
-
-def get_examples_per_second_hook(every_n_steps=100,
-                                 batch_size=128,
-                                 warm_steps=5,
-                                 **kwargs):  # pylint: disable=unused-argument
-  """Function to get ExamplesPerSecondHook.
-
-  Args:
-    every_n_steps: `int`, print current and average examples per second every
-      N steps.
-    batch_size: `int`, total batch size used to calculate examples/second from
-      global time.
-    warm_steps: skip this number of steps before logging and running average.
-    **kwargs: a dictionary of arguments to ExamplesPerSecondHook.
-
-  Returns:
-    Returns a ProfilerHook that writes out timelines that can be loaded into
-    profiling tools like chrome://tracing.
-  """
-  return hooks.ExamplesPerSecondHook(
-      batch_size=batch_size, every_n_steps=every_n_steps,
-      warm_steps=warm_steps, metric_logger=logger.get_benchmark_logger())
+    return tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=every_n_iter)
 
 
-def get_logging_metric_hook(tensors_to_log=None,
-                            every_n_secs=600,
-                            **kwargs):  # pylint: disable=unused-argument
-  """Function to get LoggingMetricHook.
+def get_profiler_hook(
+    model_dir, save_steps=1000, **kwargs
+):  # pylint: disable=unused-argument
+    """Function to get ProfilerHook.
 
-  Args:
-    tensors_to_log: List of tensor names or dictionary mapping labels to tensor
-      names. If not set, log _TENSORS_TO_LOG by default.
-    every_n_secs: `int`, the frequency for logging the metric. Default to every
-      10 mins.
+    Args:
+      model_dir: The directory to save the profile traces to.
+      save_steps: `int`, print profile traces every N steps.
+      **kwargs: a dictionary of arguments to ProfilerHook.
 
-  Returns:
-    Returns a LoggingMetricHook that saves tensor values in a JSON format.
-  """
-  if tensors_to_log is None:
-    tensors_to_log = _TENSORS_TO_LOG
-  return metric_hook.LoggingMetricHook(
-      tensors=tensors_to_log,
-      metric_logger=logger.get_benchmark_logger(),
-      every_n_secs=every_n_secs)
+    Returns:
+      Returns a ProfilerHook that writes out timelines that can be loaded into
+      profiling tools like chrome://tracing.
+    """
+    return tf.train.ProfilerHook(save_steps=save_steps, output_dir=model_dir)
+
+
+def get_examples_per_second_hook(
+    every_n_steps=100, batch_size=128, warm_steps=5, **kwargs
+):  # pylint: disable=unused-argument
+    """Function to get ExamplesPerSecondHook.
+
+    Args:
+      every_n_steps: `int`, print current and average examples per second every
+        N steps.
+      batch_size: `int`, total batch size used to calculate examples/second from
+        global time.
+      warm_steps: skip this number of steps before logging and running average.
+      **kwargs: a dictionary of arguments to ExamplesPerSecondHook.
+
+    Returns:
+      Returns a ProfilerHook that writes out timelines that can be loaded into
+      profiling tools like chrome://tracing.
+    """
+    return hooks.ExamplesPerSecondHook(
+        batch_size=batch_size,
+        every_n_steps=every_n_steps,
+        warm_steps=warm_steps,
+        metric_logger=logger.get_benchmark_logger(),
+    )
+
+
+def get_logging_metric_hook(
+    tensors_to_log=None, every_n_secs=600, **kwargs
+):  # pylint: disable=unused-argument
+    """Function to get LoggingMetricHook.
+
+    Args:
+      tensors_to_log: List of tensor names or dictionary mapping labels to tensor
+        names. If not set, log _TENSORS_TO_LOG by default.
+      every_n_secs: `int`, the frequency for logging the metric. Default to every
+        10 mins.
+
+    Returns:
+      Returns a LoggingMetricHook that saves tensor values in a JSON format.
+    """
+    if tensors_to_log is None:
+        tensors_to_log = _TENSORS_TO_LOG
+    return metric_hook.LoggingMetricHook(
+        tensors=tensors_to_log,
+        metric_logger=logger.get_benchmark_logger(),
+        every_n_secs=every_n_secs,
+    )
 
 
 # A dictionary to map one hook name and its corresponding function
 HOOKS = {
-    'loggingtensorhook': get_logging_tensor_hook,
-    'profilerhook': get_profiler_hook,
-    'examplespersecondhook': get_examples_per_second_hook,
-    'loggingmetrichook': get_logging_metric_hook,
+    "loggingtensorhook": get_logging_tensor_hook,
+    "profilerhook": get_profiler_hook,
+    "examplespersecondhook": get_examples_per_second_hook,
+    "loggingmetrichook": get_logging_metric_hook,
 }

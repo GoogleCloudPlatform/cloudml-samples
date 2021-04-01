@@ -19,10 +19,10 @@
 CSV_COLUMNS = None  # Schema of the data. Necessary for data stored in GCS
 
 NUMERIC_FEATURES = [
-    'sepal_length',
-    'sepal_width',
-    'petal_length',
-    'petal_width',
+    "sepal_length",
+    "sepal_width",
+    "petal_length",
+    "petal_width",
 ]
 
 # TODO(cfezequiel): Use an example dataset with categorical features.
@@ -32,14 +32,14 @@ CATEGORICAL_FEATURES = [
 
 FEATURE_COLUMNS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
-LABEL = 'species'
+LABEL = "species"
 
-METRIC_FILE_NAME = 'eval_metrics.joblib'
-MODEL_FILE_NAME = 'model.joblib'
+METRIC_FILE_NAME = "eval_metrics.joblib"
+MODEL_FILE_NAME = "model.joblib"
 
-BASE_QUERY = '''
+BASE_QUERY = """
     SELECT
       *
     FROM
       `{table}`
-  '''
+  """

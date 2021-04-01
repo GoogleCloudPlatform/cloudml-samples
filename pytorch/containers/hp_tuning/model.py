@@ -28,7 +28,7 @@ class SonarDNN(nn.Module):
             nn.ReLU(),
             nn.Dropout(p=0.2),
             nn.Linear(30, 1),
-            nn.Sigmoid()
+            nn.Sigmoid(),
         )
 
     def forward(self, x):

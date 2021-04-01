@@ -45,7 +45,7 @@ class Agent(object):
         Returns:
             numpy.array, represent an action.
         """
-        raise NotImplementedError('Not implemented')
+        raise NotImplementedError("Not implemented")
 
     def action(self, observation):
         """Return an action according to the agent's internal policy.
@@ -59,7 +59,7 @@ class Agent(object):
         Returns:
             numpy.array, represent an action.
         """
-        raise NotImplementedError('Not implemented')
+        raise NotImplementedError("Not implemented")
 
     def action_with_noise(self, observation):
         """Return a noisy action.
@@ -74,7 +74,7 @@ class Agent(object):
         Returns:
             numpy.array, represent an action.
         """
-        raise NotImplementedError('Not implemented')
+        raise NotImplementedError("Not implemented")
 
     def train(self, global_step):
         """Improve the agent's policy once.
@@ -86,4 +86,4 @@ class Agent(object):
         Returns:
             object, represent training metrics.
         """
-        raise NotImplementedError('Not implemented')
+        raise NotImplementedError("Not implemented")

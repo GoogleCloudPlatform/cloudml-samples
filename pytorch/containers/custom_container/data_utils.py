@@ -31,43 +31,37 @@ class SonarDataset(Dataset):
 
     def __getitem__(self, idx):
         # When iterating through the dataset get the features and targets
-        features = self.dataframe.iloc[idx, :-1].values.astype(dtype='float64')
+        features = self.dataframe.iloc[idx, :-1].values.astype(dtype="float64")
 
         # Convert the targets to binary values:
         # R = rock --> 0
         # M = mine --> 1
         target = self.dataframe.iloc[idx, -1:].values
-        if target[0] == 'R':
+        if target[0] == "R":
             target[0] = 0
-        elif target[0] == 'M':
+        elif target[0] == "M":
             target[0] = 1
-        target = target.astype(dtype='float64')
+        target = target.astype(dtype="float64")
 
         # Load the data as a tensor
-        data = {'features': torch.from_numpy(features),
-                'target': target}
+        data = {"features": torch.from_numpy(features), "target": target}
         return data
 
 
 def load_data(test_split, batch_size):
     """Loads the data"""
-    sonar_dataset = SonarDataset('./sonar.all-data')
+    sonar_dataset = SonarDataset("./sonar.all-data")
     # Create indices for the split
     dataset_size = len(sonar_dataset)
     test_size = int(test_split * dataset_size)
     train_size = dataset_size - test_size
 
-    train_dataset, test_dataset = random_split(sonar_dataset,
-                                               [train_size, test_size])
+    train_dataset, test_dataset = random_split(sonar_dataset, [train_size, test_size])
 
     train_loader = DataLoader(
-        train_dataset.dataset,
-        batch_size=batch_size,
-        shuffle=True)
-    test_loader = DataLoader(
-        test_dataset.dataset,
-        batch_size=batch_size,
-        shuffle=True)
+        train_dataset.dataset, batch_size=batch_size, shuffle=True
+    )
+    test_loader = DataLoader(test_dataset.dataset, batch_size=batch_size, shuffle=True)
 
     return train_loader, test_loader
 
@@ -75,7 +69,9 @@ def load_data(test_split, batch_size):
 def save_model(model_dir, model_name):
     """Saves the model to Google Cloud Storage"""
     bucket = storage.Client().bucket(model_dir)
-    blob = bucket.blob('{}/{}'.format(
-        datetime.datetime.now().strftime('sonar_%Y%m%d_%H%M%S'),
-        model_name))
+    blob = bucket.blob(
+        "{}/{}".format(
+            datetime.datetime.now().strftime("sonar_%Y%m%d_%H%M%S"), model_name
+        )
+    )
     blob.upload_from_filename(model_name)

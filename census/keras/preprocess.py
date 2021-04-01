@@ -19,12 +19,12 @@ import sys
 
 from trainer import model
 
-if __name__ == '__main__':
-    gen = model.generator_input(['adult.data.csv'], chunk_size=5000)
+if __name__ == "__main__":
+    gen = model.generator_input(["adult.data.csv"], chunk_size=5000)
     sample = gen.__next__()
     input_sample = dict()
-    input_sample['input'] = sample[0].values[0].tolist()
-    print('Produced sample with label {}'.format(sample[1].values[0].tolist()))
+    input_sample["input"] = sample[0].values[0].tolist()
+    print("Produced sample with label {}".format(sample[1].values[0].tolist()))
 
-    with open(sys.argv[1], 'w') as outfile:
+    with open(sys.argv[1], "w") as outfile:
         json.dump(input_sample, outfile)

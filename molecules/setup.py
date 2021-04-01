@@ -16,16 +16,16 @@ import setuptools
 #       cloud runs.
 
 REQUIRED_PACKAGES = [
-    'apache-beam[gcp]==2.11.*',
-    'tensorflow-transform==0.13.*',
-    'tensorflow==1.13.*',
+    "apache-beam[gcp]==2.11.*",
+    "tensorflow-transform==0.13.*",
+    "tensorflow==1.13.*",
 ]
 
 setuptools.setup(
-    name='molecules',
-    version='0.0.1',
+    name="molecules",
+    version="0.0.1",
     install_requires=REQUIRED_PACKAGES,
     packages=setuptools.find_packages(),
     include_package_data=True,
-    description='Cloud ML molecules sample with preprocessing',
+    description="Cloud ML molecules sample with preprocessing",
 )

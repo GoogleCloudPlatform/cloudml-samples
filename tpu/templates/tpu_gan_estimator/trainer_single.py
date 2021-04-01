@@ -20,6 +20,7 @@ import tensorflow as tf
 INPUT_DIM = 5
 OUTPUT_DIM = 3
 
+
 def generator_fn(generator_inputs):
     outputs = tf.layers.dense(generator_inputs, OUTPUT_DIM)
     return outputs
@@ -37,7 +38,9 @@ def model_fn(features, labels, mode, params):
     generator_inputs = features
     real_data = labels
 
-    gan_model = tf.contrib.gan.gan_model(generator_fn, discriminator_fn, real_data, generator_inputs)
+    gan_model = tf.contrib.gan.gan_model(
+        generator_fn, discriminator_fn, real_data, generator_inputs
+    )
 
     predictions = gan_model.generated_data
     loss = None
@@ -53,17 +56,20 @@ def model_fn(features, labels, mode, params):
         dis_optimizer = tf.train.RMSPropOptimizer(learning_rate=0.05)
 
         # wrapper to make the optimizer work with TPUs
-        if params['use_tpu']:
+        if params["use_tpu"]:
             gen_optimizer = tf.contrib.tpu.CrossShardOptimizer(gen_optimizer)
             dis_optimizer = tf.contrib.tpu.CrossShardOptimizer(dis_optimizer)
 
-        gan_train_ops = tf.contrib.gan.gan_train_ops(gan_model, gan_loss, gen_optimizer, dis_optimizer)
+        gan_train_ops = tf.contrib.gan.gan_train_ops(
+            gan_model, gan_loss, gen_optimizer, dis_optimizer
+        )
 
-        while_loop = tf.contrib.tpu.while_loop if params['use_tpu'] else tf.while_loop
+        while_loop = tf.contrib.tpu.while_loop if params["use_tpu"] else tf.while_loop
 
         # train the discriminator 100 steps
         inputs = [tf.constant(0), tf.constant(0.0)]
         cond = lambda i, x: tf.less(i, 100)
+
         def body(i, x):
             return tf.add(i, 1), gan_train_ops.discriminator_train_op
 
@@ -71,23 +77,24 @@ def model_fn(features, labels, mode, params):
 
         # tf.contrib.gan's train op does not manage global steps in it
         train_op = tf.group(
-            dis_train_op,
-            gan_train_ops.generator_train_op,
-            global_step.assign_add(1))
+            dis_train_op, gan_train_ops.generator_train_op, global_step.assign_add(1)
+        )
 
-    if params['use_tpu']:
+    if params["use_tpu"]:
         # TPU version of EstimatorSpec
         return tf.contrib.tpu.TPUEstimatorSpec(
             mode=mode,
             predictions=predictions,
             loss=loss,
-            train_op=train_op,)
+            train_op=train_op,
+        )
     else:
         return tf.estimator.EstimatorSpec(
             mode=mode,
             predictions=predictions,
             loss=loss,
-            train_op=train_op,)
+            train_op=train_op,
+        )
 
 
 def train_input_fn(params={}):
@@ -100,7 +107,7 @@ def train_input_fn(params={}):
     dataset = dataset.repeat().shuffle(10)
 
     # TPUEstimator passes params when calling input_fn
-    batch_size = params.get('train_batch_size', 16)
+    batch_size = params.get("train_batch_size", 16)
     dataset = dataset.batch(batch_size, drop_remainder=True)
 
     # TPUs need to know all dimensions when the graph is built
@@ -129,8 +136,9 @@ def main(args):
         # additional configs required for using TPUs
         tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(args.tpu)
         tpu_config = tf.contrib.tpu.TPUConfig(
-            num_shards=8, # using Cloud TPU v2-8
-            iterations_per_loop=args.save_checkpoints_steps)
+            num_shards=8,  # using Cloud TPU v2-8
+            iterations_per_loop=args.save_checkpoints_steps,
+        )
 
         # use the TPU version of RunConfig
         config = tf.contrib.tpu.RunConfig(
@@ -138,7 +146,8 @@ def main(args):
             model_dir=args.model_dir,
             tpu_config=tpu_config,
             save_checkpoints_steps=args.save_checkpoints_steps,
-            save_summary_steps=10)
+            save_summary_steps=10,
+        )
 
         # TPUEstimator
         estimator = tf.contrib.tpu.TPUEstimator(
@@ -147,48 +156,46 @@ def main(args):
             params=params,
             train_batch_size=args.train_batch_size,
             eval_batch_size=32,
-            export_to_tpu=False)
-        
+            export_to_tpu=False,
+        )
+
     else:
         config = tf.estimator.RunConfig(
-            model_dir=args.model_dir,
-            save_checkpoints_steps=10,
-            save_summary_steps=10)
+            model_dir=args.model_dir, save_checkpoints_steps=10, save_summary_steps=10
+        )
 
-        estimator = tf.estimator.Estimator(
-            model_fn,
-            config=config,
-            params=params)
+        estimator = tf.estimator.Estimator(model_fn, config=config, params=params)
 
     estimator.train(train_input_fn, steps=100)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '--model-dir',
+        "--model-dir",
         type=str,
-        default='/tmp/tpu-template',
-        help='Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.')
+        default="/tmp/tpu-template",
+        help="Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.",
+    )
     parser.add_argument(
-        '--train-batch-size',
+        "--train-batch-size",
         type=int,
         default=16,
-        help='The training batch size.  The training batch is divided evenly across the TPU cores.')
+        help="The training batch size.  The training batch is divided evenly across the TPU cores.",
+    )
     parser.add_argument(
-        '--save-checkpoints-steps',
+        "--save-checkpoints-steps",
         type=int,
         default=10,
-        help='The number of training steps before saving each checkpoint.')
+        help="The number of training steps before saving each checkpoint.",
+    )
+    parser.add_argument("--use-tpu", action="store_true", help="Whether to use TPU.")
     parser.add_argument(
-        '--use-tpu',
-        action='store_true',
-        help='Whether to use TPU.')
-    parser.add_argument(
-        '--tpu',
+        "--tpu",
         default=None,
-        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.')
+        help="The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.",
+    )
 
     args, _ = parser.parse_known_args()
 
