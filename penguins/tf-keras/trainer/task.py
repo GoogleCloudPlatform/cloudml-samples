@@ -25,6 +25,7 @@ from . import util
 
 import tensorflow as tf
 
+
 def get_args():
     """Argument parser.
 
@@ -109,7 +110,8 @@ def train_and_evaluate(args):
 
     # Setup Learning Rate decay.
     lr_decay_cb = tf.keras.callbacks.LearningRateScheduler(
-        lambda epoch: args.learning_rate + 0.02 * (0.5 ** (1 + epoch)), verbose=True
+        lambda epoch: args.learning_rate + 0.02 * (0.5 ** (1 + epoch)), 
+        verbose=True
     )
 
     # Setup TensorBoard callback.
