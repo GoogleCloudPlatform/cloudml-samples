@@ -18,87 +18,52 @@ import tensorflow as tf
 # Additionally, provide metadata about the feature.
 INPUT_COLUMNS = [
     # Categorical base columns
+
     # For categorical columns with known values we can provide lists
     # of values ahead of time.
     tf.feature_column.categorical_column_with_vocabulary_list(
-        "gender", [" Female", " Male"]
-    ),
+        'gender', [' Female', ' Male']),
     tf.feature_column.categorical_column_with_vocabulary_list(
-        "race",
-        [" Amer-Indian-Eskimo", " Asian-Pac-Islander", " Black", " Other", " White"],
-    ),
+        'race', [
+            ' Amer-Indian-Eskimo', ' Asian-Pac-Islander', ' Black', ' Other',
+            ' White'
+        ]),
     tf.feature_column.categorical_column_with_vocabulary_list(
-        "education",
-        [
-            " Bachelors",
-            " HS-grad",
-            " 11th",
-            " Masters",
-            " 9th",
-            " Some-college",
-            " Assoc-acdm",
-            " Assoc-voc",
-            " 7th-8th",
-            " Doctorate",
-            " Prof-school",
-            " 5th-6th",
-            " 10th",
-            " 1st-4th",
-            " Preschool",
-            " 12th",
-        ],
-    ),
+        'education', [
+            ' Bachelors', ' HS-grad', ' 11th', ' Masters', ' 9th',
+            ' Some-college', ' Assoc-acdm', ' Assoc-voc', ' 7th-8th',
+            ' Doctorate', ' Prof-school', ' 5th-6th', ' 10th', ' 1st-4th',
+            ' Preschool', ' 12th'
+        ]),
     tf.feature_column.categorical_column_with_vocabulary_list(
-        "marital_status",
-        [
-            " Married-civ-spouse",
-            " Divorced",
-            " Married-spouse-absent",
-            " Never-married",
-            " Separated",
-            " Married-AF-spouse",
-            " Widowed",
-        ],
-    ),
+        'marital_status', [
+            ' Married-civ-spouse', ' Divorced', ' Married-spouse-absent',
+            ' Never-married', ' Separated', ' Married-AF-spouse', ' Widowed'
+        ]),
     tf.feature_column.categorical_column_with_vocabulary_list(
-        "relationship",
-        [
-            " Husband",
-            " Not-in-family",
-            " Wife",
-            " Own-child",
-            " Unmarried",
-            " Other-relative",
-        ],
-    ),
+        'relationship', [
+            ' Husband', ' Not-in-family', ' Wife', ' Own-child', ' Unmarried',
+            ' Other-relative'
+        ]),
     tf.feature_column.categorical_column_with_vocabulary_list(
-        "workclass",
-        [
-            " Self-emp-not-inc",
-            " Private",
-            " State-gov",
-            " Federal-gov",
-            " Local-gov",
-            " ?",
-            " Self-emp-inc",
-            " Without-pay",
-            " Never-worked",
-        ],
-    ),
+        'workclass', [
+            ' Self-emp-not-inc', ' Private', ' State-gov', ' Federal-gov',
+            ' Local-gov', ' ?', ' Self-emp-inc', ' Without-pay', ' Never-worked'
+        ]),
+
     # For columns with a large number of values, or unknown values
     # We can use a hash function to convert to categories.
     tf.feature_column.categorical_column_with_hash_bucket(
-        "occupation", hash_bucket_size=100, dtype=tf.string
-    ),
+        'occupation', hash_bucket_size=100, dtype=tf.string),
     tf.feature_column.categorical_column_with_hash_bucket(
-        "native_country", hash_bucket_size=100, dtype=tf.string
-    ),
+        'native_country', hash_bucket_size=100, dtype=tf.string),
+
     # Continuous base columns.
-    tf.feature_column.numeric_column("age"),
-    tf.feature_column.numeric_column("education_num"),
-    tf.feature_column.numeric_column("capital_gain"),
-    tf.feature_column.numeric_column("capital_loss"),
-    tf.feature_column.numeric_column("hours_per_week"),
+    tf.feature_column.numeric_column('age'),
+    tf.feature_column.numeric_column('education_num'),
+    tf.feature_column.numeric_column('capital_gain'),
+    tf.feature_column.numeric_column('capital_loss'),
+    tf.feature_column.numeric_column('hours_per_week'),
 ]
 
 
@@ -112,41 +77,26 @@ def get_deep_and_wide_columns(embedding_size=8):
             lists.
     """
 
-    (
-        gender,
-        race,
-        education,
-        marital_status,
-        relationship,
-        workclass,
-        occupation,
-        native_country,
-        age,
-        education_num,
-        capital_gain,
-        capital_loss,
-        hours_per_week,
-    ) = INPUT_COLUMNS
+    (gender, race, education, marital_status, relationship, workclass,
+     occupation,
+     native_country, age, education_num, capital_gain, capital_loss,
+     hours_per_week) = INPUT_COLUMNS
 
     # Reused Transformations.
     # Continuous columns can be converted to categorical via bucketization
     age_buckets = tf.feature_column.bucketized_column(
-        age, boundaries=[18, 25, 30, 35, 40, 45, 50, 55, 60, 65]
-    )
+        age, boundaries=[18, 25, 30, 35, 40, 45, 50, 55, 60, 65])
 
     # Wide columns and deep columns.
     wide_columns = [
         # Interactions between different categorical features can also
         # be added as new virtual features.
-        tf.feature_column.crossed_column(
-            ["education", "occupation"], hash_bucket_size=int(1e4)
-        ),
-        tf.feature_column.crossed_column(
-            [age_buckets, race, "occupation"], hash_bucket_size=int(1e6)
-        ),
-        tf.feature_column.crossed_column(
-            ["native_country", "occupation"], hash_bucket_size=int(1e4)
-        ),
+        tf.feature_column.crossed_column(['education', 'occupation'],
+                                         hash_bucket_size=int(1e4)),
+        tf.feature_column.crossed_column([age_buckets, race, 'occupation'],
+                                         hash_bucket_size=int(1e6)),
+        tf.feature_column.crossed_column(['native_country', 'occupation'],
+                                         hash_bucket_size=int(1e4)),
         gender,
         native_country,
         education,
@@ -165,9 +115,12 @@ def get_deep_and_wide_columns(embedding_size=8):
         tf.feature_column.indicator_column(gender),
         tf.feature_column.indicator_column(relationship),
         tf.feature_column.indicator_column(race),
+
         # Use embedding columns for high dimensional vocabularies
-        tf.feature_column.embedding_column(native_country, dimension=embedding_size),
-        tf.feature_column.embedding_column(occupation, dimension=embedding_size),
+        tf.feature_column.embedding_column(
+            native_country, dimension=embedding_size),
+        tf.feature_column.embedding_column(
+            occupation, dimension=embedding_size),
         age,
         education_num,
         capital_gain,

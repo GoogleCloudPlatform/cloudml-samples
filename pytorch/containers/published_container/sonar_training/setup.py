@@ -15,13 +15,13 @@
 from setuptools import find_packages
 from setuptools import setup
 
-REQUIRED_PACKAGES = ["pandas", "google-cloud-storage"]
+REQUIRED_PACKAGES = ['pandas', 'google-cloud-storage']
 
 setup(
-    name="sonar_training",
-    version="0.1",
+    name='sonar_training',
+    version='0.1',
     install_requires=REQUIRED_PACKAGES,
     packages=find_packages(),
     include_package_data=True,
-    description="Sonar Training via Public Custom Container",
+    description='Sonar Training via Public Custom Container'
 )

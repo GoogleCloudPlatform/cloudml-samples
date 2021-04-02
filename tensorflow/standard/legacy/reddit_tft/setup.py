@@ -14,19 +14,15 @@
 
 import setuptools
 
-NAME = "trainer"
-VERSION = "1.0"
+NAME = 'trainer'
+VERSION = '1.0'
 
-REQUIRED_PACKAGES = [
-    "tensorflow-transform==0.1.10",
-    "protobuf==3.6.0",
-    "tensorflow==1.2.0",
-]
+REQUIRED_PACKAGES = ['tensorflow-transform==0.1.10',
+                     'protobuf==3.6.0',
+                     'tensorflow==1.2.0']
 
-if __name__ == "__main__":
-    setuptools.setup(
-        name=NAME,
-        version=VERSION,
-        packages=["trainer"],
-        install_requires=REQUIRED_PACKAGES,
-    )
+if __name__ == '__main__':
+  setuptools.setup(name=NAME,
+                   version=VERSION,
+                   packages=['trainer'],
+                   install_requires=REQUIRED_PACKAGES)

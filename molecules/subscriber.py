@@ -26,39 +26,35 @@ from apache_beam.options.pipeline_options import GoogleCloudOptions
 from apache_beam.options.pipeline_options import PipelineOptions
 
 
-if __name__ == "__main__":
-    """Main function"""
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
+if __name__ == '__main__':
+  """Main function"""
+  parser = argparse.ArgumentParser(
+      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument(
-        "--topic",
-        default="molecules-predictions",
-        help="PubSub topic to subscribe for predictions.",
-    )
+  parser.add_argument(
+      '--topic',
+      default='molecules-predictions',
+      help='PubSub topic to subscribe for predictions.')
 
-    args, pipeline_args = parser.parse_known_args()
+  args, pipeline_args = parser.parse_known_args()
 
-    beam_options = PipelineOptions(
-        pipeline_args,
-        save_main_session=True,
-        streaming=True,
-    )
+  beam_options = PipelineOptions(
+      pipeline_args,
+      save_main_session=True,
+      streaming=True,
+  )
 
-    project = beam_options.view_as(GoogleCloudOptions).project
-    if not project:
-        parser.print_usage()
-        print("error: argument --project is required")
-        sys.exit(1)
+  project = beam_options.view_as(GoogleCloudOptions).project
+  if not project:
+    parser.print_usage()
+    print('error: argument --project is required')
+    sys.exit(1)
 
-    # We'll just log the results
-    logging.basicConfig(level=logging.INFO)
-    logging.info("Listening...")
-    topic_path = "projects/{}/topics/{}".format(project, args.topic)
-    with beam.Pipeline(options=beam_options) as p:
-        _ = (
-            p
-            | "Read predictions" >> beam.io.ReadFromPubSub(topic=topic_path)
-            | "Log" >> beam.Map(logging.info)
-        )
+  # We'll just log the results
+  logging.basicConfig(level=logging.INFO)
+  logging.info('Listening...')
+  topic_path = 'projects/{}/topics/{}'.format(project, args.topic)
+  with beam.Pipeline(options=beam_options) as p:
+    _ = (p
+        | 'Read predictions' >> beam.io.ReadFromPubSub(topic=topic_path)
+        | 'Log' >> beam.Map(logging.info))

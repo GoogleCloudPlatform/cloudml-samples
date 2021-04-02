@@ -27,18 +27,28 @@ from preprocessing import preprocess
 def _parse_arguments(argv):
     """Parses command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Runs preprocessing on census train data."
-    )
-    parser.add_argument("--project_id", required=True, help="Name of the project.")
-    parser.add_argument("--job_name", required=False, help="Name of the dataflow job.")
-    parser.add_argument("--job_dir", required=True, help="Directory to write outputs.")
+        description='Runs preprocessing on census train data.')
     parser.add_argument(
-        "--cloud",
+        '--project_id',
+        required=True,
+        help='Name of the project.')
+    parser.add_argument(
+        '--job_name',
+        required=False,
+        help='Name of the dataflow job.')
+    parser.add_argument(
+        '--job_dir',
+        required=True,
+        help='Directory to write outputs.')
+    parser.add_argument(
+        '--cloud',
         default=False,
-        action="store_true",
-        help="Run preprocessing on the cloud.",
-    )
-    parser.add_argument("--input_data", required=True, help="Path to input data.")
+        action='store_true',
+        help='Run preprocessing on the cloud.')
+    parser.add_argument(
+        '--input_data',
+        required=True,
+        help='Path to input data.')
     args, _ = parser.parse_known_args(args=argv[1:])
     return args
 
@@ -67,34 +77,31 @@ def main():
 
     args = _parse_arguments(sys.argv)
     config_path = os.path.abspath(
-        os.path.join(__file__, os.pardir, "preprocessing_config.ini")
-    )
-    config = _parse_config("CLOUD" if args.cloud else "LOCAL", config_path)
+        os.path.join(__file__, os.pardir, 'preprocessing_config.ini'))
+    config = _parse_config('CLOUD' if args.cloud else 'LOCAL',
+                           config_path)
     ml_project = args.project_id
-    options = {"project": ml_project}
+    options = {'project': ml_project}
 
     if args.cloud:
         if not args.job_name:
-            raise ValueError("Job name must be specified for cloud runs.")
-        options.update(
-            {
-                "job_name": args.job_name,
-                "num_workers": int(config.get("num_workers")),
-                "max_num_workers": int(config.get("max_num_workers")),
-                "staging_location": os.path.join(args.job_dir, "staging"),
-                "temp_location": os.path.join(args.job_dir, "tmp"),
-                "region": config.get("region"),
-                "setup_file": os.path.abspath(
-                    os.path.join(__file__, "../..", "dataflow_setup.py")
-                ),
-            }
-        )
+            raise ValueError('Job name must be specified for cloud runs.')
+        options.update({
+            'job_name': args.job_name,
+            'num_workers': int(config.get('num_workers')),
+            'max_num_workers': int(config.get('max_num_workers')),
+            'staging_location': os.path.join(args.job_dir, 'staging'),
+            'temp_location': os.path.join(args.job_dir, 'tmp'),
+            'region': config.get('region'),
+            'setup_file': os.path.abspath(
+                os.path.join(__file__, '../..', 'dataflow_setup.py')),
+        })
     pipeline_options = beam.pipeline.PipelineOptions(flags=[], **options)
-    _set_logging(config.get("log_level"))
+    _set_logging(config.get('log_level'))
 
-    with beam.Pipeline(config.get("runner"), options=pipeline_options) as p:
+    with beam.Pipeline(config.get('runner'), options=pipeline_options) as p:
         preprocess.run(p, args.input_data, args.job_dir)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

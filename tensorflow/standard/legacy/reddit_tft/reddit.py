@@ -19,24 +19,25 @@ from tensorflow_transform import coders
 from tensorflow_transform.tf_metadata import dataset_schema
 
 
-def make_standard_sql(table_name, mode=tf.contrib.learn.ModeKeys.TRAIN):
-    """Returns Standard SQL string to populate reddit features.
+def make_standard_sql(table_name,
+                      mode=tf.contrib.learn.ModeKeys.TRAIN):
+  """Returns Standard SQL string to populate reddit features.
 
-    This query takes ~60s, processing 13.3GB for reddit_comments.2015_12 table,
-    and takes ~140s, processing 148GB for reddit_comments.2015_* table.
+  This query takes ~60s, processing 13.3GB for reddit_comments.2015_12 table,
+  and takes ~140s, processing 148GB for reddit_comments.2015_* table.
 
-    Args:
-      table_name: the table name to pull the data from.
-        multiple tables can be chosen using *, like:
-        fh-bigquery.reddit_comments.2015_*
-      mode: if the mode is INFER, 'score' field is not populated.
+  Args:
+    table_name: the table name to pull the data from.
+      multiple tables can be chosen using *, like:
+      fh-bigquery.reddit_comments.2015_*
+    mode: if the mode is INFER, 'score' field is not populated.
 
-    Returns:
-      The standard SQL query to pull the features from the given reddit table.
-    """
+  Returns:
+    The standard SQL query to pull the features from the given reddit table.
+  """
 
-    infer_mode = mode == tf.contrib.learn.ModeKeys.INFER
-    return """
+  infer_mode = (mode == tf.contrib.learn.ModeKeys.INFER)
+  return """
 SELECT
   {score_optional}
   created_utc,
@@ -82,99 +83,86 @@ LEFT OUTER JOIN
   ) AS B
   ON (A.parent_id = B.id)
 """.format(
-        score_optional=("" if infer_mode else "score,"),
-        a_score_optional=("" if infer_mode else "A.score AS score,"),
-        table_name=table_name,
-    )
+    score_optional=('' if infer_mode else 'score,'),
+    a_score_optional=('' if infer_mode else 'A.score AS score,'),
+    table_name=table_name)
 
 
 def make_csv_coder(schema, mode=tf.contrib.learn.ModeKeys.TRAIN):
-    """Produces a CsvCoder from a data schema.
+  """Produces a CsvCoder from a data schema.
 
-    Args:
-      schema: A tf.Transform `Schema` object.
-      mode: tf.contrib.learn.ModeKeys specifying if the source is being used for
-        train/eval or prediction.
+  Args:
+    schema: A tf.Transform `Schema` object.
+    mode: tf.contrib.learn.ModeKeys specifying if the source is being used for
+      train/eval or prediction.
 
-    Returns:
-      A tf.Transform CsvCoder.
-    """
-    column_names = [] if mode == tf.contrib.learn.ModeKeys.INFER else ["score"]
-    column_names += [
-        "created_utc",
-        "subreddit",
-        "author",
-        "comment_body",
-        "comment_parent_body",
-        "toplevel",
-    ]
-    return coders.CsvCoder(column_names, schema)
+  Returns:
+    A tf.Transform CsvCoder.
+  """
+  column_names = [] if mode == tf.contrib.learn.ModeKeys.INFER else ['score']
+  column_names += [
+      'created_utc', 'subreddit', 'author', 'comment_body',
+      'comment_parent_body', 'toplevel'
+  ]
+  return coders.CsvCoder(column_names, schema)
 
 
 def make_input_schema(mode=tf.contrib.learn.ModeKeys.TRAIN):
-    """Input schema definition.
+  """Input schema definition.
 
-    Args:
-      mode: tf.contrib.learn.ModeKeys specifying if the schema is being used for
-        train/eval or prediction.
-    Returns:
-      A `Schema` object.
-    """
-    result = (
-        {}
-        if mode == tf.contrib.learn.ModeKeys.INFER
-        else {"score": tf.FixedLenFeature(shape=[], dtype=tf.float32)}
-    )
-    result.update(
-        {
-            "subreddit": tf.FixedLenFeature(shape=[], dtype=tf.string),
-            "author": tf.FixedLenFeature(shape=[], dtype=tf.string),
-            "comment_body": tf.FixedLenFeature(
-                shape=[], dtype=tf.string, default_value=""
-            ),
-            "comment_parent_body": tf.FixedLenFeature(
-                shape=[], dtype=tf.string, default_value=""
-            ),
-            "toplevel": tf.FixedLenFeature(shape=[], dtype=tf.int64),
-        }
-    )
-    return dataset_schema.from_feature_spec(result)
+  Args:
+    mode: tf.contrib.learn.ModeKeys specifying if the schema is being used for
+      train/eval or prediction.
+  Returns:
+    A `Schema` object.
+  """
+  result = ({} if mode == tf.contrib.learn.ModeKeys.INFER else {
+      'score': tf.FixedLenFeature(shape=[], dtype=tf.float32)
+  })
+  result.update({
+      'subreddit': tf.FixedLenFeature(shape=[], dtype=tf.string),
+      'author': tf.FixedLenFeature(shape=[], dtype=tf.string),
+      'comment_body': tf.FixedLenFeature(shape=[], dtype=tf.string,
+                                         default_value=''),
+      'comment_parent_body': tf.FixedLenFeature(shape=[], dtype=tf.string,
+                                                default_value=''),
+      'toplevel': tf.FixedLenFeature(shape=[], dtype=tf.int64),
+  })
+  return dataset_schema.from_feature_spec(result)
 
 
 def make_preprocessing_fn(frequency_threshold):
-    """Creates a preprocessing function for reddit.
+  """Creates a preprocessing function for reddit.
+
+  Args:
+    frequency_threshold: The frequency_threshold used when generating
+      vocabularies for categorical and text features.
+
+  Returns:
+    A preprocessing function.
+  """
+
+  def preprocessing_fn(inputs):
+    """User defined preprocessing function for reddit columns.
 
     Args:
-      frequency_threshold: The frequency_threshold used when generating
-        vocabularies for categorical and text features.
-
+      inputs: dictionary of input `tensorflow_transform.Column`.
     Returns:
-      A preprocessing function.
+      A dictionary of `tensorflow_transform.Column` representing the transformed
+          columns.
     """
+    # TODO(b/35001605) Make this "passthrough" more DRY.
+    result = {'score': inputs['score'], 'toplevel': inputs['toplevel']}
 
-    def preprocessing_fn(inputs):
-        """User defined preprocessing function for reddit columns.
+    result['subreddit_id'] = tft.string_to_int(
+        inputs['subreddit'], frequency_threshold=frequency_threshold)
 
-        Args:
-          inputs: dictionary of input `tensorflow_transform.Column`.
-        Returns:
-          A dictionary of `tensorflow_transform.Column` representing the transformed
-              columns.
-        """
-        # TODO(b/35001605) Make this "passthrough" more DRY.
-        result = {"score": inputs["score"], "toplevel": inputs["toplevel"]}
+    for name in ('author', 'comment_body', 'comment_parent_body'):
+      words = tf.string_split(inputs[name])
+      # TODO(b/33467613) Translate these to bag-of-words style sparse features.
+      result[name + '_bow'] = tft.string_to_int(
+          words, frequency_threshold=frequency_threshold)
 
-        result["subreddit_id"] = tft.string_to_int(
-            inputs["subreddit"], frequency_threshold=frequency_threshold
-        )
+    return result
 
-        for name in ("author", "comment_body", "comment_parent_body"):
-            words = tf.string_split(inputs[name])
-            # TODO(b/33467613) Translate these to bag-of-words style sparse features.
-            result[name + "_bow"] = tft.string_to_int(
-                words, frequency_threshold=frequency_threshold
-            )
-
-        return result
-
-    return preprocessing_fn
+  return preprocessing_fn

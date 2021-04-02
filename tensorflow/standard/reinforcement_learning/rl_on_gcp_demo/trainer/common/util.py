@@ -40,3 +40,4 @@ def reverse_act(action):
     mirror_act[:2] = mirror_act[2:]
     mirror_act[2:] = tmp
     return mirror_act
+

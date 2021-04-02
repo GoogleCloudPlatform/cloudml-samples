@@ -63,3 +63,4 @@ class ReplayBuffer(object):
         s2_batch = np.array([_[4] for _ in batch])
 
         return s_batch, a_batch, r_batch, t_batch, s2_batch
+

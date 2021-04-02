@@ -28,24 +28,18 @@ def list_tpus(project, location):
     Returns
     A Python dictionary with keys 'nodes' and 'nextPageToken'.
     """
-    service = discovery.build("tpu", "v1", credentials=credentials)
+    service = discovery.build('tpu', 'v1', credentials=credentials)
 
-    parent = "projects/{}/locations/{}".format(project, location)
+    parent = 'projects/{}/locations/{}'.format(project, location)
 
     request = service.projects().locations().nodes().list(parent=parent)
 
     return request.execute()
 
 
-def create_tpu(
-    project,
-    location,
-    tpu_name,
-    accelerator_type="v2-8",
-    tensorflow_version="1.11",
-    cidr_block="10.0.101.0",
-    preemptible=False,
-):
+def create_tpu(project, location, tpu_name, accelerator_type='v2-8',
+               tensorflow_version='1.11', cidr_block='10.0.101.0',
+               preemptible=False):
     """Create a TPU node.
 
     Args:
@@ -61,25 +55,23 @@ def create_tpu(
     Returns
     A TPU node creation operation object.
     """
-    service = discovery.build("tpu", "v1", credentials=credentials)
+    service = discovery.build('tpu', 'v1', credentials=credentials)
 
-    parent = "projects/{}/locations/{}".format(project, location)
+    parent = 'projects/{}/locations/{}'.format(project, location)
 
     node = {
-        "acceleratorType": accelerator_type,
-        "tensorflowVersion": tensorflow_version,
-        "network": "default",
-        "cidrBlock": cidr_block,
-        "schedulingConfig": {"preemptible": preemptible},
+        'acceleratorType': accelerator_type,
+        'tensorflowVersion': tensorflow_version,
+        'network': 'default',
+        'cidrBlock': cidr_block,
+        'schedulingConfig': {
+            'preemptible': preemptible
+        }
     }
 
     # NOTE: in docs and samples nodeId is often referred to as tpu_name
-    request = (
-        service.projects()
-        .locations()
-        .nodes()
-        .create(parent=parent, body=node, nodeId=tpu_name)
-    )
+    request = service.projects().locations().nodes().create(
+        parent=parent, body=node, nodeId=tpu_name)
 
     return request.execute()
 
@@ -95,9 +87,10 @@ def get_tpu(project, location, tpu_name):
     Returns
     A TPU node object.
     """
-    service = discovery.build("tpu", "v1", credentials=credentials)
+    service = discovery.build('tpu', 'v1', credentials=credentials)
 
-    name = "projects/{}/locations/{}/nodes/{}".format(project, location, tpu_name)
+    name = 'projects/{}/locations/{}/nodes/{}'.format(
+        project, location, tpu_name)
 
     request = service.projects().locations().nodes().get(name=name)
 
@@ -115,10 +108,12 @@ def delete_tpu(project, location, tpu_name):
     Returns
     A TPU node deletion operation object.
     """
-    service = discovery.build("tpu", "v1", credentials=credentials)
+    service = discovery.build('tpu', 'v1', credentials=credentials)
 
-    name = "projects/{}/locations/{}/nodes/{}".format(project, location, tpu_name)
+    name = 'projects/{}/locations/{}/nodes/{}'.format(
+        project, location, tpu_name)
 
-    request = service.projects().locations().nodes().delete(name=name)
+    request = service.projects().locations().nodes().delete(
+        name=name)
 
     return request.execute()

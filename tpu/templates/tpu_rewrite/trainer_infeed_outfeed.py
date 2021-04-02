@@ -44,7 +44,7 @@ def fit_batch(features, labels):
     optimizer = tf.contrib.tpu.CrossShardOptimizer(optimizer)
 
     global_step = tf.train.get_or_create_global_step()
-    train_op = optimizer.minimize(loss, global_step=global_step)
+    train_op = optimizer.minimize(loss, global_step=global_step) 
 
     return global_step, loss, train_op
 
@@ -56,7 +56,7 @@ def tpu_computation_with_infeed(batch_size, num_shards):
     features, labels = tf.contrib.tpu.infeed_dequeue_tuple(
         # the dtypes and shapes need to be consistent with what is fed into the infeed queue.
         dtypes=[tf.float32, tf.float32],
-        shapes=[(batch_size // num_shards, 5), (batch_size // num_shards)],
+        shapes=[(batch_size // num_shards, 5), (batch_size // num_shards)]
     )
 
     global_step, loss, train_op = fit_batch(features, labels)
@@ -75,13 +75,17 @@ def setup_feed(features, labels, num_shards):
 
     for i, batch in enumerate(infeed_batches):
         infeed_op = tf.contrib.tpu.infeed_enqueue_tuple(
-            batch, [b.shape for b in batch], device_ordinal=i
+            batch,
+            [b.shape for b in batch],
+            device_ordinal=i
         )
         infeed_ops.append(infeed_op)
 
         outfeed_op = tf.contrib.tpu.outfeed_dequeue_tuple(
-            dtypes=[tf.int64, tf.float32], shapes=[(), ()], device_ordinal=i
-        )
+                dtypes=[tf.int64, tf.float32],
+                shapes=[(), ()],
+                device_ordinal=i
+            )
         outfeed_ops.append(outfeed_op)
 
     return infeed_ops, outfeed_ops
@@ -105,7 +109,7 @@ def train_input_fn():
     # TPUs need to know all dimensions including batch size
     batch_size = 16
 
-    dataset = dataset.repeat().shuffle(32).batch(batch_size)  # , drop_remainder=True)
+    dataset = dataset.repeat().shuffle(32).batch(batch_size)#, drop_remainder=True)
 
     # TPUs need to know all dimensions when the graph is built
     # Datasets know the batch size only when the graph is run
@@ -134,10 +138,7 @@ def main(args):
 
     # Wrap the tpu computation function to be run in a loop.
     def computation_loop():
-        return tf.contrib.tpu.repeat(
-            args.max_steps,
-            partial(tpu_computation_with_infeed, batch_size=16, num_shards=8),
-        )
+        return tf.contrib.tpu.repeat(args.max_steps, partial(tpu_computation_with_infeed, batch_size=16, num_shards=8))
 
     # Since we are using infeed/outfeed queues, tensors are not explicitly passed in or returned.
     tpu_computation_loop = tf.contrib.tpu.batch_parallel(computation_loop, num_shards=8)
@@ -160,19 +161,19 @@ def main(args):
             sess.run(infeed_ops)
 
             if i % args.save_checkpoints_steps == 0:
-                print("infeed {}".format(i))
+                print('infeed {}'.format(i))
+
 
     def _run_outfeed():
         for i in range(args.max_steps):
             outfeed_data = sess.run(outfeed_ops)
 
             if i % args.save_checkpoints_steps == 0:
-                print("outfeed {}".format(i))
-                print("data returned from outfeed: {}".format(outfeed_data))
+                print('outfeed {}'.format(i))
+                print('data returned from outfeed: {}'.format(outfeed_data))
 
-                saver.save(
-                    sess, os.path.join(args.model_dir, "model.ckpt"), global_step=i
-                )
+                saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=i)
+
 
     infeed_thread = threading.Thread(target=_run_infeed)
     outfeed_thread = threading.Thread(target=_run_outfeed)
@@ -190,37 +191,31 @@ def main(args):
 
     sess.run(tpu_shutdown)
 
-    saver.save(
-        sess, os.path.join(args.model_dir, "model.ckpt"), global_step=args.max_steps
-    )
+    saver.save(sess, os.path.join(args.model_dir, 'model.ckpt'), global_step=args.max_steps)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--model-dir",
+        '--model-dir',
         type=str,
-        default="/tmp/tpu-template",
-        help="Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.",
-    )
+        default='/tmp/tpu-template',
+        help='Location to write checkpoints and summaries to.  Must be a GCS URI when using Cloud TPU.')
     parser.add_argument(
-        "--max-steps",
+        '--max-steps',
         type=int,
         default=1000,
-        help="The total number of steps to train the model.",
-    )
+        help='The total number of steps to train the model.')
     parser.add_argument(
-        "--save-checkpoints-steps",
+        '--save-checkpoints-steps',
         type=int,
         default=100,
-        help="The number of training steps before saving each checkpoint.",
-    )
+        help='The number of training steps before saving each checkpoint.')
     parser.add_argument(
-        "--tpu",
+        '--tpu',
         default=None,
-        help="The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.",
-    )
+        help='The name or GRPC URL of the TPU node.  Leave it as `None` when training on AI Platform.')
 
     args, _ = parser.parse_known_args()
 

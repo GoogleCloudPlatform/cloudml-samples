@@ -10,28 +10,21 @@ import pandas as pd
 import xgboost as xgb
 
 # Fill in your Cloud Storage bucket name
-BUCKET_NAME = "<YOUR_BUCKET_NAME>"
+BUCKET_NAME = '<YOUR_BUCKET_NAME>'
 # [END setup]
 
 # [START download-data]
-iris_data_filename = "iris_data.csv"
-iris_target_filename = "iris_target.csv"
-data_dir = "gs://cloud-samples-data/ai-platform/iris"
+iris_data_filename = 'iris_data.csv'
+iris_target_filename = 'iris_target.csv'
+data_dir = 'gs://cloud-samples-data/ai-platform/iris'
 
 # gsutil outputs everything to stderr so we need to divert it to stdout.
-subprocess.check_call(
-    ["gsutil", "cp", os.path.join(data_dir, iris_data_filename), iris_data_filename],
-    stderr=sys.stdout,
-)
-subprocess.check_call(
-    [
-        "gsutil",
-        "cp",
-        os.path.join(data_dir, iris_target_filename),
-        iris_target_filename,
-    ],
-    stderr=sys.stdout,
-)
+subprocess.check_call(['gsutil', 'cp', os.path.join(data_dir,
+                                                    iris_data_filename),
+                       iris_data_filename], stderr=sys.stdout)
+subprocess.check_call(['gsutil', 'cp', os.path.join(data_dir,
+                                                    iris_target_filename),
+                       iris_target_filename], stderr=sys.stdout)
 # [END download-data]
 
 
@@ -53,20 +46,15 @@ dtrain = xgb.DMatrix(iris_data, label=iris_target)
 bst = xgb.train({}, dtrain, 20)
 
 # Export the classifier to a file
-model_filename = "model.bst"
+model_filename = 'model.bst'
 bst.save_model(model_filename)
 # [END train-and-save-model]
 
 
 # [START upload-model]
 # Upload the saved model file to Cloud Storage
-gcs_model_path = os.path.join(
-    "gs://",
-    BUCKET_NAME,
-    datetime.datetime.now().strftime("iris_%Y%m%d_%H%M%S"),
-    model_filename,
-)
-subprocess.check_call(
-    ["gsutil", "cp", model_filename, gcs_model_path], stderr=sys.stdout
-)
+gcs_model_path = os.path.join('gs://', BUCKET_NAME,
+    datetime.datetime.now().strftime('iris_%Y%m%d_%H%M%S'), model_filename)
+subprocess.check_call(['gsutil', 'cp', model_filename, gcs_model_path],
+    stderr=sys.stdout)
 # [END upload-model]

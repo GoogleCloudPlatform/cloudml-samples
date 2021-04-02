@@ -148,7 +148,8 @@ def preprocess(dataframe):
     dataframe[cat_columns] = dataframe[cat_columns].apply(
         lambda x: x.astype(_CATEGORICAL_TYPES[x.name])
     )
-    dataframe[cat_columns] = dataframe[cat_columns].apply(lambda x: x.cat.codes)
+    dataframe[cat_columns] = dataframe[cat_columns].apply(
+        lambda x: x.cat.codes)
     return dataframe
 
 

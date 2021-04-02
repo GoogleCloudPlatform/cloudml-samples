@@ -18,41 +18,15 @@
 # Define the format of your input data as present in the CSV file
 
 CSV_COLUMNS = [
-    "age",
-    "workclass",
-    "fnlwgt",
-    "education",
-    "education_num",
-    "marital_status",
-    "occupation",
-    "relationship",
-    "race",
-    "gender",
-    "capital_gain",
-    "capital_loss",
-    "hours_per_week",
-    "native_country",
-    "income_bracket",
+    'age', 'workclass', 'fnlwgt', 'education', 'education_num',
+    'marital_status', 'occupation', 'relationship', 'race', 'gender',
+    'capital_gain', 'capital_loss', 'hours_per_week', 'native_country',
+    'income_bracket'
 ]
 
-CSV_COLUMN_DEFAULTS = [
-    [0],
-    [""],
-    [0],
-    [""],
-    [0],
-    [""],
-    [""],
-    [""],
-    [""],
-    [""],
-    [0],
-    [0],
-    [0],
-    [""],
-    [""],
-]
+CSV_COLUMN_DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''],
+                       [''], [0], [0], [0], [''], ['']]
 
-LABEL_COLUMN = "income_bracket"
+LABEL_COLUMN = 'income_bracket'
 
-LABELS = [" <=50K", " >50K"]
+LABELS = [' <=50K', ' >50K']

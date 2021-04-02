@@ -20,19 +20,19 @@ import setuptools
 
 
 REQUIRED_PACKAGES = [
-    "matplotlib>=2.2.3",
-    "seaborn>=0.9.0",
-    "scikit-learn>=0.20.2",
-    "pandas-gbq>=0.8.0",
-    "cloudml-hypertune",
-    "scikit-plot",
+    'matplotlib>=2.2.3',
+    'seaborn>=0.9.0',
+    'scikit-learn>=0.20.2',
+    'pandas-gbq>=0.8.0',
+    'cloudml-hypertune',
+    'scikit-plot',
 ]
 
 setuptools.setup(
-    name="",
-    version="",
+    name='',
+    version='',
     install_requires=REQUIRED_PACKAGES,
     packages=setuptools.find_packages(),
     include_package_data=True,
-    description="",
+    description='',
 )

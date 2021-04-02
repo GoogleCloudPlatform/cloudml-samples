@@ -18,14 +18,16 @@ from tensorflow.keras.layers import Dense, Dropout
 
 def sonar_model():
     model = Sequential()
-    model.add(Dense(60, input_shape=(60,), activation="relu"))
+    model.add(Dense(60, input_shape=(60,), activation='relu'))
     model.add(Dropout(0.2))
-    model.add(Dense(30, activation="relu"))
+    model.add(Dense(30, activation='relu'))
     model.add(Dropout(0.2))
-    model.add(Dense(1, activation="sigmoid"))
+    model.add(Dense(1, activation='sigmoid'))
 
     # Use the Binary Cross Entropy loss function for a Binary Classifier.
     # https://www.tensorflow.org/api_docs/python/tf/keras/models/Sequential#compile
-    model.compile(loss="binary_crossentropy", optimizer="sgd", metrics=["accuracy"])
+    model.compile(loss='binary_crossentropy',
+                  optimizer='sgd',
+                  metrics=['accuracy'])
 
     return model

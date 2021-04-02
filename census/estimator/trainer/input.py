@@ -28,15 +28,14 @@ def _decode_csv(line):
     # [['csv,line,1'], ['csv,line,2']] which after parsing will result in a
     # tuple of tensors: [['csv'], ['csv']], [['line'], ['line']], [[1], [2]]
     row_columns = tf.expand_dims(line, -1)
-    columns = tf.decode_csv(row_columns, record_defaults=constants.CSV_COLUMN_DEFAULTS)
+    columns = tf.decode_csv(
+        row_columns, record_defaults=constants.CSV_COLUMN_DEFAULTS)
     features = dict(zip(constants.CSV_COLUMNS, columns))
 
     # Remove unused columns
-    unused_columns = (
-        set(constants.CSV_COLUMNS)
-        - {col.name for col in featurizer.INPUT_COLUMNS}
-        - {constants.LABEL_COLUMN}
-    )
+    unused_columns = set(constants.CSV_COLUMNS) - {col.name for col in
+                                                   featurizer.INPUT_COLUMNS} - {
+                         constants.LABEL_COLUMN}
     for col in unused_columns:
         features.pop(col)
     return features
@@ -55,21 +54,20 @@ def _parse_label_column(label_string_tensor):
       and a float32 Tensor representing the value for a regression task.
     """
     # Build a Hash Table inside the graph
-    table = tf.contrib.lookup.index_table_from_tensor(tf.constant(constants.LABELS))
+    table = tf.contrib.lookup.index_table_from_tensor(
+        tf.constant(constants.LABELS))
 
     # Use the hash table to convert string labels to ints and one-hot encode
     return table.lookup(label_string_tensor)
 
 
-def input_fn(
-    filenames,
-    num_epochs=None,
-    shuffle=True,
-    skip_header_lines=0,
-    batch_size=200,
-    num_parallel_calls=None,
-    prefetch_buffer_size=None,
-):
+def input_fn(filenames,
+             num_epochs=None,
+             shuffle=True,
+             skip_header_lines=0,
+             batch_size=200,
+             num_parallel_calls=None,
+             prefetch_buffer_size=None):
     """Generates features and labels for training or evaluation.
 
     This uses the input pipeline based approach using file name queue
@@ -96,16 +94,13 @@ def input_fn(
     if prefetch_buffer_size is None:
         prefetch_buffer_size = 1024
 
-    dataset = (
-        tf.data.TextLineDataset(filenames)
-        .skip(skip_header_lines)
-        .map(_decode_csv, num_parallel_calls)
-        .prefetch(prefetch_buffer_size)
-    )
+    dataset = tf.data.TextLineDataset(filenames).skip(skip_header_lines).map(
+        _decode_csv, num_parallel_calls).prefetch(prefetch_buffer_size)
 
     if shuffle:
         dataset = dataset.shuffle(buffer_size=batch_size * 10)
-    iterator = dataset.repeat(num_epochs).batch(batch_size).make_one_shot_iterator()
+    iterator = dataset.repeat(num_epochs).batch(
+        batch_size).make_one_shot_iterator()
     features = iterator.get_next()
     return features, _parse_label_column(features.pop(constants.LABEL_COLUMN))
 
@@ -120,7 +115,8 @@ def csv_serving_input_fn():
     csv_row = tf.placeholder(shape=[None], dtype=tf.string)
     features = _decode_csv(csv_row)
     features.pop(constants.LABEL_COLUMN)
-    return tf.estimator.export.ServingInputReceiver(features, {"csv_row": csv_row})
+    return tf.estimator.export.ServingInputReceiver(features,
+                                                    {'csv_row': csv_row})
 
 
 def example_serving_input_fn():
@@ -131,11 +127,9 @@ def example_serving_input_fn():
     )
     features = tf.parse_example(
         example_bytestring,
-        tf.feature_column.make_parse_example_spec(featurizer.INPUT_COLUMNS),
-    )
+        tf.feature_column.make_parse_example_spec(featurizer.INPUT_COLUMNS))
     return tf.estimator.export.ServingInputReceiver(
-        features, {"example_proto": example_bytestring}
-    )
+        features, {'example_proto': example_bytestring})
 
 
 # [START serving-function]
@@ -151,7 +145,7 @@ def json_serving_input_fn():
 # [END serving-function]
 
 SERVING_FUNCTIONS = {
-    "JSON": json_serving_input_fn,
-    "EXAMPLE": example_serving_input_fn,
-    "CSV": csv_serving_input_fn,
+    'JSON': json_serving_input_fn,
+    'EXAMPLE': example_serving_input_fn,
+    'CSV': csv_serving_input_fn
 }

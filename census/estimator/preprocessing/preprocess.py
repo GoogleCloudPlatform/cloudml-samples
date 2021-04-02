@@ -51,7 +51,8 @@ def split_data(examples, train_fraction):
             return 0
         return 1
 
-    examples_split = examples | "SplitData" >> beam.Partition(partition_fn, 2)
+    examples_split = (examples
+                      | "SplitData" >> beam.Partition(partition_fn, 2))
     return examples_split
 
 
@@ -72,28 +73,17 @@ class ConvertDictToCSV(beam.DoFn):
 def run(p, input_path, output_directory, train_fraction=0.8):
     """Runs the pipeline."""
 
-    raw_data = p | "ReadTrainData" >> beam.io.Read(
-        CsvFileSource(input_path, column_names=constants.CSV_COLUMNS)
-    )
+    raw_data = (p | "ReadTrainData" >> beam.io.Read(CsvFileSource(
+            input_path, column_names=constants.CSV_COLUMNS)))
     train_data, eval_data = split_data(raw_data, train_fraction)
 
-    (
-        train_data
-        | "PrepareCSV_train"
-        >> beam.ParDo(ConvertDictToCSV(ordered_fieldnames=constants.CSV_COLUMNS))
-        | "Write_train"
-        >> beam.io.WriteToText(
+    (train_data | "PrepareCSV_train" >> beam.ParDo(
+        ConvertDictToCSV(ordered_fieldnames=constants.CSV_COLUMNS))
+     | "Write_train" >> beam.io.WriteToText(
             os.path.join(output_directory, "output_data", "train"),
-            file_name_suffix=".csv",
-        )
-    )
-    (
-        eval_data
-        | "PrepareCSV_eval"
-        >> beam.ParDo(ConvertDictToCSV(ordered_fieldnames=constants.CSV_COLUMNS))
-        | "Write_eval"
-        >> beam.io.WriteToText(
+            file_name_suffix=".csv"))
+    (eval_data | "PrepareCSV_eval" >> beam.ParDo(
+        ConvertDictToCSV(ordered_fieldnames=constants.CSV_COLUMNS))
+     | "Write_eval" >> beam.io.WriteToText(
             os.path.join(output_directory, "output_data", "eval"),
-            file_name_suffix=".csv",
-        )
-    )
+            file_name_suffix=".csv"))
