@@ -46,21 +46,10 @@ INPUT_COLUMNS = [
     tf.feature_column.categorical_column_with_vocabulary_list(
         'gender', [' Female', ' Male']),
     tf.feature_column.categorical_column_with_vocabulary_list(
-<<<<<<< HEAD
-        "race",
-        [" Amer-Indian-Eskimo",
-            " Asian-Pac-Islander",
-            " Black",
-            " Other",
-            " White"
-        ],
-    ),
-=======
         'race', [
             ' Amer-Indian-Eskimo', ' Asian-Pac-Islander', ' Black', ' Other',
             ' White'
         ]),
->>>>>>> parent of a916581 (fix linting errors)
     tf.feature_column.categorical_column_with_vocabulary_list(
         'education', [
             ' Bachelors', ' HS-grad', ' 11th', ' Masters', ' 9th',
@@ -99,14 +88,8 @@ INPUT_COLUMNS = [
     tf.feature_column.numeric_column('hours_per_week'),
 ]
 
-<<<<<<< HEAD
-UNUSED_COLUMNS = set(CSV_COLUMNS) - {col.name for col in INPUT_COLUMNS} - {
-    LABEL_COLUMN
-    }
-=======
 UNUSED_COLUMNS = set(CSV_COLUMNS) - {col.name for col in INPUT_COLUMNS} - \
                  {LABEL_COLUMN}
->>>>>>> parent of a916581 (fix linting errors)
 
 
 def generate_model_fn(embedding_size=8,
@@ -163,18 +146,9 @@ def generate_model_fn(embedding_size=8,
 
             # Use embedding columns for high dimensional vocabularies
             tf.feature_column.embedding_column(
-<<<<<<< HEAD
-                native_country, dimension=embedding_size
-            ),
-            tf.feature_column.embedding_column(
-                occupation,
-                dimension=embedding_size
-            ),
-=======
                 native_country, dimension=embedding_size),
             tf.feature_column.embedding_column(
                 occupation, dimension=embedding_size),
->>>>>>> parent of a916581 (fix linting errors)
             age,
             education_num,
             capital_gain,
@@ -246,20 +220,10 @@ def generate_model_fn(embedding_size=8,
             train_op = tf.train.FtrlOptimizer(
                 learning_rate=learning_rate,
                 l1_regularization_strength=3.0,
-<<<<<<< HEAD
-                l2_regularization_strength=10.0,
-            ).minimize(loss, global_step=global_step)
-            return tf.estimator.EstimatorSpec(
-                mode,
-                loss=loss,
-                train_op=train_op
-            )
-=======
                 l2_regularization_strength=10.0).minimize(
                 loss, global_step=global_step)
             return tf.estimator.EstimatorSpec(mode, loss=loss,
                                               train_op=train_op)
->>>>>>> parent of a916581 (fix linting errors)
 
         if mode == Modes.EVAL:
             # Return accuracy and area under ROC curve metrics
@@ -273,17 +237,9 @@ def generate_model_fn(embedding_size=8,
                 off_value=False,
                 dtype=tf.bool)
             eval_metric_ops = {
-<<<<<<< HEAD
-                "accuracy": tf.metrics.accuracy(
-                    label_indices,
-                    predicted_indices
-                ),
-                "auroc": tf.metrics.auc(labels_one_hot, probabilities),
-=======
                 'accuracy': tf.metrics.accuracy(label_indices,
                                                 predicted_indices),
                 'auroc': tf.metrics.auc(labels_one_hot, probabilities)
->>>>>>> parent of a916581 (fix linting errors)
             }
             return tf.estimator.EstimatorSpec(
                 mode, loss=loss, eval_metric_ops=eval_metric_ops)
@@ -297,14 +253,8 @@ def csv_serving_input_fn():
     features = _decode_csv(csv_row)
     # Ignore label column.
     features.pop(LABEL_COLUMN)
-<<<<<<< HEAD
-    return tf.estimator.export.ServingInputReceiver(
-        features, {"csv_row": csv_row}
-        )
-=======
     return tf.estimator.export.ServingInputReceiver(features,
                                                     {'csv_row': csv_row})
->>>>>>> parent of a916581 (fix linting errors)
 
 
 def example_serving_input_fn():
@@ -315,12 +265,7 @@ def example_serving_input_fn():
     )
     features = tf.parse_example(
         example_bytestring,
-<<<<<<< HEAD
-        tf.feature_column.make_parse_example_spec(INPUT_COLUMNS)
-    )
-=======
         tf.feature_column.make_parse_example_spec(INPUT_COLUMNS))
->>>>>>> parent of a916581 (fix linting errors)
     return tf.estimator.export.ServingInputReceiver(
         features, {'example_proto': example_bytestring})
 
@@ -355,21 +300,11 @@ def _decode_csv(line):
     return features
 
 
-<<<<<<< HEAD
-def input_fn(
-    filenames,
-    num_epochs=None,
-    shuffle=True,
-    skip_header_lines=0,
-    batch_size=200
-):
-=======
 def input_fn(filenames,
              num_epochs=None,
              shuffle=True,
              skip_header_lines=0,
              batch_size=200):
->>>>>>> parent of a916581 (fix linting errors)
     """Generates features and labels for training or evaluation.
 
     This uses the input pipeline based approach using file name queue
