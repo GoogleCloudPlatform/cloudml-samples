@@ -314,7 +314,8 @@ def input_fn(filenames,
         filenames: [str] A List of CSV file(s) to read data from.
         num_epochs: (int) How many times through to read the data. If None will
           loop through data indefinitely
-        shuffle: (bool), whether or not to randomize the order of data. Controls randomization of both file order and line order within files.
+        shuffle: (bool), whether or not to randomize the order of data. Controls
+            randomization of both file order and line order within files.
         skip_header_lines: (int) set to non-zero in order to skip header lines
           in CSV files.
         batch_size: (int) First dimension size of the Tensors returned by
