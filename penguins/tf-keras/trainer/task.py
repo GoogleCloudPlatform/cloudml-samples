@@ -11,7 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Trains a Keras model to predict penguin species from other penguin measurement data."""
+"""
+Trains a Keras model to predict penguin species
+from other penguin measurement data.
+"""
+
 
 from __future__ import absolute_import
 from __future__ import division
@@ -37,7 +41,8 @@ def get_args():
         "--job-dir",
         type=str,
         required=True,
-        help="local or GCS location for writing checkpoints and exporting " "models",
+        help="local or GCS location for writing checkpoints and exporting "
+        "models",
     )
     parser.add_argument(
         "--num-epochs",
@@ -110,7 +115,7 @@ def train_and_evaluate(args):
 
     # Setup Learning Rate decay.
     lr_decay_cb = tf.keras.callbacks.LearningRateScheduler(
-        lambda epoch: args.learning_rate + 0.02 * (0.5 ** (1 + epoch)), 
+        lambda epoch: args.learning_rate + 0.02 * (0.5 ** (1 + epoch)),
         verbose=True
     )
 

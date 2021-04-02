@@ -86,6 +86,8 @@ def create_keras_model(num_classes, input_dim, learning_rate):
 
     # Compile Keras model
     model.compile(
-        loss="categorical_crossentropy", optimizer=optimizer, metrics=["accuracy"]
+      loss="categorical_crossentropy",
+      optimizer=optimizer,
+      metrics=["accuracy"]
     )
     return model

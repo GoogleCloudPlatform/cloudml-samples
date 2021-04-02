@@ -32,14 +32,14 @@ from tensorflow.keras.utils import to_categorical
 DATA_DIR = os.path.join(tempfile.gettempdir(), "penguins_data")
 
 # Download options.
-DATA_URL = "https://storage.googleapis.com/cloud-samples-data/ai-platform/penguins"
+DATA_URL = "https://storage.googleapis.com/cloud-samples-data/ai-platform/penguins"  # noqa
 TRAINING_FILE = "penguins.data.csv"
 EVAL_FILE = "penguins.test.csv"
 TRAINING_URL = "%s/%s" % (DATA_URL, TRAINING_FILE)
 EVAL_URL = "%s/%s" % (DATA_URL, EVAL_FILE)
 
 # These are the features in the dataset.
-# Dataset information: https://www.kaggle.com/parulpandey/palmer-archipelago-antarctica-penguin-data
+# Dataset information: https://www.kaggle.com/parulpandey/palmer-archipelago-antarctica-penguin-data  # noqa
 _CSV_COLUMNS = [
     "species",
     "island",
