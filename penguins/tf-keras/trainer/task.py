@@ -90,7 +90,7 @@ def train_and_evaluate(args):
 
     # Create the Keras Model
     keras_model = model.create_keras_model(
-        num_classes=train_y.shape[-1],
+        num_classes=train_y.shape[1],
         input_dim=input_dim,
         learning_rate=args.learning_rate,
     )
