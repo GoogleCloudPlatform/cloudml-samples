@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import pdb
 
 import os
 from six.moves import urllib
@@ -65,9 +66,9 @@ _CATEGORICAL_TYPES = {
     ),
     "species": pd.api.types.CategoricalDtype(
         categories=[
-            "Adelie",
-            "Chinstrap",
-            "Gentoo",
+            "Adelie Penguin (Pygoscelis adeliae)",
+            "Chinstrap penguin (Pygoscelis antarctica)",
+            "Gentoo (Pygoscelis papua)",
         ]
     ),
     "sex": pd.api.types.CategoricalDtype(
