@@ -1,0 +1,12 @@
+{
+  "base_url": "/",
+  "hostname": "localhost",
+  "notebook_dir": "C:\\tensorflow1\\research\\object_detection\\colab_tutorials",
+  "password": false,
+  "pid": 3932,
+  "port": 8080,
+  "secure": false,
+  "sock": "",
+  "token": "2ad5b0ad3d03f48e27a232cb44779edcb3c1b982fc075507",
+  "url": "http://localhost:8080/"
+}
