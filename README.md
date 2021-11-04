@@ -131,3 +131,9 @@ Documentation
 -------------
 
 We host AI Platform documentation [here](https://cloud.google.com/ml-engine/docs/)
+
+
+Disclaimer
+-------------
+
+The content in the `CloudML-Samples` repository is not officially maintained by Google.
