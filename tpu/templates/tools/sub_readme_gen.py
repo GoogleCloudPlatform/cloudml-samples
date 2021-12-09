@@ -4,7 +4,7 @@ import re
 import yaml
 
 root = '..'
-BASE_URL = 'https://github.com/GoogleCloudPlatform/cloudml-samples/blob/master/tpu/templates/{}/{}'
+BASE_URL = 'https://github.com/GoogleCloudPlatform/cloudml-samples/blob/main/tpu/templates/{}/{}'
 
 with open('samples.yaml', 'r') as f:
     samples = yaml.load(f.read())

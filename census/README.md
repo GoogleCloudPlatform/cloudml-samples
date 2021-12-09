@@ -39,7 +39,7 @@ All the models provided in this directory can be run on AI Platform.
 #
 * **Notebooks**
 
-    - [TensorFlow Keras](../notebooks/tensorflow/getting-started-keras.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/master/notebooks/tensorflow/getting-started-keras.ipynb))
+    - [TensorFlow Keras](../notebooks/tensorflow/getting-started-keras.ipynb) (Open in [Colab](https://colab.research.google.com/github/GoogleCloudPlatform/cloudml-samples/blob/main/notebooks/tensorflow/getting-started-keras.ipynb))
 
 #
 * **Data description**
@@ -391,7 +391,7 @@ Once the job is `SUCCEEDED` you can check the results in `--output-path`.
 
 # (Optional) Preprocessing with Dataflow
 
-**Note: This is available only for [Estimator](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/master/census/estimator)/.**
+**Note: This is available only for [Estimator](https://github.com/GoogleCloudPlatform/cloudml-samples/tree/main/census/estimator)/.**
 
 * **Objective**
 

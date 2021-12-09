@@ -20,7 +20,7 @@ set -eo pipefail
 shopt -s globstar
 
 
-# `--only-changed` will only run tests on projects container changes from the master branch.
+# `--only-changed` will only run tests on projects container changes from the main branch.
 if [[ $* == *--only-diff* ]]; then
     ONLY_DIFF="true"
 else
@@ -90,7 +90,7 @@ run_tests() {
       cd "${KOKORO_ARTIFACTS_DIR}"/"${file%/*}"
       # If $ONLY_DIFF is true, skip projects without changes.
       if [[ "$ONLY_DIFF" = "true" ]]; then
-          CHANGED=$(git diff master "${KOKORO_GITHUB_PULL_REQUEST_COMMIT}" $(pwd))
+          CHANGED=$(git diff main "${KOKORO_GITHUB_PULL_REQUEST_COMMIT}" $(pwd))
           if [[ -z "$CHANGED" ]]; then
             echo -e "\n Skipping $file: no changes in folder.\n"
             continue
