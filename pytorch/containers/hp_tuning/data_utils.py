@@ -78,7 +78,7 @@ def save_model(job_dir, model_name):
     # Get the Bucket Id
     bucket_id = job_dir.split('/')[0]
     # Get the path. Example: 'hptuning_sonar/1'
-    bucket_path = job_dir.lstrip('{}/'.format(bucket_id))
+    bucket_path = job_dir[len('{}/'.format(bucket_id)):]
 
     # Upload the model to GCS
     bucket = storage.Client().bucket(bucket_id)
