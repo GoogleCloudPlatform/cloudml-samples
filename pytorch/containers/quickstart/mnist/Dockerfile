@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Dockerfile
-FROM python:2.7.15-jessie
+FROM python:2.7.16-jessie
 WORKDIR /root
 
 # Installs pytorch and torchvision.
