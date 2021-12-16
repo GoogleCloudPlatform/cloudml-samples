@@ -72,7 +72,7 @@ class CustomCommands(setuptools.Command):
 
 REQUIRED_PACKAGES = [
     'gym',
-    'box2d-py==2.3.5',
+    'box2d-py==2.3.8',
     'ffmpeg'
 ]
 
