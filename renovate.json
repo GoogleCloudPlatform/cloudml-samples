@@ -4,9 +4,8 @@
   ],
   "packageRules": [
     {
-      "excludePackageNames": [
-        "tensorflow"
-      ]
+      "matchPackageNames": ["tensorflow"],
+      "enabled": false
     }
   ]  
 }
