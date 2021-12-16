@@ -1,5 +1,12 @@
 {
   "extends": [
     "config:base"
-  ]
+  ],
+  "packageRules": [
+    {
+      "excludePackageNames": [
+        "tensorflow"
+      ]
+    }
+  ]  
 }
