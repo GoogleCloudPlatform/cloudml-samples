@@ -3,9 +3,10 @@
     "config:base"
   ],
   "packageRules": [
-    {
-      "matchPackageNames": ["tensorflow"],
-      "enabled": false
-    }
-  ]  
+      {
+        "matchPackageNames": ["tensorflow", "python"],
+        "matchUpdateTypes": ["major"],
+        "enabled": false
+      }
+    ]
 }
