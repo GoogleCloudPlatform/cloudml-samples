@@ -1,4 +1,4 @@
-tensorflow-gpu==1.10
+tensorflow-gpu==1.15.5
 box2d-py==2.3.8
 absl-py
 gym
