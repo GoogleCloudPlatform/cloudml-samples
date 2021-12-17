@@ -1,5 +1,5 @@
 tensorflow==1.15.5
 tensorflow-model-analysis==0.36.0
 apache-beam[gcp]==2.34.0
-absl-py==0.15.0
+absl-py==1.0.0
 tensorflow-serving-api==1.15
