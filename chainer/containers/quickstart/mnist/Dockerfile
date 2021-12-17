@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Dockerfile-gpu
-FROM chainer/chainer:v5.4.0-python2
+FROM chainer/chainer:v6.7.0-python2
 
 # Installs necessary dependencies.
 RUN apt-get update && \
