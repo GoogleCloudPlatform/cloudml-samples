@@ -18,7 +18,7 @@ NAME = 'trainer'
 VERSION = '1.0'
 
 REQUIRED_PACKAGES = ['tensorflow-transform==1.5.0',
-                     'protobuf==3.6.0',
+                     'protobuf==3.19.1',
                      'tensorflow==1.15.5']
 
 if __name__ == '__main__':
