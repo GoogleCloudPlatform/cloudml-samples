@@ -1,7 +1,7 @@
 from setuptools import find_packages
 from setuptools import setup
 
-REQUIRED_PACKAGES = ['tensorflow-transform==0.4.0', 'apache-beam[gcp]==2.2.0']
+REQUIRED_PACKAGES = ['tensorflow-transform==0.4.0', 'apache-beam[gcp]==2.34.0']
 
 setup(
     name='trainer',
