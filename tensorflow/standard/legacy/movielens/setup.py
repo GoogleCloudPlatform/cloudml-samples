@@ -17,7 +17,7 @@ import setuptools
 NAME = 'movielens'
 SIX='six==1.10.0'
 TENSORFLOW='tensorflow==1.3.0'
-TENSORFLOW_TRANSFORM='tensorflow-transform==0.30.0'
+TENSORFLOW_TRANSFORM='tensorflow-transform==1.5.0'
 
 if __name__ == '__main__':
   setuptools.setup(name=NAME, 
