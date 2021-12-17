@@ -1,2 +1,2 @@
 PyYaml==3.13
-redbaron==0.8
+redbaron==0.9.2
