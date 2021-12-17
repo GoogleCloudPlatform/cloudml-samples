@@ -1,4 +1,4 @@
-google-api-python-client==1.6.2
+google-api-python-client==1.12.8
 oauth2client==3.0.0
 scikit-optimize==0.5.2
 cloud-tpu-profiler==1.15.0
