@@ -17,7 +17,7 @@ import setuptools
 NAME = 'trainer'
 VERSION = '1.0'
 
-REQUIRED_PACKAGES = ['tensorflow-transform==0.1.10',
+REQUIRED_PACKAGES = ['tensorflow-transform==0.30.0',
                      'protobuf==3.6.0',
                      'tensorflow==1.2.0']
 
