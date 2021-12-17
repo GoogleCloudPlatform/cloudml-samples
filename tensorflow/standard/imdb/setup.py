@@ -2,7 +2,7 @@
 from setuptools import find_packages
 from setuptools import setup
 
-REQUIRED_PACKAGES = ['requests==2.21.0']
+REQUIRED_PACKAGES = ['requests==2.26.0']
 
 setup(name='imdb',
       version='1.0',
