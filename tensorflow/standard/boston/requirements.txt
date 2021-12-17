@@ -1,2 +1,2 @@
-tensorflow==1.15.2
+tensorflow==1.15.5
 setuptools==39.1.0
